@@ -43,7 +43,7 @@ const projectGroups: Group[] = [
     { label: 'Providers', path: '/providers', icon: providersIcon, sourceIcon: true },
     { label: 'Diagnostics', path: '/diagnostics', icon: diagnosticsIcon, sourceIcon: true },
   ] },
-  { label: 'Ramble', items: [{ label: 'Transcriptions', path: '/transcription/library', icon: transcriptionIcon, sourceIcon: true }] },
+  // ST-20: no second Ramble library here — Transcriptions open Ramble itself.
 ];
 const mobileProjectItems: Item[] = [
   { label: 'All projects', path: '/projects/list', icon: mobileKnowledgeIcon, sourceIcon: true },
@@ -74,7 +74,7 @@ const settingsGroups: Group[] = [
   ] },
   { label: 'Data', items: [
     { label: 'Archived', path: '/settings/archived', icon: 'archived' },
-    { label: 'Transcriptions', path: '/transcription/library', icon: transcriptionIcon, sourceIcon: true },
+    { label: 'Transcriptions', path: '/transcription', icon: transcriptionIcon, sourceIcon: true },
   ] },
   { label: 'Other', items: [{ label: 'About', path: '/settings/about', icon: 'about' }] },
 ];

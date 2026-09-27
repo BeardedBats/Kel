@@ -21,6 +21,7 @@ import imageModelChevron from '@renderer/assets/figma/image-model/chevron-down.s
 import SettingsCreateMenu from '@/renderer/components/base/SettingsCreateMenu';
 import AddMcpServerModal from '@/renderer/pages/settings/components/AddMcpServerModal';
 import McpServerItem from '@/renderer/pages/settings/ToolsSettings/McpServerItem';
+import { getMcpVisualStatus } from '@/renderer/pages/settings/ToolsSettings/McpServerHeader';
 import FeedbackButton from '@/renderer/components/base/FeedbackButton';
 import AionModal from '@/renderer/components/base/AionModal';
 import {
@@ -82,7 +83,7 @@ const ModalMcpManagementSection: React.FC<{
     [clearLoginRequired]
   );
 
-  const { testingServers, handleTestMcpConnection, handleTestMcpConnections } = useMcpConnection(
+  const { testingServers, lastErrors, handleTestMcpConnection, handleTestMcpConnections } = useMcpConnection(
     setMcpServers,
     message,
     handleAuthRequired,
@@ -173,6 +174,30 @@ const ModalMcpManagementSection: React.FC<{
     }
   }, [mcpServers, checkOAuthStatus]);
 
+  // ST-06: each server has its own On/Off switch; the engine's toggle is the source of truth.
+  const [togglingServers, setTogglingServers] = useState<Record<string, boolean>>({});
+  const handleToggleEnabled = useCallback(
+    async (server: IMcpServer, enabled: boolean) => {
+      if (server.enabled === enabled) return;
+      setTogglingServers((prev) => ({ ...prev, [server.id]: true }));
+      try {
+        const updated = await mcpService.toggleServer.invoke({ id: server.id });
+        await saveMcpServers((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+        const name = server.name === 'aionui-browser' ? 'Kel Browser' : server.name;
+        if (updated.enabled !== enabled) {
+          message.error(`Kel could not turn ${name} ${enabled ? 'on' : 'off'}. Try again.`);
+        } else {
+          message.success(enabled ? `${name} is on. New chats can use its tools.` : `${name} is off. Kel stops using its tools.`);
+        }
+      } catch {
+        message.error(`Kel could not change ${server.name}. Try again.`);
+      } finally {
+        setTogglingServers((prev) => ({ ...prev, [server.id]: false }));
+      }
+    },
+    [message, saveMcpServers]
+  );
+
   const handleConfirmDelete = useCallback(async () => {
     if (!serverToDelete) return;
     hideDeleteConfirm();
@@ -204,14 +229,12 @@ const ModalMcpManagementSection: React.FC<{
       />
     );
   };
-  const selectedStatus =
-    selectedServer?.last_test_status === 'error'
-      ? 'Check failed'
-      : oauthStatus[selectedServer?.id || '']?.needsLogin
-        ? 'Sign in needed'
-        : selectedServer?.last_test_status === 'connected'
-          ? 'Connected'
-          : 'Not tested';
+  const selectedStatus = selectedServer
+    ? getMcpVisualStatus(selectedServer, {
+        needsLogin: oauthStatus[selectedServer.id]?.needsLogin,
+        isTesting: testingServers[selectedServer.id],
+      }).label
+    : 'Not tested';
   const selectedCheckedAt = selectedServer?.updated_at
     ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(
         selectedServer.updated_at
@@ -226,11 +249,21 @@ const ModalMcpManagementSection: React.FC<{
             <h2>Status</h2>
             <strong data-status={selectedStatus}>{selectedStatus}</strong>
             {selectedCheckedAt && <span>Checked {selectedCheckedAt}</span>}
+            <label className='kel-tools-mobile-detail__switch'>
+              <span>Use this server</span>
+              <Switch
+                size='small'
+                checked={selectedServer.enabled}
+                loading={togglingServers[selectedServer.id]}
+                aria-label={`Use ${selectedServer.name === 'aionui-browser' ? 'Kel Browser' : selectedServer.name}`}
+                onChange={(checked) => void handleToggleEnabled(selectedServer, checked)}
+              />
+            </label>
           </section>
           {selectedServer.last_test_status === 'error' && (
             <div className='kel-tools-mobile-detail__warning'>
               <span aria-hidden='true'>⚠</span>
-              <span>Configuration may be incorrect. Review the MCP JSON and test again.</span>
+              <span>{lastErrors[selectedServer.id] || 'Configuration may be incorrect. Review the MCP JSON and test again.'}</span>
             </div>
           )}
           <section className='kel-tools-mobile-detail__card'>
@@ -296,6 +329,9 @@ const ModalMcpManagementSection: React.FC<{
                       onEditServer={showEditMcpModal}
                       onDeleteServer={showDeleteConfirm}
                       onOAuthLogin={handleOAuthLogin}
+                      onToggleEnabled={(target, enabled) => void handleToggleEnabled(target, enabled)}
+                      isToggling={togglingServers[server.id] || false}
+                      lastError={lastErrors[server.id]}
                     />
                   ))}
                   {extensionMcpServers.map((server) => (

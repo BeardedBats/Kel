@@ -66,3 +66,65 @@ export const applyWorkspaceRepairs = async (
   }
   return applied;
 };
+
+type ConversationPage = { items?: WorkspaceDonorConversation[]; has_more?: boolean } | null | undefined;
+type SidebarGroupPage = {
+  scope?: { type?: string; project_id?: string; key?: string };
+  items?: Array<{ type?: string; conversation?: WorkspaceDonorConversation }>;
+  has_more?: boolean;
+  next_cursor?: string;
+};
+
+const sidebarScopeToken = (scope: SidebarGroupPage['scope']): string | null => {
+  if (!scope?.type) return null;
+  if (scope.type === 'project' && scope.project_id) return `project:${scope.project_id}`;
+  if (scope.type === 'dir' && scope.key) return `dir:${scope.key}`;
+  if (scope.type === 'chats' || scope.type === 'pinned') return scope.type;
+  return null;
+};
+
+const conversationsOf = (items: SidebarGroupPage['items']): WorkspaceDonorConversation[] =>
+  (items ?? []).flatMap((item) => (item?.type === 'conversation' && item.conversation?.id ? [item.conversation] : []));
+
+/**
+ * Every donor conversation the repair should look at: all active chats (the donor's
+ * `page_size` is ignored and caps a page at 20, so `limit` asks for all of them) and the
+ * ARCHIVED ones too, read through the archived sidebar and paged per group — an archived chat
+ * that points at a removed root is just as broken once it is restored. Read failures are
+ * tolerated: whatever could be read is still repaired.
+ */
+export const listConversationsForRepair = async (
+  get: (route: string) => Promise<unknown>,
+  pageLimit = 200
+): Promise<WorkspaceDonorConversation[]> => {
+  const byId = new Map<string, WorkspaceDonorConversation>();
+  const add = (items: WorkspaceDonorConversation[]) => {
+    for (const item of items) if (item?.id && !byId.has(item.id)) byId.set(item.id, item);
+  };
+  try {
+    const active = (await get('/api/conversations?limit=10000')) as ConversationPage;
+    add(active?.items ?? []);
+  } catch (error) {
+    console.warn('[Kel] Could not list chats for the folder repair', error);
+  }
+  try {
+    const archived = (await get(`/api/sidebar?archived=true&limit=${pageLimit}`)) as { groups?: SidebarGroupPage[] } | null;
+    for (const group of archived?.groups ?? []) {
+      add(conversationsOf(group.items));
+      const token = sidebarScopeToken(group.scope);
+      let cursor = group.next_cursor;
+      let more = Boolean(group.has_more && cursor && token);
+      // A bounded walk: never more than 50 extra pages per group, whatever the backend says.
+      for (let page = 0; more && page < 50; page += 1) {
+        const params = new URLSearchParams({ scope: token as string, cursor: cursor as string, limit: String(pageLimit), archived: 'true' });
+        const next = (await get(`/api/sidebar/items?${params.toString()}`)) as SidebarGroupPage | null;
+        add(conversationsOf(next?.items));
+        cursor = next?.next_cursor;
+        more = Boolean(next?.has_more && cursor);
+      }
+    }
+  } catch (error) {
+    console.warn('[Kel] Could not list archived chats for the folder repair', error);
+  }
+  return [...byId.values()];
+};

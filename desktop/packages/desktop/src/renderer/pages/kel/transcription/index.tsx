@@ -27,7 +27,7 @@ import rambleMobileEditIcon from '@renderer/assets/figma/refresh/ramble-mobile-e
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, Input, Message, Modal, Select } from '@arco-design/web-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
@@ -100,12 +100,13 @@ function downloadBlob(name: string, data: BlobPart, mime: string): void {
 
 const TranscriptionPage: React.FC = () => {
   const navigate = useNavigate();
-  const embedded = useLocation().pathname === '/transcription/library';
   const layout = useLayoutContext();
   const [creatingFolder, setCreatingFolder] = useState(false);
   const folderCreatePending = useRef(false);
   const folderRenamePending = useRef(false);
   const cancelFolderRename = useRef(false);
+  // ST-18: the folder "+" just created and is still being named — Escape cancels it entirely.
+  const namingNewFolder = useRef<string | null>(null);
   const [status, setStatus] = useState<ProviderStatus>();
   const [library, setLibrary] = useState<Library>({ folders: [], transcripts: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -172,18 +173,11 @@ const TranscriptionPage: React.FC = () => {
       ]);
       setStatus(state);
       setLibrary(data);
-      if (embedded) {
-        setSelectedId((current) =>
-          current && data.transcripts.some((item) => item.id === current)
-            ? current
-            : [...data.transcripts].sort((a, b) => b.created - a.created)[0]?.id || null
-        );
-      }
       setLoadError(null);
     } catch (error) {
       setLoadError(error);
     }
-  }, [embedded]);
+  }, []);
 
   useEffect(() => {
     void refresh();
@@ -394,6 +388,7 @@ const TranscriptionPage: React.FC = () => {
       setExpanded((current) => new Set(current).add(folder.id));
       setFolderDraft(folder.name);
       setFolderEditing(folder.id);
+      namingNewFolder.current = folder.id;
     } catch (error) {
       Message.error(failMessage(error));
     } finally {
@@ -402,8 +397,20 @@ const TranscriptionPage: React.FC = () => {
     }
   }, []);
 
+  const cancelNewFolder = useCallback(async (id: string) => {
+    namingNewFolder.current = null;
+    setFolderEditing(null);
+    setLibrary((current) => ({ ...current, folders: current.folders.filter((folder) => folder.id !== id) }));
+    try {
+      await transcription({ action: 'folder_delete', id });
+    } catch (error) {
+      Message.error(failMessage(error));
+    }
+  }, []);
+
   const renameFolder = useCallback(
     async (id: string, name: string) => {
+      if (namingNewFolder.current === id) namingNewFolder.current = null;
       if (folderRenamePending.current) return;
       const trimmed = name.trim();
       if (!trimmed || library.folders.find((folder) => folder.id === id)?.name === trimmed) {
@@ -672,7 +679,7 @@ const statusCopy =
   return (
     <div className='relative h-full'>
       <div
-        className={`${styles.shell} kel-shell-ramble${embedded ? ' kel-shell-ramble--embedded' : ''}${!embedded && (selected || recState !== 'idle') ? ' kel-shell-ramble--detail' : ''}${!embedded && selected && recState === 'idle' ? ' kel-shell-ramble--selected' : ''}`}
+        className={`${styles.shell} kel-shell-ramble${selected || recState !== 'idle' ? ' kel-shell-ramble--detail' : ''}${selected && recState === 'idle' ? ' kel-shell-ramble--selected' : ''}`}
         data-testid='transcription-page'
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes('Files')) {
@@ -683,7 +690,7 @@ const statusCopy =
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
       >
-        {!embedded && <aside className={styles.sidebar} aria-label='Transcript library'>
+        {<aside className={styles.sidebar} aria-label='Transcript library'>
           <div className={styles.brandRow}>
             <div className='kel-shell-tool-brand'><img src={rambleBrand} alt='' width={30} height={31} /><span>Kel</span></div>
             <div className={styles.navigation} ref={layout?.setTitlebarMenuHost} data-testid='ramble-navigation' />
@@ -753,8 +760,11 @@ const statusCopy =
                         onKeyDown={(event) => {
                           if (event.key === 'Enter') event.currentTarget.blur();
                           if (event.key === 'Escape') {
+                            event.preventDefault();
+                            event.stopPropagation();
                             cancelFolderRename.current = true;
-                            setFolderEditing(null);
+                            if (namingNewFolder.current === folder.id) void cancelNewFolder(folder.id);
+                            else setFolderEditing(null);
                           }
                         }}
                         autoFocus
@@ -849,12 +859,12 @@ const statusCopy =
         </aside>}
 
         <main className={styles.workspace}>
-          {!embedded && selected && recState === 'idle' && <button type='button' className='kel-shell-ramble-mobile-back' onClick={() => setSelectedId(undefined)}><img src={rambleMobileBackIcon} alt='' /><span>{selected.name}</span></button>}
+          {selected && recState === 'idle' && <button type='button' className='kel-shell-ramble-mobile-back' onClick={() => setSelectedId(undefined)}><img src={rambleMobileBackIcon} alt='' /><span>{selected.name}</span></button>}
           {loadError && <KelFailureCard error={loadError} onRetry={() => void refresh()} />}
           <header className={styles.pageHeader}>
-            <h1 className='kel-h1'>{embedded ? 'Transcriptions' : 'Ramble'}</h1>
+            <h1 className='kel-h1'>Ramble</h1>
             <div className={styles.actionRow}>
-              {!embedded && <Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>}
+              {<Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>}
               {recState === 'idle' && (
                 <>
                   <Button className='kel-transcription-upload' icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
@@ -950,7 +960,7 @@ const statusCopy =
                   {/* Saved / recording state reads beside the title, as in the standalone app. */}
                   <span className={styles.grow} />
                   <span className={styles.documentStatus} data-testid='transcript-status'>
-                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy}<span className='kel-shell-ramble-mobile-duration'>{selected.duration_ms ? ` · ${selected.duration_ms >= 60000 ? Math.round(selected.duration_ms / 60000) + ' min' : formatDuration(selected.duration_ms)}` : ''}</span> {layout?.isMobile || embedded ? <img src={transcriptSettingsIcon} alt='' width='14' height='14' /> : <details className='kel-ramble-desktop-document-menu'>
+                    <img src={transcriptCheckIcon} alt='' width='14' height='14' /> {statusCopy}<span className='kel-shell-ramble-mobile-duration'>{selected.duration_ms ? ` · ${selected.duration_ms >= 60000 ? Math.round(selected.duration_ms / 60000) + ' min' : formatDuration(selected.duration_ms)}` : ''}</span> {layout?.isMobile ? <img src={transcriptSettingsIcon} alt='' width='14' height='14' /> : <details className='kel-ramble-desktop-document-menu'>
                       <summary aria-label='Transcript actions'><img src={transcriptSettingsIcon} alt='' width='14' height='14' /></summary>
                       <div><button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button><button type='button' onClick={() => void openReview('freethink')}>Vetting answers</button></div>
                     </details>}
@@ -983,8 +993,8 @@ const statusCopy =
                   >
                     Combine
                   </Button>
-                  {!embedded && !layout?.isMobile && <Button className='kel-ramble-footer-record-more' icon={<img src={transcriptPlusIcon} alt='' width='16' height='16' />} disabled={recState !== 'idle' || selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)} data-testid='footer-record-more'>Record More</Button>}
-                  {!embedded && <details className='kel-shell-ramble-more'>
+                  {!layout?.isMobile && <Button className='kel-ramble-footer-record-more' icon={<img src={transcriptPlusIcon} alt='' width='16' height='16' />} disabled={recState !== 'idle' || selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)} data-testid='footer-record-more'>Record More</Button>}
+                  {<details className='kel-shell-ramble-more'>
                     <summary aria-label='More transcript actions'><img src={rambleMobileMoreIcon} alt='' /></summary>
                     <div>
                       <button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button>
@@ -1247,4 +1257,11 @@ const statusCopy =
   );
 };
 
-export default TranscriptionPage;
+/**
+ * ST-20: Ramble is one screen — its library is the sidebar of /transcription. The old
+ * `/transcription/library` route (a second copy inside the Projects nav frame) now opens it.
+ */
+const TranscriptionRoute: React.FC = () =>
+  useLocation().pathname === '/transcription/library' ? <Navigate to='/transcription' replace /> : <TranscriptionPage />;
+
+export default TranscriptionRoute;

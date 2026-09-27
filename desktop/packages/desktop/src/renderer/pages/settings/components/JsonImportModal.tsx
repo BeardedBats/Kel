@@ -173,26 +173,33 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
   const [jsonInput, setJsonInput] = useState('');
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitting, setSubmitting] = useState(false);
-  const [validation, setValidation] = useState<ValidationResult>({ isValid: true });
+  const [validation, setValidation] = useState<ValidationResult>({ isValid: false });
 
   /**
    * JSON语法校验
    */
   const validateJsonSyntax = useCallback(
     (input: string): ValidationResult => {
+      // ST-17: an empty field is not "valid" — "Add server" stays disabled until the JSON parses
+      // and describes at least one server (the error only shows once something was typed).
       if (!input.trim()) {
-        return { isValid: true }; // 空值视为有效
+        return { isValid: false };
       }
 
+      let parsed: unknown;
       try {
-        JSON.parse(input);
-        return { isValid: true };
+        parsed = JSON.parse(input);
       } catch (error) {
         return {
           isValid: false,
           errorMessage: error instanceof SyntaxError ? error.message : t('settings.mcpJsonFormatError'),
         };
       }
+      const parseResult = parseMcpJsonImport(parsed);
+      if (parseResult.isValid === false) {
+        return { isValid: false, errorMessage: t(parseResult.errorKey) };
+      }
+      return { isValid: true };
     },
     [t]
   );
@@ -341,7 +348,7 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
         render: () => (
           <div className='kel-tools-json-modal__actions'>
             <Button onClick={onCancel}>Cancel</Button>
-            <Button type='primary' onClick={() => void handleSubmit()} disabled={!validation.isValid || submitting} loading={submitting}>
+            <Button type='primary' onClick={() => void handleSubmit()} disabled={!validation.isValid || submitting} loading={submitting} data-testid='mcp-json-submit'>
               {server ? 'Save server' : 'Add server'}
             </Button>
           </div>

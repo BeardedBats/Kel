@@ -50,8 +50,17 @@ export const KelKeepAwakeCard: React.FC<{ compact?: boolean }> = ({ compact = fa
     [refresh]
   );
 
+  // JR-48: the row reports the live power-save state from the main process, not the switch.
+  // "On but not active" is a real state (the blocker failed to start) and says so.
+  const liveState = active ? 'Active' : enabled ? 'Not active — Kel could not hold the computer awake' : 'Off';
   if (compact) return <div className='kel-shell-preference-row' data-testid='kel-keep-awake-card'>
-    <div><div>Keep computer awake</div></div>
+    <div>
+      <div>Keep computer awake</div>
+      <p className='kel-meta m-0'>
+        Stops this computer from sleeping while Kel is open so long work keeps running. The screen can still dim. Now:{' '}
+        <span data-testid='kel-keep-awake-state' data-active={active ? 'true' : 'false'}>{liveState}</span>
+      </p>
+    </div>
     <span data-testid='kel-keep-awake-switch'><Switch aria-label='Keep computer awake' size='small' checked={enabled} disabled={busy} onChange={value => void change(value)} /></span>
   </div>;
 

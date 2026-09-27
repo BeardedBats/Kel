@@ -54,6 +54,10 @@ interface Draft {
   docs_url: string;
   test_endpoint: string;
   notes: string;
+  /** The known service this draft started from (UI only — picks the purpose placeholder and hint). */
+  service_id?: string;
+  /** The service's own note, shown as a hint instead of being written into the purpose field. */
+  service_hint?: string;
 }
 
 const EMPTY_DRAFT: Draft = {
@@ -90,6 +94,56 @@ const credentialDraftFor = (connection: KelConnection, list: KelConnectionList) 
   headerEditable: connection.auth_method === 'header',
   value: '',
 });
+
+/**
+ * ST-10: an account-sign-in service (Google Drive) cannot be signed into with one click yet — the
+ * engine's sign-in needs a client ID the person would have to create. Say what actually works today.
+ */
+export const knownServiceCredentialText = (service: Pick<KelKnownService, 'kind' | 'name' | 'credential'>): string =>
+  service.kind === 'oauth'
+    ? `an access token for your ${service.name} account — paste it as the credential. One-click sign-in isn't built yet`
+    : service.credential;
+
+const knownServiceHint = (service: KelKnownService): string | undefined =>
+  service.kind === 'oauth'
+    ? `Paste an access token for your ${service.name} account as the credential. One-click sign-in isn't built yet.`
+    : service.note || undefined;
+
+/** ST-11: a known service fills the form, but its note is a hint — never the purpose the person writes. */
+export const draftFromKnownService = (service: KelKnownService): Draft => ({
+  ...knownServiceDraft(service),
+  notes: '',
+  service_id: service.id,
+  service_hint: knownServiceHint(service),
+});
+
+/** ST-12: the purpose field's example matches the service being set up. */
+const PURPOSE_PLACEHOLDERS: Record<string, string> = {
+  'google-drive': 'e.g. read files in my Drive',
+  stripe: 'e.g. look up payouts only',
+  github: 'e.g. read my repositories and issues',
+  discord: 'e.g. post updates in one channel',
+  clickup: 'e.g. read and update my tasks',
+  figma: 'e.g. read my design files',
+  'pitcher-list': 'e.g. draft posts, never publish',
+  raptive: 'e.g. read ad earnings only',
+};
+export const purposePlaceholder = (serviceId?: string): string =>
+  (serviceId && PURPOSE_PLACEHOLDERS[serviceId]) || 'e.g. what Kel may do with this service';
+
+/** ST-07: the row states the recorded check, not just that a credential exists. */
+export const connectionRowStatus = (
+  connection: Pick<KelConnection, 'has_credentials' | 'last_test_state' | 'last_test_at'>
+): { label: string; state: string } => {
+  if (!connection.has_credentials) return { label: 'Needs a credential', state: 'needs-credential' };
+  if (connection.last_test_at && connection.last_test_state) {
+    return {
+      label: CONNECTION_CHECK_LABELS[connection.last_test_state] ?? 'Checked',
+      state: connection.last_test_state === 'ok' ? 'ready' : 'check-failed',
+    };
+  }
+  return { label: 'Ready — not tested', state: 'ready' };
+};
 
 /** The three things a person can mean by "how the credential is presented". */
 const prefixMode = (prefix: string | null): 'auto' | 'raw' | 'custom' =>
@@ -418,7 +472,7 @@ const Connections: React.FC = () => {
     <div className="kel-page kel-connections-page">
       <div className="kel-page__head">
         <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1></div>
-        {connections.length > 0 && <KelButton variant="primary" onClick={() => setDraft({ ...EMPTY_DRAFT })} disabled={busy}>
+        {connections.length > 0 && !draft && <KelButton variant="primary" onClick={() => setDraft({ ...EMPTY_DRAFT })} disabled={busy}>
           Add a service
         </KelButton>}
       </div>
@@ -441,8 +495,8 @@ const Connections: React.FC = () => {
           <div className="kel-connections-empty-body"><img src={connectionIcon} alt="" width={20} height={20} /><KelEmpty
             title="No connections yet."
             why="Add a service and its credential. Then Kel can work with it directly."
-            actionLabel="Add a service"
-            onAction={() => setDraft({ ...EMPTY_DRAFT })}
+            actionLabel={draft ? undefined : 'Add a service'}
+            onAction={draft ? undefined : () => setDraft({ ...EMPTY_DRAFT })}
           /></div>
         ) : (
           connections.map((connection) => {
@@ -492,14 +546,14 @@ const Connections: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <span className="kel-connection-status" title={stateSentence(connection)} data-state={connection.has_credentials ? 'ready' : 'needs-credential'}>
-                  {connection.has_credentials ? 'Ready' : 'Needs a credential'}
+                <span className="kel-connection-status" title={stateSentence(connection)} data-state={connectionRowStatus(connection).state} data-testid="connection-row-status">
+                  {connectionRowStatus(connection).label}
                 </span>
                 <span className="kel-grow" />
                 {connection.can_test && (
                   <KelButton
                     variant="quiet"
-                    disabled={busy}
+                    disabled={busy || !connection.has_credentials}
                     onClick={() => void checkConnection(connection)}
                   >
                     Test
@@ -582,12 +636,12 @@ const Connections: React.FC = () => {
               {[connectionTemplate(list, service.kind)?.label,
                 service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
             </span>
-            <span className="kel-connection-extra">Kel needs {service.credential}.</span>
+            <span className="kel-connection-extra">Kel needs {knownServiceCredentialText(service)}.</span>
             <span className="kel-connection-extra">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
           </div>
           <span className="kel-grow" />
           <KelButton variant="primary" disabled={busy}
-            onClick={() => setDraft({ ...knownServiceDraft(service) })}>Set up {service.name}</KelButton>
+            onClick={() => setDraft(draftFromKnownService(service))}>Set up {service.name}</KelButton>
         </div>)}</div>
       </KelCard>}
 
@@ -648,11 +702,12 @@ const Connections: React.FC = () => {
           {!draft.id && addable.length > 0 && <details className="kel-connection-templates">
             <summary>Start with a known service</summary>
             <div>{addable.map((service) => <div key={service.id}>
-              <button type="button" onClick={() => setDraft({ ...knownServiceDraft(service) })}>Set up {service.name}</button>
-              <span>Kel needs {service.credential}.</span>
+              <button type="button" onClick={() => setDraft(draftFromKnownService(service))}>Set up {service.name}</button>
+              <span>Kel needs {knownServiceCredentialText(service)}.</span>
               <span>{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
             </div>)}</div>
           </details>}
+          {draft.service_hint && <p className="kel-meta kel-connection-service-hint" data-testid="connection-service-hint">{draft.service_hint}</p>}
           <button type="button" className="kel-connection-advanced-toggle"
             aria-expanded={showAdvancedConnectionFields}
             onClick={() => setShowAdvancedConnectionFields((open) => !open)}>Advanced options</button>
@@ -806,7 +861,7 @@ const Connections: React.FC = () => {
             <input
               id="kel-connection-notes"
               className="kel-input"
-              placeholder="payouts only"
+              placeholder={purposePlaceholder(draft.service_id)}
               value={draft.notes}
               onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
             />

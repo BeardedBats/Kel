@@ -30,7 +30,12 @@
  */
 
 import { spawn } from 'node:child_process';
-import { buildMcpSpawnCommand, resolveBridgeToken, resolveBrowserUrl } from './browserServerPort';
+import {
+  buildMcpSpawnCommand,
+  CHROME_DEVTOOLS_MCP_VERSION,
+  resolveBridgeToken,
+  resolveBrowserUrl,
+} from './browserServerPort';
 
 /**
  * stdio MCP 服务器的 stdout 是协议通道，任何附加输出都会破坏握手。
@@ -105,7 +110,7 @@ logDiagnostic(`Connecting chrome-devtools-mcp to the in-app browser bridge at ${
  * upstream able to swap out the code that drives a browser holding the user's live
  * sign-in cookies.
  */
-const CHROME_DEVTOOLS_MCP_VERSION = '0.16.0';
+// The pinned version lives in browserServerPort.ts so the chrome-devtools default server uses the same one.
 
 /**
  * Windows 上 npx 是 npx.cmd，而 .cmd 属于批处理文件，没有终端无法自己执行。

@@ -504,6 +504,24 @@ const SystemModalContent: React.FC = () => {
     crossSessionMessage: 'Messages between chats', promptTimeout: 'Prompt timeout',
     agentIdleTimeout: 'Idle timeout', previewTextSizeLimit: 'Preview size limit',
   };
+  // Plain-words descriptions for the desktop page (ST-05): every row says what it does, and a
+  // disabled or overridden row says why instead of looking broken.
+  const startOnBootReason = startOnBoot.supported
+    ? 'Open Kel automatically when you sign in to this computer.'
+    : startOnBoot.isPackaged
+      ? 'Not available on this system.'
+      : 'Available in the installed app only — this copy of Kel is a development build.';
+  const desktopDescriptions: Record<string, string | undefined> = {
+    startOnBoot: startOnBootReason,
+    closeToTray: 'Closing the window keeps Kel running in the tray so background work continues.',
+    hardwareAcceleration: gpuStatus?.autoDisabled
+      ? 'Turned off automatically after repeated graphics crashes. Switch it on to try again (Kel restarts).'
+      : 'Use the graphics card to draw Kel. Turn off if the window flickers or crashes. Kel restarts to apply.',
+    crossSessionMessage: 'Let Kel send a message from one chat to another. Turning this off also disables @@ chat mentions.',
+    promptTimeout: 'How long Kel waits for a model to answer before giving up (30–3600 seconds).',
+    agentIdleTimeout: 'Stop helper processes that have been idle this long to free memory (1–60 minutes).',
+    previewTextSizeLimit: 'Text files larger than this open with a notice instead of their content. Applies to newly opened files.',
+  };
   const visiblePreferences = preferenceItems.filter((item) => item.key !== 'saveUploadToWorkspace');
   if (isDesktopPage) visiblePreferences.sort((a, b) => desktopOrder.indexOf(a.key) - desktopOrder.indexOf(b.key));
 
@@ -517,7 +535,10 @@ const SystemModalContent: React.FC = () => {
             <ShellSourceCardHeader title='General' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
               {visiblePreferences.map((item) => (
-                <React.Fragment key={item.key}><PreferenceRow label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}>
+                <React.Fragment key={item.key}><PreferenceRow
+                  label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}
+                  description={isDesktopPage ? desktopDescriptions[item.key] ?? item.description : item.description}
+                >
                   {item.component}
                 </PreferenceRow>{item.key === 'language' && <KelKeepAwakeCard compact />}</React.Fragment>
               ))}
