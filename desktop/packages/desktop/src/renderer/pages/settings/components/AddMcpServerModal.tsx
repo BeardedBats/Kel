@@ -1,7 +1,7 @@
 import type { IMcpServer } from '@/common/config/storage';
 import React, { useEffect, useState } from 'react';
 import JsonImportModal from './JsonImportModal';
-import OneClickImportModal from './OneClickImportModal';
+import CliImportModal from './CliImportModal';
 
 interface AddMcpServerModalProps {
   visible: boolean;
@@ -12,7 +12,7 @@ interface AddMcpServerModalProps {
   onBatchImport?: (
     servers: Omit<IMcpServer, 'id' | 'created_at' | 'updated_at'>[]
   ) => Promise<IMcpServer[] | void> | IMcpServer[] | void;
-  importMode?: 'json' | 'oneclick';
+  importMode?: 'json' | 'cli';
 }
 
 const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
@@ -25,26 +25,26 @@ const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
   importMode = 'json',
 }) => {
   const [showJsonModal, setShowJsonModal] = useState(false);
-  const [showOneClickModal, setShowOneClickModal] = useState(false);
+  const [showCliModal, setShowCliModal] = useState(false);
 
   useEffect(() => {
     if (visible && !server) {
       if (importMode === 'json') {
         setShowJsonModal(true);
-      } else if (importMode === 'oneclick') {
-        setShowOneClickModal(true);
+      } else if (importMode === 'cli') {
+        setShowCliModal(true);
       }
     } else if (visible && server) {
       setShowJsonModal(true);
     } else if (!visible) {
       setShowJsonModal(false);
-      setShowOneClickModal(false);
+      setShowCliModal(false);
     }
   }, [visible, server, importMode]);
 
   const handleModalCancel = () => {
     setShowJsonModal(false);
-    setShowOneClickModal(false);
+    setShowCliModal(false);
     onCancel();
   };
 
@@ -59,8 +59,8 @@ const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
         onSubmit={onSubmit}
         onBatchImport={onBatchImport}
       />
-      <OneClickImportModal
-        visible={showOneClickModal}
+      <CliImportModal
+        visible={showCliModal}
         existingServerNames={existingServerNames}
         onCancel={handleModalCancel}
         onBatchImport={onBatchImport}
