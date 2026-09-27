@@ -4,6 +4,7 @@ import contextlib
 import json
 from pathlib import Path
 import time
+import uuid
 from .core import PolicyError, uid, digest, encode
 
 
@@ -36,9 +37,18 @@ class Context:
                        (pid,name.strip(),root,notes,time.time()))
         return pid
 
-    def conversation(self,project_id='default',title='New conversation'):
-        cid=uid()
+    def conversation(self,project_id='default',title='New conversation',conversation_id=None):
+        """A new conversation; with `conversation_id`, the conversation an ACP session reserved
+        (ST-04: created on its first message, so opening a chat writes nothing). Idempotent."""
+        cid=conversation_id or uid()
+        if conversation_id is not None:
+            try:
+                cid=str(uuid.UUID(str(conversation_id)))
+            except ValueError:
+                raise PolicyError('Invalid conversation id') from None
         with self.store.transaction() as db:
+            if conversation_id is not None and db.execute('SELECT 1 FROM conversations WHERE id=?',(cid,)).fetchone():
+                return cid
             if not db.execute('SELECT 1 FROM projects WHERE id=?',(project_id,)).fetchone():raise PolicyError('Project missing')
             db.execute('INSERT INTO conversations VALUES(?,?,?,?)',(cid,project_id,title[:120],time.time()))
         return cid

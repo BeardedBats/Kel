@@ -196,6 +196,7 @@ class ACPHost:
     def __init__(self, client, emit, poll_interval=.25):
         self.client, self.emit, self.poll_interval = client, emit, poll_interval
         self.active = {}
+        self.reserved = set()  # ST-04: chats opened here whose conversation is not created yet
         self.lock = threading.RLock()
         self.closed = threading.Event()
 
@@ -235,14 +236,34 @@ class ACPHost:
         if message:
             self.text(session, '\n' + message + '\n')
 
+    def _reserved(self, cid):
+        """A conversation id this host handed out on session/new that has no engine row yet (ST-04).
+
+        Known in memory for this host, or from the session-map record written at session/new
+        (so a restarted host still recognises a chat that was opened but never used)."""
+        if cid in self.reserved:
+            return True
+        folder = self.client.data / 'aion-session-map'
+        if folder.is_dir():
+            for record in folder.glob('*.json'):
+                try:
+                    if cid in json.loads(record.read_text(encoding='utf-8-sig')).values():
+                        return True
+                except (OSError, ValueError, AttributeError):
+                    continue
+        return False
+
     def session(self, session):
+        """(conversation id, state, exists). A reserved chat with no row yet has empty state."""
         if not isinstance(session, str) or not session.startswith('kel:'):
             raise ValueError('Unknown Kel session')
         cid = session[4:]
         state = self.client.state(cid)
         if not any(c['id'] == cid for c in state['conversations']):
-            raise ValueError('Kel conversation no longer exists')
-        return cid, state
+            if not self._reserved(cid):
+                raise ValueError('Kel conversation no longer exists')
+            return cid, state, False
+        return cid, state, True
 
     def dispatch(self, method, params):
         if method == 'initialize':
@@ -270,9 +291,12 @@ class ACPHost:
             # A new ACP conversation has no user-authorized project yet. The
             # donor's working directory (often a temp or install path) is not a
             # project root: a root must come from an explicit project choice or
-            # greenfield intent. Default to the unrooted project.
-            project = 'default'
-            cid = self.client.call('/api/conversation', {'project': project})['id']
+            # greenfield intent. It will be created in the unrooted project.
+            # ST-04: opening a chat writes nothing in the engine — the id is reserved here and the
+            # conversation is created on its first message, so launches leave no empty chats.
+            cid = str(uuid.uuid4())
+            with self.lock:
+                self.reserved.add(cid)
             if record:
                 record.parent.mkdir(exist_ok=True)
                 temporary = record.with_suffix('.' + uuid.uuid4().hex + '.tmp')
@@ -284,7 +308,7 @@ class ACPHost:
             return {'sessionId': 'kel:' + cid}
         if method == 'session/load':
             session = params['sessionId']
-            _, state = self.session(session)
+            _, state, _exists = self.session(session)
             for row in state['messages']:
                 kind = 'user_message_chunk' if row['role'] == 'user' else 'agent_message_chunk'
                 self.update(session, {'sessionUpdate': kind, 'content': {'type': 'text', 'text': row['text']}})
@@ -353,7 +377,12 @@ class ACPHost:
 
     def prompt(self, params):
         session = params['sessionId']
-        cid, baseline = self.session(session)
+        cid, baseline, exists = self.session(session)
+        if not exists:
+            # ST-04: the reserved chat becomes a real conversation with its first message.
+            self.client.call('/api/conversation', {'project': 'default', 'id': cid})
+            with self.lock:
+                self.reserved.discard(cid)
         with self.lock:
             previous = self.active.pop(session, None)
             if previous is not None:

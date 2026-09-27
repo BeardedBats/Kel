@@ -89,8 +89,17 @@ class ACPHostTests(unittest.TestCase):
         # not silently become an authorized project root. A new conversation
         # defaults to the unrooted project.
         result = self.host.dispatch('session/new', {'cwd': str(self.root)})
-        self.assertEqual(result, {'sessionId': 'kel:c1'})
-        self.assertEqual(self.requests, [('/api/conversation', {'project': 'default'})])
+        cid = result['sessionId'][4:]
+        # ST-04: opening a chat writes nothing; the conversation is created (unrooted, in the
+        # default project) with its first message.
+        self.assertEqual(self.requests, [])
+        self.host.dispatch('session/load', {'sessionId': result['sessionId']})
+        self.host.prompt({'sessionId': result['sessionId'], 'prompt': [{'type': 'text', 'text': 'hello'}]})
+        self.assertEqual(self.requests[0], ('/api/conversation', {'project': 'default', 'id': cid}))
+
+    def test_an_unknown_session_is_still_refused(self):
+        with self.assertRaises(ValueError):
+            self.host.dispatch('session/load', {'sessionId': 'kel:00000000-0000-4000-8000-000000000000'})
 
     def test_prompt_streams_real_http_response_and_stable_submission(self):
         result = self.host.dispatch('session/prompt', {'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'hello'}]})
@@ -435,9 +444,15 @@ class ACPHostTests(unittest.TestCase):
             self.host.dispatch('session/new', {'cwd': str(self.root)})
             files = list((self.root / 'aion-session-map').glob('*.json'))
             self.assertEqual(len(files), 1)
-            self.assertEqual(json.loads(files[0].read_text()), {'donor-new': 'c1'})
-            self.host.dispatch('session/new', {'cwd': str(self.root)})
-        self.assertEqual([path for path, _ in self.requests], ['/api/conversation'])
+            record = json.loads(files[0].read_text())
+            self.assertEqual(list(record), ['donor-new'])
+            reserved = record['donor-new']
+            again = self.host.dispatch('session/new', {'cwd': str(self.root)})
+        self.assertEqual(again, {'sessionId': 'kel:' + reserved})
+        self.assertEqual(self.requests, [], 'no engine conversation until the first message')
+        # A restarted host still recognises the reserved chat from its record.
+        fresh = ACPHost(ServiceClient(self.root), self.events.append, .01)
+        self.assertEqual(fresh.dispatch('session/load', {'sessionId': 'kel:' + reserved}), {})
 
     def test_standalone_cli_initializes_without_a_package_context(self):
         script = Path(__file__).parents[1] / 'kel' / 'acp_host.py'

@@ -641,6 +641,45 @@ class HandoffServiceTests(unittest.TestCase):
         self.assertFalse(providers['deepseek']['available'])
         self.assertEqual(providers['deepseek']['available_note'], 'Not supported for chat yet')
 
+    # -- ST-04 / ST-23 / CH-10: start-up and idle cost ---------------------------------------------
+    def test_a_reserved_chat_is_created_on_its_first_message_only_once(self):
+        import uuid
+        reserved = str(uuid.uuid4())
+        self.assertEqual(self.service._project_of(reserved), 'default', 'a reserved chat is not an error')
+        with self.assertRaises(PolicyError):
+            self.service._project_of('not-a-conversation')
+        for _ in range(2):
+            self.assertEqual(self.service.action('/api/conversation', {'project': 'default', 'id': reserved}),
+                             {'id': reserved})
+        rows = [c for c in self.service.state(reserved)['conversations'] if c['id'] == reserved]
+        self.assertEqual(len(rows), 1)
+        with self.assertRaises(PolicyError):
+            self.service.action('/api/conversation', {'project': 'default', 'id': 'x; drop table'})
+
+    def test_conversation_counts_come_from_one_grouped_read(self):
+        empty = self.service.context.conversation('default')
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        counts = {row['id']: row for row in self.service.conversations()['conversations']}
+        self.assertEqual((counts[empty]['message_count'], counts[empty]['job_count']), (0, 0))
+        self.assertGreaterEqual(counts[self.cid]['message_count'], 2)
+        self.assertEqual(counts[self.cid]['job_count'], 1)
+
+    def test_an_idle_engine_says_so_and_does_not_renew_its_lease_every_pass(self):
+        calls = []
+        original = self.service.store.controller_lease
+        self.service.store.controller_lease = lambda *a, **k: (calls.append(a), original(*a, **k))[1]
+        self.addCleanup(setattr, self.service.store, 'controller_lease', original)
+        for _ in range(10):
+            self.assertFalse(self.service.engine.tick())
+        self.assertEqual(calls, [], 'the 120 s lease is renewed about every 30 s, not every pass')
+        self.service.engine._lease_renewed -= 31
+        self.service.engine.tick()
+        self.assertEqual(len(calls), 1)
+        sid = self.service.submit({'text': 'Write me a garden plan', 'conversation': self.cid})
+        self.assertEqual(self.wait(sid), 'DISPATCHED')
+        self.assertTrue(self.service.engine.tick(), 'a READY job keeps supervision at full pace')
+
     def test_follow_up_posts_one_notice_per_stalled_state(self):
         sid = self.service.submit({'text': 'Write a garden plan', 'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')
