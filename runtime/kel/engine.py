@@ -12,6 +12,8 @@ from .instance_lock import InstanceLock
 
 
 LEASE_RENEW_SECONDS = 30
+# D-67: the route block of a step whose role is Fixed to a model that cannot run here.
+FIXED_WAIT = 'Fixed model not available: '
 # Job states the supervision pass can move forward by itself (anything else waits on a person, a
 # model becoming available, or nothing at all).
 ADVANCING_STATES = ('READY', 'RUNNING', 'VERIFYING', 'CANCELLING', 'PAUSING')
@@ -223,9 +225,14 @@ class Engine:
                 job = self.store.get(job['id'])
                 if any(jid==job['id'] for jid,mid in self.reviews):continue
                 if job['state']=='WAITING_RESOURCE' and job.get('route_block'):
-                    health=self.store.provider_states()
-                    if any(s.get('circuit_until',0)<=time.time() and s.get('quota')!=0 for s in health.values()):
-                        self.store.retry_route(job['id']);job=self.store.get(job['id'])
+                    if str(job['route_block']).startswith(FIXED_WAIT):
+                        # D-67: a Fixed role waits until its model is set up here (or Nick changes it).
+                        if self._fixed_roles_runnable(job):
+                            self.store.retry_route(job['id']);job=self.store.get(job['id'])
+                    else:
+                        health=self.store.provider_states()
+                        if any(s.get('circuit_until',0)<=time.time() and s.get('quota')!=0 for s in health.values()):
+                            self.store.retry_route(job['id']);job=self.store.get(job['id'])
                 if job['state'] in ('CANCELLED', 'CANCELLING', 'PAUSED', 'PAUSING', 'AWAITING_USER', 'WAITING_RESOURCE'):
                     continue
                 if not any(m['state'] == 'RUNNING' for m in job['milestones'].values()):
@@ -301,10 +308,24 @@ class Engine:
                     # candidate adapter it stands for so a saved Claude/Codex choice is honoured.
                     aliases = adapter_names((pref or {}).get('provider'))
                     prefer = next((c.name for c in candidates if c.name in aliases), None)
+                    explicit = spec.get('provider') or job['contract'].get('provider')
+                    # D-67/D-69: a staffed step runs on its role's model. A model picked in a chat (or
+                    # named by a schedule) is Kel's own; it never steers staff, not even as a hint.
+                    binding = self._role_binding(job, spec, role, candidates) if role else None
+                    if role:
+                        prefer, aliases, pref = None, (), None
+                    if binding:
+                        if binding['waiting'] and not explicit:
+                            self.store.wait_for_route(job['id'], binding['block'])
+                            continue
+                        if binding['adapter']:
+                            prefer = binding['adapter']
+                            if binding['mode'] == 'FIXED' and not explicit:
+                                explicit = binding['adapter']
                     from .routing_evidence import summary as _routing_evidence_summary
                     evidence=_routing_evidence_summary(self.store,[c.name for c in candidates])
                     try:
-                        route = select(candidates, required=required, explicit=spec.get('provider') or job['contract'].get('provider'),quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence)
+                        route = select(candidates, required=required, explicit=explicit,quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence)
                     except PolicyError as exc:
                         self.store.wait_for_route(job['id'],str(exc))
                         continue
@@ -314,9 +335,9 @@ class Engine:
                         model=(runtime_model((pref or {}).get('model')) if route['selected'] in aliases else None) or getattr(adapter,'options',{}).get('model')
                         staff_record=None
                         if role:
-                            staff_record={'role':role,'asked':{'role':role,'mode':'automatic'},
-                                          'ran':{'adapter':route['selected'],'model':model,'model_confirmed':False},
-                                          'why':route.get('why')}
+                            staff_record=self._staff_record(role, binding, route, model)
+                            if staff_record['asked'].get('model_arg') is not None or staff_record.get('uses_role_model'):
+                                model=staff_record['asked'].get('model_arg') or model
                         run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model,staff=staff_record)
                     except PolicyError:
                         continue
@@ -329,6 +350,65 @@ class Engine:
                     future = self.pool.submit(self._execute, run, self.adapters[route['selected']], cancel)
                     self.active[run['id']] = (future, cancel, run)
             return bool(advancing or self.active or self.reviews)
+
+    @staticmethod
+    def _purpose(job, spec):
+        if job['contract'].get('kind') == 'coding':
+            return 'code'
+        needs = spec.get('required_capabilities', job['contract'].get('required_capabilities', []))
+        return 'web' if 'web_research' in (needs or []) else 'text'
+
+    def _role_binding(self, job, spec, role, candidates):
+        """D-67: what this step's role asks for, resolved against the adapters that can run it."""
+        from .role_models import MODELS, ROLE_LABELS, resolve
+        try:
+            binding = resolve(self.store, role, adapters={c.name for c in candidates},
+                              purpose=self._purpose(job, spec))
+        except Exception:
+            return None  # an unreadable role setting never blocks work; routing decides
+        if binding['waiting']:
+            label = (MODELS.get(binding['asked']['model']) or {}).get('label', binding['asked']['model'])
+            binding['block'] = (FIXED_WAIT + '%s is set to %s only, and %s. Change it in Settings, or '
+                                'set that model up on this computer.'
+                                % (ROLE_LABELS[role], label, binding['why']))
+        return binding
+
+    def _fixed_roles_runnable(self, job):
+        from .role_models import resolve
+        from .staff import step_role
+        for mid, m in (job.get('milestones') or {}).items():
+            role = step_role(job, mid)
+            if not role or m.get('state') not in ('READY', 'NEEDS_REPAIR', 'INVALIDATED'):
+                continue
+            spec = next((s for s in job['contract']['milestones'] if s['id'] == mid), {})
+            try:
+                if resolve(self.store, role, adapters=set(self.adapters),
+                           purpose=self._purpose(job, spec))['waiting']:
+                    return False
+            except Exception:
+                return True
+        return True
+
+    @staticmethod
+    def _staff_record(role, binding, route, model):
+        """The truth about a step's model before it runs: what the role asked for, which adapter
+        routing chose, and why they differ (if they do). What *ran* is filled in from the runtime."""
+        asked = dict((binding or {}).get('asked') or {'role': role, 'mode': 'AUTOMATIC'})
+        uses = bool(binding and binding.get('adapter') == route['selected'])
+        if uses:
+            asked.update(model_arg=binding['model_arg'], fallback_arg=binding['fallback_arg'],
+                         effort_arg=binding['effort_arg'])
+            why = binding.get('why')
+        else:
+            asked.update(model_arg=None, fallback_arg=None, effort_arg=None)
+            why = (binding or {}).get('why')
+            if binding and binding.get('adapter'):
+                why = ('%s was not used for this step: this work names another model'
+                       % (asked.get('label') or 'The role model'))
+            why = why or route.get('why')
+        return {'role': role, 'asked': asked, 'uses_role_model': uses, 'why': why,
+                'ran': {'adapter': route['selected'], 'model': model if not uses else None,
+                        'model_confirmed': False}}
 
     def _attach_role(self, job, mid, run):
         """Kel attaches a role snapshot to every run (V1.5 G3).

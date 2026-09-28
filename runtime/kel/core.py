@@ -501,7 +501,9 @@ class Store:
     def _settle_staff_call(db, run_id, state, result):
         """D-66: settle a staffed step's call with what its runtime reported (no-op when unstaffed)."""
         try:
-            from .staff import update_call
+            from .staff import note_rejection, update_call
+            if state == 'failed':
+                note_rejection(db, run_id, result.get('error'))
             update_call(None, run_id, state=state, db=db,
                         ran={'model': result.get('model_used'),
                              'reasoning': result.get('reasoning_used'),

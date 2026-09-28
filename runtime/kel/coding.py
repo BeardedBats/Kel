@@ -213,8 +213,27 @@ class CodingAdapter:
         if phase and phase['phase'] in ('TURN_DISPATCHED','TESTS_DISPATCHED') and not host_alive(self.store,run_id):
             raise PolicyError('Native transport lost; unresolved effects cannot be replayed')
         connection=DurableCodingConnection(self.store,run_id,workspace)
+        # D-67: a staffed step runs on its role's model and reasoning level. Codex takes both per
+        # turn; Kel's Claude Code host takes them once per thread (--model/--fallback-model/--effort).
+        from .staff import binding_for_run,update_call
+        binding=binding_for_run(self.store,run_id)
+        if run['provider']=='claude-code':
+            run_options={'model':binding.get('model_arg'),'fallback_model':binding.get('fallback_arg'),
+                         'thread_effort':binding.get('effort_arg')}
+        else:
+            run_options={'model':binding.get('model_arg'),
+                         'effort':binding.get('effort_arg') if binding else 'low'}
+        observed={}
         def progress(event):
             method=event.get('method','');params=event.get('params',{})
+            if method in ('kel/runtime','kel/thread') and (params.get('model') or params.get('reasoningEffort') or params.get('effort')):
+                # What the runtime itself reports running — the only source for "ran".
+                observed.update({k:v for k,v in {'model_used':params.get('model'),
+                    'reasoning_used':params.get('reasoningEffort') or params.get('effort')}.items() if v})
+                try:update_call(self.store,run_id,ran={'model':params.get('model'),
+                    'reasoning':params.get('reasoningEffort') or params.get('effort'),
+                    'model_confirmed':True if params.get('model') else None})
+                except Exception:pass
             # Persist bounded user-visible native events, not token-by-token reasoning.
             if method in ('kel/session','item/started','item/completed','turn/completed'):
                 with self.store.transaction() as db:
@@ -238,7 +257,8 @@ class CodingAdapter:
                       'Keep everything inside the project root. Prefer the Python standard library; only add dependencies the project can install and document them.' if contract.get('greenfield') else '')
                     +'\nContext:\n'+prompt,
                     session_id=session_id,cancel=cancel,on_event=progress,
-                    on_approval=lambda m,p:self.approval(run,m,p,cancel))
+                    on_approval=lambda m,p:self.approval(run,m,p,cancel),**run_options)
+            result.update(observed)
             if result['outcome']!='SUCCESS':return result
             if not phase or phase['phase']=='TURN_DISPATCHED':
                 result['_checkpoint_manifest']=file_manifest(workspace)
