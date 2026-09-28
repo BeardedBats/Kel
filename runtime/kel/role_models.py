@@ -44,8 +44,9 @@ MODELS = {
                          'runtime': 'claude', 'arg': 'claude-fable-5-1', 'cli_fallback': 'fable'},
     'claude-sonnet': {'label': 'Claude Sonnet', 'version': 'Sonnet', 'family': 'anthropic',
                       'runtime': 'claude', 'arg': 'sonnet', 'api_arg': 'claude-sonnet-4-6'},
-    'deepseek-flash': {'label': 'DeepSeek Flash', 'version': 'Flash', 'family': 'deepseek',
-                       'runtime': 'deepseek', 'arg': 'deepseek-flash'},
+    'deepseek-flash': {'label': 'DeepSeek Flash', 'version': 'V4.1 Flash', 'family': 'deepseek',
+                       'runtime': 'deepseek', 'arg': 'deepseek-flash',
+                       'openrouter_arg': 'deepseek/deepseek-v4.1-flash'},
 }
 
 # Routing 2 (ROUTING_2.md §5.1): a coarse strength per model (1 fast and cheap, 2 balanced, 3 the
@@ -66,8 +67,10 @@ RUNTIMES = {
     'codex': {'label': 'Codex', 'code': 'codex-code', 'text': 'codex', 'web': None},
     'claude': {'label': 'Claude Code', 'code': 'claude-code', 'text': 'claude', 'web': None},
     'api': {'label': 'Anthropic API', 'code': None, 'text': 'internal', 'web': 'research'},
-    'deepseek': {'label': 'DeepSeek API', 'code': None, 'text': None, 'web': None},
+    'deepseek': {'label': 'DeepSeek API', 'code': None, 'text': 'deepseek', 'web': None},
 }
+# Routing 2 §5.6: OpenRouter is a second route to catalog models that name an `openrouter_arg`.
+OPENROUTER = 'openrouter'
 CLAUDE_EFFORT = ('low', 'medium', 'high', 'xhigh', 'max')
 CODEX_EFFORT = ('low', 'medium', 'high', 'xhigh')  # when Codex's own catalog is unreadable
 
@@ -96,7 +99,9 @@ FALLBACKS = {'builder': ('codex',)}
 INDEPENDENT = {'openai': ('gpt-6-astra', 'codex'), 'anthropic': ('claude-opus-5-5', 'claude-sonnet')}
 REVIEW_ROLES = ('verifier', 'oracle', 'sentinel')
 ADAPTER_FAMILIES = {'claude': 'anthropic', 'claude-code': 'anthropic', 'internal': 'anthropic',
-                    'research': 'anthropic', 'codex': 'openai', 'codex-code': 'openai'}
+                    'research': 'anthropic', 'codex': 'openai', 'codex-code': 'openai',
+                    # OpenRouter only routes DeepSeek Flash today (ROUTING_2.md "Needs Nick" 5).
+                    'deepseek': 'deepseek', 'openrouter': 'deepseek'}
 REJECTION_HOURS = 24
 
 
@@ -217,7 +222,7 @@ _REFUSALS = (
     ('no_access', re.compile(r'(?:no|not have|lacks?) access to (?:the |this )?model|model[^.]{0,60}\b(?:not '
                              r'allowed|access denied|permission denied)', re.IGNORECASE)),
     ('not_found', re.compile(r'(?:model|model_id)\b.{0,80}\b(?:not found|not supported|not available|does not '
-                             r"exist|unknown|invalid|isn't available|is not available|unsupported|not "
+                             r"exist|not exist|unknown|invalid|isn't available|is not available|unsupported|not "
                              r'recognized)|\b(?:unknown|invalid|unsupported) model\b|model_not_found',
                              re.IGNORECASE)),
 )
@@ -382,8 +387,12 @@ def adapter_for(model_id, purpose, adapters, set_aside=None):
     if runtime == 'claude' and purpose == 'web':
         runtime = 'api'  # live web research runs on the Anthropic API worker
     name = RUNTIMES.get(runtime, {}).get(purpose)
-    if runtime == 'deepseek':
-        return None, 'has no DeepSeek connection in this version of Kel'
+    if name and name not in adapters and info.get('openrouter_arg') and OPENROUTER in adapters             and not (set_aside and OPENROUTER in set_aside):
+        return OPENROUTER, None  # the same model through OpenRouter (Routing 2 §5.6)
+    if runtime == 'deepseek' and name and name not in adapters:
+        if set_aside and name in set_aside:
+            return None, 'runs on the DeepSeek API, which %s' % set_aside[name]
+        return None, 'needs a DeepSeek API key (or an OpenRouter key), which is not set up on this computer'
     if not name:
         return None, "can't do this kind of work here"
     if name not in adapters:
@@ -398,6 +407,8 @@ def model_arg(model_id, adapter):
     info = MODELS.get(model_id) or {}
     if adapter in ('internal', 'research'):
         return info.get('api_arg')
+    if adapter == OPENROUTER:
+        return info.get('openrouter_arg')
     return info.get('arg')
 
 

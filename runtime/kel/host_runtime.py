@@ -13,7 +13,8 @@ def test_command_env():
     """Environment for the configured test command: provider authentication is not needed."""
     env = os.environ.copy()
     env['PYTHONDONTWRITEBYTECODE'] = '1'
-    for key in ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY'):
+    from .internal import SECRET_ENV_KEYS  # every provider key Kel manages (incl. OpenRouter, Routing 2)
+    for key in SECRET_ENV_KEYS:
         env.pop(key, None)
     return env
 
