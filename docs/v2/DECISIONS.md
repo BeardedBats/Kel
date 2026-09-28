@@ -834,3 +834,16 @@ They are recommendations, not Nick's explicit picks — each is one setting to c
 4. OpenRouter carries only DeepSeek Flash for now.
 5. Codex and Claude Code subscription calls count as $0 marginal cost when ranking (quota still counts).
 6. Kel's own turn, reply and plan calls are recorded in usage.
+
+## D-73 — Visual-audit questions (recommended values, adopted under the "execute everything" instruction)
+
+**Adopted 2026-09-28** (Claude's recommendations, not Nick's explicit picks; each is easy to change).
+1. **Notifications switch.** Settings → System gets a Notifications switch, and the setting reaches the
+   main process (same sync pattern as Close to tray) so it really stops Kel's attention notifications.
+2. **Light mode.** The work cards, panel, scoping card and chips get light tokens and meet contrast in
+   Light mode (no dark-only exception).
+3. **One "Kel's model".** Settings → Model and the Kel row in Staff & models edit the same value; the
+   composer picker is a per-chat override of it (D-69). No second, conflicting control.
+4. **Card row scope.** In an open chat, the card row shows that chat's project's work; on Home / new
+   chat it follows the active project (or All projects).
+5. **Save as a recipe** is offered only for work that finished and passed its checks.
