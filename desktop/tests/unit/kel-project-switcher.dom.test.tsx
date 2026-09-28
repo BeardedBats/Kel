@@ -91,6 +91,8 @@ describe('Project switcher (D-54)', () => {
     await waitFor(() => expect(engine.calls).toContainEqual({ action: 'set_active', id: 'site' }));
     expect(await screen.findByRole('button', { name: /Website/ })).toBeTruthy();
     expect(screen.queryByRole('dialog', { name: 'Projects' })).toBeNull();
+    // VIS-11: the chip's tooltip names the project, not its folder path.
+    await waitFor(() => expect(screen.getByTestId('kel-project-chip').getAttribute('title')).toBe('Website'));
   });
 
   it('opens All projects from "Manage projects"', async () => {
