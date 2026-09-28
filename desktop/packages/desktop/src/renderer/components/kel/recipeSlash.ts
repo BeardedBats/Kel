@@ -140,3 +140,37 @@ export const useRecipeSlashCommands = (taken: ReadonlySet<string>) => {
 
   return { commands, match, run };
 };
+
+type RecipeSlash = Pick<ReturnType<typeof useRecipeSlashCommands>, 'match' | 'run'>;
+type Notify = { success: (text: string) => void; warning: (text: string) => void; error: (text: string) => void };
+
+/**
+ * FN-11: when a composer line is `/<recipe> …`, start that Recipe (the line leaves the box; it comes
+ * back if the recipe needs more or could not start) and return true; otherwise return false and the
+ * caller sends the line as a message.
+ */
+export const startRecipeFromLine = (
+  line: string,
+  slash: RecipeSlash,
+  setInput: (text: string) => void,
+  notify: Notify
+): boolean => {
+  const hit = slash.match(line);
+  if (!hit) return false;
+  setInput('');
+  void slash
+    .run(hit.entry, hit.rest)
+    .then((outcome) => {
+      if (outcome.kind === 'started') {
+        notify.success(outcome.text);
+      } else {
+        notify.warning(outcome.text);
+        setInput(line);
+      }
+    })
+    .catch(() => {
+      notify.error(`Kel could not start “${hit.entry.name}”. Try again, or run it from Projects · Recipes.`);
+      setInput(line);
+    });
+  return true;
+};

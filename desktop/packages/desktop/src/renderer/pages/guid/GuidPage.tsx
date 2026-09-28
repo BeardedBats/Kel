@@ -37,7 +37,8 @@ import { useOpenFileSelector } from '@/renderer/hooks/file/useOpenFileSelector';
 import { appendSpeechTranscript } from '@/renderer/hooks/system/useSpeechInput';
 import { useLiveTranscriptInsertion } from '@/renderer/hooks/system/useLiveTranscriptInsertion';
 import { ArrowRightUp } from '@icon-park/react';
-import { Button, ConfigProvider } from '@arco-design/web-react';
+import { Button, ConfigProvider, Message } from '@arco-design/web-react';
+import { startRecipeFromLine, useRecipeSlashCommands } from '@renderer/components/kel/recipeSlash';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -203,16 +204,25 @@ const GuidPage: React.FC = () => {
     ],
     [t, isMobile]
   );
+  // FN-11: the New chat slash menu lists the active project's Recipes, as an open chat's does (CH-7).
+  const takenGuidSlashNames = useMemo(
+    () => new Set([...guidBuiltinSlashCommands, ...(agentSelection.currentAgentAvailableCommands ?? [])].map((command) => command.name)),
+    [agentSelection.currentAgentAvailableCommands, guidBuiltinSlashCommands]
+  );
+  const recipeSlash = useRecipeSlashCommands(takenGuidSlashNames);
   const guidSlashCommands = useMemo(
-    () =>
-      buildGuidSlashCommands({
+    () => [
+      ...buildGuidSlashCommands({
         builtinCommands: guidBuiltinSlashCommands,
         agentCommands: agentSelection.currentAgentAvailableCommands,
         selectedSkills: selectedSkillNames,
         descriptionByName: skillDescriptionByName,
         skillFallbackDescription: t('conversation.skills.slashHint', { defaultValue: 'Skill' }),
       }),
+      ...recipeSlash.commands,
+    ],
     [
+      recipeSlash.commands,
       agentSelection.currentAgentAvailableCommands,
       guidBuiltinSlashCommands,
       selectedSkillNames,
@@ -294,6 +304,13 @@ const GuidPage: React.FC = () => {
     [guidInput.setInput]
   );
 
+  // FN-11: `/<recipe> what it is for` runs that Recipe in the active project, as in an open chat —
+  // it never starts a chat with the command line as its first message.
+  const sendOrRunRecipe = useCallback(() => {
+    const started = guidInput.files.length === 0 && startRecipeFromLine(guidInput.input, recipeSlash, guidInput.setInput, Message);
+    if (!started) send.sendMessageHandler();
+  }, [guidInput, recipeSlash, send.sendMessageHandler]);
+
   const handleInputKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (slashController.onKeyDown(event)) {
@@ -306,10 +323,10 @@ const GuidPage: React.FC = () => {
         // chat"). Mirror the send button's gate so Enter and click behave
         // identically (blocked only while loading or with no assistant).
         if (send.isButtonDisabled) return;
-        send.sendMessageHandler();
+        sendOrRunRecipe();
       }
     },
-    [send.isButtonDisabled, send.sendMessageHandler, slashController]
+    [send.isButtonDisabled, sendOrRunRecipe, slashController]
   );
 
   const handleSelectAssistant = useCallback(
@@ -660,7 +677,7 @@ const GuidPage: React.FC = () => {
       }
       loading={guidInput.loading}
       isButtonDisabled={send.isButtonDisabled}
-      onSend={send.sendMessageHandler}
+      onSend={sendOrRunRecipe}
     />
   );
   const slashCommandMenuNode = slashController.isOpen ? (
