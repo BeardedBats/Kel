@@ -37,6 +37,8 @@ KIND_BY_TYPE = {
     'changes.auto_applied': 'work', 'changes.applied': 'work', 'changes.undone': 'work',
     # D-68: Nick removed a finished work card from the top of the chat (the work itself is kept).
     'office.dismissed': 'work',
+    # Routing 2 §5.4: Nick raised a job's budget class so it could continue.
+    'budget.raised': 'work',
 }
 KINDS = ('work', 'attention', 'learning', 'recipes', 'connections', 'network', 'staffing',
          'recovery', 'scheduled', 'other')
@@ -126,6 +128,9 @@ def sentence_for(event_type, payload):
         return 'The applied change was undone; the earlier files are back.'
     if event_type == 'office.dismissed':
         return 'You removed finished work from the top of the chat.'
+    if event_type == 'budget.raised':
+        return 'You raised the budget for this work to %s so it could continue.' % (
+            _snippet(detail.get('to'), 20) or 'the next size')
     if event_type == 'authority.changed':
         return ('Full access is on: Kel acts without asking.' if detail.get('mode') == 'full'
                 else 'Ask first is on: Kel asks before it acts.')

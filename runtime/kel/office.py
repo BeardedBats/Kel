@@ -422,6 +422,14 @@ def detail(store, job_id):
     published = _published(store, job_id)
     handoff = (job.get('contract') or {}).get('handoff') or {}
     out = dict(base)
+    try:
+        from .budget import BUDGET_WAIT, view as budget_view
+        budget = budget_view(store, job)
+        budget['stopped'] = str(job.get('route_block') or '').startswith(BUDGET_WAIT)
+        budget['can_raise'] = budget['stopped'] and budget['class'] != 'high-assurance'
+    except Exception:
+        budget = None  # the budget view is additive; the detail never fails on it
+    out['budget'] = budget
     out.update({'why': why, 'next': nxt, 'staff': staff_view, 'steps': steps, 'review': review,
                 'oracle': oracle_view, 'files_changed': files, 'application': application,
                 'verification': {'result': result_word, 'summary': summary.split('\n') if summary else []},

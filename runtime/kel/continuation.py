@@ -295,6 +295,11 @@ class Continuation:
                    'the file-changing steps were not repeated.')
             nxt = 'Say "continue" to re-arm it as a fresh attempt.'
             needs = True
+        elif str(job.get('route_block') or '').startswith('Budget reached: '):
+            # Routing 2 §5.4: only Nick moves budget-stopped work on.
+            why = str(job['route_block'])[:400]
+            nxt = 'Raise its budget to let it continue, or stop it.'
+            needs = True
         elif job.get('route_block'):
             why = 'No model was free: ' + str(job['route_block'])[:160]
             nxt = 'Kel retries automatically as soon as a capable model is healthy.'
