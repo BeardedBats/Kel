@@ -15,6 +15,21 @@ const rootPackageJson = JSON.parse(readFileSync(resolve(__dirname, '../../packag
   version: string;
 };
 
+// VIS-27 / D-56: About shows the version and the build. The build id is the source commit the
+// package was made from (KEL_BUILD_SHA when a packaging script supplies it, else the checkout's HEAD).
+const resolveBuildId = (): string => {
+  const supplied = process.env.KEL_BUILD_SHA?.trim();
+  if (supplied) return supplied.slice(0, 12);
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+  } catch {
+    return '';
+  }
+};
+const appBuildId = resolveBuildId();
+
 // Build builtin MCP servers after main process bundle so they survive out/main/ cleanup.
 function buildMcpServersPlugin() {
   return {
@@ -323,6 +338,7 @@ export default defineConfig(({ mode }) => {
         // can show it without importing packages/desktop/package.json, which is
         // a workspace-internal placeholder frozen at "0.0.0".
         __APP_VERSION__: JSON.stringify(rootPackageJson.version),
+        __APP_BUILD__: JSON.stringify(appBuildId),
         global: 'globalThis',
       },
       optimizeDeps: {
