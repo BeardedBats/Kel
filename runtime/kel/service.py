@@ -636,6 +636,17 @@ class Service:
             explicit_job=(packet.get('continuation') or {}).get('job_id')
             continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             jid=None
+            if not packet.get('schedule') and not packet.get('recipe_invocation') and not explicit_job \
+                    and kind not in ('recipe','continue','status'):
+                # D-70 item 4: while a scoping card is open, answers typed here (and "start" / "go")
+                # go to that card through the same vetting ingestion; nothing new starts.
+                from . import scoping
+                try:
+                    handled=scoping.typed_answers(self,sid,cid,text)
+                except PolicyError:
+                    handled=False
+                if handled:
+                    return None
             if packet.get('schedule') and (packet.get('recipe_invocation') or {}).get('recipe_id')!='continue-work':
                 # D-57: a scheduled run is work by definition; its acknowledgement is a plain template.
                 from .schedules import ACK
@@ -1202,7 +1213,7 @@ class Service:
                    'last_at':last.get(job['id'])}
             if pending.get(job['id']):
                 entry.update(needs_you=True,why='Waiting for your decision on a gated step.',
-                             next='Decide on the request card in the conversation — or in Work context.')
+                             next='Decide on the request card in the conversation — or on its work card at the top of the chat.')
             if not active:
                 stopped=job['state'] in ('CANCELLED','CANCELLING')
                 entry.update(needs_you=False,
@@ -1506,7 +1517,7 @@ class Service:
             lines=['I found several unfinished jobs in this project. Which one should I continue?']
             for choice in result['candidates']:
                 lines.append('- %s — %s, %d/%d milestones accepted (job %s)'%(choice['title'] or 'Untitled work',choice['state'].lower().replace('_',' '),choice['accepted'],choice['total'],choice['job_id']))
-            lines.append('Reply with "continue <job id>", or use the Continue Work controls in Work context.')
+            lines.append('Reply with "continue <job id>", or open that work\'s card at the top of the chat.')
             self.store.add_message('\n'.join(lines),'assistant',cid)
         else:
             self.store.add_message('There is no unfinished work in this project to continue. New requests start fresh work.','assistant',cid)

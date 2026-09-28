@@ -434,7 +434,9 @@ class ACPHostTests(unittest.TestCase):
         text = self.events[-1]['params']['update']['content']['text']
         self.assertIn('Kel needs your permission', text)
         self.assertIn('npm test', text)
-        self.assertIn('Work context', text)
+        # The retired "Work context" drawer is not in the UI; the work card at the top of the chat is.
+        self.assertIn('work card at the top of the chat', text)
+        self.assertNotIn('Work context', text)
         update = self.events[-2]['params']['update']
         self.assertEqual(update['status'], 'pending')
 

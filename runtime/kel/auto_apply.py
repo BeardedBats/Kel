@@ -302,7 +302,7 @@ def result_text(store, job):
                 + how + '\n\nThe earlier files are saved — Undo on the result card puts them back.')
     if saved['decision'] == WAITING and saved.get('reason') and saved['reason'] != ASK_REASON:
         return ('The change passed its tests and a separate review. Kel did not apply it on its own: '
-                + saved['reason'] + '. Use Apply checked changes in Work context to write it into ' + where
+                + saved['reason'] + '. Choose Apply anyway on its work card at the top of this chat to write it into ' + where
                 + ' — Kel checks your project for conflicts and saves a backup first.')
     return None
 
