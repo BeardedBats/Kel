@@ -94,8 +94,9 @@ V2-17. Partial: V2-05, V2-16, V2-18, V2-19. Planned: V2-15, V2-20. Mobile stays 
 in `design/`. Verify with `cd desktop && bunx tsc --noEmit && bun run test` and
 `cd runtime && python -m pytest tests -q`; build with `cd desktop && bun run package`. Nick may be using
 the installed App: never touch `App` or `Data`; test on copies (see the worker brief pattern: copy Data,
-run `App\Kel.exe` with `KEL_DATA_DIR`/`AIONUI_DATA_DIR`/`KEL_HOST_DATA_DIR`, `AIONUI_MULTI_INSTANCE=1`,
-`KEL_BACKGROUND_WINDOW=1`).
+run `App\Kel.exe` with `KEL_DATA_DIR`/`AIONUI_DATA_DIR`/`KEL_HOST_DATA_DIR`, `KEL_PROJECTS_ROOT` on a
+scratch folder so no project lands in the real `Documents\Kel Projects` (General follows it;
+`KEL_GENERAL_ROOT` overrides General alone), `AIONUI_MULTI_INSTANCE=1`, `KEL_BACKGROUND_WINDOW=1`).
 
 ## History
 
