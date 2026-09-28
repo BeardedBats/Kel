@@ -40,7 +40,24 @@ export const summaryLine = (summary: BackupSummary, empty = 'nothing backed up y
 export const BACKUP_INCLUDES =
   'Includes your chats, projects, work, memories, transcripts and their audio, attachments, skills and settings.';
 export const BACKUP_EXCLUDES =
-  'Not included: saved credentials — model provider keys, the transcription key and connection credentials. Add them again after a restore.';
+  'Not included, on purpose: saved keys and sign-ins — model provider keys, the transcription key and connection credentials. They stay on this PC, so a restore here keeps them; on a different PC, add them again.';
+
+/** FN-02: the last restore attempt, recorded by the engine beside the data, in plain words. */
+export type RestoreOutcome = {
+  ok: boolean;
+  title?: string;
+  detail?: string;
+  technical?: string;
+  at?: number;
+  dismissed?: boolean;
+};
+const outcomeDate = (at?: number): string => {
+  if (!at || !Number.isFinite(at)) return '';
+  const date = new Date(at > 1_000_000_000_000 ? at : at * 1000);
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
 
 const pickFolder = async (): Promise<string | null> => {
   const picked = await ipcBridge.dialog.showOpen.invoke({ properties: ['openDirectory', 'createDirectory'] });
@@ -83,6 +100,24 @@ export const KelDataCard: React.FC = () => {
   useEffect(() => {
     loadPath();
   }, [loadPath]);
+
+  // FN-02: the last restore's outcome, shown here until Nick dismisses it (a failed read shows nothing).
+  const [outcome, setOutcome] = useState<RestoreOutcome | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api<{ outcome?: RestoreOutcome | null }>({ action: 'outcome' })
+      .then((reply) => {
+        if (!cancelled) setOutcome(reply?.outcome && typeof reply.outcome.ok === 'boolean' ? reply.outcome : null);
+      })
+      .catch((): undefined => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const dismissOutcome = useCallback(() => {
+    setOutcome(null);
+    void api({ action: 'outcome-dismiss' }).catch((): undefined => undefined);
+  }, []);
 
   const copyPath = useCallback(async () => {
     if (!dataPath) return;
@@ -164,8 +199,14 @@ export const KelDataCard: React.FC = () => {
               {inventory ? ` (${summaryLine(current, 'no chats yet')})` : ''} — chats, projects, work, memories,
               transcripts, attachments, skills and settings — with the backup&apos;s copy.
             </p>
-            <p>Your current data is kept beside the data folder first. Kel finishes the restore the next time it starts.</p>
-            <p>Saved credentials are not in backups: add your model keys, the transcription key and connection credentials again after.</p>
+            <p>
+              Kel finishes the restore the next time it starts, before it opens your data. If any part cannot be
+              replaced, Kel puts everything back as it was. Your current data is kept beside the data folder.
+            </p>
+            <p>
+              Saved keys and sign-ins are never in backups and stay on this PC, so you keep them. Only on a different PC
+              do you add your model keys, the transcription key and connection credentials again.
+            </p>
           </div>
         ),
         okText: 'Restore',
@@ -173,7 +214,7 @@ export const KelDataCard: React.FC = () => {
         onOk: async () => {
           try {
             await api<{ restart_required: boolean }>({ action: 'restore', source: details.folder });
-            Message.success('Ready to restore. Close and reopen Kel to finish.');
+            Message.success('Ready to restore. Quit Kel and reopen it to finish.');
           } catch (error) {
             Message.error(plainError(error));
           }
@@ -188,6 +229,24 @@ export const KelDataCard: React.FC = () => {
 
   return <div className='kel-card kel-shell-data-card'>
     <div className='kel-h2'><span className='kel-desktop-only'>Data and backup</span><span className='kel-phone-only'>Data &amp; backup</span></div>
+    {outcome && !outcome.dismissed ? (
+      <div className='kel-shell-preference-row' data-testid='restore-outcome' data-ok={outcome.ok ? 'true' : 'false'} role='status'>
+        <div>
+          <div>{outcome.title || (outcome.ok ? 'Your backup was restored' : 'Kel could not restore your backup')}</div>
+          <p className='kel-meta'>
+            {outcomeDate(outcome.at) ? `${outcomeDate(outcome.at)} · ` : ''}
+            {outcome.detail}
+          </p>
+          {outcome.technical ? (
+            <details className='kel-meta'>
+              <summary>Details</summary>
+              {outcome.technical}
+            </details>
+          ) : null}
+        </div>
+        <Button onClick={dismissOutcome} data-testid='restore-outcome-dismiss'>Got it</Button>
+      </div>
+    ) : null}
     <div className='kel-phone-only kel-shell-system-mobile-rows'>
       <button type='button' className='kel-shell-system-mobile-row' onClick={() => pathError ? void loadPath() : void openFolder()} disabled={!dataPath && !pathError}>Data folder <span aria-hidden='true'>›</span></button>
       <button type='button' className='kel-shell-system-mobile-row' onClick={() => setFolderDialog('backup')}>Back up now <span aria-hidden='true'>›</span></button>
