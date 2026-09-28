@@ -130,6 +130,15 @@ def _owns(db, project_id):
     return found
 
 
+def projects_root():
+    """Where Kel creates new projects: `%USERPROFILE%/Documents/Kel Projects`, or `KEL_PROJECTS_ROOT`
+    (the engine test suite and off-screen audits point it at a temporary folder)."""
+    override = (os.environ.get('KEL_PROJECTS_ROOT') or '').strip()
+    if override:
+        return Path(os.path.expandvars(os.path.expanduser(override)))
+    return Path(os.environ.get('USERPROFILE') or Path.home()) / 'Documents' / 'Kel Projects'
+
+
 def default_general_root():
     """General's default folder (D-62): `%USERPROFILE%/Documents/Kel Projects/General`.
 
@@ -141,6 +150,8 @@ def default_general_root():
         if override.strip().lower() in ('', 'none', 'off'):
             return None
         return Path(os.path.expandvars(os.path.expanduser(override.strip())))
+    if (os.environ.get('KEL_PROJECTS_ROOT') or '').strip():
+        return projects_root() / 'General'
     home = Path(os.environ.get('USERPROFILE') or Path.home())
     return home / 'Documents' / 'Kel Projects' / 'General'
 

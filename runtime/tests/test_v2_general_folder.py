@@ -43,6 +43,7 @@ class GeneralFolderTests(unittest.TestCase):
     def test_the_real_default_is_documents_kel_projects_general(self):
         with patch.dict(os.environ, {'USERPROFILE': str(self.base)}):
             os.environ.pop('KEL_GENERAL_ROOT', None)
+            os.environ.pop('KEL_PROJECTS_ROOT', None)
             self.assertEqual(default_general_root(), self.base / 'Documents' / 'Kel Projects' / 'General')
         with patch.dict(os.environ, {'KEL_GENERAL_ROOT': 'none'}):
             self.assertIsNone(default_general_root())

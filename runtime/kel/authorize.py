@@ -23,6 +23,7 @@ checks inside a bounded window collapse into one record so the audit stays signa
 """
 import contextlib
 import json
+import os
 from pathlib import Path
 import time
 
@@ -105,7 +106,14 @@ def role_for(store, job_id, milestone_id):
 
 
 def project_creation_root():
-    """The only location where an explicit user request may create a new project folder."""
+    """The only location where an explicit user request may create a new project folder.
+
+    `%USERPROFILE%/Documents/Kel Projects`, or `KEL_PROJECTS_ROOT` when set — the engine test suite
+    and off-screen audits point it at a temporary folder so they never create folders in the real
+    Documents folder."""
+    override = (os.environ.get('KEL_PROJECTS_ROOT') or '').strip()
+    if override:
+        return Path(os.path.expandvars(os.path.expanduser(override))).resolve()
     return (Path.home() / 'Documents' / 'Kel Projects').resolve()
 
 
