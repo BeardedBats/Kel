@@ -145,13 +145,17 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   for (const job of jobs.filter((entry) => entry.state === 'PAUSED').slice(0, BRIEF_SECTION_CAP)) {
     const view = workWords(job);
     const reason = recordedReason(job);
+    // VIS-12 / D-70: paused work with a card is picked back up on that card, like everything else it
+    // needs; older work without a card still opens its chat.
+    const onCard = hasWorkCard(job);
+    const next = onCard ? 'pick it back up on its card' : 'open its chat to pick it back up';
     lines.push({
       id: `brief-stopped-${job.id}`,
       kind: 'stopped',
       tone: 'attention',
       title: titleOf(job, candidates),
-      detail: reason ? `${view.label} — ${sentence(reason)}. Open its chat to pick it back up.` : `${view.label} — open its chat to pick it back up.`,
-      action: jobChatAction(job),
+      detail: reason ? `${view.label} — ${sentence(reason)}. ${next[0].toUpperCase()}${next.slice(1)}.` : `${view.label} — ${next}.`,
+      action: onCard ? cardAction(job, 'Open its card') : jobChatAction(job),
     });
   }
 

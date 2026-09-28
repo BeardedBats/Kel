@@ -159,7 +159,38 @@ describe('buildResumptionBrief', () => {
     });
     const visible = JSON.stringify(result.lines);
     expect(visible).not.toContain('a paused task');
-    expect(result.lines.map((line) => line.title).sort()).toEqual(['Book the dentist', 'Rename the photos']);
+    // VIS-13: the same words the work card uses — the request on one line, as the engine shortens it.
+    expect(result.lines.map((line) => line.title).sort()).toEqual(['Book the dentist second line', 'Rename the photos']);
+  });
+
+  it('names work by the title its card shows (VIS-13)', () => {
+    const result = brief({
+      jobs: [
+        job({
+          id: 'h1',
+          state: 'AWAITING_USER',
+          contract: { request: 'I want to create a little app that asks me questions', handoff: { title: 'Question app' } },
+        }),
+      ],
+    });
+    expect(result.lines[0].title).toBe('Question app');
+  });
+
+  it('sends paused work with a card to that card, not to its chat (VIS-12)', () => {
+    const result = brief({
+      jobs: [
+        job({ id: 'c1', state: 'PAUSED', contract: { request: 'Build the site', staffing: { roles: [] } } as KelWorkJob['contract'] }),
+        job({ id: 'old', state: 'PAUSED', contract: { request: 'Old work' } }),
+      ],
+    });
+    const withCard = result.lines.find((line) => line.id === 'brief-stopped-c1');
+    expect(withCard?.action?.card).toBe('c1');
+    expect(withCard?.action?.label).toBe('Open its card');
+    expect(withCard?.detail).toContain('pick it back up on its card');
+    expect(withCard?.detail).not.toMatch(/open its chat/i);
+    const older = result.lines.find((line) => line.id === 'brief-stopped-old');
+    expect(older?.action?.card).toBeUndefined();
+    expect(older?.detail).toContain('open its chat');
   });
 
   it('shows each job on exactly one line', () => {

@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import { ipcBridge } from '@/common';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import { collectAttention, type AttentionItem } from '@renderer/components/kel/needsAttention';
+import { workTitle } from '@renderer/components/kel/jobLabels';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelState, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import {
   diffAttentionEvents,
@@ -28,7 +29,7 @@ const cleanlyFinished = (jobs: KelWorkJob[]): FinishedWork[] =>
     .filter((job) => job.state === 'CLOSED' && (job.verdict || '').toUpperCase() === 'VERIFIED')
     .map((job) => ({
       id: job.id,
-      title: job.contract?.request?.trim() || 'Work finished',
+      title: workTitle(job, 'Work finished'),
       conversation_id: job.conversation,
     }));
 

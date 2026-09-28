@@ -21,7 +21,7 @@ import { KelButton, KelCard, KelEmpty } from '@renderer/components/kel/KelPrimit
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { KelActivityLoading } from '@renderer/components/kel/KelDesktopPendingStates';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
-import { workLabelFor } from '@renderer/components/kel/jobLabels';
+import { passedItsChecks, workLabelFor } from '@renderer/components/kel/jobLabels';
 import { routeSentence, workWords } from '@renderer/components/kel/workLanguage';
 import { jobChatAction, resolveAttentionRoute } from '@renderer/components/kel/needsAttention';
 import {
@@ -355,7 +355,8 @@ const KelActivityPage: React.FC = () => {
                 all={all}
                 focused={job.id === focusId}
                 action={
-                  job.state === 'CLOSED' && draft?.jobId !== job.id ? (
+                  // D-73.5 / VIS-14: only work that finished and passed its checks becomes a recipe.
+                  passedItsChecks(job) && draft?.jobId !== job.id ? (
                     <KelButton
                       variant='quiet'
                       disabled={busy === job.id}
