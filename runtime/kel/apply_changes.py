@@ -120,6 +120,7 @@ def apply_checked(store,job_id,actor='kel',auto=False):
             else:
                 raw=(vault/change['after']).read_bytes()
                 if digest(raw)!=change['after']:raise PolicyError('Saved application bytes changed')
+                _note_created_dirs(vault,root,target.parent)
                 target.parent.mkdir(parents=True,exist_ok=True)
                 temporary=target.parent/('.kel-'+digest([job_id,p])+'.tmp')
                 with temporary.open('xb') as f:f.write(raw);f.flush();os.fsync(f.fileno())
@@ -184,6 +185,38 @@ def _lock(root):
     lockroot=metadata/'kel-application';lockroot.mkdir(exist_ok=True)
     if lockroot.is_symlink() or lockroot.is_junction() or not lockroot.resolve().is_relative_to(metadata):raise PolicyError('The application lock directory is linked')
     return InstanceLock(lockroot)
+
+
+def _note_created_dirs(vault,root,folder):
+    """LIVE-12: remember the folders an application creates, so Undo can remove them again (and only
+    them) once they are empty."""
+    missing=[]
+    current=Path(folder)
+    while current!=root and not current.exists():
+        missing.append(current.relative_to(root).as_posix());current=current.parent
+    if not missing:return
+    ledger=vault/'created-folders.json'
+    try:known=json.loads(ledger.read_text(encoding='utf-8'))
+    except (OSError,ValueError):known=[]
+    for item in missing:
+        if item not in known:known.append(item)
+    temporary=ledger.with_suffix('.tmp')
+    temporary.write_text(json.dumps(known),encoding='utf-8');os.replace(temporary,ledger)
+
+
+def _remove_created_dirs(vault,root):
+    """Remove the folders the application created, deepest first, only while they are empty."""
+    try:known=json.loads((vault/'created-folders.json').read_text(encoding='utf-8'))
+    except (OSError,ValueError):return 0
+    removed=0
+    for item in sorted({str(k) for k in known},key=lambda k:k.count('/'),reverse=True):
+        folder=(root/item)
+        try:
+            if folder.resolve().is_relative_to(root) and folder.is_dir() and not any(folder.iterdir()):
+                folder.rmdir();removed+=1
+        except OSError:
+            pass
+    return removed
 
 
 def undo_applied(store,job_id,actor='user'):
@@ -252,10 +285,17 @@ def undo_applied(store,job_id,actor='user'):
         if any(final.get(p)!=c['before'] for p,c in plan['changes'].items()):
             raise PolicyError('Project changed during undo; the saved backup is intact')
         count=len(plan['changes'])
+        folders=_remove_created_dirs(vault,root)  # LIVE-12: no empty folders left behind
+        try:
+            from .auto_apply import place
+            where=place(store,str(root),job['contract'].get('project_id'))['words']
+        except Exception:
+            where=root.name or 'your project'
         with store.transaction() as db:
             db.execute("UPDATE change_applications SET state='UNDONE' WHERE job_id=?",(job_id,))
-            store._save(db,store._get(db,job_id),'changes.undone',{'files':count,'root':str(root)})
+            store._save(db,store._get(db,job_id),'changes.undone',{'files':count,'root':str(root),'folders':folders})
+            # LIVE-10: the project's name (and its folder's name once), never an absolute path.
             db.execute('INSERT INTO messages(conversation_id,role,text,job_id,at) VALUES(?,?,?,?,?)',
-                (job['conversation'],'assistant','Undid the change in '+str(root)+': '+('the file is' if count==1 else 'the '+str(count)+' files are')+' back to how '+('it was' if count==1 else 'they were')+' before Kel applied it.',None,time.time()))
+                (job['conversation'],'assistant','Undid the change in '+where+': '+('the file is' if count==1 else 'the '+str(count)+' files are')+' back to how '+('it was' if count==1 else 'they were')+' before Kel applied it.',None,time.time()))
         return {'state':'UNDONE','files':count}
     finally:lock.close()

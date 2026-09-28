@@ -31,8 +31,10 @@ KIND_BY_TYPE = {
     'network.decided': 'network', 'network.requested': 'network',
     'staffing.decided': 'staffing', 'proposal.queued': 'staffing',
     # D-70: Kel asked before starting big work, and how Nick started it; Nick answered a card.
-    'scoping.asked': 'work', 'scoping.started': 'work', 'scoping.best_guess': 'work',
+    'scoping.asked': 'work', 'scoping.started': 'work', 'scoping.best_guess': 'work', 'scoping.dismissed': 'work',
     'needs_you.answered': 'work',
+    # FN-05: a request Kel said no to before any work (it asked to touch a protected place).
+    'request.refused': 'attention',
     # D-64 Full access: what Kel went ahead with (or refused) instead of asking.
     'approval.auto_granted': 'work', 'approval.refused': 'work',
     'authorization.auto_granted': 'work', 'authority.changed': 'other',
@@ -136,6 +138,11 @@ def sentence_for(event_type, payload):
             ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
     if event_type == 'scoping.started':
         return 'You answered Kel’s questions and started %s.' % (
+            ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
+    if event_type == 'request.refused':
+        return 'Kel said no to a request before starting it: it asked to touch a protected place.'
+    if event_type == 'scoping.dismissed':
+        return 'You chose Not now for %s; nothing started.' % (
             ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
     if event_type == 'scoping.best_guess':
         return 'You started %s with Kel’s best guess; its assumptions are recorded.' % (
@@ -251,7 +258,7 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
             if schedule_detail.get('project_id'):
                 row_projects = {schedule_detail['project_id']}
                 row_project = schedule_detail['project_id']
-        if event_type.startswith('scoping.'):
+        if event_type.startswith('scoping.') or event_type == 'request.refused':
             # D-70: Kel's "before I start" questions belong to the project the request was made in.
             try:
                 raw = event.get('payload')

@@ -37,7 +37,7 @@ CREATE INDEX IF NOT EXISTS scopings_by_conversation ON scopings(conversation_id,
 CREATE TABLE IF NOT EXISTS scoping_prefs(key TEXT PRIMARY KEY, value TEXT NOT NULL, updated REAL NOT NULL);
 """
 
-OPEN, STARTED, BEST_GUESS = 'open', 'started', 'best_guess'
+OPEN, STARTED, BEST_GUESS, DISMISSED = 'open', 'started', 'best_guess', 'dismissed'
 
 # The one threshold setting (D-70: "until Nick sets one"): the smallest staffing tier that is scoped
 # first. D2 = a Builder + Verifier pod; 'off' never scopes by size (open questions still do);
@@ -72,12 +72,29 @@ MARKDOWN = re.compile(r'^\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>\s|```)|[`*_]{2,}', r
 
 # Kel's own questions when its plan names none (kind -> questions; `best` is the best guess).
 BANK = {
+    # Something new (a new app or tool): how finished, who for, which look.
     'code': [
         {'prompt': 'How finished should the first version be?',
          'options': ['A quick working version', 'Polished and ready to use', 'Built to last, with tests'], 'best': 1},
         {'prompt': 'Who will use it?', 'options': ['Just me', 'A few people I know', 'Anyone, publicly'], 'best': 0},
         {'prompt': 'Which look?', 'options': ['Clean and simple', 'Bold and colorful', 'Match something I have'],
          'best': 0, 'user_facing': True},
+    ],
+    # LIVE-8: a change to code that already exists (a fix, a small feature) — never "Who will use it?".
+    'change': [
+        {'prompt': 'How far should the change go?',
+         'options': ['Only what I asked', 'Fix the same thing elsewhere too'], 'best': 0},
+        {'prompt': 'Tests for it?', 'options': ['Add or update a test', 'Keep the tests as they are'], 'best': 0},
+        {'prompt': 'Which look?', 'options': ['Match what is there', 'Clean and simple', 'Something new'],
+         'best': 0, 'user_facing': True},
+    ],
+    # LIVE-8: a change that touches passwords, keys, sign-in or permissions.
+    'change_security': [
+        {'prompt': 'How far should the change go?',
+         'options': ['Only what I asked', 'Fix the same thing elsewhere too'], 'best': 0},
+        {'prompt': 'Where should secrets live?',
+         'options': ['Out of the code (settings or environment)', 'Leave that as it is today'], 'best': 0},
+        {'prompt': 'Tests for it?', 'options': ['Add or update a test', 'Keep the tests as they are'], 'best': 0},
     ],
     'writing': [
         {'prompt': 'Who is it for?', 'options': ['Just me', 'My team or colleagues', 'The public'], 'best': 1},
@@ -167,9 +184,14 @@ def clean_questions(raw):
     return out
 
 
-def _bank(kind, text):
-    from .staff import USER_FACING
+def _bank(kind, text, greenfield=False):
+    """Kel's own questions for this kind of work, fitted to the request (LIVE-8): building something
+    new asks how finished and for whom; changing existing code asks how far and about tests (and where
+    secrets live when the change touches them)."""
+    from .staff import USER_FACING, flags_for
     user_facing = bool(USER_FACING.search(text or ''))
+    if kind == 'code' and not greenfield:
+        kind = 'change_security' if 'security_boundary' in flags_for(text) else 'change'
     return [dict(q) for q in BANK.get(kind, BANK['writing']) if user_facing or not q.get('user_facing')][:MAX_QUESTIONS]
 
 
@@ -188,10 +210,21 @@ def estimate(store, text, kind):
     tier = decision['tier']
     if kind == 'code' and TIER_RANK.get(tier, 0) < 1:
         tier = 'D1'
-    return {'tier': tier, 'features': features, 'flags': list(flags), 'reasons': list(decision.get('reasons') or [])}
+    # FN-07: a security word alone ("token", "password", "secret") raises the care Kel takes (the
+    # security lens, the Oracle) but is not a reason to stop and ask: the size used for scoping
+    # leaves out risk that comes only from that flag.
+    size_tier = tier
+    risky = [f for f in flags if f in ('security_boundary', 'irreversible', 'data_migration')]
+    if risky == ['security_boundary']:
+        calm = dict(features, risk=0)
+        size_tier = staffing.resolve(store, calm, flags=tuple(f for f in flags if f != 'security_boundary'))['tier']
+        if kind == 'code' and TIER_RANK.get(size_tier, 0) < 1:
+            size_tier = 'D1'
+    return {'tier': tier, 'size_tier': size_tier, 'features': features, 'flags': list(flags),
+            'reasons': list(decision.get('reasons') or [])}
 
 
-def consider(store, text, kind, decision):
+def consider(store, text, kind, decision, greenfield=False):
     """The scoping plan for one request, or None when it starts straight away.
 
     Scoped when the estimated tier reaches the threshold (a Builder + Verifier pod or larger by
@@ -203,11 +236,11 @@ def consider(store, text, kind, decision):
     if limit == 'never':
         return None  # Nick chose "Never": Kel starts straight away
     guess = estimate(store, text, kind)
-    big = limit != 'off' and TIER_RANK.get(guess['tier'], 0) >= TIER_RANK[limit]
+    big = limit != 'off' and TIER_RANK.get(guess.get('size_tier', guess['tier']), 0) >= TIER_RANK[limit]
     if not big and not questions:
         return None
     if not questions:
-        questions = _bank(kind, text)
+        questions = _bank(kind, text, greenfield=greenfield)
     if not questions:
         return None
     summary = _clean(proposed.get('summary'), SUMMARY_LIMIT)
@@ -238,7 +271,7 @@ def maybe_ask(service, sid, cid, text, packet, kind, greenfield, decision, choic
         return False
     work_kind = _work_kind(service, text, kind, packet)
     try:
-        plan = consider(service.store, text, work_kind, decision)
+        plan = consider(service.store, text, work_kind, decision, greenfield=bool(greenfield))
     except Exception:
         return False  # a trigger that cannot be read never blocks the work
     if not plan:
@@ -610,4 +643,38 @@ def action(service, data):
         return start(service, scoping_id, answers=data.get('answers') or {}, conversation=conversation)
     if verb == 'best_guess':
         return start(service, scoping_id, best_guess=True, conversation=conversation)
-    raise PolicyError('Choose Start or "Just start with your best guess".')
+    if verb in ('dismiss', 'not_now'):
+        return dismiss(service, scoping_id, conversation=conversation)
+    raise PolicyError('Choose Start, "Just start with your best guess" or Not now.')
+
+
+def dismiss(service, scoping_id, conversation=None, actor='user'):
+    """D-74.3 "Not now": cancel an open scoping card. Nothing is compiled, created or run; the card
+    leaves the top of the chat, says so in one short line, and the request stays in the chat to ask
+    again. Idempotent; one Activity line."""
+    if actor != 'user':
+        raise PolicyError('Only you can cancel this.')
+    store = service.store
+    ensure_schema(store)
+    row = _row(store, scoping_id)
+    if not row or (conversation and row['conversation_id'] != conversation):
+        raise PolicyError('Kel could not find those questions in this conversation.')
+    if row['state'] == DISMISSED:
+        return dict(view(store, scoping_id), dismissed=True, already=True)
+    if row['state'] != OPEN:
+        raise PolicyError('This work has already started. Stop it from its card instead.')
+    now = time.time()
+    with service.handoff_lock:
+        with store.transaction() as db:
+            current = _row(store, scoping_id, db)
+            if current['state'] != OPEN:
+                return dict(view(store, scoping_id), dismissed=current['state'] == DISMISSED, already=True)
+            db.execute('UPDATE scopings SET state=?, started_at=? WHERE id=?', (DISMISSED, now, scoping_id))
+            db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
+                       (row['conversation_id'], 'assistant',
+                        "Okay, I won't start that. Ask again whenever you want it.", now,
+                        encode({'kind': 'scoping_dismissed', 'scoping': scoping_id})))
+            _event(db, scoping_id, 'dismissed', {'project_id': row['project_id'], 'title': row['title'],
+                                                  'actor': actor})
+    service.wake.set()
+    return dict(view(store, scoping_id), dismissed=True)

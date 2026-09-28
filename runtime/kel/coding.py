@@ -539,10 +539,17 @@ class CodingAdapter:
             if method in ('kel/runtime','kel/thread') and (params.get('model') or params.get('reasoningEffort') or params.get('effort')):
                 # What the runtime itself reports running — the only source for "ran".
                 observed.update({k:v for k,v in {'model_used':params.get('model'),
-                    'reasoning_used':params.get('reasoningEffort') or params.get('effort')}.items() if v})
+                    'reasoning_used':observed.get('turn_reasoning') or params.get('reasoningEffort') or params.get('effort')}.items() if v})
                 try:update_call(self.store,run_id,ran={'model':params.get('model'),
-                    'reasoning':params.get('reasoningEffort') or params.get('effort'),
+                    'reasoning':observed.get('reasoning_used'),
                     'model_confirmed':True if params.get('model') else None})
+                except Exception:pass
+            if method=='kel/turn' and params.get('reasoningEffort'):
+                # LIVE-9: the level this turn really ran at (Codex takes it per turn), recorded over
+                # the thread's default.
+                observed['turn_reasoning']=params['reasoningEffort']
+                observed['reasoning_used']=params['reasoningEffort']
+                try:update_call(self.store,run_id,ran={'reasoning':params['reasoningEffort']})
                 except Exception:pass
             # Persist bounded user-visible native events, not token-by-token reasoning.
             if method in ('kel/session','item/started','item/completed','turn/completed'):

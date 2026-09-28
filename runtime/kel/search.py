@@ -52,22 +52,24 @@ class Search:
                 pass
             try:
                 for row in db.execute(
-                        "SELECT id, topic, state FROM vetting_sessions WHERE topic LIKE ? ESCAPE '\\' "
+                        "SELECT id, topic, state, conversation_id FROM vetting_sessions WHERE topic LIKE ? ESCAPE '\\' "
                         'ORDER BY updated DESC LIMIT ?', (pattern, limit)):
                     results['vetting'].append({
                         'id': row['id'],
                         'title': row['topic'],
                         'snippet': 'Design vetting session · ' + str(row['state'] or '').lower(),
+                        'conversation_id': row['conversation_id'],  # the chat it belongs to (palette)
                     })
                 if len(results['vetting']) < limit:
                     for row in db.execute(
-                            "SELECT distinct s.id, s.topic FROM vetting_sessions s "
+                            "SELECT distinct s.id, s.topic, s.conversation_id FROM vetting_sessions s "
                             'JOIN vetting_questions q ON q.session_id = s.id '
                             "WHERE q.prompt LIKE ? ESCAPE '\\' LIMIT ?", (pattern, limit)):
                         if all(item['id'] != row['id'] for item in results['vetting']):
                             results['vetting'].append({
                                 'id': row['id'], 'title': row['topic'],
                                 'snippet': 'Matches a question in this session',
+                                'conversation_id': row['conversation_id'],
                             })
             except Exception:
                 pass

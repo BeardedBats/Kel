@@ -387,6 +387,15 @@ def outcome_advice(store, features, *, flags=(), tier_max=None, budget_class=Non
         if _tier_index(candidate) < _tier_index(flag_floor):
             reasons.append('held at %s: a hard rule requires at least %s' % (base_tier, flag_floor))
             candidate = base_tier
+        elif features.get('tool_requirements', 0) >= 1 and _tier_index(candidate) < _tier_index('D1'):
+            # LIVE-6: work that needs a tool (web research, code) keeps the specialist who has it —
+            # history never lowers research to Kel alone, where Discovery would never run.
+            reasons.append('held at %s: this work needs a specialist with its tools' % base_tier)
+            candidate = base_tier
+        elif not low_decomp and _tier_index(candidate) < _tier_index(base_tier):
+            # LIVE-6: a plan with independent parts keeps the tier that runs them side by side.
+            reasons.append('held at %s: its plan has independent parts that run side by side' % base_tier)
+            candidate = base_tier
         advice.update(advised_tier=candidate, direction='lower' if candidate != base_tier else 'none',
                       applied=candidate != base_tier, reasons=reasons)
         return advice

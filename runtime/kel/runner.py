@@ -12,7 +12,7 @@ import subprocess
 import sys
 import threading
 import time
-from .core import Store, PolicyError, encode
+from .core import Store, PolicyError, encode, INTERRUPTED_NOTE
 from .instance_lock import InstanceLock
 
 
@@ -78,7 +78,8 @@ def recover_readonly_result(store,run,row):
     """Recover only tool-disabled leaf output after the recorded child exits."""
     if row['provider'] in ('internal','deepseek','openrouter'):
         return {'outcome':'FAILED','error':'Read-only model broker exited before saving its answer; retry the bounded request.'}
-    if row['provider'] not in ('codex','claude'):return None
+    if row['provider'] not in ('codex','claude','claude-web','codex-web'):return None
+    base=row['provider'].split('-')[0]
     with contextlib.closing(store.connect()) as db:
         child=db.execute('SELECT * FROM native_processes WHERE run_id=?',(run['id'],)).fetchone()
     if not child or not child['identity']:return None
@@ -92,14 +93,18 @@ def recover_readonly_result(store,run,row):
     if path.is_file() and path.stat().st_size<=4_000_000:
         output=path.read_text(encoding='utf-8',errors='replace')
         try:
-            if row['provider']=='claude':
+            if base=='claude':
                 record=json.loads(output);terminal=record.get('type')=='result' and record.get('subtype')=='success'
             else:
                 records=[json.loads(line) for line in output.splitlines() if line.strip()]
                 terminal=bool(records) and records[-1].get('type')=='turn.completed'
             if terminal:
                 from .native import NativeAdapter
-                result=NativeAdapter(row['provider'],store.root/'workspaces'/row['provider'],store.root/'native-logs').parse(output,row['session_id'])
+                web=row['provider'].endswith('-web')
+                result=NativeAdapter(base,store.root/'workspaces'/base,store.root/'native-logs',web=web).parse(output,row['session_id'])
+                if web:
+                    from .research import settle_cli_research
+                    result=settle_cli_research(store,run['id'],result,base)
                 result['recovered_from_native_log']=True
         except (ValueError,TypeError,AttributeError):pass
     return result
@@ -167,18 +172,35 @@ def monitor(store,run_id,cancel=None):
             if row['provider'] in ('codex-code','claude-code') and recover_isolated_loss(store,run_id):
                 return {'outcome':'FAILED','isolated_copy_discarded':True,'error':'Abandoned isolated work was stopped; replacement work is bounded by the same contract.'}
             # Preserve the same native session and workspace for reconciliation. Do not retry effects.
+            store.record_lost_usage(run_id,_partial_native_result(store,run_id,row))  # LIVE-13
             with store.transaction() as db:
                 job=store._get(db,run['job_id'])
                 if run['state'] in ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED'):
                     db.execute("UPDATE runs SET state='ORPHANED',reservation=0 WHERE id=?",(run_id,))
                     job['reserved']-=run['reservation'];job['spent']+=1
-                    job['milestones'][run['milestone_id']].update(state='UNCERTAIN',error='Worker broker exited without a receipt')
+                    job['milestones'][run['milestone_id']].update(state='UNCERTAIN',error=INTERRUPTED_NOTE,interrupted=True)
                     job.update(state='WAITING_RESOURCE',verdict='UNCERTAIN')
                     store._save(db,job,'broker.lost',{'run_id':run_id,'native_session':run['native_session']})
             return {'outcome':'FAILED','error':'Worker receipt missing; native reconciliation required','uncertain':True}
         if not row['pid'] and time.time()-row['heartbeat']>20:
             raise PolicyError('Worker launch has no process receipt; refusing duplicate launch')
         time.sleep(.2)
+
+
+def _partial_native_result(store,run_id,row):
+    """LIVE-13: the token counts a killed native text run had already streamed (Codex `--json`), else None."""
+    try:
+        if str(row['provider']).split('-')[0]!='codex' or row['provider']=='codex-code':return None
+        with contextlib.closing(store.connect()) as db:
+            child=db.execute('SELECT stdout_path FROM native_processes WHERE run_id=?',(run_id,)).fetchone()
+        path=Path(child['stdout_path']).resolve() if child else None
+        if not path or not path.is_file() or path.stat().st_size>4_000_000:return None
+        from .native import NativeAdapter
+        parsed=NativeAdapter('codex',store.root/'workspaces'/'codex',store.root/'native-logs').parse(
+            path.read_text(encoding='utf-8',errors='replace'))
+        return {'usage':parsed['usage']} if parsed.get('usage') else None
+    except Exception:
+        return None
 
 
 def restart_checks_broker(store,run,row):
@@ -257,14 +279,21 @@ def run_broker(store,run_id):
                 # Routing 2 §5.6: a bounded text worker on an OpenAI-compatible API.
                 from .api_models import OpenAICompatAdapter
                 adapter=OpenAICompatAdapter(provider,model=binding.get('model_arg') or options.get('model'),timeout=180)
-            elif provider in ('codex','claude'):
+            elif provider in ('codex','claude','claude-web','codex-web'):
                 from .native import DEFAULT_EFFORT,NativeAdapter
-                adapter=NativeAdapter(provider,store.root/'workspaces'/provider,store.root/'native-logs',timeout=180,
+                base=provider.split('-')[0]
+                adapter=NativeAdapter(base,store.root/'workspaces'/base,store.root/'native-logs',timeout=180,
                                       model=binding.get('model_arg'),fallback_model=binding.get('fallback_arg'),
-                                      effort=binding.get('effort_arg') if binding else DEFAULT_EFFORT)
+                                      effort=binding.get('effort_arg') if binding else DEFAULT_EFFORT,
+                                      web=provider.endswith('-web'))
             else:raise PolicyError('Unsupported durable provider')
             kwargs={}
-            if provider in ('codex','claude'):
+            web_blocked=None
+            if provider in ('claude-web','codex-web'):
+                # D-74.1: the conversation's Web switch is honoured before any search is sent.
+                from .research import RESEARCH_BRIEF,web_allowed
+                web_blocked=web_allowed(store,run_id)
+            if provider in ('codex','claude','claude-web','codex-web'):
                 def observe(pid,path,timeout):
                     identity=process_identity(pid)
                     if not identity:raise PolicyError('Native process identity unavailable; no request was sent')
@@ -287,7 +316,15 @@ def run_broker(store,run_id):
                     images.append({'mime':f['mime'],'data':base64.b64encode(raw).decode()})
                 if images:kwargs['images']=images
             started=time.monotonic()
-            result=adapter.execute(row['prompt'],run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
+            if web_blocked:
+                result=web_blocked
+            elif provider in ('claude-web','codex-web'):
+                result=adapter.execute(RESEARCH_BRIEF.format(date=time.strftime('%Y-%m-%d',time.gmtime()))+row['prompt'],
+                                       run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
+                from .research import settle_cli_research
+                result=settle_cli_research(store,run_id,result,provider.split('-')[0])
+            else:
+                result=adapter.execute(row['prompt'],run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
             if isinstance(result,dict):
                 # Routing 2 §5.2: every run's wall-clock is measured here, so coding runs report one too
                 # (and the router's per-runtime latency is a measurement, not a guess).
@@ -296,7 +333,7 @@ def run_broker(store,run_id):
         except Exception as exc:result={'outcome':'FAILED','error':type(exc).__name__+': '+str(exc),'uncertain':row['provider'] in ('codex-code','claude-code')}
         if row['provider'] in ('codex-code','claude-code') and result.get('uncertain'):
             fence_uncertain_code(store,run_id,result.get('error') or 'Native execution outcome is unknown')
-        elif cancel.is_set():store.acknowledge_stop(run_id,row['epoch'])
+        elif cancel.is_set():store.acknowledge_stop(run_id,row['epoch'],result=result if isinstance(result,dict) else None)
         else:store.enqueue_result(run_id+':result',run_id,row['epoch'],result)
         store.provider_outcome(row['provider'],result)
         with store.transaction() as db:
@@ -316,7 +353,7 @@ def fence_uncertain_code(store,run_id,reason):
         job=store._get(db,run['job_id'])
         db.execute("UPDATE runs SET state='ORPHANED',reservation=0 WHERE id=?",(run_id,))
         job['reserved']-=run['reservation'];job['spent']+=1
-        job['milestones'][run['milestone_id']].update(state='UNCERTAIN',error='The worker connection was interrupted. Kel preserved the project copy and stopped automatic retries because a command may already have run. Details: '+str(reason))
+        job['milestones'][run['milestone_id']].update(state='UNCERTAIN',interrupted=True,error="Kel's worker stopped unexpectedly before it finished. Kel kept the project copy and won't repeat the step on its own, because a command may already have run.",detail=str(reason)[:300])
         job.update(state='WAITING_RESOURCE',verdict='UNCERTAIN')
         store._save(db,job,'coding.reconciliation_required',{'run_id':run_id,'reason':str(reason)})
 

@@ -92,10 +92,11 @@ class ModelPrefs:
                 raise PolicyError('That model choice is not available for %s.'
                                   % PROVIDER_LABELS.get(provider, provider))
 
-    def set(self, scope, provider, model):
+    def set(self, scope, provider, model, validate=True):
         if not provider:
             return self.clear(scope)
-        self._validate(provider, model)
+        if validate:
+            self._validate(provider, model)
         with contextlib.closing(self.store.connect()) as db:
             db.execute('INSERT INTO model_prefs VALUES(?,?,?,?) ON CONFLICT(scope) DO UPDATE '
                        'SET provider=excluded.provider, model=excluded.model, updated=excluded.updated',

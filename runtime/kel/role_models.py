@@ -82,8 +82,10 @@ STRENGTH = {model_id: strength_from_price(model_id) for model_id in PRICES}
 # runtime -> the engine adapters that run it, per purpose ('code' repository work, 'text' writing
 # or review, 'web' live web research), and its own plain name.
 RUNTIMES = {
-    'codex': {'label': 'Codex', 'code': 'codex-code', 'text': 'codex', 'web': None},
-    'claude': {'label': 'Claude Code', 'code': 'claude-code', 'text': 'claude', 'web': None},
+    # D-74.1: the coding runtimes search the web themselves on Nick's subscriptions (Codex
+    # `web_search="live"`, Claude Code's WebSearch/WebFetch tools), so research needs no API key.
+    'codex': {'label': 'Codex', 'code': 'codex-code', 'text': 'codex', 'web': 'codex-web'},
+    'claude': {'label': 'Claude Code', 'code': 'claude-code', 'text': 'claude', 'web': 'claude-web'},
     'api': {'label': 'Anthropic API', 'code': None, 'text': 'internal', 'web': 'research'},
     'deepseek': {'label': 'DeepSeek API', 'code': None, 'text': 'deepseek', 'web': None},
 }
@@ -94,7 +96,7 @@ OPENROUTER = 'openrouter'
 # D-72 item 5: Codex and Claude Code run on Nick's subscriptions — their calls cost nothing extra per
 # run when Kel ranks models (the dollar figure they report is API-equivalent effort, shown as
 # "included in your plan"); the plan's quota still counts.
-SUBSCRIPTION_ADAPTERS = ('codex', 'codex-code', 'claude', 'claude-code')
+SUBSCRIPTION_ADAPTERS = ('codex', 'codex-code', 'codex-web', 'claude', 'claude-code', 'claude-web')
 
 
 def is_subscription(adapter):
@@ -127,10 +129,27 @@ FALLBACKS = {'builder': ('codex',)}
 INDEPENDENT = {'openai': ('gpt-6-astra', 'codex'), 'anthropic': ('claude-opus-5-5', 'claude-sonnet')}
 REVIEW_ROLES = ('verifier', 'oracle', 'sentinel')
 ADAPTER_FAMILIES = {'claude': 'anthropic', 'claude-code': 'anthropic', 'internal': 'anthropic',
-                    'research': 'anthropic', 'codex': 'openai', 'codex-code': 'openai',
+                    'research': 'anthropic', 'claude-web': 'anthropic', 'codex': 'openai', 'codex-code': 'openai',
+                    'codex-web': 'openai',
                     # OpenRouter only routes DeepSeek Flash today (ROUTING_2.md "Needs Nick" 5).
                     'deepseek': 'deepseek', 'openrouter': 'deepseek'}
 REJECTION_HOURS = 24
+# LIVE-3: the work a role exists for. A model that can't do it is not offered for that role.
+ROLE_PURPOSE = {'builder': 'code', 'discovery': 'web'}
+PURPOSE_WORDS = {'code': ("can't change code", "the Builder's code work"),
+                 'web': ("can't search the web", "Discovery's research")}
+
+
+def capable(model_id, purpose):
+    """(True, None) when this model can do this kind of work anywhere Kel runs it, else
+    (False, plain reason). Independent of what is installed here (that is `adapter_for`)."""
+    info = MODELS.get(model_id)
+    if not info:
+        return False, 'is not a model Kel knows'
+    if purpose in ('code', 'web') and info['runtime'] not in ('claude', 'codex'):
+        cannot, work = PURPOSE_WORDS[purpose]
+        return False, "%s %s, so it can't do %s" % (info['label'], cannot, work)
+    return True, None
 
 
 def _codex_catalog():
@@ -214,6 +233,12 @@ def set_role(store, role, mode, model=None, reasoning='auto'):
     if model and reasoning not in reasoning_options(model):
         raise PolicyError('%s does not offer %s reasoning.'
                           % (MODELS[model]['label'], REASONING_LABELS[reasoning]))
+    if model and mode == 'FIXED' and ROLE_PURPOSE.get(role):
+        able, why_not = capable(model, ROLE_PURPOSE[role])
+        if not able:
+            # LIVE-3: Fixed means "only this model" — one that can't do the role's work would leave
+            # every step of it waiting for ever.
+            raise PolicyError(why_not[:1].upper() + why_not[1:] + '. Choose another model, or Preferred.')
     from .staff import ensure_schema
     ensure_schema(store)
     with store.transaction() as db:
@@ -412,9 +437,9 @@ def adapter_for(model_id, purpose, adapters, set_aside=None):
     if not info:
         return None, 'is not a model Kel knows'
     runtime = info['runtime']
-    if runtime == 'claude' and purpose == 'web':
-        runtime = 'api'  # live web research runs on the Anthropic API worker
     name = RUNTIMES.get(runtime, {}).get(purpose)
+    if runtime == 'claude' and purpose == 'web' and name not in adapters and 'research' in adapters:
+        runtime, name = 'api', 'research'  # the Anthropic API worker's own web search
     if name and name not in adapters and info.get('openrouter_arg') and OPENROUTER in adapters             and not (set_aside and OPENROUTER in set_aside):
         return OPENROUTER, None  # the same model through OpenRouter (Routing 2 §5.6)
     if runtime == 'deepseek' and name and name not in adapters:
@@ -574,7 +599,7 @@ def catalog_id(raw, adapter=None):
     None when it is not a catalog model."""
     text = str(raw or '').strip().split('[')[0].lower()
     if not text:
-        return 'codex' if adapter in ('codex', 'codex-code') else None
+        return 'codex' if adapter in ('codex', 'codex-code', 'codex-web') else None
     if text in MODELS:
         return text
     for model_id, info in MODELS.items():
@@ -654,24 +679,46 @@ def _last_entry(asked, ran, confirmed, at, why):
             'confirmed': confirmed, 'fell_back': fell_back, 'at': at, 'why': why if fell_back else None}
 
 
+def _role_option(store, model_id, purpose, adapters):
+    """(available, note) for one model in one role's picker: can it do the role's work, and here?"""
+    info = MODELS[model_id]
+    able, why_not = capable(model_id, purpose)
+    if not able:
+        return False, why_not
+    refused = rejected(store, model_id)
+    if refused:
+        # The live check: a runtime that refuses the model is the truth, whatever is installed.
+        return False, "%s can't run here: %s" % (info['label'], refused)
+    adapter, why_not = adapter_for(model_id, purpose, adapters)
+    if adapter is None:
+        return False, '%s %s' % (info['label'], why_not)
+    return True, None
+
+
 def listing(store, adapters):
-    """Every role row for Settings, with the choosable models and whether each can run here."""
+    """Every role row for Settings, with the choosable models and whether each can run here.
+
+    LIVE-3: availability is per role — a model that can't do a role's work (DeepSeek Flash as the
+    Builder for code, a model with no web search as Discovery) is unavailable for that role, with
+    the reason, in the row (`available`, `note`) and in the role's own picker (`model_options`)."""
     rows = []
     last = last_runs(store)
     for role in ROLES:
         current = setting(store, role)
-        purpose = 'code' if role == 'builder' else 'text'
+        purpose = ROLE_PURPOSE.get(role, 'text')
         available, note = True, None
         if current['model']:
-            adapter, why_not = adapter_for(current['model'], purpose, adapters)
-            if adapter is None and purpose == 'code':
-                adapter, why_not = adapter_for(current['model'], 'text', adapters)
-            available = adapter is not None
-            note = None if available else '%s %s' % (MODELS[current['model']]['label'], why_not)
-            refused = rejected(store, current['model'])
-            if refused:
-                # The live check: a runtime that refuses the model is the truth, whatever is installed.
-                available, note = False, "%s can't run here: %s" % (MODELS[current['model']]['label'], refused)
+            available, note = _role_option(store, current['model'], purpose, adapters)
+            if not available and current['mode'] == 'PREFERRED' and FALLBACKS.get(role):
+                note += '; Kel uses %s instead' % ', then '.join(MODELS[m]['label'] for m in FALLBACKS[role])
+        elif purpose == 'web' and not any(_role_option(store, m, 'web', adapters)[0] for m in MODELS):
+            # D-74.1: Automatic research with no web route at all says so plainly.
+            available, note = False, ('No model here can search the web: Kel needs Claude Code or Codex '
+                                      'signed in on this computer, or an Anthropic API key.')
+        options = []
+        for model_id, info in MODELS.items():
+            ok, why = _role_option(store, model_id, purpose, adapters)
+            options.append({'id': model_id, 'label': info['label'], 'available': ok, 'note': why})
         default_mode, default_model, default_reasoning_level = DEFAULTS[role]
         rows.append({'role': role, 'label': ROLE_LABELS[role], 'mode': current['mode'],
                      'mode_label': MODE_LABELS[current['mode']], 'model': current['model'],
@@ -681,6 +728,7 @@ def listing(store, adapters):
                      'reasoning_options': list(reasoning_options(current['model']))
                      if current['model'] else ['auto'],
                      'available': available, 'note': note, 'is_default': current['is_default'],
+                     'purpose': purpose, 'model_options': options,
                      'fallbacks': [MODELS[m]['label'] for m in FALLBACKS.get(role, ())],
                      'last_run': last.get(role),
                      'default': {'mode': default_mode, 'model': default_model,

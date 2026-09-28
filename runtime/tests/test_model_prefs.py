@@ -152,11 +152,16 @@ class PayloadContractTests(unittest.TestCase):
         self.assertEqual([row['id'] for row in got['providers']],
                          [row['id'] for row in listed['providers']])
 
-    def test_default_choice_round_trips_through_the_payload(self):
-        choice = {'provider': 'deepseek', 'model': 'deepseek-flash'}
-        self.service._model_action({'action': 'set_default', 'choice': choice})
-        state = self.service._model_action({'action': 'get'})
-        self.assertEqual(state['default']['provider'], 'deepseek')
+    def test_the_older_default_is_retired_for_kels_model(self):
+        # D-73.3 / FN-06: Kel's model is the Kel role. A catalog choice sent as the old default is
+        # written to the Kel role; a provider-only choice is refused plainly; a clear still works.
+        from kel.core import PolicyError
+        from kel.role_models import setting
+        self.service._model_action({'action': 'set_default', 'choice': {'model': 'deepseek-flash'}})
+        self.assertEqual(setting(self.service.store, 'kel')['model'], 'deepseek-flash')
+        self.assertIsNone(self.service._model_action({'action': 'get'})['default'])
+        with self.assertRaises(PolicyError):
+            self.service._model_action({'action': 'set_default', 'choice': {'provider': 'codex', 'model': None}})
         self.service._model_action({'action': 'set_default', 'choice': None})
         self.assertIsNone(self.service._model_action({'action': 'get'})['default'])
 

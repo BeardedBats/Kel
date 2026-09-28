@@ -23,4 +23,6 @@ elif a.rpc_run:
     from kel.coding_transport import serve
     serve(Store(a.data),a.rpc_run)
 elif a.run:run_broker(Store(a.data),a.run)
-else:service.serve(a.data,a.port)
+else:
+    service.serve(a.data,a.port)
+    service.exit_process(0)  # D-74.4: a closed engine ends even if a pool thread is still inside a call

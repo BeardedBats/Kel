@@ -109,7 +109,11 @@ class TrustSummaryTests(unittest.TestCase):
         self.assertEqual(meta['verdict'], 'VERIFIED')
         self.assertEqual([e['label'] for e in meta['executed_by']], ['Codex'])
         self.assertEqual([e['label'] for e in meta['reviewed_by']], ['Claude Code'])
-        self.assertIn('• Executed by: Codex', meta['summary'])
+        # LIVE-10 / VIS-4: clean lines, no bullets and no verdict line (the card shows the verdict).
+        self.assertIn('Done by Codex.', meta['summary'])
+        self.assertIn('Checked by Claude Code.', meta['summary'])
+        self.assertFalse(any(line.startswith('•') or line in ('Verified', 'Uncertain', 'Failed')
+                             for line in meta['summary']))
 
     def test_publish_keeps_b2_explanation_for_uncertain_jobs(self):
         temp = tempfile.TemporaryDirectory()
@@ -129,7 +133,7 @@ class TrustSummaryTests(unittest.TestCase):
         self.assertNotIn('• Limitation', text)
         meta = self.published_meta(store, job)
         self.assertEqual(meta['verdict'], 'UNCERTAIN')
-        self.assertIn('• Limitation: Independent rubric review not recorded', meta['summary'])
+        self.assertIn('Not confirmed: independent rubric review not recorded.', meta['summary'])
 
 
 if __name__ == '__main__':

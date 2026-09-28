@@ -233,9 +233,14 @@ class Continuation:
         if state == 'PAUSED':
             self.store.control(job_id, 'resume')
         elif state == 'WAITING_RESOURCE' and job.get('route_block'):
-            # A routing block clears itself as soon as a worker is available; the person asking
-            # early just stops the waiting.
-            self.store.retry_route(job_id)
+            from .core import route_wait_kind
+            if route_wait_kind(job['route_block']) == 'stuck':
+                # FN-03: Nick's "Try again" on work that ran out of tries gives it more tries.
+                self.store.give_more_tries(job_id)
+            else:
+                # A routing block clears itself as soon as a worker is available; the person asking
+                # early just stops the waiting (and a changed model setting is picked up now).
+                self.store.retry_route(job_id)
         elif state in ('WAITING_RESOURCE', 'CLOSED'):
             # WAITING_RESOURCE without a route_block is an interrupted run: the engine fenced its
             # milestone and will not replay it on its own. Reaching here *is* the person's
@@ -279,8 +284,10 @@ class Continuation:
                   'error': m.get('error')}
                  for mid, m in sorted(milestones.items())
                  if m.get('state') in OPEN_MILESTONE_STATES and (m.get('attempts') or 0) < 4]
-        fenced = any('requires reconciliation' in str(m.get('error') or '')
-                     for m in milestones.values())
+        from .core import interrupted, route_wait_kind, route_wait_words
+        # LIVE-3: the fence is a marker on the step (a restart, a lost worker), never a wording.
+        fenced = any(interrupted(m) for m in milestones.values())
+        wait_kind = route_wait_kind(job.get('route_block')) if job.get('route_block') else None
         state = job.get('state')
         if state == 'CLOSED' and job.get('verdict') == 'VERIFIED':
             why, nxt, needs = 'Done and verified.', 'Nothing needed — ask for a new change for more work.', False
@@ -294,17 +301,27 @@ class Continuation:
             why, nxt, needs = ("It finished, but Kel couldn't fully verify the result.",
                                'Look over the result, then try again or ask for a change.', False)
         elif fenced:
-            why = ('An attempt was interrupted and fenced; Kel will not replay it on its own, and '
-                   'the file-changing steps were not repeated.')
-            nxt = 'Say "continue" to re-arm it as a fresh attempt.'
+            why = ("Kel's worker stopped unexpectedly (the app restarted) before this step finished. "
+                   "Kel won't repeat it on its own, because part of it may already have run.")
+            nxt = 'Choose Try again to start that step again (or say "continue").'
             needs = True
-        elif str(job.get('route_block') or '').startswith('Budget reached: '):
+        elif wait_kind == 'budget':
             # Routing 2 §5.4: only Nick moves budget-stopped work on.
             why = str(job['route_block'])[:400]
             nxt = 'Raise its budget to let it continue, or stop it.'
             needs = True
+        elif wait_kind == 'stuck':
+            # FN-03: out of tries — only Nick decides whether it gets more.
+            why = route_wait_words(job['route_block'])[:400]
+            nxt = 'Choose Try again to give it more tries, or stop it.'
+            needs = True
+        elif wait_kind in ('fixed', 'no_route'):
+            # LIVE-3: a model that can't run here never starts on its own; a setting change fixes it.
+            why = route_wait_words(job['route_block'])[:400]
+            nxt = 'Change the model in Settings → Staff & models (or set one up), then choose Try again.'
+            needs = True
         elif job.get('route_block'):
-            why = 'No model was free: ' + str(job['route_block'])[:160]
+            why = 'No model was free: ' + route_wait_words(job['route_block'])[:200]
             nxt = 'Kel retries automatically as soon as a capable model is healthy.'
             needs = False
         elif state in ('PAUSED', 'PAUSING'):
@@ -321,4 +338,4 @@ class Continuation:
         return {'job_id': job_id, 'title': title or job_id, 'state': state,
                 'verdict': job.get('verdict'), 'shipped': shipped, 'open': opens,
                 'fenced': fenced, 'session': session, 'why': why, 'next': nxt,
-                'needs_you': needs}
+                'needs_you': needs, 'wait': 'interrupted' if fenced and needs else wait_kind}

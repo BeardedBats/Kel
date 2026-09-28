@@ -282,7 +282,7 @@ def result_text(store, job):
     root = str(job['contract'].get('root'))
     where = place(store, root, job['contract'].get('project_id'))['words']
     tests = ' '.join(str(part) for part in job['contract'].get('test_command') or [])
-    how = ('How it was checked: ' + ('`' + tests + '`' if tests else 'the project tests') +
+    how = ('How it was checked: ' + ('your tests (' + tests + ')' if tests else 'the project tests') +
            ' passed in a separate copy of the project, and a separate review approved the change.')
     if saved['decision'] == APPLIED:
         current = _select(store, 'SELECT plan FROM change_applications WHERE job_id=?', job['id']) or {}
@@ -301,7 +301,7 @@ def result_text(store, job):
         if removed:
             parts.append('removed ' + _names(removed))
         what = '; '.join(parts) or 'no files'
-        lead = ('Your new project is ready. ' if job['contract'].get('greenfield') else '')
+        lead = ('Your new project is ready. ' if job['contract'].get('greenfield') and changes else '')
         return (lead + 'Applied to ' + where + ': ' + what + ' (' + _count(len(changes), 'file') + ').\n\n'
                 + how + '\n\nThe earlier files are saved — Undo on the result card puts them back.')
     if saved['decision'] == WAITING and saved.get('reason') and saved['reason'] != ASK_REASON:

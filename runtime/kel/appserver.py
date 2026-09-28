@@ -135,6 +135,11 @@ class CodexConnection:
             turn['effort']=effort
         response=self.call('turn/start',turn)
         turn_id=response['turn']['id']
+        if on_event and effort:
+            # LIVE-9: turn/start accepted this turn's own reasoning level, which overrides the thread's
+            # default that thread/start reported (the card showed Medium for a Low turn).
+            on_event({'method':'kel/turn','params':{'threadId':tid,'turnId':turn_id,
+                                                    'reasoningEffort':(response.get('turn') or {}).get('effort') or effort}})
         texts=[]
         deadline=time.monotonic()+timeout
         interrupted=False

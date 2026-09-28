@@ -47,7 +47,7 @@ class FailureSurfacing(unittest.TestCase):
         text = explain_failure(current)
         self.assert_explained(text)
         self.assertIn('No model could start this work', text)
-        self.assertIn('health circuit open', text)
+        self.assertIn('Codex is resting after recent failures', text)  # LIVE-5: plain words, no router jargon
         self.assertEqual(current['state'], 'WAITING_RESOURCE')
         self.assertEqual(current['verdict'], 'UNCERTAIN')
 
@@ -61,8 +61,9 @@ class FailureSurfacing(unittest.TestCase):
         current = store.get(job)
         text = explain_failure(current)
         self.assert_explained(text)
-        self.assertIn('not installed', text)
-        self.assertIn('authentication unavailable', text)
+        self.assertIn("Claude Code isn't installed", text)
+        self.assertIn("Codex isn't signed in", text)
+        self.assertIn('No model here can run this work', text)  # nothing can ever run it: Nick decides
         self.assertEqual(current['state'], 'WAITING_RESOURCE')
 
     def test_approval_wait_explains_the_gate(self):
