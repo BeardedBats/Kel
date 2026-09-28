@@ -29,7 +29,6 @@ import AcpModelSelector from '@/renderer/components/agent/AcpModelSelector';
 import { KelModelPill } from '@/renderer/components/kel/KelModelControl';
 import { KelToolsControl } from '@/renderer/components/kel/KelToolsControl';
 import { KelMemoryProposalControl } from '@/renderer/components/kel/KelMemoryProposal';
-import AcpRuntimeRestartButton from '@/renderer/components/agent/AcpRuntimeRestartButton';
 import { getConversationOrNull } from '@/renderer/pages/conversation/utils/conversationCache';
 import { getConversationCreateErrorMessage } from '@/renderer/pages/conversation/utils/conversationCreateError';
 import GoogleModelSelector from '../platforms/gemini/GoogleModelSelector';
@@ -243,7 +242,7 @@ const ChatConversation: React.FC<{
   conversation?: TChatConversation;
   hideSendBox?: boolean;
 }> = ({ conversation, hideSendBox }) => {
-  const [runtimeReadyConversationId, setRuntimeReadyConversationId] = useState<string | null>(null);
+  const [, setRuntimeReadyConversationId] = useState<string | null>(null);
   const { t } = useTranslation();
   // Stable identity: the selector reports readiness from an effect keyed on this
   // callback, so an inline arrow would re-run it on every render.
@@ -429,14 +428,8 @@ const ChatConversation: React.FC<{
         </div>
       )}
       {modelSelector && <div className='shrink-0'>{modelSelector}</div>}
-      {conversation && conversation.type === 'acp' && !isMobile && !isLegacyReadOnlyConversation && (
-        <div className='shrink-0'>
-          <AcpRuntimeRestartButton
-            conversation_id={conversation.id}
-            availability={runtimeReadyConversationId === conversation.id ? 'ready' : 'initializing'}
-          />
-        </div>
-      )}
+      {/* VIS-8: no permanent "restart the chat connection" control in the title area (machinery,
+          JR-16); the error card offers Reconnect where a broken connection actually shows up. */}
     </div>
   );
 

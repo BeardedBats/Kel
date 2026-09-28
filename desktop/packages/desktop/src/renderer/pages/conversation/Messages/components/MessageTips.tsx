@@ -18,6 +18,7 @@ import { useConversationContextSafe } from '@/renderer/hooks/context/Conversatio
 import { emitter } from '@/renderer/utils/emitter';
 import { useMessageList } from '../hooks';
 import { useWorkspaceSelector } from '@/renderer/hooks/file/useWorkspaceSelector';
+import { useAcpRuntimeRestart } from '@/renderer/components/agent/AcpRuntimeRestartButton';
 
 // One entry per `IMessageTips['type']`. `info` was missing, and the render
 // falls back to `warning`, so every informational tip was drawn with the alarm
@@ -64,6 +65,21 @@ const resolveAgentTipBody = (
   });
 };
 
+/** Restarts Kel's chat connection for this chat (the same restart the old title-bar icon ran). */
+const KelReconnectButton: React.FC<{ conversationId: string }> = ({ conversationId }) => {
+  const { restart, restarting } = useAcpRuntimeRestart({ conversation_id: conversationId });
+  return (
+    <button
+      type='button'
+      className='kel-chat-agent-error__model'
+      disabled={restarting}
+      onClick={() => void restart().catch((): void => undefined)}
+    >
+      {restarting ? 'Reconnecting…' : 'Reconnect'}
+    </button>
+  );
+};
+
 const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
   const { t } = useTranslation();
   const conversation = useConversationContextSafe();
@@ -89,6 +105,9 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
   const retryText = previousUserText?.type === 'text' ? previousUserText.content.content.trim() : '';
   const canRetry = isKelChat && structuredError?.retryable === true && Boolean(retryText) &&
     !/\[\[AION_FILES\]\]|@@/.test(retryText) && !conversation.hideSendBox;
+  // VIS-8: restarting Kel's chat connection lives here, on the card that shows the connection
+  // failed, instead of as a permanent icon in the title area.
+  const canReconnect = isKelChat && !isMissingFolder && !conversation.hideSendBox;
 
   if (structuredError) {
     const errorCode = structuredError.code;
@@ -164,11 +183,12 @@ const MessageTips: React.FC<{ message: IMessageTips }> = ({ message }) => {
           <strong>{title}</strong>
         </div>
         <p className='kel-chat-agent-error__body'>{body}</p>
-        {(canRetry || isModelTimeout || isMissingFolder) && (
+        {(canRetry || isModelTimeout || isMissingFolder || canReconnect) && (
           <div className='kel-chat-agent-error__actions'>
             {isMissingFolder && <button type='button' className='kel-chat-agent-error__retry' onClick={() => void chooseFolder()}>Choose a folder</button>}
             {canRetry && <button type='button' className='kel-chat-agent-error__retry' onClick={() => emitter.emit('agent.error.retry', retryText, message.conversation_id)}>Try again</button>}
             {isModelTimeout && <button type='button' className='kel-chat-agent-error__model' onClick={() => emitter.emit('agent.error.pick-model', message.conversation_id)}>Pick another model</button>}
+            {canReconnect && <KelReconnectButton conversationId={message.conversation_id} />}
           </div>
         )}
         {(detailParts.length > 0 || shouldShowFeedback) && (
