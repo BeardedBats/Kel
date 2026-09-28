@@ -70,7 +70,8 @@ class FenceTests(Base):
         self.assertEqual(job['verdict'], 'UNCERTAIN')
         milestone = job['milestones']['m1']
         self.assertEqual(milestone['state'], 'UNCERTAIN')
-        self.assertIn('requires reconciliation', milestone['error'])
+        self.assertTrue(milestone.get('interrupted'), 'LIVE-3: a proper marker, not a wording')
+        self.assertIn('stopped unexpectedly', milestone['error'])
         self.assertNotEqual(milestone['state'], 'READY', 'fencing never re-arms on its own')
         self.assertEqual(self.store.recover_abandoned(now=time.time() + 60), [],
                          'fencing is idempotent')
@@ -138,8 +139,9 @@ class BriefTests(Base):
         brief = self.brief(job_id)
         self.assertTrue(brief['fenced'])
         self.assertTrue(brief['needs_you'])
-        self.assertIn('not replay', brief['why'])
-        self.assertTrue(brief['next'].startswith('Say "continue"'))
+        self.assertIn("won't repeat it on its own", brief['why'])
+        self.assertIn('Try again', brief['next'])
+        self.assertEqual(brief['wait'], 'interrupted')
         self.assertEqual([item['id'] for item in brief['open']], ['m1'])
         self.assertEqual(brief['shipped'], [])
 
@@ -201,7 +203,7 @@ class SurfaceTests(Base):
         self.assertIn(second, by_id)
         self.assertTrue(by_id[job_id]['needs_you'])
         self.assertTrue(by_id[job_id]['fenced'])
-        self.assertTrue(by_id[job_id]['next'].startswith('Say "continue"'))
+        self.assertIn('Try again', by_id[job_id]['next'])
         self.assertFalse(by_id[second]['needs_you'])
         self.assertEqual(work['needs_you'], 1, 'only the person-action job counts')
         self.assertEqual(work['jobs'][0]['job_id'], job_id, 'needs-you jobs sort first')

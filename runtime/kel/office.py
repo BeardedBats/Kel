@@ -16,8 +16,12 @@ from .core import PolicyError
 FINISHED = ('done', 'failed', 'stopped')
 KIND_WORDS = {'code': 'code', 'research': 'research', 'recipe': 'recipe', 'writing': 'writing'}
 RUNTIME_LABELS = {'claude': 'Claude Code', 'claude-code': 'Claude Code', 'codex': 'Codex',
-                  'codex-code': 'Codex', 'internal': 'Anthropic API', 'research': 'Anthropic API'}
+                  'codex-code': 'Codex', 'internal': 'Anthropic API', 'research': 'Anthropic API',
+                  'claude-web': 'Claude Code (web search)', 'codex-web': 'Codex (web search)'}
 PROVIDER_LABELS = {'anthropic': 'Anthropic', 'openai': 'OpenAI', 'deepseek': 'DeepSeek'}
+# LIVE-10: independence in words ("Independence: different" read as jargon).
+INDEPENDENCE_WORDS = {'different': 'A different model family from the one that did the work',
+                      'reduced': 'The same model family as the one that did the work, so less independent'}
 AREA_WORDS = {'functional-testing': 'Tests', 'maintainability': 'Maintainability',
               'security': 'Security', 'privacy': 'Privacy', 'data-integrity': 'Data safety',
               'release-integrity': 'Release', 'requirements-coverage': 'Meets the request',
@@ -45,18 +49,63 @@ def _title(job):
     return handoff.get('title') or _short((job.get('contract') or {}).get('request'), 60) or 'Your request'
 
 
+# LIVE-12: what happens to finished work afterwards (applying, undoing, removing its card, Nick's
+# answer on it) never moves its finish time or its place in the row.
+AFTER_FINISH = ('changes.applied', 'changes.auto_applied', 'changes.undone', 'office.dismissed',
+                'needs_you.answered', 'budget.raised')
+
+
 def _events(store, job_ids):
-    """job id -> (first event time, last event time) — the real clock of each job."""
+    """job id -> (first event time, last event time, last work event time) — the real clock of each
+    job; the third leaves out what happens to finished work afterwards (AFTER_FINISH)."""
     ids = list(job_ids)
     out = {}
     with contextlib.closing(store.connect()) as db:
         for start in range(0, len(ids), 400):
             part = ids[start:start + 400]
-            for row in db.execute('SELECT aggregate_id, MIN(at) AS first, MAX(at) AS last FROM events '
-                                  'WHERE aggregate_id IN (%s) GROUP BY aggregate_id' % ','.join('?' * len(part)),
-                                  part):
-                out[row['aggregate_id']] = (row['first'], row['last'])
+            marks = ','.join('?' * len(part))
+            after = ','.join('?' * len(AFTER_FINISH))
+            for row in db.execute('SELECT aggregate_id, MIN(at) AS first, MAX(at) AS last, '
+                                  'MAX(CASE WHEN type NOT IN (%s) THEN at END) AS worked FROM events '
+                                  'WHERE aggregate_id IN (%s) GROUP BY aggregate_id' % (after, marks),
+                                  list(AFTER_FINISH) + part):
+                out[row['aggregate_id']] = (row['first'], row['last'], row['worked'] or row['last'])
     return out
+
+
+def _undone(store, job_id):
+    """LIVE-12: {at, files, folders} once Nick undid an applied change, else None."""
+    with contextlib.closing(store.connect()) as db:
+        row = db.execute("SELECT at, payload FROM events WHERE aggregate_id=? AND type='changes.undone' "
+                         "ORDER BY revision DESC LIMIT 1", (job_id,)).fetchone()
+    if not row:
+        return None
+    try:
+        detail = (json.loads(row['payload']) or {}).get('detail') or {}
+    except (TypeError, ValueError):
+        detail = {}
+    return {'at': row['at'], 'files': detail.get('files'), 'folders': detail.get('folders')}
+
+
+def _application_state(store, job):
+    """{'state'} of a coding change's application (APPLIED / UNDONE / WAITING…), else None."""
+    if (job.get('contract') or {}).get('kind') != 'coding' or job.get('state') != 'CLOSED':
+        return None
+    try:
+        from .auto_apply import describe
+        entry = describe(store, [job['id']]).get(job['id']) or {}
+    except Exception:
+        return None
+    return {'state': entry.get('state'), 'decision': entry.get('decision'),
+            'waiting_reason': entry.get('waiting_reason')} if entry else None
+
+
+def _restarted(store, job_id):
+    """LIVE-11: True when Kel stopped this job to restart it with Nick's change (D-55)."""
+    with contextlib.closing(store.connect()) as db:
+        if not _table(db, 'handoff_restarts'):
+            return False
+        return db.execute('SELECT 1 FROM handoff_restarts WHERE replaced_job=?', (job_id,)).fetchone() is not None
 
 
 def _published(store, job_id):
@@ -97,6 +146,11 @@ def state_of(store, job, brief=None):
     verdict = job.get('verdict')
     kind = (job.get('contract') or {}).get('kind')
     if state in ('CANCELLED', 'CANCELLING'):
+        if _restarted(store, job['id']):
+            # LIVE-11 / D-55: Kel stopped it to start again with Nick's change — not Nick's Stop.
+            return 'stopped', 'Restarted with your change.', False, \
+                'Kel stopped this version and started again with your change.', \
+                'The new version has its own card.'
         return 'stopped', 'You stopped this work.', False, 'You stopped this work.', \
             'Its saved request is kept in this conversation.'
     if state == 'CLOSED':
@@ -117,6 +171,8 @@ def state_of(store, job, brief=None):
                 application = describe(store, [job['id']]).get(job['id']) or {}
                 if application.get('state') == 'APPLIED':
                     line = 'Done and checked — applied to your project.'
+                elif application.get('state') == 'UNDONE':
+                    line = 'Done and checked — you undid the change, so your files are as they were.'
                 elif application.get('ask_first'):
                     ask = 'Checked and ready. %s, so it waits for you to apply it.' % application['waiting_reason']
                     return 'needs_you', ask, True, ask, 'Choose Apply when you are ready, or Leave it.'
@@ -167,9 +223,9 @@ def _objective(job, milestone_id):
     if milestone_id == (job.get('contract') or {}).get('final_milestone'):
         return 'combining the parts'
     text = str(spec.get('objective') or '')
-    marker = 'Complete this part of the source request: '
-    if text.startswith(marker):
-        text = text[len(marker):].split('\n')[0]
+    for marker in ('Complete this part of the source request: ', 'Research this part of the source request: '):
+        if text.startswith(marker):
+            text = text[len(marker):].split('\n')[0]
     return _short(text, 70) or 'its step'
 
 
@@ -226,6 +282,7 @@ def _member(call, runs, job):
             'model_confirmed': confirmed, 'provider': PROVIDER_LABELS.get(family), 'runtime': RUNTIME_LABELS.get(adapter),
             'runtime_version': ran.get('runtime_version'), 'reasoning': REASONING_LABELS.get(reasoning, reasoning) if reasoning else None,
             'asked': asked_view, 'note': note, 'independence': ran.get('independence'),
+            'independence_label': INDEPENDENCE_WORDS.get(ran.get('independence')),
             'step': call.get('milestone_id'), 'started_at': call.get('started'), 'finished_at': call.get('finished')}
 
 
@@ -240,17 +297,41 @@ def _standard_plan_note(job):
     return 'Kel used its standard plan for this kind of work.'
 
 
-def _kel_member(job):
+def _kel_turn(store, job):
+    """The model Kel's own turn for this work really ran on (usage, D-72 item 6), or {}."""
+    submission = (job.get('contract') or {}).get('submission_id') or \
+        ((job.get('contract') or {}).get('handoff') or {}).get('submission_id')
+    if not store or not submission:
+        return {}
+    try:
+        from .usage import KEL_KINDS, rows
+        items = [i for i in rows(store, submission_id=str(submission)) if i.get('kind') in KEL_KINDS
+                 and (i.get('raw_model') or i.get('model'))]
+    except Exception:
+        return {}
+    return max(items, key=lambda i: i.get('at') or 0) if items else {}
+
+
+def _kel_member(job, store=None):
     from .role_models import describe_model
     planner = (job.get('contract') or {}).get('planner') or {}
     model = planner.get('model')
+    standard = not model  # LIVE-10: coding, research and template work start from Kel's standard plan
+    runtime = RUNTIME_LABELS.get(planner.get('provider'))
+    reasoning = None
+    if not model:
+        # Kel's own turn still ran on a real model: name it (only as the runtime reported it).
+        turn = _kel_turn(store, job)
+        model = turn.get('raw_model') or turn.get('model')
+        runtime = RUNTIME_LABELS.get(turn.get('adapter')) or runtime
+        reasoning = None  # usage keeps reasoning tokens, not the level; no level is claimed here
     label, version = describe_model(raw=model) if model else (None, None)
     return {'id': 'kel', 'role': 'kel', 'role_label': 'Kel', 'instance': 1,
             'doing': 'Planned this work and chose who does it', 'state': 'done',
             'model': model, 'model_label': label, 'version': version, 'model_confirmed': bool(model),
-            'provider': None, 'runtime': RUNTIME_LABELS.get(planner.get('provider')), 'runtime_version': None,
-            'reasoning': None, 'asked': None,
-            'note': None if model else _standard_plan_note(job),
+            'provider': None, 'runtime': runtime, 'runtime_version': None,
+            'reasoning': reasoning, 'asked': None, 'standard_plan': standard,
+            'note': _standard_plan_note(job) if standard else None,
             'independence': None, 'step': None, 'started_at': (job.get('contract') or {}).get('staffing', {}).get('decided_at'),
             'finished_at': None}
 
@@ -266,7 +347,8 @@ def _progress(job, state, brief):
     elif state == 'needs_you':
         label = 'Waiting for you'
     elif state == 'failed':
-        label = "Didn't pass its checks"
+        # LIVE-10: an unconfirmed result is not a failed one.
+        label = "Couldn't confirm it passed" if job.get('verdict') == 'UNCERTAIN' else "Didn't pass its checks"
     elif state == 'stopped':
         label = 'Stopped'
     elif total > 1:
@@ -298,15 +380,21 @@ def _item(store, job, conv_map, clock, calls_by_job, runs_by_job, brief):
     team = [{'role': 'kel', 'role_label': 'Kel', 'state': 'done'}]
     for member in members:
         team.append({'role': member['role'], 'role_label': member['role_label'], 'state': member['state']})
-    first, last = clock.get(job['id'], (job.get('created'), job.get('created')))
+    first, last, worked = clock.get(job['id'], (job.get('created'), job.get('created'), job.get('created')))
     finished = state in FINISHED
+    paused = job.get('state') in ('PAUSED', 'PAUSING')
     submission = ((job.get('contract') or {}).get('handoff') or {}).get('submission_id')
     return {'job_id': job['id'], 'title': _title(job), 'project_id': primary_project(job, conv_map),
             'conversation_id': job.get('conversation'), 'submission_id': submission,
             'kind': KIND_WORDS.get(record.get('kind'), 'writing'), 'state': state, 'finished': finished,
             'status_line': line, 'needs_you': needs_you, 'progress': _progress(job, state, brief),
             'team': team, 'team_size': len(team), 'started_at': job.get('created') or first,
-            'updated_at': last, 'finished_at': last if finished else None}
+            'updated_at': last, 'finished_at': worked if finished else None,
+            # The row tells passed from unconfirmed/failed work itself (not only the detail).
+            'verdict': job.get('verdict') if job.get('state') == 'CLOSED' else None,
+            'application': _application_state(store, job),
+            # VIS-6: paused work says so (its card shows a paused step, not "working").
+            'paused': paused, 'undone': _undone(store, job['id']) if finished else None}
 
 
 GROUP = {'scoping': 0, 'needs_you': 0, 'working': 1, 'in_review': 1, 'done': 2, 'failed': 2, 'stopped': 2}
@@ -365,7 +453,7 @@ def _findings_view(rows):
 def detail(store, job_id):
     """One piece of work in full: team, steps, review, second opinion, files, verification, links."""
     from .continuation import Continuation
-    from .core import verification_summary
+    from .core import interrupted, verification_lines
     from .oracle import findings_for, status as oracle_status
     from .pod_review import task_id as pod_task
     from .role_models import describe_model
@@ -384,7 +472,7 @@ def detail(store, job_id):
     runs = _run_states(store, job_id)
     base = _item(store, job, conv_map, _events(store, [job_id]), {job_id: job_calls}, {job_id: runs}, brief)
     state, _line, _needs, why, nxt = state_of(store, job, brief)
-    staff_view = [_kel_member(job)] + [_member(call, runs, job) for call in job_calls]
+    staff_view = [_kel_member(job, store)] + [_member(call, runs, job) for call in job_calls]
     milestones = job.get('milestones') or {}
     steps = []
     for spec in (job.get('contract') or {}).get('milestones') or []:
@@ -397,8 +485,11 @@ def detail(store, job_id):
                       'CANCELLED': 'stopped'}.get(raw, 'waiting')
         at = max([c.get('finished') or c.get('started') or 0 for c in job_calls
                   if c.get('milestone_id') == spec['id']] or [0]) or None
+        if job.get('state') in ('PAUSED', 'PAUSING') and step_state in ('waiting', 'working'):
+            step_state = 'paused'  # VIS-6: a paused job's open step is paused, not waiting or working
         steps.append({'id': spec['id'], 'label': _objective(job, spec['id'])[:1].upper() + _objective(job, spec['id'])[1:],
-                      'state': step_state, 'at': at, 'attempts': milestone.get('attempts')})
+                      'state': step_state, 'at': at, 'attempts': milestone.get('attempts'),
+                      'interrupted': bool(interrupted(milestone))})
     from .assurance import findings as ledger
     pod_rows = []
     try:
@@ -416,6 +507,7 @@ def detail(store, job_id):
                   describe_model(raw=checks[-1].get('reviewer_model'))[0] if checks and checks[-1].get('reviewer_model')
                   else None),
               'independence': (checker or {}).get('independence'),
+              'independence_label': INDEPENDENCE_WORDS.get((checker or {}).get('independence')),
               'findings': _findings_view(pod_rows)}
     oracle_state = oracle_status(store, job)
     oracle_call = next((c for c in reversed(job_calls) if c['kind'] == 'oracle'), None)
@@ -427,7 +519,11 @@ def detail(store, job_id):
     oracle_view = {'state': oracle_state['state'], 'why': oracle_state.get('why') or (
         '; '.join(oracle_state.get('reasons') or []) or None),
         'independence': oracle_state.get('independence'), 'model_label': oracle_member.get('model_label'),
-        'reasoning': oracle_member.get('reasoning'), 'findings': _findings_view(oracle_rows)}
+        'independence_label': INDEPENDENCE_WORDS.get(oracle_state.get('independence')),
+        'reasoning': oracle_member.get('reasoning'), 'findings': _findings_view(oracle_rows),
+        # LIVE-10: what the second opinion concluded (not only why it was asked).
+        'conclusion': _oracle_conclusion(oracle_state, oracle_rows),
+        'coverage': oracle_state.get('coverage')}
     files, application = None, None
     if (job.get('contract') or {}).get('kind') == 'coding':
         from .auto_apply import changed_paths, describe
@@ -436,7 +532,7 @@ def detail(store, job_id):
         except Exception:
             files = None
         application = describe(store, [job_id]).get(job_id)
-    summary = verification_summary(job)
+    summary = verification_lines(job)
     result_word = None
     if job.get('state') == 'CLOSED':
         result_word = {'VERIFIED': 'passed', 'FAILED': 'failed'}.get(job.get('verdict'), 'not_confirmed')
@@ -468,14 +564,33 @@ def detail(store, job_id):
         out['usage'] = None
     out.update({'why': why, 'next': nxt, 'staff': staff_view, 'steps': steps, 'review': review,
                 'oracle': oracle_view, 'files_changed': files, 'application': application,
-                'verification': {'result': result_word, 'summary': summary.split('\n') if summary else []},
+                'verification': {'result': result_word, 'summary': summary},
                 'result': _short(published['text'], 600) if published else None,
                 'links': {'conversation_id': job.get('conversation'),
                           'submission_id': handoff.get('submission_id'), 'message_seq': handoff.get('ack_seq')}})
     return out
 
 
-def dismiss(store, job_id, actor='user'):
+def _oracle_conclusion(current, rows):
+    """One plain sentence: what the independent second opinion concluded, or None while it runs."""
+    state = current.get('state')
+    if state == 'could_not_run':
+        return "It couldn't run: %s." % (current.get('why') or 'no reason was recorded')
+    if state != 'done':
+        return None
+    live = [r for r in rows if r.get('status') in ('open', 'confirmed')]
+    serious = [r for r in live if r.get('severity') in ('blocker', 'critical')]
+    notes = [r for r in live if r.get('severity') not in ('blocker', 'critical')]
+    if serious:
+        return 'It found %s: %s' % ('a serious problem' if len(serious) == 1 else '%d serious problems' % len(serious),
+                                    ' '.join(str(serious[0].get('summary') or '').split()))
+    if notes:
+        return 'It found nothing that should stop this, and left %s.' % (
+            'one note' if len(notes) == 1 else '%d notes' % len(notes))
+    return 'It found nothing that should stop this.'
+
+
+def dismiss(store, job_id, actor='user', service=None):
     """Remove one finished card (D-68). Durable, idempotent, one Activity line; nothing is deleted."""
     from .staff import ensure_schema, staffing_of
     if not isinstance(job_id, str) or not job_id.strip():
@@ -483,7 +598,15 @@ def dismiss(store, job_id, actor='user'):
     try:
         job = store.get(job_id)
     except KeyError:
-        raise PolicyError('Kel could not find that work.') from None
+        job = None
+    if job is None:
+        # D-74.3 / LIVE-8: an open scoping card is dismissed with "Not now" (cancels the scoping;
+        # nothing starts). Its id is the card's `scoping_id`.
+        from . import scoping
+        if scoping._row(store, job_id) and service is not None:
+            out = scoping.dismiss(service, job_id, actor=actor)
+            return {'dismissed': True, 'already': bool(out.get('already')), 'job_id': job_id, 'scoping': True}
+        raise PolicyError('Kel could not find that work.')
     ensure_schema(store)
     with contextlib.closing(store.connect()) as db:
         if db.execute('SELECT 1 FROM office_dismissals WHERE job_id=?', (job_id,)).fetchone():

@@ -390,10 +390,14 @@ def attention(store, job):
 
 
 def result_note(store, job):
-    """One line for a published non-code result whose second opinion raised a problem (or could not run)."""
-    if (job.get('contract') or {}).get('kind') == 'coding':
-        return None
+    """One line for a published result that had an independent second opinion: what it concluded
+    (LIVE-1 audit: the result never mentioned it). A coding change held by the Oracle is explained by
+    its application line instead."""
     needed = attention(store, job)
-    if not needed:
-        return None
-    return 'Kel had this checked by an independent second opinion. ' + needed['why']
+    if needed:
+        if (job.get('contract') or {}).get('kind') == 'coding':
+            return None
+        return 'Kel had this checked by an independent second opinion. ' + needed['why']
+    if status(store, job).get('state') == 'done':
+        return 'An independent second opinion also checked it and found nothing that should stop this.'
+    return None

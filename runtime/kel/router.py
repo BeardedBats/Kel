@@ -10,6 +10,41 @@ from .core import PolicyError
 GREENFIELD_RE = re.compile(
     r'\b(create|build|make|write|develop|code)\b.{0,100}\b(app|application|program|tool|script|bot|game|cli|website|utility|extension|project)\b',
     re.IGNORECASE)
+_BUILD_VERB_RE = re.compile(r'\b(?:create|build|make|write|develop|code)\b', re.IGNORECASE)
+_DELIVERABLE_RE = re.compile(
+    r'\b(?:app|application|program|tool|script|bot|game|cli|website|utility|extension|project)\b', re.IGNORECASE)
+# LIVE-2 / D-74.2: "this/the/my/our/current project" (or app, tool…) is the one Kel is already in,
+# never a new one. A deliverable counts only when nothing says it already exists.
+_EXISTING_RE = re.compile(r"\b(?:this|that|the|my|our|your|current|existing|same|kel'?s)\s+(?:[\w'-]+\s+){0,2}$",
+                          re.IGNORECASE)
+# D-74.2: an explicit request for a new or separate project (the only way Kel starts one while a
+# project with a folder is active).
+EXPLICIT_NEW_RE = re.compile(
+    r"\b(?:new|separate|another|fresh|standalone|brand[- ]new|different)\s+(?:[\w'-]+\s+){0,2}?"
+    r"(?:project|repo(?:sitory)?|workspace|folder)\b"
+    r"|\b(?:as|in|into)\s+(?:a|its\s+own|their\s+own)\s+(?:own\s+)?(?:new\s+|separate\s+)?(?:project|repo(?:sitory)?|folder)\b"
+    r"|\bfrom\s+scratch\b"
+    r"|\b(?:create|build|make|start|develop|code|write)\s+(?:me\s+|us\s+)?(?:a|an)\s+(?:new|separate|standalone)\s+"
+    r"(?:[\w'-]+\s+){0,2}?(?:app|application|program|website|game|tool|bot|cli|script|utility|extension)\b",
+    re.IGNORECASE)
+
+
+def greenfield_intent(text):
+    """True when the message asks Kel to build something new ("create a little app"), not to change
+    something that already exists ("make this project's tests pass", "build the app in my project")."""
+    text = str(text or '')
+    for verb in _BUILD_VERB_RE.finditer(text):
+        window = text[verb.end():verb.end() + 110]
+        for noun in _DELIVERABLE_RE.finditer(window):
+            before = text[:verb.end() + noun.start()]
+            if not _EXISTING_RE.search(before):
+                return True
+    return False
+
+
+def explicit_new_project(text):
+    """True when the request explicitly asks for a new or separate project (D-74.2)."""
+    return bool(EXPLICIT_NEW_RE.search(str(text or '')))
 
 # Explicit tool/work requests (V2-09). Measured gap: a phone turn that asked Kel to run
 # `python -m kel.conn list` and use a connected service was answered conversationally by the
@@ -169,7 +204,7 @@ def classify(text):
     word = text.strip().lower()
     if word in ('status', '/status', 'jobs', '/jobs'):
         return {'kind': 'status', 'confidence': 1.0}
-    if GREENFIELD_RE.search(word):
+    if greenfield_intent(word):
         return {'kind': 'coding', 'confidence': .7, 'greenfield': True}
     if word.startswith(('write ', 'create ', 'draft ', 'summarize ')):
         return {'kind': 'document', 'confidence': .8}

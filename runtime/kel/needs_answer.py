@@ -11,6 +11,10 @@ conversation through a path that already exists —
   "Leave it" records Nick's choice on that same route;
 - paused or interrupted work (`paused`, `interrupted`): the existing resume control or a "continue"
   message for that job;
+- work no model here can run (`no_model`: a Fixed model that can't run, or nothing set up can do the
+  step) or work out of tries (`out_of_tries`): "Try again" is the same "continue" message for that
+  job; "Change the model in Staff & models" (`open_staff`, `action: 'open_settings'`) only opens
+  Settings → Staff & models — nothing is sent;
 - anything else (`clarification`, `blocked`): a normal message in the conversation, so the D-55
   restart rule applies to it like any other message.
 
@@ -30,6 +34,11 @@ CREATE TABLE IF NOT EXISTS needs_you_answers(
 APPLY_ANYWAY = 'apply_anyway'
 LEAVE = 'leave'
 CHOICES = (APPLY_ANYWAY, LEAVE)
+# LIVE-3: the quick picks for stalled work. 'continue' goes to Kel as a "continue" message for the
+# job (the existing resume path); 'open_staff' is a navigation the renderer performs.
+TRY_AGAIN = {'id': 'continue', 'label': 'Try again'}
+OPEN_STAFF = {'id': 'open_staff', 'label': 'Change the model in Staff & models', 'action': 'open_settings',
+              'target': 'staff'}
 
 # What kind of wait it is, in words a person reads beside the question.
 WAIT_WORDS = {
@@ -38,6 +47,8 @@ WAIT_WORDS = {
     'second_opinion': 'A second opinion raised a problem',
     'paused': 'Paused',
     'interrupted': 'Interrupted',
+    'no_model': 'No model can run it',
+    'out_of_tries': 'Out of tries',
     'blocked': 'Stopped by a safety rule',
     'clarification': 'Waiting for your answer',
 }
@@ -147,11 +158,24 @@ def question(store, job, why=None, nxt=None):
     if state in ('PAUSED', 'PAUSING'):
         return dict(base, kind='paused', wait=WAIT_WORDS['paused'], text='This work is paused. Continue it?',
                     detail=None, options=[{'id': 'resume', 'label': 'Continue'}], ref={'job': job['id']})
+    from .core import interrupted, route_wait_kind, route_wait_words
     milestones = (job.get('milestones') or {}).values()
-    if any('requires reconciliation' in str(m.get('error') or '') for m in milestones):
+    if state == 'WAITING_RESOURCE' and any(interrupted(m) for m in milestones):
         return dict(base, kind='interrupted', wait=WAIT_WORDS['interrupted'],
-                    text='An attempt was interrupted, and Kel won’t repeat it on its own. Start it again?',
-                    detail=None, options=[{'id': 'continue', 'label': 'Start it again'}], ref={'job': job['id']})
+                    text='Kel’s worker stopped unexpectedly (the app restarted). Start that step again?',
+                    detail='Kel won’t repeat it on its own, because part of it may already have run.',
+                    options=[dict(TRY_AGAIN)], ref={'job': job['id']})
+    wait_kind = route_wait_kind(job.get('route_block')) if state == 'WAITING_RESOURCE' and job.get('route_block') else None
+    if wait_kind in ('fixed', 'no_route'):
+        return dict(base, kind='no_model', wait=WAIT_WORDS['no_model'],
+                    text='No model here can run this work. Change the model, then try again?',
+                    detail=_first_sentence(route_wait_words(job['route_block']), 300),
+                    options=[dict(TRY_AGAIN), dict(OPEN_STAFF)], ref={'job': job['id']})
+    if wait_kind == 'stuck':
+        return dict(base, kind='out_of_tries', wait=WAIT_WORDS['out_of_tries'],
+                    text='This work ran out of tries before it passed its checks. Give it more tries?',
+                    detail=_first_sentence(route_wait_words(job['route_block']), 300),
+                    options=[dict(TRY_AGAIN)], ref={'job': job['id']})
     if state == 'BLOCKED':
         from .core import explain_failure
         reason = explain_failure(job) or why or 'A safety rule stopped this work before its next step.'

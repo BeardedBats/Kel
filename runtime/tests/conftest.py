@@ -16,3 +16,7 @@ if not os.environ.get('KEL_PROJECTS_ROOT'):
     import tempfile
     os.environ['KEL_PROJECTS_ROOT'] = os.path.join(tempfile.mkdtemp(prefix='kel-tests-'), 'Kel Projects')
     os.makedirs(os.environ['KEL_PROJECTS_ROOT'], exist_ok=True)
+
+# D-74.1: research routes through the installed Claude Code / Codex web search. The suite never
+# sends a real web search from a background job; tests of that route turn it on themselves.
+os.environ.setdefault('KEL_CLI_WEB', '0')

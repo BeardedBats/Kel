@@ -113,7 +113,7 @@ class FullAccessTests(AutoApplyBase):
         self.assertIn('added new.txt', text)
         self.assertIn('removed remove.txt', text)
         self.assertIn('(3 files)', text)
-        self.assertIn('`python -m unittest` passed', text)
+        self.assertIn('your tests (python -m unittest) passed', text)
         self.assertIn('a separate review approved the change', text)
         self.assertIn('Undo', text)
         self.assertNotIn('Apply checked changes', text)

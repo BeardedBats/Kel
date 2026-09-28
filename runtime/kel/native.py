@@ -181,7 +181,7 @@ DEFAULT_EFFORT = object()  # "as before": Codex text runs at low effort, Claude 
 
 class NativeAdapter:
     def __init__(self, provider, workspace, logs, timeout=100, model=None, effort=DEFAULT_EFFORT,
-                 fallback_model=None):
+                 fallback_model=None, web=False):
         """`model`/`fallback_model`/`effort` (D-67) are the runtime's own flags: Codex `-m` and
         `model_reasoning_effort`; Claude Code `--model`, `--fallback-model`, `--effort`. `effort=None`
         means "the model's own default level" (no override)."""
@@ -194,6 +194,11 @@ class NativeAdapter:
         self.model = model or None
         self.fallback_model = fallback_model or None
         self.effort = effort
+        # D-74.1: a research run gets the runtime's own web search and nothing else — Codex
+        # `-c web_search="live"` (verified on codex-cli 0.142.5: `item.completed` events of type
+        # `web_search`), Claude Code `--tools WebSearch,WebFetch` (verified on 2.1.283: the result's
+        # `modelUsage[*].webSearchRequests`). No shell, no file tools, read-only sandbox as before.
+        self.web = bool(web)
         # Called with (error, runtime version) when a run on an explicit model fails, so a refused
         # model is remembered at its first refusal from any call site (turn, plan, review, Oracle).
         self.on_refusal = None
@@ -220,7 +225,7 @@ class NativeAdapter:
     def argv(self, session_id=None, stream=False):
         if self.provider == 'codex':
             args = executable('codex') + ['exec', '--ignore-user-config', '--skip-git-repo-check', '--json',
-                    '-c', 'approval_policy="never"', '-c', 'web_search="disabled"']
+                    '-c', 'approval_policy="never"', '-c', 'web_search="%s"' % ('live' if self.web else 'disabled')]
             effort = 'low' if self.effort is DEFAULT_EFFORT else self.effort
             if effort:
                 args += ['-c', 'model_reasoning_effort="%s"' % effort]
@@ -236,7 +241,8 @@ class NativeAdapter:
             else:
                 args += ['-s', 'read-only', '-']
             return args
-        args = executable('claude') + ['-p', '--safe-mode', '--tools', '', '--disable-slash-commands',
+        tools = ['--tools', 'WebSearch,WebFetch', '--allowedTools', 'WebSearch,WebFetch'] if self.web else ['--tools', '']
+        args = executable('claude') + ['-p', '--safe-mode'] + tools + ['--disable-slash-commands',
                 '--permission-mode', 'dontAsk', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
                 '--output-format', 'json', '--max-budget-usd', '0.50']
         if stream:
@@ -294,8 +300,15 @@ class NativeAdapter:
             output = stdout_path.read_text(encoding='utf-8', errors='replace')
             # Logs stay local. Return only bounded diagnostics; never inspect credential files.
             if stopped:
-                return dict(outcome='CANCELLED' if stopped == 'CANCELLED' else 'FAILED', error=stopped,
-                            session_id=session_id, duration=time.monotonic()-started)
+                out = dict(outcome='CANCELLED' if stopped == 'CANCELLED' else 'FAILED', error=stopped,
+                           session_id=session_id, duration=time.monotonic()-started)
+                try:
+                    partial = self.parse(output, session_id)  # LIVE-13: tokens the run had already used
+                    if partial.get('usage'):
+                        out.update(usage=partial['usage'], partial=True)
+                except Exception:
+                    pass
+                return out
             result = self.parse(output, session_id)
             if process.returncode != 0:
                 reported = result.get('error') if result.get('outcome') == 'FAILED' else None
@@ -381,10 +394,15 @@ class NativeAdapter:
                     return dict(outcome='FAILED', error='Malformed native JSON')
             usage_by_model = record.get('modelUsage') if isinstance(record.get('modelUsage'), dict) else {}
             used = None
+            searches = sum(int((entry or {}).get('webSearchRequests') or 0) for entry in usage_by_model.values()
+                           if isinstance(entry, dict))
             if usage_by_model:
                 # The model that did the work: the one with the most output (Claude Code may also
-                # call a small helper model).
-                used = max(usage_by_model, key=lambda name: (usage_by_model[name] or {}).get('outputTokens') or 0)
+                # call a small helper model — for web research that helper runs the searches, so a
+                # model that only searched is not the one that wrote the answer).
+                writers = [name for name in usage_by_model
+                           if not ((usage_by_model[name] or {}).get('webSearchRequests') or 0)] or list(usage_by_model)
+                used = max(writers, key=lambda name: (usage_by_model[name] or {}).get('outputTokens') or 0)
             out = dict(outcome='FAILED' if record.get('is_error') else 'SUCCESS',
                        text=record.get('result', ''), session_id=record.get('session_id', session_id),
                        usage=record.get('usage'), cost_usd=record.get('total_cost_usd'),
@@ -395,9 +413,12 @@ class NativeAdapter:
                 out['error'] = str(record.get('result'))[:500]
             if used:
                 out['model_used'] = used
+            if self.web:
+                out['searches'] = searches
             return out
         text, events, errors = [], [], []
         usage = None
+        queries = []
         for line in output.splitlines():
             try:
                 record = json.loads(line)
@@ -409,6 +430,9 @@ class NativeAdapter:
             if record.get('type') == 'thread.started':
                 session_id = record.get('thread_id')
             item = record.get('item', {})
+            if record.get('type') == 'item.completed' and item.get('type') == 'web_search':
+                action = item.get('action') if isinstance(item.get('action'), dict) else {}
+                queries.append(str(item.get('query') or action.get('query') or '')[:200])
             if record.get('type') == 'item.completed' and item.get('type') == 'agent_message':
                 text.append(item.get('text', ''))
             if record.get('type') == 'turn.completed' and isinstance(record.get('usage'), dict):
@@ -425,6 +449,8 @@ class NativeAdapter:
                    session_id=session_id, native_events=events, error='; '.join(dict.fromkeys(errors)) or None)
         if usage is not None:
             out['usage'] = usage
+        if self.web:
+            out.update(searches=len(queries), queries=[q for q in queries if q])
         return out
 
 

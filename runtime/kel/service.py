@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import sys
 import threading
 import time
 from urllib.parse import urlparse,parse_qs
@@ -28,6 +29,7 @@ from .turn import decide as decide_turn, amend_ack, guard_ack, guard_reply, temp
 # whose reported version differs from the app it shipped with, so this literal must match
 # `desktop/package.json`'s version (what `app.getVersion()` reports in the packaged app).
 from . import __version__ as ENGINE_VERSION
+CATALOG_PROVIDER='catalog'  # FN-06: a per-chat override naming a Kel-role catalog model (role_models.MODELS)
 
 # Verbs that mean "change code in an existing project". These are the only
 # requests that need a project root; greenfield ("create an app") is classified
@@ -124,6 +126,11 @@ class Service:
                 adapters[provider]=DurableAdapter(self.store,provider)
         if 'codex' in adapters:adapters['codex-code']=DurableAdapter(self.store,'codex-code',{'repository_edit','native_session','approval_stream'})
         if 'claude' in adapters:adapters['claude-code']=DurableAdapter(self.store,'claude-code',{'repository_edit','native_session'})
+        # D-74.1: web research runs through the installed coding runtimes' own web search on Nick's
+        # subscriptions, so it works without an Anthropic API key. Offered only for research steps.
+        if os.environ.get('KEL_CLI_WEB','1').strip().lower() not in ('0','false','off','no'):
+            if 'claude' in adapters:adapters['claude-web']=DurableAdapter(self.store,'claude-web',{'text','web_research'})
+            if 'codex' in adapters:adapters['codex-web']=DurableAdapter(self.store,'codex-web',{'text','web_research'})
         if self.model:adapters['internal']=DurableAdapter(self.store,'internal',{'text','image'},options={'model':self.model.model})
         if self.model:adapters['research']=DurableAdapter(self.store,'research',{'text','web_research'},options={'model':self.model.model})
         # Routing 2 §5.6: DeepSeek and OpenRouter run when their keys reached the engine's environment
@@ -402,6 +409,20 @@ class Service:
                 return kel
         if preference:
             provider=preference.get('provider')
+            if provider==CATALOG_PROVIDER:
+                # FN-06: a chat's own pick of a Kel-role catalog model runs exactly like a role binding.
+                from .role_models import MODELS,adapter_for,model_arg
+                model_id=preference.get('model')
+                info=MODELS.get(model_id)
+                if not info:
+                    return None
+                present=self.staff_adapters()
+                adapter,_why=adapter_for(model_id,'text',present)
+                if adapter is None:
+                    return None
+                return self.staff_model({'adapter':adapter,'model':model_id,'model_arg':model_arg(model_id,adapter),
+                                         'fallback_arg':info.get('cli_fallback') if adapter in ('claude','claude-code') else None,
+                                         'effort_arg':None},timeout=30 if turn else 100,turn=turn)
             if provider=='internal':
                 if not isinstance(self.model,InternalAdapter):
                     return None
@@ -440,7 +461,10 @@ class Service:
         except Exception:
             snapshot={}
         chosen=None
-        for preference in (snapshot.get('conversation'),snapshot.get('default')):
+        # FN-06 / D-73.3: one "Kel's model". The chat's own pick is a per-chat override; otherwise
+        # Kel's model is read from one place — the Kel row in Staff & models, or the older Settings
+        # default only when that was chosen more recently (see `kel_model_source`).
+        for preference in (snapshot.get('conversation'),):
             if preference and preference.get('provider'):
                 chosen=chosen or preference
                 model=self._model_for(preference,turn)
@@ -448,6 +472,37 @@ class Service:
                     return model,self._choice(model,None if preference is chosen else chosen)
         model=self._model_for(None,turn,images)
         return model,self._choice(model,chosen)
+
+    def kel_model_source(self):
+        """FN-06 / D-73.3: where Kel's own model comes from — 'staff_role' (the Kel row in Staff &
+        models, Nick's choice), 'settings_default' (the older Settings → Model default, when Nick chose
+        it after the Kel row or never set the row), or 'role_default' (D-67's starting model)."""
+        from .role_models import _row as role_row
+        try:
+            row=role_row(self.store,'kel')
+        except Exception:
+            row=None
+        # The older Settings default is retired (D-73.3): it is never read for Kel's model any more.
+        return 'staff_role' if row else 'role_default'
+
+    def kel_model_view(self,cid=None):
+        """FN-06: which model is Kel's own right now, and whether this chat overrides it (for Settings,
+        the Staff & models Kel row and the composer picker — one value, shown the same everywhere)."""
+        from .model_prefs import ModelPrefs,model_label,provider_label
+        from .role_models import MODELS,setting
+        source=self.kel_model_source()
+        snapshot=ModelPrefs(self.store).snapshot(cid)
+        row=setting(self.store,'kel')
+        kel={'source':source,'mode':row['mode'],'model':row['model'],'reasoning':row['reasoning'],
+             'label':(MODELS.get(row['model']) or {}).get('label') or 'Automatic'}
+        override=snapshot.get('conversation') if cid else None
+        if override and override.get('provider'):
+            label=(MODELS.get(override.get('model')) or {}).get('label') if override.get('provider')==CATALOG_PROVIDER \
+                else model_label(override.get('model')) or provider_label(override.get('provider'))
+            override=dict(override,label=label)
+        else:
+            override=None
+        return {'kel':kel,'conversation_override':override,'in_effect':'conversation' if override else 'kel'}
 
     def _chat_model(self,cid,turn=False,images=False):
         return self._chat_choice(cid,turn,images)[0]
@@ -717,6 +772,7 @@ class Service:
                     refusal=request_refusal(text+'\n'+str(decision.get('request') or ''),self.store.root)
                     if refusal:
                         self._say(sid,cid,refusal,choice)
+                        self._record_refusal(sid,cid,refusal)  # FN-05: one Activity line
                         return None
                     if decision.get('request') and decision['request']!=text:
                         text=self._rewrite_request(sid,decision['request'])
@@ -940,9 +996,13 @@ class Service:
                 contract['file_request']=target
         elif coding:
             root=packet['project']['root']
-            # Greenfield intent ("create me an app") always wins, even when the
-            # active project already has a root such as a desktop temp workspace.
-            greenfield=bool(greenfield_flag) or not bool(root)
+            # LIVE-2 / D-74.2: while a project with a folder is active, work goes into that folder; a
+            # new project is made only when the request explicitly asks for a new or separate one.
+            # General (the catch-all chat, D-62) is not a project of Nick's: building something new
+            # there still gets its own project, as before.
+            from .router import explicit_new_project
+            in_own_project=bool(root) and (packet['project'].get('id') or 'default')!='default'
+            greenfield=not bool(root) or (bool(greenfield_flag) and (not in_own_project or explicit_new_project(text)))
             if not greenfield:
                 from .projects import ensure_folder
                 ensure_folder(self.store,root)  # D-62: General's default folder is made when work needs it
@@ -989,8 +1049,13 @@ class Service:
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
         elif kind=='research' or classified=='research' or (not classified and needs_research(text)):
             from .research import compile_research
-            contract=compile_research(text,self.commander,packet)
-            contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+            # LIVE-6: Kel's own model decides whether the research splits into independent parts.
+            kel=self._kel_model(False) if self.commander else None
+            contract=compile_research(text,self.commander,packet,model=kel,
+                                      on_result=lambda model,result,wall:self._kel_usage('plan',sid,cid,model,result,wall,'planning'))
+            planned=contract.get('compiler')=='research-plan-v1'
+            contract['planner']={'provider':getattr(kel,'provider',None) if planned else None,
+                                 'model':(getattr(kel,'model',None) if planned else None),'compiler':contract.get('compiler')}
         else:
             contract=self._document_contract(text,packet,sid,cid)
         contract['context']=packet
@@ -1790,16 +1855,60 @@ class Service:
         with contextlib.closing(self.store.connect()) as db:
             return db.execute('SELECT 1 FROM publications WHERE job_id=? LIMIT 1',(job_id,)).fetchone() is not None
 
+    def _record_refusal(self,sid,cid,refusal):
+        """FN-05: a request Kel refused before any work (a protected place) is recorded once, in
+        Activity, in plain words; nothing was acknowledged, compiled or run."""
+        try:
+            from .core import uid
+            aggregate='submission:'+str(sid)
+            try:project=self._project_of(cid)
+            except Exception:project=None
+            with self.store.transaction() as db:
+                if db.execute("SELECT 1 FROM events WHERE aggregate_id=? AND type='request.refused'",(aggregate,)).fetchone():
+                    return
+                db.execute('INSERT INTO events(id,aggregate_id,revision,type,at,payload) VALUES(?,?,?,?,?,?)',
+                           (uid(),aggregate,1,'request.refused',time.time(),
+                            encode({'schema_version':1,'detail':{'conversation_id':cid,'reason':str(refusal)[:300],
+                                                                  'project_id':(project or {}).get('id') if isinstance(project,dict) else project}})))
+        except Exception:
+            pass  # the record is additive; the refusal itself was already said
+
+    def messages_since(self,after):
+        """LIVE-7: {latest, items:[{conversation_id, seq}]} — messages with details written after
+        `after` (a message seq); without `after`, only `latest` (the watcher's starting point)."""
+        try:after=None if after in (None,'') else max(0,int(after))
+        except (TypeError,ValueError):after=None
+        with contextlib.closing(self.store.connect()) as db:
+            latest=db.execute('SELECT COALESCE(MAX(seq),0) FROM messages').fetchone()[0]
+            rows=db.execute("SELECT conversation_id,seq FROM messages WHERE seq>? AND meta IS NOT NULL AND meta!='' "
+                            "AND meta!='null' ORDER BY seq LIMIT 200",(after,)).fetchall() if after is not None else []
+        return {'latest':latest,'items':[{'conversation_id':row['conversation_id'],'seq':row['seq']} for row in rows]}
+
+    def settled(self):
+        """D-74.4: True when nothing is moving — no planning, no run, no review, and no job the engine
+        can advance by itself. Work waiting on Nick is durable and resumes at the next start."""
+        from .engine import ADVANCING_STATES
+        with contextlib.closing(self.store.connect()) as db:
+            planning=db.execute("SELECT count(*) FROM submissions WHERE state='PLANNING'").fetchone()[0]
+        if planning or self.engine.active or self.engine.reviews:
+            return False
+        return not any(j['state'] in ADVANCING_STATES for j in self.store.list_jobs())
+
     def action(self,path,data):
         with self.lifecycle_lock:
             if self.draining:raise PolicyError('Kel is restarting for an update. Try again after it opens.')
             if path=='/api/shutdown-idle':
-                with self.engine.lock:
-                    with contextlib.closing(self.store.connect()) as db:
-                        planning=db.execute("SELECT count(*) FROM submissions WHERE state='PLANNING'").fetchone()[0]
-                    if planning or self.engine.active or self.engine.reviews or any(j['state'] not in ('CLOSED','CANCELLED') for j in self.store.list_jobs()):
-                        raise PolicyError('Work is still open. Finish or cancel it before updating Kel.')
+                # FN-03: never wait behind a busy supervision pass for ever; D-74.4: work that only
+                # waits on Nick (paused, needs you, out of tries) is durable and does not keep the
+                # engine alive — only work that is moving does.
+                if not self.engine.lock.acquire(timeout=10):
+                    raise PolicyError('Kel is busy finishing a step. It will close on its own once its work settles.')
+                try:
+                    if not self.settled():
+                        raise PolicyError('Work is still running. Kel keeps it going and closes on its own once it settles.')
                     self.draining=True;self.stop.set();self.wake.set()
+                finally:
+                    self.engine.lock.release()
                 return {'ok':True,'draining':True}
             try:
                 return self._action(path,data)
@@ -1958,7 +2067,7 @@ class Service:
             if data.get('action')!='dismiss':
                 raise PolicyError('The work view can only remove a finished card or raise a budget.')
             from .office import dismiss
-            return dismiss(self.store,str(data.get('id') or data.get('job') or ''),actor='user')
+            return dismiss(self.store,str(data.get('id') or data.get('job') or ''),actor='user',service=self)
         raise PolicyError('Unknown action')
 
     def office(self,query):
@@ -2188,7 +2297,7 @@ class Service:
             # Routing 2 §5.8: read-only — per task class, the governing role, its tier, and every model
             # in the order Kel would use it, each with the plain reason.
             from . import task_routing
-            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research')
+            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research','claude-web','codex-web')
                                            if name in self.engine.adapters}
             return task_routing.overview(self.store,present)
         if action in ('roles','set_role','reset_role'):
@@ -2200,9 +2309,14 @@ class Service:
                                      data.get('mode'),data.get('model'),data.get('reasoning') or 'auto')
             elif action=='reset_role':
                 role_models.reset_role(self.store,self._required(data,'role','Pick a role first.'))
-            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research')
+            if action in ('set_role','reset_role') and data.get('role')=='kel':
+                prefs.clear('default')  # FN-06 / D-73.3: the Kel row is now Kel's one model
+            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research','claude-web','codex-web')
                                            if name in self.engine.adapters}
-            return role_models.listing(self.store,present)
+            out=role_models.listing(self.store,present)
+            try:out['kel_model']=self.kel_model_view()
+            except Exception:out['kel_model']=None
+            return out
         if action in ('get','list'):
             # Both actions carry the provider listing: the Kel model control reads the choice
             # and the choices from one payload, and a missing list is what made the settings
@@ -2225,16 +2339,29 @@ class Service:
                 })
             snapshot['providers']=listing
             snapshot['auto_label']='Auto'
+            try:snapshot['kel_model']=self.kel_model_view(data.get('conversation'))  # FN-06
+            except Exception:snapshot['kel_model']=None
             return snapshot
         if action in ('set_default','set_conversation','clear_conversation'):
             choice=data.get('choice') or None
+            from .role_models import MODELS as ROLE_MODELS
             if action=='set_default':
-                if choice and choice.get('provider'):
-                    prefs.set_default(choice.get('provider'),choice.get('model'))
-                else:
-                    prefs.clear('default')
+                # D-73.3 / FN-06: the older engine default is retired; Kel's model is the Kel role. A
+                # clear still works (the renderer clears it on every write of Kel's model); a choice
+                # of a catalog model is written to the Kel role, anything else is refused plainly.
+                prefs.clear('default')
+                if choice and (choice.get('model') in ROLE_MODELS):
+                    from . import role_models
+                    role_models.set_role(self.store,'kel','PREFERRED',choice.get('model'),'auto')
+                elif choice and choice.get('provider'):
+                    raise PolicyError("Kel's model is set in Settings → Staff & models now.")
             elif action=='set_conversation':
-                if choice and choice.get('provider'):
+                if choice and choice.get('model') in ROLE_MODELS and choice.get('provider') in (None,'',CATALOG_PROVIDER):
+                    # FN-06: the per-chat override takes Kel-role model ids ('gpt-6-luna', …).
+                    if not data.get('conversation'):
+                        raise PolicyError('Open a conversation before choosing its model.')
+                    prefs.set('conversation:'+data['conversation'],CATALOG_PROVIDER,choice['model'],validate=False)
+                elif choice and choice.get('provider'):
                     prefs.set_conversation(data.get('conversation'),choice.get('provider'),choice.get('model'))
                 else:
                     prefs.clear_conversation(data.get('conversation'))
@@ -2318,6 +2445,9 @@ class Service:
             self._required(data,'id','Pick a recording first.'))
         if action=='set_key':return service.set_key(data.get('key',''))
         if action=='clear_key':return service.clear_key()
+        # D-75.3: the desktop's main process hands over the Muse key from its custody (never a page).
+        if action=='supply':return service.supply(data.get('key'),bool(data.get('clear')),bool(data.get('drop_legacy')))
+        if action=='legacy_key':return service.legacy_key()
         raise PolicyError('Unknown transcription action')
 
     # -- Fix Capture (V2.0 preflight) --------------------------------------------------------------
@@ -2544,7 +2674,9 @@ def serve(root,port=0):
         def authorized(self):
             host=f'127.0.0.1:{self.server.server_port}'
             origin=self.headers.get('Origin')
-            return self.headers.get('Host')==host and (not origin or origin=='http://'+host) and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+token)
+            ok=self.headers.get('Host')==host and (not origin or origin=='http://'+host) and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+token)
+            if ok:service.last_contact=time.time()  # D-74.4: an app (or its ACP host) is attached
+            return ok
         def do_GET(self):
             parsed=urlparse(self.path)
             if parsed.path=='/oauth/callback':
@@ -2576,6 +2708,10 @@ def serve(root,port=0):
                     if parsed.path=='/api/draft':
                         # D-75.1: the chat's cheap poll for a reply's words while they are written.
                         self.reply(200,service.draft((query.get('id') or [''])[0]));return
+                    if parsed.path=='/api/messages/since':
+                        # LIVE-7: the desktop's cheap watch for new messages that carry details (a
+                        # scoping card, a result), so they reach an open chat at once.
+                        self.reply(200,service.messages_since((query.get('after') or [None])[0]));return
                     if parsed.path=='/api/scoping':
                         from .scoping import view as scoping_view
                         self.reply(200,scoping_view(service.store,(query.get('id') or [''])[0],
@@ -2642,12 +2778,61 @@ def serve(root,port=0):
     descriptor={'url':f'http://127.0.0.1:{server.server_port}/','token':token,'pid':os.getpid(),'engine_version':ENGINE_VERSION}
     path=service.store.root/'desktop-session.json';path.write_text(encode(descriptor),encoding='utf-8')
     print(encode({'url':descriptor['url'],'pid':descriptor['pid'],'engine_version':ENGINE_VERSION}),flush=True)
+    service.last_contact=time.time()
+    watchdog=threading.Thread(target=_idle_watchdog,args=(service,server),daemon=True,name='kel-idle-exit')
+    watchdog.start()
     try:server.serve_forever()
     finally:
+        # FN-03: shutting down never waits on a planner call or a stuck pass; durable work lives in
+        # the database and the detached brokers, and resumes at the next start.
         service.stop.set();service.wake.set();service.supervisor.join(timeout=2)
-        service.requests.shutdown(wait=True)
-        service.planning.shutdown(wait=True)
-        service.engine.close();server.server_close()
+        service.requests.shutdown(wait=False,cancel_futures=True)
+        service.planning.shutdown(wait=False,cancel_futures=True)
+        try:service.engine.close(wait=False)
+        finally:
+            server.server_close()  # D-74.4: the port is released before the process goes
+            try:
+                if path.is_file() and json.loads(path.read_text(encoding='utf-8')).get('pid')==os.getpid() \
+                        and json.loads(path.read_text(encoding='utf-8')).get('url')==descriptor['url']:
+                    path.unlink()  # a next launch never attaches to an engine that is gone
+            except (OSError,ValueError):
+                pass
+
+
+IDLE_EXIT_SECONDS=600  # D-74.4: 10 minutes with no app attached and nothing moving
+
+
+def _idle_watchdog(service,server):
+    """D-74.4: the engine outlives a closed app window while work runs (durability), then exits on
+    its own once its work is settled and no app has reattached for IDLE_EXIT_SECONDS."""
+    try:
+        limit=float(os.environ.get('KEL_IDLE_EXIT_SECONDS') or IDLE_EXIT_SECONDS)
+    except ValueError:
+        limit=IDLE_EXIT_SECONDS
+    if limit<=0:
+        return  # 0 turns it off
+    check=min(15.0,max(limit/4,.2))
+    while not service.stop.wait(check):
+        if time.time()-getattr(service,'last_contact',time.time())<limit:
+            continue
+        try:
+            if not service.settled():
+                continue
+        except Exception:
+            continue
+        with service.lifecycle_lock:
+            service.draining=True;service.stop.set();service.wake.set()
+        server.shutdown()
+        return
+
+
+def exit_process(code=0):
+    """End the engine process once `serve` returned (D-74.4 / FN-03): leftover pool threads (a
+    planner call, a monitor) must not keep a closed engine alive. Durable state is committed."""
+    try:
+        sys.stdout.flush();sys.stderr.flush()
+    finally:
+        os._exit(code)
 
 
 if __name__=='__main__':
@@ -2655,3 +2840,4 @@ if __name__=='__main__':
     args=p.parse_args()
     try:serve(args.data,args.port)
     except Conflict as exc:print(str(exc),flush=True);raise SystemExit(2)
+    exit_process(0)

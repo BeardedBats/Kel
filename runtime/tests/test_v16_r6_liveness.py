@@ -50,7 +50,7 @@ class LivenessTruthTests(unittest.TestCase):
         self.assertEqual(job['verdict'], 'UNCERTAIN')
         milestone = job['milestones']['m1']
         self.assertEqual(milestone['state'], 'UNCERTAIN')
-        self.assertIn('reconciliation', milestone['error'])
+        self.assertTrue(milestone.get('interrupted'), 'LIVE-3: fenced with a marker, never re-armed on its own')
         run = self._run()
         self.assertEqual(run['state'], 'ORPHANED')
         self.assertNotEqual(run['epoch'], self.epoch)  # a fresh fence epoch for late deliveries

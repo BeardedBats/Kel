@@ -403,7 +403,8 @@ class HandoffServiceTests(unittest.TestCase):
         self.service.engine.adapters = {}
         self.assertIs(self.service._turn_model(self.cid), self.turn)
         self.service.engine.adapters = {'codex': object(), 'claude': object()}
-        prefs.set_default('claude-code', None)
+        # D-73.3 / FN-06: the older engine default is retired; a chat's own pick is the override.
+        prefs.set_conversation(self.cid, 'claude-code', None)
         model = self.service._turn_model(self.cid)
         self.assertIsInstance(model, NativeAdapter)
         self.assertEqual((model.provider, model.timeout), ('claude', 30))

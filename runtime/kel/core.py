@@ -329,6 +329,7 @@ class Store:
             db.execute("INSERT INTO runs VALUES(?,?,?,?,?,?,?,?,?,?,?)",
                        (run_id, job_id, milestone_id, epoch, 'RUNNING', 2, time.time()+timeout, None, None, provider, model))
             m.update(state='RUNNING', attempts=m['attempts']+1, provider=provider, model=model, error=None)
+            m.pop('interrupted', None)
             job.update(state='RUNNING', reserved=job['reserved']+2, verdict='UNCERTAIN', assessment=None)
             if staff:
                 # D-66: the step's staffing binding is written in the claim transaction, so a run
@@ -685,6 +686,9 @@ class Store:
             job = self._get(db, job_id)
             if job['state'] in ('CANCELLED', 'CANCELLING'):
                 return 'UNCERTAIN'
+            # FN-03: an assessment that changes nothing writes nothing (a stalled job re-assessed on
+            # every supervision pass once appended a full job event ~2.4 times a second).
+            before = encode(job)
             states = []
             for m in job['milestones'].values():
                 if m['state'] == 'ACCEPTED':
@@ -693,7 +697,7 @@ class Store:
                         if job['contract'].get('kind')=='coding':
                             from .coding import check_evidence
                             states.append(check_evidence(self,m['artifact']['run_id']))
-                        elif m['provider']=='research':
+                        elif m['provider'] in WEB_PROVIDERS:
                             from .research import check_research_evidence
                             states.append('VERIFIED' if check_research_evidence(self,m['artifact']['run_id'],self.artifact_text(m['artifact'])) else 'UNCERTAIN')
                         else:
@@ -718,7 +722,11 @@ class Store:
             if verdict == 'VERIFIED':
                 job['state'] = 'CLOSED'
             elif not active and job['state'] not in ('PAUSED', 'AWAITING_USER', 'WAITING_RESOURCE'):
-                job['state'] = 'READY' if any(m['state'] in ('READY', 'NEEDS_REPAIR', 'INVALIDATED') and m['attempts'] < 4 for m in job['milestones'].values()) else 'CLOSED'
+                # FN-03: READY only while some step can still run — a step waiting on one that can
+                # never finish (exhausted, out of tries) would otherwise keep the job READY forever.
+                job['state'] = 'READY' if runnable_steps(job) else 'CLOSED'
+            if encode(job) == before:
+                return verdict
             self._save(db, job, 'completion.assessed', {'assessment_id': assessment_id, 'verdict': verdict})
             return verdict
 
@@ -743,9 +751,10 @@ class Store:
                 text='\n\n'.join(self.artifact_text(m['artifact']) for m in accepted.values())
                 if job['contract'].get('kind')=='coding':
                     if job['contract'].get('greenfield'):
-                        text=('Your new project is ready at '+str(job['contract'].get('root'))+
-                              '. The code passed its tests and a separate review. '
-                              'Download the change report to see what was built, then use Apply checked changes to write the files into the project folder.')
+                        # LIVE-2/LIVE-10: nothing is in the new project's folder yet here, so it is not
+                        # called "ready", and no absolute path is written into the message.
+                        text=('The code for your new project passed its tests and a separate review. '
+                              "It isn't in the project folder yet — its work card offers Apply.")
                     else:
                         text=('The change passed its tests and a separate review. '
                               'Its work card shows whether it is in your project and offers Apply or Undo.')
@@ -760,12 +769,12 @@ class Store:
                     text=("Here's the content for "+str(file_request.get('filename'))+' — it passed its checks. '
                           +file_note+('\n\n'+text if text else ''))
                 elif handoff.get('title'):
-                    text="Here's "+natural_title(handoff['title'])+' — it passed its checks.'+('\n\n'+text if text else '')
+                    text=result_lead(handoff['title'])+('\n\n'+text if text else '')
                 elif job['contract'].get('kind')!='coding':
                     text=(text+'\n\n' if text else '')+'It passed its checks.'
                 if job['contract'].get('staffing'):
-                    # D-66: an independent second opinion that raised a problem (or could not run)
-                    # is said once, with the result (read-only here, like the D-65 lookup above).
+                    # D-66: an independent second opinion — what it concluded — is said once, with
+                    # the result (read-only here, like the D-65 lookup above).
                     try:
                         from .oracle import result_note
                         note=result_note(self,job)
@@ -819,12 +828,17 @@ class Store:
         self._save(db, job, 'job.'+action)
         return [r['id'] for r in active]
 
-    def acknowledge_stop(self, run_id, epoch):
+    def acknowledge_stop(self, run_id, epoch, result=None):
+        """`result` (LIVE-13): what the stopped run had used by then — the runtime's partial token counts
+        and the wall-clock — so a stopped run is not recorded as free and budgets don't undercount."""
         with self.transaction() as db:
             run = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
             if not run or run['epoch'] != epoch or run['state'] not in ('CANCEL_REQUESTED', 'RUNNING', 'WAITING_APPROVAL'):
                 return False
             job = self._get(db, run['job_id'])
+            if isinstance(result, dict):
+                self._record_usage(db, job, run, dict(result, outcome=result.get('outcome') or 'CANCELLED',
+                                                      partial=True))
             job['reserved'] -= run['reservation']
             job['spent'] += 1
             m = job['milestones'][run['milestone_id']]
@@ -836,6 +850,24 @@ class Store:
             self._save(db, job, 'run.stopped', {'run_id': run_id})
             return True
 
+    def record_lost_usage(self, run_id, result=None):
+        """LIVE-13: a run whose worker was killed or lost still used time (and maybe tokens): record
+        what is known — the runtime's partial counts if any, and the wall-clock since the claim."""
+        try:
+            with self.transaction() as db:
+                run = db.execute('SELECT * FROM runs WHERE id=?', (run_id,)).fetchone()
+                if not run:
+                    return False
+                claimed = db.execute("SELECT MIN(at) FROM events WHERE aggregate_id=? AND type='run.claimed' "
+                                     "AND json_extract(payload,'$.detail.run_id')=?", (run['job_id'], run_id)).fetchone()[0]
+                data = dict(result or {}, outcome=(result or {}).get('outcome') or 'FAILED', partial=True)
+                if claimed and not isinstance(data.get('wall_ms'), (int, float)):
+                    data['wall_ms'] = int(max(0.0, time.time() - claimed) * 1000)
+                self._record_usage(db, self._get(db, run['job_id']), run, data)
+            return True
+        except Exception:
+            return False  # usage is additive; recovery never fails on it
+
     def recover_expired(self, now=None):
         """Fence expired runs. Do not replay an unconfirmed external writer."""
         now = time.time() if now is None else now
@@ -846,7 +878,7 @@ class Store:
                 db.execute("UPDATE runs SET state='ORPHANED',epoch=? WHERE id=?", (uid(), run['id']))
                 job['reserved'] -= run['reservation']
                 job['spent'] += 1
-                job['milestones'][run['milestone_id']].update(state='UNCERTAIN', error='Expired run; native state requires reconciliation')
+                job['milestones'][run['milestone_id']].update(state='UNCERTAIN', error=INTERRUPTED_NOTE, interrupted=True)
                 job.update(state='WAITING_RESOURCE', verdict='UNCERTAIN')
                 self._save(db, job, 'run.orphaned', {'run_id': run['id']})
                 recovered.append(run['id'])
@@ -886,7 +918,7 @@ class Store:
                 job['reserved'] -= run['reservation']
                 job['spent'] += 1
                 job['milestones'][run['milestone_id']].update(
-                    state='UNCERTAIN', error='Expired run; native state requires reconciliation')
+                    state='UNCERTAIN', error=INTERRUPTED_NOTE, interrupted=True)
                 job.update(state='WAITING_RESOURCE', verdict='UNCERTAIN')
                 self._save(db, job, 'run.orphaned', {'run_id': run['id'], 'recovery': 'runtime'})
                 fenced.append(run['id'])
@@ -1026,6 +1058,7 @@ class Store:
                     # cleared by the next claim, so it can never outlive the retry it describes.
                     m.update(state='NEEDS_REPAIR', artifact=None, checks=[],
                              error='Trying this again at your request; the interrupted attempt was not replayed.')
+                    m.pop('interrupted', None)
             job.update(state='READY', verdict='UNCERTAIN', assessment=None)
             self._save(db, job, 'job.reopened', {'reason': str(reason)[:200]})
             return job_id
@@ -1115,8 +1148,28 @@ class Store:
     def wait_for_route(self,job_id,reason):
         with self.transaction() as db:
             job=self._get(db,job_id)
+            if job['state']=='WAITING_RESOURCE' and job.get('route_block')==reason:
+                return  # FN-03: the same wait twice is one wait (no event per supervision pass)
             job.update(state='WAITING_RESOURCE',route_block=reason)
             self._save(db,job,'route.unavailable',{'reason':reason})
+
+    def give_more_tries(self,job_id,extra=8):
+        """Nick chose "Try again" on work that ran out of tries (FN-03): fresh budget for the steps
+        still open, never a replay of a finished step."""
+        with self.transaction() as db:
+            job=self._get(db,job_id)
+            if job['state'] not in ('WAITING_RESOURCE','READY','CLOSED') or job.get('verdict')=='VERIFIED':
+                raise PolicyError('This work is not waiting for more tries.')
+            for mid,m in job['milestones'].items():
+                if m['state']=='ACCEPTED':
+                    continue
+                if (m.get('attempts') or 0)>=2:
+                    m['attempts']=2  # two more tries per open step
+                if m['state']=='EXHAUSTED' or (m['state']=='UNCERTAIN' and not _may_finish(job,mid)):
+                    m.update(state='NEEDS_REPAIR',error='Trying this again at your request.')
+            job['budget']=max(job['budget'],job['spent']+job['reserved'])+int(extra)
+            job.update(state='READY',route_block=None,verdict='UNCERTAIN',assessment=None)
+            self._save(db,job,'job.more_tries',{'budget':job['budget']})
 
     def retry_route(self,job_id):
         with self.transaction() as db:
@@ -1126,6 +1179,59 @@ class Store:
                 self._save(db,job,'route.retry')
 
 
+# LIVE-3: a step stopped by a restart or a lost worker carries `interrupted: True` (the marker the
+# brief, the card and the needs-you question read — never the wording) and this plain note.
+INTERRUPTED_NOTE = "Kel's worker stopped unexpectedly (the app restarted), so this step didn't finish."
+
+
+def interrupted(milestone):
+    """True when a restart or a lost worker fenced this step (older jobs: the old wordings)."""
+    m = milestone or {}
+    if m.get('interrupted'):
+        return True
+    error = str(m.get('error') or '')
+    return m.get('state') == 'UNCERTAIN' and any(words in error for words in (
+        'requires reconciliation', 'without a receipt', 'worker connection was interrupted',
+        'Run was fenced by durable recovery'))
+
+
+# Providers whose steps are live web research (D-74.1): the Anthropic API worker and the coding
+# runtimes' own web search (Claude Code WebSearch/WebFetch, Codex `web_search="live"`).
+WEB_PROVIDERS = ('research', 'claude-web', 'codex-web')
+RUNNABLE_STATES = ('READY', 'NEEDS_REPAIR', 'INVALIDATED')
+
+
+def _may_finish(job, mid, seen=None):
+    """True while this step is accepted or can still become accepted without Nick."""
+    m = (job.get('milestones') or {}).get(mid) or {}
+    state = m.get('state')
+    if state in ('ACCEPTED', 'RUNNING', 'CHECKING'):
+        return True
+    if state == 'UNCERTAIN' and m.get('artifact') and any(
+            c.get('kind') == 'manual_review' and not c.get('reviewer_id') for c in m.get('checks') or []):
+        return True  # its review is still to come
+    if state not in RUNNABLE_STATES or (m.get('attempts') or 0) >= 4:
+        return False
+    seen = set(seen or ()) | {mid}
+    spec = next((s for s in (job.get('contract') or {}).get('milestones') or [] if s.get('id') == mid), {})
+    return all(dep not in seen and _may_finish(job, dep, seen) for dep in spec.get('depends_on') or [])
+
+
+def runnable_steps(job):
+    """The steps that may still be claimed (now, or once the steps they wait on finish)."""
+    return [mid for mid, m in (job.get('milestones') or {}).items()
+            if m.get('state') in RUNNABLE_STATES and (m.get('attempts') or 0) < 4 and _may_finish(job, mid)]
+
+
+def claimable_steps(job):
+    """The steps whose own state and dependencies allow a claim right now."""
+    specs = {s['id']: s for s in (job.get('contract') or {}).get('milestones') or []}
+    milestones = job.get('milestones') or {}
+    return [mid for mid in runnable_steps(job)
+            if all((milestones.get(dep) or {}).get('state') == 'ACCEPTED'
+                   for dep in (specs.get(mid) or {}).get('depends_on') or [])]
+
+
 def aggregate(verdicts):
     if 'FAILED' in verdicts:
         return 'FAILED'
@@ -1133,10 +1239,22 @@ def aggregate(verdicts):
 
 
 def _explain(what, why, tried, nxt):
+    why = ' '.join(str(why or '').split()) or 'Kel did not record a reason for this.'  # LIVE-5: never a blank "Why:"
     return ('What happened: ' + what + '\n' +
             'Why: ' + why + '\n' +
             'What Kel already tried: ' + tried + '\n' +
             'What you can do next: ' + nxt)
+
+
+_ROUTE_NAMES = {'codex': 'Codex', 'codex-code': 'Codex', 'claude': 'Claude Code', 'claude-code': 'Claude Code',
+                'internal': 'the Anthropic API', 'research': 'Anthropic API web research',
+                'claude-web': 'Claude Code web search', 'codex-web': 'Codex web search',
+                'deepseek': 'DeepSeek', 'openrouter': 'OpenRouter', 'fixture': 'the test model'}
+_ROUTE_REASONS = {'missing capability': "can't do this kind of work", 'quota exhausted': 'is out of quota',
+                  'health circuit open': 'is resting after recent failures', 'user choice': "isn't the chosen model",
+                  'not installed': "isn't installed", 'authentication unavailable': "isn't signed in",
+                  'quality floor not established': "hasn't shown enough quality yet",
+                  'privacy scope': 'is outside the privacy scope'}
 
 
 def _route_block_reasons(route_block):
@@ -1148,14 +1266,75 @@ def _route_block_reasons(route_block):
         import ast
         excluded = ast.literal_eval(route_block.split(marker, 1)[1].strip())
         if isinstance(excluded, dict):
-            parts = []
+            if not excluded:
+                return 'no model set up on this computer can do this kind of work'
+            parts = {}
             for name, reasons in excluded.items():
-                joined = ', '.join(map(str, reasons)) if isinstance(reasons, (list, tuple)) else str(reasons)
-                parts.append(str(name) + ' — ' + joined)
-            return '; '.join(parts)
+                items = reasons if isinstance(reasons, (list, tuple)) else [reasons]
+                label = _ROUTE_NAMES.get(str(name), str(name))
+                words = [_ROUTE_REASONS.get(str(r), str(r)) for r in items]
+                parts.setdefault(label, [])
+                parts[label] += [w for w in words if w not in parts[label]]
+            return '; '.join('%s %s' % (label, ' and '.join(words)) for label, words in parts.items())
     except Exception:
         pass
     return route_block
+
+
+# Route blocks that only Nick can move on (LIVE-3, FN-03). The engine writes them with these
+# prefixes; everything else is a temporary wait that clears itself.
+FIXED_WAIT = 'Fixed model not available: '
+BUDGET_WAIT = 'Budget reached: '
+STUCK_WAIT = 'Out of tries: '
+NO_ROUTE_WAIT = 'No model can do this: '
+TRANSIENT_ROUTE_REASONS = ('quota exhausted', 'health circuit open')
+
+
+def route_excluded(route_block):
+    """{adapter: [reasons]} from a router block ('No eligible route: {...}'), else None."""
+    marker = 'No eligible route:'
+    text = str(route_block or '')
+    if marker not in text:
+        return None
+    try:
+        import ast
+        found = ast.literal_eval(text.split(marker, 1)[1].strip())
+    except Exception:
+        return None
+    return found if isinstance(found, dict) else None
+
+
+def route_wait_kind(route_block):
+    """'fixed' | 'budget' | 'stuck' | 'no_route' (only Nick can move these on) | 'waiting'."""
+    text = str(route_block or '')
+    if text.startswith(FIXED_WAIT):
+        return 'fixed'
+    if text.startswith(BUDGET_WAIT):
+        return 'budget'
+    if text.startswith(STUCK_WAIT):
+        return 'stuck'
+    if text.startswith(NO_ROUTE_WAIT):
+        return 'no_route'
+    excluded = route_excluded(text)
+    if excluded is not None and not any(
+            any(r in TRANSIENT_ROUTE_REASONS for r in (reasons if isinstance(reasons, (list, tuple)) else [reasons]))
+            for reasons in excluded.values()):
+        return 'no_route'  # nothing that could run it is merely busy: waiting would never end
+    return 'waiting'
+
+
+def route_wait_words(route_block):
+    """The plain sentence for a route block (never empty, never a raw dict)."""
+    text = str(route_block or '')
+    for prefix in (FIXED_WAIT, BUDGET_WAIT, STUCK_WAIT, NO_ROUTE_WAIT):
+        if text.startswith(prefix):
+            return text[len(prefix):].strip() or 'No model here can run this work.'
+    if route_excluded(text) is not None:
+        reasons = _route_block_reasons(text)
+        if not reasons or reasons.strip() in ('', '{}', 'No eligible route: {}'):
+            return 'No model set up on this computer can do this kind of work.'
+        return 'No model set up on this computer could run it (' + reasons + ').'
+    return text.strip() or 'No model set up on this computer can do this kind of work.'
 
 
 def explain_failure(job):
@@ -1188,10 +1367,23 @@ def explain_failure(job):
                 str(job['route_block'])[len('Budget reached: '):],
                 'Kel stopped before the next step and did not switch to a cheaper model.',
                 'Raise its budget on its card to continue, or stop it.')
+        kind = route_wait_kind(job.get('route_block')) if job.get('route_block') else None
+        if kind == 'stuck':
+            return _explain(
+                'This work ran out of tries before it passed its checks.',
+                route_wait_words(job['route_block']),
+                'Kel stopped instead of trying the same thing again.',
+                'Choose Try again on its card to give it more tries, or stop it.')
+        if kind in ('fixed', 'no_route'):
+            return _explain(
+                'No model here can run this work.',
+                route_wait_words(job['route_block']),
+                "Kel checked every model set up on this computer; none of them can do it, so it didn't start.",
+                'Change the model in Settings → Staff & models (or set one up), then choose Try again on its card.')
         if job.get('route_block'):
             return _explain(
-                'No model could start this work.',
-                _route_block_reasons(job['route_block']),
+                'No model could start this work yet.',
+                route_wait_words(job['route_block']),
                 'Kel keeps re-checking in the background and will resume automatically when a model becomes available.',
                 'Wait for a model to become available, or review model status in Settings.')
         return _explain(
@@ -1211,6 +1403,9 @@ def explain_failure(job):
             for c in m.get('checks', []):
                 if c.get('verdict') == 'UNCERTAIN' and c.get('reason'):
                     unsure.append(str(c['reason']))
+                elif c.get('verdict') == 'UNCERTAIN' and c.get('kind') == 'manual_review' and c.get('findings'):
+                    # LIVE-5: say what the reviewer could not confirm, not only that something wasn't.
+                    unsure.append('the reviewer could not confirm it: ' + str(c['findings'][-1]).rstrip('.'))
                 elif c.get('verdict') == 'FAILED':
                     failed.append(plain_check(c))
         blockers = errors + (failed + unsure if verdict == 'FAILED' else unsure + failed)
@@ -1251,7 +1446,7 @@ def explain_failure(job):
             'Kel could not fully verify the result.',
             why,
             'Kel ran its verification checks and an independent review where one was available.',
-            'Provide the missing environment or evidence, then re-request the task.')
+            'Look over the result in its work card; ask Kel to try again, or tell it what to check.')
 
     return None
 
@@ -1312,6 +1507,26 @@ def _worker_label(provider, model=None):
 _LEADING_ARTICLES = ('the ', 'a ', 'an ', 'your ', 'my ', 'our ', 'this ', 'that ')
 
 
+# LIVE-10: a title that starts with an instruction ("Add power function with test") is not a thing
+# to hand over ("Here's your add power function with test").
+_INSTRUCTION_VERBS = frozenset((
+    'add', 'build', 'change', 'check', 'clean', 'compare', 'convert', 'create', 'debug', 'delete', 'design',
+    'draft', 'edit', 'explain', 'extract', 'find', 'fix', 'format', 'generate', 'implement', 'improve',
+    'list', 'look', 'make', 'migrate', 'move', 'optimize', 'optimise', 'plan', 'refactor', 'remove', 'rename',
+    'replace', 'research', 'review', 'rewrite', 'run', 'search', 'set', 'sort', 'summarize', 'summarise',
+    'test', 'tidy', 'translate', 'update', 'upgrade', 'write'))
+
+
+def result_lead(title):
+    """The first line of a passed hand-off's result: "Here's your garden plan — it passed its checks." or,
+    for an instruction-shaped title, "Done: add a power function with a test. It passed its checks."""
+    name = ' '.join(str(title or '').split()).strip().rstrip('.')
+    first = name.split(' ', 1)[0].lower() if name else ''
+    if first in _INSTRUCTION_VERBS:
+        return 'Done: ' + name[:1].lower() + name[1:] + '. It passed its checks.'
+    return "Here's " + natural_title(title) + ' — it passed its checks.'
+
+
 def natural_title(title):
     """A work title as it reads inside a sentence: "Here's your garden plan", "Here's the ACCEPT note".
 
@@ -1353,12 +1568,79 @@ def verification_details(job):
                      'label': _worker_label(c['reviewer_provider'], c.get('reviewer_model'))}
             if entry not in reviewers:
                 reviewers.append(entry)
-    summary = verification_summary(job)
     return {'kind': 'result', 'verdict': job.get('verdict'),
             'job': job.get('id'),  # D-70: the result's done card reads its work card by this id
             'checks': [{'kind': c.get('kind'), 'verdict': c.get('verdict')} for c in checks],
             'executed_by': executors, 'reviewed_by': reviewers,
-            'summary': summary.split('\n') if summary else []}
+            'summary': verification_lines(job)}
+
+
+def _plain_worker(provider, model=None):
+    """'Claude Opus 5.5 in Claude Code' — the model's own name, then where it ran (LIVE-10)."""
+    runtime = _WORKER_NAMES.get(provider) or {'internal': 'the Anthropic API', 'research': 'the Anthropic API',
+                                              'claude-web': 'Claude Code', 'codex-web': 'Codex',
+                                              'deepseek': 'DeepSeek', 'openrouter': 'OpenRouter'}.get(provider)
+    label = None
+    if model:
+        try:
+            from .role_models import describe_model
+            label = describe_model(raw=model)[0]
+        except Exception:
+            label = str(model)
+    if label and runtime:
+        return label + ' in ' + runtime
+    return label or runtime or 'a model Kel ran'
+
+
+def verification_lines(job):
+    """LIVE-10 / VIS-4: the verification summary as clean lines — no bullets, no verdict line (the card
+    already shows the verdict), model names instead of ids. [] while unsettled."""
+    verdict = job.get('verdict')
+    if job.get('state') != 'CLOSED' or verdict not in ('VERIFIED', 'UNCERTAIN', 'FAILED'):
+        return []
+    milestones = list(job.get('milestones', {}).values())
+    checks = [c for m in milestones for c in m.get('checks', []) if isinstance(c, dict)]
+    lines = []
+    repository = [c for c in checks if c.get('kind') == 'repository_evidence']
+    if repository and (repository[0].get('tests') or repository[0].get('existing')):
+        lines += [str(repository[0][key]) for key in ('tests', 'existing') if repository[0].get(key)]
+    elif repository:
+        lines.append({'VERIFIED': 'Your tests passed.', 'FAILED': "Your tests didn't pass."}.get(
+            repository[0].get('verdict'), "Kel couldn't confirm your tests passed."))
+    research = [c for c in checks if c.get('kind') == 'research_evidence']
+    if research:
+        lines.append('Its sources are linked and were checked against the search.' if research[0].get('verdict') == 'VERIFIED'
+                     else "Kel couldn't confirm its sources against the search.")
+    failures = [c for c in checks if c.get('verdict') == 'FAILED' and c.get('kind') != 'repository_evidence']
+    if failures:
+        found = plain_check(failures[0])
+        lines.append("Didn't pass: " + found[:1].lower() + found[1:])
+    limits = []
+    for c in checks:
+        if verdict == 'FAILED' and c.get('kind') == 'manual_review' and not c.get('reviewer_id'):
+            continue
+        if c.get('verdict') == 'UNCERTAIN' and c.get('reason') and str(c['reason']) not in limits:
+            limits.append(str(c['reason']))
+    for m in milestones:
+        if m.get('error') and str(m['error']) not in limits:
+            limits.append(str(m['error']))
+    lines += ['Not confirmed: ' + limit[:1].lower() + limit[1:] for limit in limits[:2]]
+    workers, checkers = [], []
+    for m in milestones:
+        if m.get('provider'):
+            label = _plain_worker(m['provider'], m.get('model'))
+            if label not in workers:
+                workers.append(label)
+    for c in checks:
+        if c.get('kind') == 'manual_review' and c.get('reviewer_provider'):
+            label = _plain_worker(c['reviewer_provider'], c.get('reviewer_model'))
+            if label not in checkers:
+                checkers.append(label)
+    if workers:
+        lines.append('Done by ' + ', '.join(workers) + '.')
+    if checkers:
+        lines.append('Checked by ' + ', '.join(checkers) + '.')
+    return [line if line.endswith(('.', '!', '?', ')')) else line + '.' for line in lines]
 
 
 def verification_summary(job):

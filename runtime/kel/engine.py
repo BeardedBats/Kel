@@ -5,20 +5,25 @@ import json
 from pathlib import Path
 import threading
 import time
-from .core import PolicyError, Conflict, uid, validate_contract
+from .core import (PolicyError, Conflict, uid, validate_contract, FIXED_WAIT, BUDGET_WAIT, STUCK_WAIT,
+                   NO_ROUTE_WAIT, TRANSIENT_ROUTE_REASONS, WEB_PROVIDERS, claimable_steps, route_excluded,
+                   route_wait_kind, route_wait_words)
 from . import guardrails
 from .router import Candidate, select
 from .instance_lock import InstanceLock
 
 
 LEASE_RENEW_SECONDS = 30
-# D-67: the route block of a step whose role is Fixed to a model that cannot run here.
-FIXED_WAIT = 'Fixed model not available: '
-# Routing 2 §5.4: the route block of a job that reached its budget (only Nick moves it on).
-BUDGET_WAIT = 'Budget reached: '
+# D-67 FIXED_WAIT: a step whose role is Fixed to a model that cannot run here. Routing 2 §5.4
+# BUDGET_WAIT: a job that reached its budget. FN-03 STUCK_WAIT: a job out of tries. LIVE-3
+# NO_ROUTE_WAIT: nothing set up here can do the step. Only Nick moves these on (core.route_wait_kind).
 # Job states the supervision pass can move forward by itself (anything else waits on a person, a
 # model becoming available, or nothing at all).
 ADVANCING_STATES = ('READY', 'RUNNING', 'VERIFYING', 'CANCELLING', 'PAUSING')
+OUT_OF_TRIES = "Kel used all the tries this work allows and it still hasn't passed its checks."
+# LIVE-5 / D-74.1: what the Discovery row and the card say when nothing here can search the web.
+NO_WEB_ROUTE = ('No model here can search the web. Kel searches through Claude Code or Codex (installed '
+                'and signed in on this computer) or an Anthropic API key, and none of those is available.')
 
 
 def compile_document(request, required=None, filename='result.md'):
@@ -138,7 +143,7 @@ class Engine:
         if isinstance(adapter,DurableAdapter):
             return result  # The broker owns the inbox receipt and stop acknowledgement.
         if cancel.is_set():
-            self.store.acknowledge_stop(run['id'], run['epoch'])
+            self.store.acknowledge_stop(run['id'], run['epoch'], result=result if isinstance(result, dict) else None)
         else:
             self.store.enqueue_result(run['id']+':result', run['id'], run['epoch'], result)
             self.store.provider_outcome(run['provider'],result)
@@ -247,16 +252,15 @@ class Engine:
                 job = self.store.get(job['id'])
                 if any(jid==job['id'] for jid,mid in self.reviews):continue
                 if job['state']=='WAITING_RESOURCE' and job.get('route_block'):
-                    if str(job['route_block']).startswith(FIXED_WAIT):
+                    wait_kind=route_wait_kind(job['route_block'])
+                    if wait_kind=='fixed':
                         # D-67: a Fixed role waits until its model is set up here (or Nick changes it).
                         if self._fixed_roles_runnable(job):
                             self.store.retry_route(job['id']);job=self.store.get(job['id'])
-                    elif str(job['route_block']).startswith(BUDGET_WAIT):
-                        pass  # Routing 2 §5.4: only Nick raising the budget (or stopping it) moves it
-                    else:
-                        health=self.store.provider_states()
-                        if any(s.get('circuit_until',0)<=time.time() and s.get('quota')!=0 for s in health.values()):
-                            self.store.retry_route(job['id']);job=self.store.get(job['id'])
+                    elif wait_kind in ('budget','stuck','no_route'):
+                        pass  # only Nick moves these on (raise the budget, Try again, change the model)
+                    elif self._route_may_clear(job['route_block']):
+                        self.store.retry_route(job['id']);job=self.store.get(job['id'])
                 if job['state'] in ('CANCELLED', 'CANCELLING', 'PAUSED', 'PAUSING', 'AWAITING_USER', 'WAITING_RESOURCE'):
                     continue
                 if not any(m['state'] == 'RUNNING' for m in job['milestones'].values()):
@@ -283,6 +287,12 @@ class Engine:
                     self.store.publish(job['id'])
                     continue
                 if self.tampered:
+                    continue
+                if job['state']=='READY' and not any(m['state']=='RUNNING' for m in job['milestones'].values()) \
+                        and claimable_steps(job) and job['budget']-job['spent']-job['reserved']<2:
+                    # FN-03: steps are still open but the job has no tries left to claim them. It
+                    # stops and asks Nick instead of staying READY for ever.
+                    self.store.wait_for_route(job['id'], STUCK_WAIT+OUT_OF_TRIES)
                     continue
                 for mid, m in job['milestones'].items():
                     if len(self.active) >= 2 or self.closed:
@@ -327,7 +337,7 @@ class Engine:
                                   circuit_until=health.get(n,{}).get('circuit_until',0),quota=health.get(n,{}).get('quota'),
                                   cost=health.get(n,{}).get('cost'),latency=health.get(n,{}).get('latency'),quality=health.get(n,{}).get('quality')) for n,a in self.adapters.items()
                                   if (n not in ('codex-code','claude-code') or job['contract'].get('kind')=='coding') and
-                                  (n!='research' or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])))]
+                                  (n not in WEB_PROVIDERS or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])))]
                     required={'repository_edit'} if job['contract'].get('kind')=='coding' else set(spec.get('required_capabilities',job['contract'].get('required_capabilities',['text'])))
                     candidates=[c for c in candidates if required.issubset(c.capabilities)]
                     set_aside={}
@@ -364,7 +374,12 @@ class Engine:
                     try:
                         route = select(candidates, required=required, explicit=explicit,quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence)
                     except PolicyError as exc:
-                        self.store.wait_for_route(job['id'],str(exc))
+                        block=str(exc)
+                        if route_wait_kind(block)=='no_route':
+                            # LIVE-3/LIVE-5: nothing set up here can ever run this step. Say so plainly
+                            # and wait for Nick instead of "retrying automatically" for ever.
+                            block=NO_ROUTE_WAIT+self._no_route_words(job,spec,block)
+                        self.store.wait_for_route(job['id'],block)
                         continue
                     reservation=None
                     if role:
@@ -392,7 +407,9 @@ class Engine:
                             if staff_record['asked'].get('model_arg') is not None or staff_record.get('uses_role_model'):
                                 model=staff_record['asked'].get('model_arg') or model
                         run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model,staff=staff_record,reservation=reservation)
-                    except PolicyError:
+                    except PolicyError as exc:
+                        if 'budget exhausted' in str(exc) and not self._job_active(job['id']):
+                            self.store.wait_for_route(job['id'], STUCK_WAIT+OUT_OF_TRIES)
                         continue
                     job['milestones'][mid]['state'] = 'RUNNING'  # later steps of this pass see it
                     try:
@@ -403,6 +420,38 @@ class Engine:
                     future = self.pool.submit(self._execute, run, self.adapters[route['selected']], cancel)
                     self.active[run['id']] = (future, cancel, run)
             return bool(advancing or self.active or self.reviews)
+
+    def _job_active(self, job_id):
+        with contextlib.closing(self.store.connect()) as db:
+            return bool(db.execute("SELECT 1 FROM runs WHERE job_id=? AND state IN ('RUNNING','WAITING_APPROVAL',"
+                                   "'CANCEL_REQUESTED')", (job_id,)).fetchone())
+
+    def _route_may_clear(self, route_block):
+        """A temporary wait retries only once a model it waited on is healthy again (FN-03: never a
+        retry-and-block cycle on every pass because some *other* model is healthy)."""
+        health = self.store.provider_states()
+        excluded = route_excluded(route_block)
+        if excluded is None:  # an older free-text block: the previous rule
+            return any(s.get('circuit_until', 0) <= time.time() and s.get('quota') != 0 for s in health.values())
+        for name, reasons in excluded.items():
+            reasons = reasons if isinstance(reasons, (list, tuple)) else [reasons]
+            if any(r in TRANSIENT_ROUTE_REASONS for r in reasons):
+                state = health.get(name, {})
+                if state.get('circuit_until', 0) <= time.time() and state.get('quota') != 0:
+                    return True
+        return False
+
+    def _no_route_words(self, job, spec, block):
+        """Why no model here can run this step, in plain words (never a raw routing dict)."""
+        needs = spec.get('required_capabilities', job['contract'].get('required_capabilities', [])) or []
+        if 'web_research' in needs:
+            return NO_WEB_ROUTE
+        if job['contract'].get('kind') == 'coding':
+            return ('No model here can change code. Kel needs Claude Code or Codex installed and '
+                    'signed in on this computer.')
+        if 'image' in needs:
+            return 'No model here can read images. That needs an Anthropic API key (Settings, Providers).'
+        return route_wait_words(block)
 
     @staticmethod
     def _purpose(job, spec):
@@ -534,13 +583,15 @@ class Engine:
             time.sleep(.1)
         raise TimeoutError('Job remains durable; wait limit reached')
 
-    def close(self):
+    def close(self, wait=True):
+        """`wait=False` (the engine process ending, FN-03): don't block on runs or reviews still
+        finishing — their brokers are durable and adopted at the next start."""
         self.closed = True
         jobs = {run['job_id'] for _, _, run in self.active.values()}
         for job_id in jobs:
             self.control(job_id, 'pause')
-        self.pool.shutdown(wait=True, cancel_futures=False)
-        self.review_pool.shutdown(wait=True,cancel_futures=False)
+        self.pool.shutdown(wait=wait, cancel_futures=not wait)
+        self.review_pool.shutdown(wait=wait, cancel_futures=not wait)
         self.store.consume()
         try:
             self.store.controller_lease(self.owner,release=True)
