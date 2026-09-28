@@ -465,7 +465,7 @@ def waive_gate(store, *, task_id, authority, rationale, now=None):
 
 
 def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_provider,
-                mission_id, now=None, allow_same_family=False):
+                mission_id, now=None, allow_same_family=False, mode='oracle'):
     """Run the adversarial (Oracle) lens under family independence (doc 08 §8).
 
     The oracle must be a different provider family than the producer; the same-family fallback
@@ -482,6 +482,10 @@ def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_
                           '(got %s for both); pass allow_same_family=True to record the '
                           'fallback' % producer_family)
     require_text(mission_id, 'mission_id (review records are recorded)')
+    if mode not in ('oracle', 'red team'):
+        raise PolicyError('Independent Assurance modes are oracle and red team')
+    # Charter 13: one function, two modes; the Red Team's coverage is recorded under its own label.
+    suffix = '' if mode == 'oracle' else ' (red team)'
     payload = {'lens': ORACLE_LENS, 'artifact': artifact,
                'requirement': 'attack the artifact and state your coverage explicitly'}
     outcome = runner(ORACLE_LENS, payload)
@@ -492,7 +496,7 @@ def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_
     if oracle_family == producer_family:
         fallback = write_evidence(store, mission_id=mission_id, task_id=task_id,
                                   evidence_class='review_record',
-                                  label='oracle same-family fallback',
+                                  label='%s same-family fallback' % mode,
                                   produced_by=oracle_provider,
                                   output='producer family %s == oracle family %s '
                                          '(allow_same_family=True)' % (producer_family,
@@ -500,7 +504,7 @@ def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_
                                   ran_at=stamp)['id']
     coverage_evidence = write_evidence(store, mission_id=mission_id, task_id=task_id,
                                        evidence_class='review_record',
-                                       label='lens coverage: %s' % ORACLE_LENS,
+                                       label='lens coverage: %s%s' % (ORACLE_LENS, suffix),
                                        produced_by=oracle_provider, output=coverage,
                                        ran_at=stamp)['id']
     records = [record_finding(store, item, now=stamp) for item in outcome.get('findings', [])]
@@ -509,7 +513,39 @@ def oracle_check(store, *, task_id, artifact, runner, producer_provider, oracle_
             'family_diversity': ('different' if oracle_family != producer_family
                                  else 'unavailable (recorded fallback)'),
             'fallback_evidence': fallback,
-            'oracle_provider': oracle_provider, 'producer_provider': producer_provider}
+            'oracle_provider': oracle_provider, 'producer_provider': producer_provider, 'mode': mode}
+
+
+SENTINEL_LENSES = ('security', 'privacy', 'data-integrity', 'release-integrity')
+
+
+def sentinel_check(store, *, task_id, artifact, lenses, findings, coverage, reviewer_provider,
+                   mission_id, now=None):
+    """Record one Sentinel review (charter 11): its never-gate lenses, its coverage and findings.
+
+    Sentinel reviews only its own class (security, privacy, data-integrity, release-integrity);
+    a finding in any other lens is refused (no scope creep into taste). The coverage statement is
+    required and written to the evidence ledger once per lens reviewed, so a later auditor sees
+    exactly what Sentinel covered. Findings land through the standard pipeline; they are
+    never-gate, so only Nick can accept or dismiss them (`resolve_finding`, `waive_gate`).
+    """
+    lenses = list(lenses or ())
+    if not lenses or any(name not in SENTINEL_LENSES for name in lenses):
+        raise PolicyError('Sentinel reviews only %s' % ', '.join(SENTINEL_LENSES))
+    require_text(mission_id, 'mission_id (review records are recorded)')
+    require_text(coverage, 'coverage statement for Sentinel')
+    for item in findings:
+        if item.get('lens') not in lenses:
+            raise PolicyError('A Sentinel finding must be in one of its lenses (%s)' % ', '.join(lenses))
+    stamp = time.time() if now is None else now
+    coverage_evidence = [write_evidence(store, mission_id=mission_id, task_id=task_id,
+                                        evidence_class='review_record',
+                                        label='lens coverage: %s (sentinel)' % name,
+                                        produced_by=reviewer_provider, output=coverage, ran_at=stamp)['id']
+                         for name in lenses]
+    records = [record_finding(store, item, now=stamp) for item in findings]
+    return {'lenses': lenses, 'coverage_statement': coverage, 'coverage_evidence': coverage_evidence,
+            'findings': records, 'reviewer_provider': reviewer_provider}
 
 
 ACCEPTANCE_REASON_PREFIXES = ('risk-accepted:', 'gate-waived')

@@ -27,6 +27,8 @@ AREA_WORDS = {'functional-testing': 'Tests', 'maintainability': 'Maintainability
               'security': 'Security', 'privacy': 'Privacy', 'data-integrity': 'Data safety',
               'release-integrity': 'Release', 'requirements-coverage': 'Meets the request',
               'adversarial': 'Second opinion'}
+# The independent review passes after the checks (kel/oracle.py), in the order they run.
+PASS_VIEWS = ('sentinel', 'oracle', 'red_team')
 
 
 def _table(db, name):
@@ -141,7 +143,8 @@ def _reviewing(store, job):
     """True while a check or the second opinion is still running for this job."""
     with contextlib.closing(store.connect()) as db:
         if _table(db, 'staff_calls') and db.execute(
-                "SELECT 1 FROM staff_calls WHERE job_id=? AND kind IN ('check','oracle') AND state='running'",
+                "SELECT 1 FROM staff_calls WHERE job_id=? AND kind IN ('check','oracle','sentinel','red_team') "
+                "AND state='running'",
                 (job['id'],)).fetchone():
             return True
     for milestone in (job.get('milestones') or {}).values():
@@ -179,8 +182,9 @@ def state_of(store, job, brief=None):
             if needed:
                 return 'needs_you', needed['why'], True, needed['why'], needed['next']
             if pending(store, job) or (kind == 'coding' and not _published(store, job['id'])):
-                return 'in_review', 'Getting an independent second opinion before anything is applied.' \
-                    if pending(store, job) else 'Finishing up the checked change.', False, None, None
+                from .oracle import reviewing_line
+                return ('in_review', reviewing_line(store, job) or 'Finishing up the checked change.',
+                        False, None, None)
             line = 'Done and checked.'
             if kind == 'coding':
                 from .auto_apply import describe
@@ -267,6 +271,14 @@ def _doing(call, state, job):
         if state == 'working':
             return 'Giving an independent second opinion'
         return 'Second opinion: ' + (call.get('summary') or 'finished')
+    if call['kind'] == 'sentinel':
+        if state == 'working':
+            return 'Checking it for security and data safety'
+        return 'Security check: ' + (call.get('summary') or 'finished')
+    if call['kind'] == 'red_team':
+        if state == 'working':
+            return 'Trying to break the accepted result'
+        return 'Tried to break it: ' + (call.get('summary') or 'finished')
     return 'Planning'
 
 
@@ -525,21 +537,8 @@ def detail(store, job_id):
               'independence': (checker or {}).get('independence'),
               'independence_label': INDEPENDENCE_WORDS.get((checker or {}).get('independence')),
               'findings': _findings_view(pod_rows)}
-    oracle_state = oracle_status(store, job)
-    oracle_call = next((c for c in reversed(job_calls) if c['kind'] == 'oracle'), None)
-    oracle_member = _member(oracle_call, runs, job) if oracle_call else {}
-    try:
-        oracle_rows = findings_for(store, job) if oracle_state['state'] != 'not_needed' else []
-    except Exception:
-        oracle_rows = []
-    oracle_view = {'state': oracle_state['state'], 'why': oracle_state.get('why') or (
-        '; '.join(oracle_state.get('reasons') or []) or None),
-        'independence': oracle_state.get('independence'), 'model_label': oracle_member.get('model_label'),
-        'independence_label': INDEPENDENCE_WORDS.get(oracle_state.get('independence')),
-        'reasoning': oracle_member.get('reasoning'), 'findings': _findings_view(oracle_rows),
-        # LIVE-10: what the second opinion concluded (not only why it was asked).
-        'conclusion': _oracle_conclusion(oracle_state, oracle_rows),
-        'coverage': oracle_state.get('coverage')}
+    passes = {kind: _pass_view(store, job, job_calls, runs, kind, oracle_status, findings_for)
+              for kind in PASS_VIEWS}
     files, application = None, None
     if (job.get('contract') or {}).get('kind') == 'coding':
         from .auto_apply import changed_paths, describe
@@ -579,7 +578,8 @@ def detail(store, job_id):
     except Exception:
         out['usage'] = None
     out.update({'why': why, 'next': nxt, 'staff': staff_view, 'steps': steps, 'review': review,
-                'oracle': oracle_view, 'files_changed': files, 'application': application,
+                'oracle': passes['oracle'], 'sentinel': passes['sentinel'], 'red_team': passes['red_team'],
+                'files_changed': files, 'application': application,
                 'verification': {'result': result_word, 'summary': summary},
                 'result': _short(published['text'], 600) if published else None,
                 'links': {'conversation_id': job.get('conversation'),
@@ -587,11 +587,37 @@ def detail(store, job_id):
     return out
 
 
+def _pass_view(store, job, job_calls, runs, kind, pass_status, pass_findings):
+    """One independent pass for the detail, in the Oracle's shape: {state, why, conclusion, coverage,
+    independence, independence_label, model_label, reasoning, findings}."""
+    current = pass_status(store, job, kind)
+    call = next((c for c in reversed(job_calls) if c['kind'] == kind), None)
+    member = _member(call, runs, job) if call else {}
+    try:
+        rows = pass_findings(store, job, kind=kind) if current['state'] != 'not_needed' else []
+    except Exception:
+        rows = []
+    why = current.get('why') or ('; '.join(current.get('reasons') or []) or None)
+    if kind == 'sentinel' and current['state'] == 'not_needed' and not why:
+        record = (job.get('contract') or {}).get('staffing') or {}
+        note = (record.get('sentinel') or {}).get('not_needed')
+        why = (note[:1].upper() + note[1:] + '.') if note else None
+    return {'state': current['state'], 'why': why,
+            'independence': current.get('independence'), 'model_label': member.get('model_label'),
+            'independence_label': INDEPENDENCE_WORDS.get(current.get('independence')),
+            'reasoning': member.get('reasoning'), 'findings': _findings_view(rows),
+            # LIVE-10: what the pass concluded (not only why it was asked).
+            'conclusion': _oracle_conclusion(current, rows),
+            'coverage': current.get('coverage')}
+
+
 def _oracle_conclusion(current, rows):
     """One plain sentence: what the independent second opinion concluded, or None while it runs."""
     state = current.get('state')
     if state == 'could_not_run':
         return "It couldn't run: %s." % (current.get('why') or 'no reason was recorded')
+    if state == 'not_needed' and current.get('skipped'):
+        return current.get('why')
     if state != 'done':
         return None
     live = [r for r in rows if r.get('status') in ('open', 'confirmed')]

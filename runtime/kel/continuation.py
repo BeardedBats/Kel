@@ -30,6 +30,21 @@ STATUS_ONLY_STATES = ('RUNNING', 'CANCELLING')
 OPEN_MILESTONE_STATES = ('READY', 'NEEDS_REPAIR', 'UNCERTAIN', 'INVALIDATED', 'EXHAUSTED')
 STATE_PRIORITY = {'AWAITING_USER': 0, 'PAUSED': 1, 'WAITING_RESOURCE': 2, 'READY': 3}
 SESSION_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{7,200}$')
+# Why work waits on Nick, as one word the renderer reads (Home stops inferring it): a restart
+# stopped a step part-way, it ran out of tries, its Fixed model can't run here, nothing here can
+# run it, or it reached its budget. None when nothing only Nick can do holds it.
+WAITS = ('interrupted', 'stuck', 'fixed', 'no_route', 'budget')
+
+
+def wait_of(job):
+    """The job's `wait` (one of WAITS) from persisted state only, else None."""
+    from .core import interrupted, route_wait_kind
+    if job.get('state') in ('CLOSED', 'CANCELLED', 'CANCELLING'):
+        return None
+    if any(interrupted(m) for m in (job.get('milestones') or {}).values()):
+        return 'interrupted'
+    kind = route_wait_kind(job.get('route_block')) if job.get('route_block') else None
+    return kind if kind in WAITS else None
 
 
 def ensure_schema(store):
@@ -120,6 +135,7 @@ class Continuation:
                     'conversation': job.get('conversation'),
                     'linked': sorted(links.get(job['id'], ())),
                     'last_event_at': last or job.get('created', 0.0),
+                    'wait': wait_of(job),
                 })
         return out
 
@@ -338,4 +354,4 @@ class Continuation:
         return {'job_id': job_id, 'title': title or job_id, 'state': state,
                 'verdict': job.get('verdict'), 'shipped': shipped, 'open': opens,
                 'fenced': fenced, 'session': session, 'why': why, 'next': nxt,
-                'needs_you': needs, 'wait': 'interrupted' if fenced and needs else wait_kind}
+                'needs_you': needs, 'wait': wait_of(job)}

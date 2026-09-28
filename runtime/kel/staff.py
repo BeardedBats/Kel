@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS oracle_reviews(
 ROLE_LABELS = {'kel': 'Kel', 'discovery': 'Discovery', 'architect': 'Architect',
                'designer': 'Designer', 'builder': 'Builder', 'verifier': 'Verifier',
                'sentinel': 'Sentinel', 'release': 'Release', 'oracle': 'Oracle',
-               'utility': 'Utility'}
+               'utility': 'Utility', 'red_team': 'Red Team'}
 REVIEW_ROLES = ('verifier', 'oracle', 'sentinel')
 # The authority template a step's executor runs under (the V1.5 frozen role snapshot). Utility is
 # the Builder's fast tier (charter doc 04); Kel's own work keeps the legacy per-kind template.
@@ -54,7 +54,10 @@ EXECUTOR_TEMPLATES = {'builder': 'builder', 'utility': 'builder', 'discovery': '
                       'designer': 'designer', 'architect': 'architect'}
 LEGACY_TEMPLATES = {'coding': 'implementation-engineer', 'research': 'research-specialist'}
 
-CALL_KINDS = ('work', 'check', 'oracle', 'plan')
+# `sentinel` and `red_team` are the other independent review passes (kel/oracle.py); like `check`
+# and `oracle` they are review calls a killed engine leaves `stopped`.
+CALL_KINDS = ('work', 'check', 'oracle', 'plan', 'sentinel', 'red_team')
+REVIEW_KINDS = ('check', 'oracle', 'sentinel', 'red_team')
 CALL_STATES = ('running', 'done', 'failed', 'stopped', 'waiting')
 
 OFF_VALUES = ('0', 'false', 'off', 'no')
@@ -112,6 +115,10 @@ FLAG_PATTERNS = {
                           r'delete (?:all |the |every )?(?:data|records|rows|users|accounts|files)'),
     'new_dependency': _rx(r'install', r'npm install', r'pip install',
                           r'(?:add|new) (?:a |the )?(?:dependency|package|library)'),
+    # Sentinel's privacy class (handoff §16). Narrow phrases only; like every flag it never raises the
+    # scoping size (FN-07) — it records the class and, for a code change, brings Sentinel's review.
+    'privacy': _rx(r'privacy', r'personal (?:data|information|details)', r'pii',
+                   r'personally identifiable', r'gdpr', r'telemetry'),
 }
 USER_FACING = _rx(r'ui', r'ux', r'screens?', r'pages?', r'buttons?', r'layout', r'design\w*', r'css',
                   r'styles?(?:heet)?', r'dialogs?', r'modals?', r'menus?', r'forms?', r'front-?end',
@@ -208,6 +215,9 @@ REVIEW_LENSES = {'code': ('functional-testing', 'maintainability'),
 FLAG_LENSES = {'security_boundary': 'security', 'data_migration': 'data-integrity',
                'release': 'release-integrity'}
 ORACLE_FLAGS = ('security_boundary', 'irreversible', 'release', 'data_migration')
+# Sentinel (handoff §16): security, privacy, data integrity, migration risk — the flag and the lens
+# Sentinel reviews it through (never-gate lenses, workforce-os doc 08 §6).
+SENTINEL_FLAGS = {'security_boundary': 'security', 'privacy': 'privacy', 'data_migration': 'data-integrity'}
 TIER_RANK = {'D0': 0, 'D1': 1, 'D2': 2, 'D3': 3, 'D4': 4}
 
 
@@ -305,6 +315,8 @@ def plan_job(store, contract, request=None, *, tier_max=None):
         hit = [flag for flag in flags if flag in ORACLE_FLAGS]
         if hit:
             oracle_why.append('consequential work (%s)' % ', '.join(f.replace('_', ' ') for f in hit))
+    sentinel = sentinel_decision(kind, tier, flags)
+    red_team = red_team_decision(kind, tier, flags)
     return {'schema': 1, 'decided_at': time.time(), 'kind': kind, 'tier': tier,
             'decided_tier': decision['tier'], 'score': decision['score'],
             'rules': [item['id'] for item in decision['rules_fired']], 'reasons': reasons,
@@ -315,7 +327,42 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             'parallel': parallel, 'serial': parallel is None,
             'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses},
             'oracle': {'required': bool(oracle_why), 'why': oracle_why},
+            'sentinel': sentinel, 'red_team': red_team,
             'caps': {'workers_max': staffing.CAPS['workers_max'], 'engine_concurrency': 2}}
+
+
+def sentinel_decision(kind, tier, flags):
+    """Whether Sentinel reviews this work (recorded with reasons, frozen with the decision).
+
+    Sentinel runs when the work can actually cause security, privacy or data harm: a code change
+    carrying one of its flags, or high-assurance (D4) work carrying one. A flag on writing or
+    research below D4 — a note that explains what an API token is — is a mention, not an exposure
+    (FN-07: a word alone is not a reason for more ceremony); the Verifier's lens still covers it at
+    D2, and the non-activation is recorded with its reason (charter 11).
+    """
+    hit = [flag for flag in flags if flag in SENTINEL_FLAGS]
+    lenses = [SENTINEL_FLAGS[flag] for flag in hit]
+    words = ', '.join(flag.replace('_boundary', '').replace('_', ' ') for flag in hit)
+    if hit and (kind == 'code' or tier == 'D4'):
+        why = ['a code change touching %s' % words] if kind == 'code' else [
+            'high-assurance work touching %s' % words]
+        return {'required': True, 'why': why, 'lenses': lenses}
+    not_needed = ('the request mentions %s, but it changes no code, so there is nothing for Sentinel '
+                  'to check' % words) if hit else None
+    return {'required': False, 'why': [], 'lenses': lenses, 'not_needed': not_needed}
+
+
+def red_team_decision(kind, tier, flags):
+    """Whether the Red Team (Independent Assurance mode B) attacks the accepted result.
+
+    Only when justified: high-assurance (D4) work always; a security-flagged code change only when
+    the verified diff is larger than the size trigger (measured after the change is checked).
+    """
+    from .oracle import RED_TEAM_FILES, RED_TEAM_LINES
+    why = ['high-assurance work is attacked once it is accepted'] if tier == 'D4' else []
+    size = ({'files': RED_TEAM_FILES, 'lines': RED_TEAM_LINES}
+            if kind == 'code' and 'security_boundary' in flags else None)
+    return {'required': bool(why), 'why': why, 'size_trigger': size}
 
 
 def staffing_of(job):
@@ -515,10 +562,11 @@ def calls(store, job_id):
 
 
 def settle_interrupted(store):
-    """At engine start: review/Oracle calls a killed engine left running are stopped (work calls
-    follow their run's own state, which V2-11 recovery owns)."""
+    """At engine start: review calls (Verifier, Sentinel, Oracle, Red Team) a killed engine left
+    running are stopped (work calls follow their run's own state, which V2-11 recovery owns)."""
     with store.transaction() as db:
         if not _has_table(db, 'staff_calls'):
             return 0
         return db.execute("UPDATE staff_calls SET state='stopped', finished=? WHERE state='running' "
-                          "AND kind IN ('check','oracle')", (time.time(),)).rowcount
+                          "AND kind IN (%s)" % ','.join('?' * len(REVIEW_KINDS)),
+                          (time.time(),) + REVIEW_KINDS).rowcount

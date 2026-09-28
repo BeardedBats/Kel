@@ -1308,7 +1308,7 @@ class Service:
                    'accepted':len(brief['shipped']),'total':len(milestones),
                    'open':len(brief['open']),'fenced':brief['fenced'],
                    'needs_you':brief['needs_you'],'why':brief['why'],'next':brief['next'],
-                   'last_at':last.get(job['id'])}
+                   'wait':brief.get('wait'),'last_at':last.get(job['id'])}
             if pending.get(job['id']):
                 entry.update(needs_you=True,why='Waiting for your decision on a gated step.',
                              next='Decide on the request card in the conversation — or on its work card at the top of the chat.')

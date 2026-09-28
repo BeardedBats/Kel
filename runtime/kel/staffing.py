@@ -124,7 +124,10 @@ SCORED_SCALES = {'complexity': 3, 'decomposability': 3, 'sequentiality': 3, 'unc
 # (None = recording only). Flags are conservative inputs, not scored features.
 FLAG_RULES = {'security_boundary': ('R3', 'D2'), 'release': ('R4', 'D2'),
               'irreversible': ('R5', 'D2'), 'data_migration': ('R6', 'D2'),
-              'new_dependency': ('R7', None)}
+              'new_dependency': ('R7', None),
+              # Sentinel's privacy class: recorded (and it brings Sentinel to a code change), never a
+              # tier raise on its own — the rule table has no privacy rule (doc 05).
+              'privacy': ('R3', None)}
 
 BAND_CEILINGS = (('D0', 2.0), ('D1', 5.0), ('D2', 9.0), ('D3', 14.0), ('D4', float('inf')))
 TIER_ORDER = ('D0', 'D1', 'D2', 'D3', 'D4')

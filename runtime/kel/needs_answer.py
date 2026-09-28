@@ -131,9 +131,9 @@ def question(store, job, why=None, nxt=None):
         if needed:
             options = ([{'id': APPLY_ANYWAY, 'label': 'Apply anyway'}, {'id': LEAVE, 'label': 'Leave it'}]
                        if coding else [{'id': LEAVE, 'label': 'Keep the result as it is'}])
+            lead = needed.get('question') or 'An independent second opinion raised a problem'
             return dict(base, kind='second_opinion', wait=WAIT_WORDS['second_opinion'],
-                        text=('An independent second opinion raised a problem. Apply the change anyway?'
-                              if coding else 'An independent second opinion raised a problem with this result.'),
+                        text=(lead + '. Apply the change anyway?' if coding else lead + ' with this result.'),
                         detail=needed['why'], options=options, ref={'job': job['id']})
         if coding:
             from .auto_apply import describe

@@ -152,6 +152,61 @@ a triggered code change **waits for Nick** instead of applying (missing coverage
 `oracle_reviews(job_id, subject, attempts, status, …)` mirrors `review_runs`: RUNNING rows become
 INTERRUPTED at engine start and are retried at most twice.
 
+## 3a. Sentinel and the Red Team (phase 3, 2026-09-28)
+Three independent passes now run, one at a time on the review pool, after a staffed job is VERIFIED
+and before anything is applied or published — **Sentinel → Oracle → Red Team** (`kel/oracle.py`,
+`PASSES`). The engine hook is unchanged: `oracle.pending` answers for all three and `oracle.run` runs
+the next one; `oracle.gate` (D-65), `oracle.attention` (Needs you, `/api/work`, the hand-off card,
+`/api/office`) and `oracle.result_note` cover every pass. All three are fresh-context and read-only,
+see the request, claims, checks and artifact (the trusted diff for code) and never the Builder's own
+report; none can change the verdict, the artifact or the project.
+
+**Sentinel** (handoff §16, charter 11) — a real staff member with its own review call.
+- *Trigger* (decided at intake, frozen as `staffing['sentinel'] = {required, why, lenses,
+  not_needed}`): one of staff.py's flags `security_boundary` → `security`, `privacy` → `privacy`,
+  `data_migration` → `data-integrity` **and** the work is a code change, or high-assurance (D4) work.
+  A flag on writing or research below D4 ("Write a short note explaining what an API token is") is a
+  mention, not an exposure: no Sentinel, and the non-activation is recorded with its reason. This keeps
+  FN-07: no flag, old or new, raises the scoping size, and none brings ceremony by a word alone to
+  work that changes nothing. `privacy` is a new, narrow flag (privacy, personal data/information/
+  details, PII, personally identifiable, GDPR, telemetry); in the rule table it is recorded only
+  (`R3`, no tier raise).
+- *Never-gate*: it always resolves on the `assurance` dispatch tier (`task_class='review'`), is not
+  held to the step budget, and cannot be lowered for cost. Role model: Automatic (D-67), another
+  family than the Builder first; `independence` is recorded.
+- *Output*: `{verdict: clear|clear_with_notes|block|not_assessed, findings:[{severity, area, summary,
+  where, proof, clears_when}], coverage}`. Findings go to the ledger under `sentinel:<job>` in
+  Sentinel's lenses only (`assurance.sentinel_check`; coverage written once per lens). A blocker must
+  say what would clear it. **A live blocker/critical stops auto-apply and becomes Needs you**
+  ("Sentinel's security check found a problem: …"; the card asks "Sentinel's security check raised a
+  problem. Apply the change anyway?"). `not_assessed` is a recorded gap, never clean: the change waits
+  for Nick.
+- *On the card*: a staff row `role: sentinel`, `role_label: "Sentinel"`, doing "Checking it for
+  security and data safety" / "Security check: found nothing that should stop this"; the in-review
+  line is "Sentinel is checking it for security and data safety before anything is applied."
+
+**Red Team** (Independent Assurance mode B, charter 13; intent doc §9: one function, two modes).
+- *Runs only when justified*: high-assurance (D4) work (`staffing['red_team'].required`), or a
+  security-flagged (`security_boundary`) code change whose verified diff is **larger than 5 files or
+  150 changed lines** (`staffing['red_team'].size_trigger = {files: 5, lines: 150}`,
+  `oracle.RED_TEAM_FILES/LINES`; measured like the Oracle's size, independent of access mode).
+- *Skipped, with its reason*, when an earlier review (pod, Sentinel or Oracle) already stands against
+  the result: there is no accepted result to attack.
+- It attacks the accepted result **and every earlier finding**: its prompt carries the prior findings
+  as a coverage map and asks what they missed. Outcomes `clean` are coverage, not findings.
+- It runs on the Oracle's role model (same function), another family than the Builder where
+  available, and records `independence` (`different` / `reduced`). Findings go under `redteam:<job>`
+  as `adversarial` (coverage label "lens coverage: adversarial (red team)") and **behave like the
+  Oracle's**: a live blocker/critical stops auto-apply and marks Needs you; a pass that cannot run is a
+  recorded gap and the change waits for Nick. It has no implementation authority.
+- Staff row: `role: red_team`, `role_label: "Red Team"` (its `asked.role` is `oracle`).
+
+**Restart safety.** Each pass keeps one `oracle_reviews` row — the Oracle's key is the artifact digest
+(unchanged), Sentinel's `sentinel:<digest>`, the Red Team's `red_team:<digest>` — so the engine's
+existing RUNNING → INTERRUPTED reset and the two-attempt limit cover all three with no new table.
+`staff_calls.kind` gains `sentinel` and `red_team`; a killed engine's open calls become `stopped`.
+Jobs staffed before this change carry no `sentinel`/`red_team` record and are never re-decided.
+
 ## 4. Live state API (D-66, D-68)
 The renderer polls it for the row of work cards at the top of the chat (D-68). Plain words only — no
 tiers, lease ids, run ids or event names.
@@ -185,11 +240,20 @@ its evidence are untouched.
          model, model_label, version, model_confirmed, provider, runtime, runtime_version,
          reasoning, asked:{model_label, reasoning}|null, note, started_at, finished_at}],
  steps:[{id, label, state, at}], review:{verdict, checked_by, independence, findings:[…]},
- oracle:{state:'not_needed'|'waiting'|'running'|'done'|'could_not_run', why, independence, findings:[…]},
+ oracle:{state:'not_needed'|'waiting'|'running'|'done'|'could_not_run', why, conclusion, coverage,
+         independence, independence_label, model_label, reasoning, findings:[…]},
+ sentinel:{…the same shape…}, red_team:{…the same shape…},
  files_changed:[path…]|null, verification:{result, summary:[…]},
  links:{conversation_id, submission_id, message_seq}}
 ```
 Finding rows: `{severity:'blocker'|'critical'|'note', area, summary, where, status:'open'|'resolved'}`.
+`sentinel` and `red_team` (§3a) have the Oracle's shape; `not_needed` carries a `why` when Sentinel was
+not needed for a flagged mention or the Red Team was skipped (then `conclusion` repeats it).
+
+**`wait`** (phase 3): `/api/work` entries, the state's `continuation` list entries and the resume brief
+carry `wait` ∈ `interrupted | stuck | fixed | no_route | budget | null` from engine state
+(`continuation.wait_of`), so Home no longer infers it; `null` when nothing only Nick can do holds the
+work (a transient "no model free" wait is `null`).
 The desktop allowlist (`kelRequestGuard.ts`) admits exactly these GET shapes and the POST route;
 `kelApi.ts` gets `kelOffice(scope)`, `kelOfficeItem(job)` and `kelOfficeDismiss(job)` with typed
 results. No UI is built here (D-68 chose the design; the card row is a renderer task).
@@ -222,9 +286,11 @@ status, detail, PK(job_id, subject))`, `office_dismissals(job_id PK, at, actor)`
 
 ## 7. What stays deferred (and why)
 - **Parallel code streams (D3 for coding):** needs per-stream project copies in the coding bridge.
-- **A separate Sentinel staff member:** the security lens runs inside the Verifier's review;
-  Sentinel remains Automatic with no dedicated review call.
-- **Red Team mode, adaptive gating (5.7), depth-2 grandchildren:** unchanged, still deferred.
+- ~~A separate Sentinel staff member~~ and ~~Red Team mode~~: built in phase 3 (§3a). The Verifier's
+  pod review keeps its security lens as well (defence in depth).
+- **Adaptive gating (5.7), depth-2 grandchildren:** unchanged, still deferred.
+- **Sentinel's release-integrity co-sign** (charter 11 resp. 7): not triggered yet — `release` work
+  keeps the Verifier's release-integrity lens and the Oracle.
 - **DeepSeek Flash:** there is no DeepSeek adapter; Utility work always falls back (recorded).
 - **The Office UI and the Settings row for role models:** data only here.
 - **Scoping (vetting) as the default for big requests:** not built. What it would take: a size/risk

@@ -162,7 +162,21 @@ class DetailTests(Base):
         view = office.detail(self.store, job)
         self.assert_plain(view)
         roles = [(m['role'], m['state']) for m in view['staff']]
-        self.assertEqual(roles, [('kel', 'done'), ('builder', 'done'), ('verifier', 'done'), ('oracle', 'done')])
+        self.assertEqual(roles, [('kel', 'done'), ('builder', 'done'), ('verifier', 'done'), ('sentinel', 'done'),
+                                 ('oracle', 'done')])
+        sentinel = view['staff'][3]
+        self.assertEqual((sentinel['role_label'], sentinel['doing']),
+                         ('Sentinel', 'Security check: found nothing that should stop this'))
+        # The detail carries Sentinel and the Red Team in the Oracle's shape.
+        shape = {'state', 'why', 'conclusion', 'coverage', 'independence', 'independence_label', 'model_label',
+                 'reasoning', 'findings'}
+        self.assertEqual(set(view['sentinel']), shape)
+        self.assertEqual(set(view['red_team']), shape)
+        self.assertEqual((view['sentinel']['state'], view['sentinel']['conclusion']),
+                         ('done', 'It found nothing that should stop this.'))
+        self.assertEqual(view['sentinel']['independence_label'],
+                         'A different model family from the one that did the work')
+        self.assertEqual(view['red_team']['state'], 'not_needed', 'a one-file change is below the Red Team size')
         builder = view['staff'][1]
         self.assertEqual((builder['model_label'], builder['version'], builder['model_confirmed'], builder['runtime'],
                           builder['provider']), ('Claude Opus 5.5', 'Opus 5.5', True, 'Claude Code', 'Anthropic'))

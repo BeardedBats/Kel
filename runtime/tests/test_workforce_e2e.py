@@ -29,11 +29,13 @@ class FakeModel:
     """A text/review/Oracle model. It answers by what it is asked to do, and reports its model."""
 
     def __init__(self, provider, model=None, verdict='VERIFIED', findings=None, challenges=None,
-                 reports=True):
+                 reports=True, sentinel=None, attacks=None):
         self.provider, self.model = provider, model
         self.verdict, self.findings = verdict, findings
         self.challenges = challenges or []
         self.reports = reports
+        self.sentinel = sentinel if sentinel is not None else {'verdict': 'clear', 'findings': []}
+        self.attacks = attacks or []
         self.prompts = []
 
     def execute(self, prompt, run_id=None, **kwargs):
@@ -43,6 +45,12 @@ class FakeModel:
             out['model_used'] = self.model
         if prompt.startswith('Plan a bounded Markdown document job'):
             return {'outcome': 'FAILED', 'error': 'the fake planner does not plan'}
+        if prompt.startswith('You are Sentinel'):
+            out['text'] = json.dumps(dict(self.sentinel, coverage='Read the diff for secrets and access.'))
+            return out
+        if prompt.startswith('You are the Red Team'):
+            out['text'] = json.dumps({'attacks': self.attacks, 'coverage': 'Attacked the inputs and the recovery path.'})
+            return out
         if 'You are the Oracle' in prompt:
             out['text'] = json.dumps({'challenges': self.challenges,
                                       'coverage': 'Read the diff, the claims and the checks.'})
@@ -89,7 +97,7 @@ class StaffStub:
         if model is None:
             return None
         clone = FakeModel(name, binding.get('model_arg'), model.verdict, model.findings, model.challenges,
-                          model.reports)
+                          model.reports, model.sentinel, model.attacks)
         clone.prompts = model.prompts
         return clone
 
@@ -205,7 +213,9 @@ class ServiceLevelTests(ServiceBase):
         self.assertIn('security', record['review']['lenses'])
         self.wait_published(job)
         self.assertEqual((project / 'app.txt').read_text(), 'new')
-        self.assertEqual([r for r, k, s in self.roles(job)], ['builder', 'verifier', 'oracle'])
+        # A code change touching security gets Sentinel (its own read-only review) before the Oracle.
+        self.assertEqual([r for r, k, s in self.roles(job)], ['builder', 'verifier', 'sentinel', 'oracle'])
+        self.assertEqual(oracle.status(self.store, self.store.get(job), 'sentinel')['state'], 'done')
         status = oracle.status(self.store, self.store.get(job))
         self.assertEqual((status['state'], status['independence']), ('done', 'different'))
         oracle_call = next(c for c in staff.calls(self.store, job) if c['kind'] == 'oracle')
