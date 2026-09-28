@@ -757,3 +757,18 @@ failed or stopped — until Nick removes it himself (a remove control on the car
 drops a detail panel down from the top (team with role · model · version · reasoning level, steps,
 review and Oracle findings, files changed, verification, "Talk to Kel about this", Stop while
 running); clicking anywhere outside closes it. The chat keeps the rest of the height.
+
+## D-69 — Staff always use their role models; the Oracle always gets a reviewer
+
+**Decided by Nick 2026-09-27** (answers the D-66 design note's "Needs Nick" list).
+1. **A model picked in a chat applies to Kel's own replies only.** Staff always run on their role
+   model (D-67 table, or whatever Nick sets per role in Settings). This supersedes CH-2 for staff work.
+2. **Claude Code updated** to 2.1.283 on this PC (global npm install used by Kel's coding runtime);
+   it knows `claude-opus-5-5` and `claude-fable-5-1`. Kel still records what actually ran.
+3. **If the Oracle's model can't run, Kel hands the Oracle to another model** instead of stopping:
+   the next available model, preferring a different family (and provider) from the Builder; if only
+   the same family is available it still runs and the record says independence was reduced (coverage
+   debt, workforce-os doc 10 §3). Only when no model at all can run does a triggered change wait for Nick.
+   The Oracle's triggers (over 10 files / 400 changed lines, security-flagged work, high-assurance)
+   are kept.
+4. Writing work (posts, documents) staffed as Builder is kept as the default (no objection raised).
