@@ -294,6 +294,12 @@
 .kel-v2-shell :is(.kel-input, .kel-select):disabled {
   opacity: .45; cursor: not-allowed;
 }
+/* VIS-22: every native <select> (Staff & models, Projects, Connections...) opens a popup the OS
+   draws; without a colour scheme it stayed light while the options inherited near-white text. */
+html[data-theme='dark'] select { color-scheme: dark; }
+html[data-theme='light'] select { color-scheme: light; }
+html[data-theme='dark'] select :is(option, optgroup) { background-color: #0f2d64; color: #edf2fa; }
+html[data-theme='light'] select :is(option, optgroup) { background-color: #ffffff; color: #14233a; }
 .kel-v2-shell .kel-tab { border: 1px solid transparent; border-radius: 8px; }
 .kel-v2-shell .kel-tab--on { border: 1px solid var(--kel-figma-color-control-edge); background: var(--kel-shell-selected); }
 .kel-v2-shell .kel-attention__row { border: 0; padding: 12px 0; gap: 14px; }
