@@ -20,6 +20,7 @@ export const answeredFollowUp = (question: Pick<OfficeQuestion, 'kind'>, answer:
   if ('option' in answer) {
     if (question.kind === 'approval' && answer.option.id === 'deny') return 'Kel won’t take that step';
     if (answer.option.id === 'leave') return 'Kel left it as it is';
+    if (question.kind === 'apply' && answer.option.id === 'apply_anyway') return 'Kel applied the change';
   }
   return 'Kel is continuing';
 };

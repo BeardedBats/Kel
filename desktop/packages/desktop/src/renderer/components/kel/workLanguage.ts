@@ -88,6 +88,8 @@ export interface WorkFacts {
   verdict?: string | null;
   /** Set while the engine waits for a model; such a job resumes by itself. */
   route_block?: string | null;
+  /** D-65/D-70: a checked coding change that waits for Nick carries its `waiting_reason`. */
+  application?: { waiting_reason?: string | null } | null;
 }
 
 const words = (label: string, sentence: string, tone: WorkTone, section: WorkSection, needsYou = false): WorkWords => ({
@@ -110,6 +112,7 @@ export const WORK_WORDS = {
   CANCELLING: words('Stopping', 'Kel is stopping this.', 'stopping', 'now'),
   CANCELLED: words('Stopped', 'This work was stopped. Its saved request is kept.', 'stopped', 'finished'),
   VERIFIED: words('Done and checked', 'The result passed its checks.', 'verified', 'finished'),
+  WAITING_APPLY: words('Waiting for you to apply it', 'It passed its checks. Choose Apply or Leave it on its card.', 'waiting', 'waiting', true),
   UNCHECKED: words('Finished — not fully checked', 'Kel finished, but could not fully check the result.', 'uncertain', 'finished'),
   FAILED: words("Didn't pass its checks", 'The result did not pass its checks. Nothing was retried on its own.', 'failed', 'finished'),
   INTERRUPTED: words('Interrupted', 'It stopped part-way. Your work is kept — reply “continue” in its chat to pick it up.', 'waiting', 'waiting', true),
@@ -148,7 +151,7 @@ export function workWords(job: WorkFacts | null | undefined): WorkWords {
       return WORK_WORDS.INTERRUPTED;
     case 'CLOSED':
     case 'DONE':
-      if (verdict === 'VERIFIED') return WORK_WORDS.VERIFIED;
+      if (verdict === 'VERIFIED') return job?.application?.waiting_reason ? WORK_WORDS.WAITING_APPLY : WORK_WORDS.VERIFIED;
       if (verdict === 'FAILED') return WORK_WORDS.FAILED;
       return WORK_WORDS.UNCHECKED;
     case 'FAILED':

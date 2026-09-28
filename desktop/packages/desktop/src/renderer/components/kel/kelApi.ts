@@ -85,6 +85,8 @@ export interface KelWorkJob {
   route_block?: string;
   contract?: { request?: string; project_id?: string; milestones?: KelJobContractMilestone[] };
   milestones?: Record<string, KelJobMilestoneRuntime>;
+  /** D-65: coding work only — where its checked change stands (and whether it waits for you). */
+  application?: KelChangeApplication | null;
 }
 
 export interface KelContinuationCandidate {
@@ -1500,7 +1502,8 @@ export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =
 /**
  * D-65: where a verified coding change stands in the project folder. `state` is the application
  * journal (null = not applied yet); `auto` = Full access applied it on its own; `waiting_reason` =
- * why Full access left it for you (absent under Ask first).
+ * why it waits for you to Apply or Leave it (null once applied or answered); `ask_first` = it waits
+ * only because Ask first was on (so the card offers "Apply", not "Apply anyway").
  */
 export interface KelChangeApplication {
   state: 'PREPARED' | 'APPLIED' | 'BLOCKED' | 'UNDOING' | 'UNDONE' | null;
@@ -1509,6 +1512,7 @@ export interface KelChangeApplication {
   root: string | null;
   files: number | null;
   waiting_reason: string | null;
+  ask_first?: boolean;
   /** The project's saved name and its folder's name (the full path stays in `root`, for Open folder). */
   project_name?: string | null;
   folder?: string | null;

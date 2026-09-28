@@ -16,6 +16,7 @@ import { applicationLine, isApplied } from './changeApplication';
 import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
 import { KelWorkLine } from './workCards/KelWorkLine';
+import { answerApply } from './workCards/officeApi';
 import './KelWorkCard.css';
 
 export const KEL_WORK_CARD_POLL_MS = 3000;
@@ -154,6 +155,15 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
       await refresh();
     });
 
+  // D-70: a checked change that waits for you (Ask first, or held in Full access): Apply or Leave it,
+  // on the same route as the top card's answer, with you as the actor.
+  const answer = (choice: 'apply_anyway' | 'leave') =>
+    guarded(async () => {
+      if (!view?.job_id) return;
+      await answerApply(view.job_id, choice);
+      await refresh();
+    });
+
   const retry = () =>
     guarded(async () => {
       await kelRetry(submissionId);
@@ -169,6 +179,7 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
     return <KelWorkLine view={staffedView} />;
   }
   const running = phase === 'starting' || phase === 'running';
+  const waitingChange = phase === 'needs_you' && Boolean(view?.job_id && view.application?.waiting_reason);
   const headline = view ? workHeadline(view) : unavailable ? 'Checking on this work…' : 'Getting started…';
   const detail =
     phase === 'failed_to_start'
@@ -245,6 +256,22 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
             <button type='button' disabled={busy} onClick={() => void undo()} data-testid='kel-work-undo'>
               Undo
             </button>
+          ) : null}
+          {waitingChange ? (
+            <>
+              <button
+                type='button'
+                className='kel-work-card__primary'
+                disabled={busy}
+                onClick={() => void answer('apply_anyway')}
+                data-testid='kel-work-apply'
+              >
+                {view?.application?.ask_first ? 'Apply' : 'Apply anyway'}
+              </button>
+              <button type='button' disabled={busy} onClick={() => void answer('leave')} data-testid='kel-work-leave'>
+                Leave it
+              </button>
+            </>
           ) : null}
           {view?.can_retry ? (
             <button

@@ -3,13 +3,14 @@
 Where it runs: the engine settles a coding job (CLOSED, VERIFIED) and calls `settle` just before it
 publishes the result, so the one result message can say what was applied, where, and how it was
 checked. The write itself is `apply_changes.apply_checked` — the same digest-bound, journaled,
-backed-up application the "Apply checked changes" button uses — so snapshots, conflict checks and
-crash recovery are identical. `apply_changes.undo_applied` puts the saved files back.
+backed-up application Nick's own Apply uses — so snapshots, conflict checks and crash recovery are
+identical. `apply_changes.undo_applied` puts the saved files back.
 
-Still waits for Nick (the button stays): a change that failed or skipped verification, a change that
-touches a protected place (Kel's app or data, a system or credential folder — D-64), and any change
-while the mode is "Ask first". Kel also waits when the automatic apply itself is refused (the project
-changed since coding started, authorization was withdrawn); the reason is kept and shown.
+Still waits for Nick (its needs-you card asks Apply / Leave it, D-70): a change that failed or
+skipped verification, a change that touches a protected place (Kel's app or data, a system or
+credential folder — D-64), and any change while the mode is "Ask first". Kel also waits when the
+automatic apply itself is refused (the project changed since coding started, authorization was
+withdrawn); the reason is kept and shown.
 
 Idempotent and crash-safe: the decision is written once per job (`auto_applications`) *before* any
 file is touched. `applying` means an automatic apply began; a restart resumes it through the
@@ -32,6 +33,8 @@ APPLIED = 'applied'     # applied automatically
 WAITING = 'waiting'     # kept for Nick: `reason` says why ('ask' = Ask first is on)
 MANUAL = 'manual'       # Nick applied it himself later (after an undo, or from a waiting state)
 ASK_REASON = 'ask'
+ASK_WORDS = 'Ask first is on'  # the plain waiting reason the card shows for ASK_REASON
+ASK_WORDS_BEFORE = 'Ask first was on when it finished'  # …after Nick switched to Full access since
 
 
 def ensure_schema(store):
@@ -265,9 +268,10 @@ def place(store, root, project_id=None):
 
 
 def result_text(store, job):
-    """The coding result message when D-65 applied the change (or held it in Full access).
+    """The coding result message when D-65 applied the change, or held it for Nick (Full access or
+    Ask first) — naming the Apply control the card really has.
 
-    None keeps today's text (Ask first, or nothing automatic happened).
+    None keeps today's text (nothing was decided for this job).
     """
     if job.get('contract', {}).get('kind') != 'coding' or job.get('verdict') != 'VERIFIED':
         return None
@@ -304,6 +308,12 @@ def result_text(store, job):
         return ('The change passed its tests and a separate review. Kel did not apply it on its own: '
                 + saved['reason'] + '. Choose Apply anyway on its work card at the top of this chat to write it into ' + where
                 + ' — Kel checks your project for conflicts and saves a backup first.')
+    if saved['decision'] == WAITING and saved.get('reason') == ASK_REASON:
+        lead = ('The code for your new project passed its tests and a separate review.'
+                if job['contract'].get('greenfield') else 'The change passed its tests and a separate review.')
+        return (lead + ' Ask first is on, so Kel has not changed ' + where + ' yet. Choose Apply on its work card'
+                + ' at the top of this chat to write it in, or Leave it — Kel checks your project for conflicts'
+                + ' and saves a backup first, so you can undo it.\n\n' + how)
     return None
 
 
@@ -314,7 +324,7 @@ def describe(store, job_ids):
         return {}
     out = {}
     marks = ','.join('?' * len(ids))
-    rows, decisions = {}, {}
+    rows, decisions, answered = {}, {}, set()
     with contextlib.closing(store.connect()) as db:  # read-only: /api/state polls this
         tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if 'change_applications' in tables:
@@ -323,6 +333,17 @@ def describe(store, job_ids):
         if 'auto_applications' in tables:
             decisions = {r['job_id']: r for r in db.execute(
                 'SELECT job_id,decision,reason FROM auto_applications WHERE job_id IN (%s)' % marks, ids)}
+        if 'needs_you_answers' in tables:  # D-70: Nick answered Apply / Leave it on the card
+            answered = {r['job_id'] for r in db.execute(
+                'SELECT job_id FROM needs_you_answers WHERE job_id IN (%s)' % marks, ids)}
+    ask_words = []  # read the mode once, only when an Ask-first change is waiting
+
+    def asked():
+        if not ask_words:
+            from . import authority
+            ask_words.append(ASK_WORDS_BEFORE if authority.is_full(store) else ASK_WORDS)
+        return ask_words[0]
+
     for job_id in ids:
         row, dec = rows.get(job_id), decisions.get(job_id)
         if not row and not dec:
@@ -330,7 +351,8 @@ def describe(store, job_ids):
         entry = {'state': row['state'] if row else None,
                  'auto': bool(dec and dec['decision'] in (APPLIED, APPLYING)),
                  'decision': dec['decision'] if dec else None,
-                 'root': row['root'] if row else None, 'files': None, 'waiting_reason': None}
+                 'root': row['root'] if row else None, 'files': None, 'waiting_reason': None,
+                 'ask_first': False}
         if row and row['root']:
             entry.update({k: v for k, v in place(store, row['root']).items() if k in ('project_name', 'folder')})
         if row:
@@ -338,7 +360,9 @@ def describe(store, job_ids):
                 entry['files'] = len(json.loads(row['plan']).get('changes') or {})
             except (TypeError, ValueError):
                 pass
-        if dec and dec['decision'] == WAITING and dec['reason'] != ASK_REASON:
-            entry['waiting_reason'] = dec['reason']
+        # Waiting for Nick until he answers: under Ask first the reason is the mode itself.
+        if dec and dec['decision'] == WAITING and job_id not in answered:
+            entry['ask_first'] = dec['reason'] == ASK_REASON
+            entry['waiting_reason'] = asked() if entry['ask_first'] else dec['reason']
         out[job_id] = entry
     return out

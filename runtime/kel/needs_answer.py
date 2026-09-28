@@ -5,9 +5,10 @@ answer box. There is no second answer system here: every answer goes to Kel in t
 conversation through a path that already exists —
 
 - a gated step (`approval`): the in-chat approval's own approve/deny route (`/api/approvals`);
-- a checked change Kel would not apply on its own, or an independent second opinion that raised a
-  problem (`apply`, `second_opinion`): "Apply anyway" is the existing apply path with the user as
-  the actor (`/api/apply`), "Leave it" records Nick's choice on that same route;
+- a checked change Kel would not apply on its own (Full access held it, or Ask first is on), or an
+  independent second opinion that raised a problem (`apply`, `second_opinion`): "Apply anyway" (just
+  "Apply" under Ask first) is the existing apply path with the user as the actor (`/api/apply`),
+  "Leave it" records Nick's choice on that same route;
 - paused or interrupted work (`paused`, `interrupted`): the existing resume control or a "continue"
   message for that job;
 - anything else (`clarification`, `blocked`): a normal message in the conversation, so the D-55
@@ -127,6 +128,16 @@ def question(store, job, why=None, nxt=None):
             from .auto_apply import describe
             application = describe(store, [job['id']]).get(job['id']) or {}
             reason = application.get('waiting_reason')
+            if reason and application.get('ask_first'):
+                from .auto_apply import place
+                contract = job.get('contract') or {}
+                where = place(store, contract.get('root'), contract.get('project_id'))['words']
+                return dict(base, kind='apply', wait=WAIT_WORDS['apply'],
+                            text='The change passed its checks. Apply it to %s?' % where,
+                            detail=reason + ', so Kel waits for you before it changes your project. '
+                                   'Kel checks for conflicts and saves a backup first, so you can undo it.',
+                            options=[{'id': APPLY_ANYWAY, 'label': 'Apply'}, {'id': LEAVE, 'label': 'Leave it'}],
+                            ref={'job': job['id']})
             if reason:
                 return dict(base, kind='apply', wait=WAIT_WORDS['apply'],
                             text='The change passed its checks, but Kel didn’t apply it on its own. Apply it?',
@@ -186,7 +197,7 @@ def answer_apply(store, job_id, choice, actor='user'):
         return {'job_id': job['id'], 'choice': already['choice'], 'already': True}
     if not _waiting_on_apply(store, job):
         raise PolicyError('This work is not waiting for you to apply it.')
-    kind = 'second_opinion' if _second_opinion(store, job) else 'apply'
+    kind = 'second_opinion' if _second_opinion(store, job) else 'ask_first' if _ask_first(store, job) else 'apply'
     result = None
     if choice == APPLY_ANYWAY:
         if (job.get('contract') or {}).get('kind') != 'coding':
@@ -211,3 +222,9 @@ def _second_opinion(store, job):
         return bool(attention(store, job))
     except Exception:
         return False
+
+
+def _ask_first(store, job):
+    """True when the change waits only because Ask first is on (so Nick's Apply is not "anyway")."""
+    from .auto_apply import describe
+    return bool((describe(store, [job['id']]).get(job['id']) or {}).get('ask_first'))
