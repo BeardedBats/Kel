@@ -54,8 +54,7 @@ export interface ResumptionPayload {
   providers?: AttentionProviderState[];
   /** D-57: a scheduled task paused because something it needs is gone needs you too. */
   schedules?: KelSchedule[];
-  /** FN-02: `title` names the outcome; `notice: false` once the one-time notice has been shown. */
-  restore?: { ok: boolean; detail?: string; at?: number; title?: string; notice?: boolean } | null;
+  restore?: { ok: boolean; detail?: string; at?: number } | null;
   now?: number;
 }
 
@@ -87,17 +86,16 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   const lines: BriefLine[] = [];
 
   // 1) A failed restore is the first thing to say — it is durable truth recorded by the engine.
-  // FN-02: a one-time notice — once shown it is marked seen, and Settings → System keeps the record.
-  if (payload.restore && !payload.restore.ok && payload.restore.notice !== false) {
+  if (payload.restore && !payload.restore.ok) {
     lines.push({
       id: 'restore-failed',
       kind: 'restore',
       tone: 'attention',
-      title: payload.restore.title?.trim() || 'A restore did not finish',
+      title: 'A restore did not finish',
       detail:
         payload.restore.detail?.trim() ||
         'Kel recorded a restore attempt that failed. Your previous data is kept beside the data folder.',
-      action: { label: 'Open Data and backup', to: '/settings/system' },
+      action: { label: 'Open Settings', to: '/settings' },
     });
   }
 
@@ -172,19 +170,14 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     return value < 1e12 ? value * 1000 : value;
   };
   const restoreAtMs = normalizeRestoreAt(payload.restore?.at);
-  if (
-    payload.restore?.ok &&
-    payload.restore.notice !== false &&
-    restoreAtMs !== null &&
-    now - restoreAtMs <= RESTORE_FRESH_MS
-  ) {
+  if (payload.restore?.ok && restoreAtMs !== null && now - restoreAtMs <= RESTORE_FRESH_MS) {
     lines.push({
       id: 'restore-ok',
       kind: 'restore',
       tone: 'success',
-      title: payload.restore.title?.trim() || 'Your data was restored',
+      title: 'Your data was restored',
       detail: payload.restore.detail?.trim() || 'Kel opened with the restored data.',
-      action: { label: 'Open Data and backup', to: '/settings/system' },
+      action: { label: 'Open Settings', to: '/settings' },
     });
   }
 

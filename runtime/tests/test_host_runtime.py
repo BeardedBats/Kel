@@ -34,14 +34,15 @@ class NativeHostTests(unittest.TestCase):
    script=Path(folder)/'test command.cmd';script.write_text('@echo off\necho %~1\n')
    result=subprocess.run(host_command([str(script),'two words']),capture_output=True,text=True)
    self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),'two words')
- def test_full_access_is_applied_to_native_session(self):
+ def test_full_access_means_no_prompts_inside_the_sandbox(self):
+  # FN-01: Full access (D-64) is "no approval prompts", never "no boundaries".
   c=object.__new__(HostConnection);c.provider='codex'
   with patch.object(CodexConnection,'call',return_value={}) as rpc:
    c.call('thread/resume',{'threadId':'id','sandbox':'workspace-write','approvalPolicy':'on-request'})
    p=rpc.call_args.args[1]
-   self.assertEqual(p['sandbox'],'danger-full-access');self.assertEqual(p['approvalPolicy'],'never')
- def test_full_access_applies_to_turn(self):
+   self.assertEqual(p['sandbox'],'workspace-write');self.assertEqual(p['approvalPolicy'],'never')
+ def test_the_turn_keeps_the_workspace_sandbox_with_network(self):
   c=object.__new__(HostConnection);c.provider='codex'
   with patch.object(CodexConnection,'call',return_value={}) as rpc:
    c.call('turn/start',{'threadId':'id','input':[]})
-   self.assertEqual(rpc.call_args.args[1]['sandboxPolicy'],{'type':'dangerFullAccess'})
+   self.assertEqual(rpc.call_args.args[1]['sandboxPolicy'],{'type':'workspaceWrite','writableRoots':[],'networkAccess':True})

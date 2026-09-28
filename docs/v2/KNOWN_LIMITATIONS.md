@@ -607,6 +607,42 @@ blank-body deep link — below), job-driven attention actions, conversational pr
 - **Read-only execution is the leaf’s own mode.** Verifier-style read-only runs rely on the
   tool-disabled argv and the isolated copy; there is no separate fs-level read-only mount.
 
+## FN-01 — protected places on what the runtimes do directly: the honest edges (2026-09-28)
+
+Corrects the V2-13 line "it does not constrain what an installed CLI could read": the native host
+runtimes now start bounded (`kel/runtime_guard.py`). Full access (D-64) means no approval prompts, not
+no boundaries.
+
+- **Claude Code** runs with `--settings` carrying a PreToolUse hook (`guard_hook.mjs`) and
+  `permissions.deny` rules, `--strict-mcp-config` with no servers and `--setting-sources user`.
+  File tools may write only in the working copy; no tool may read or write Kel's Data, the installed
+  app, credential folders or `KEL_PROTECTED_PATHS`. **Edge:** shell commands are checked by reading
+  the paths they name (including `~`, `$HOME`, `%USERPROFILE%`, `..` from the working copy); a program
+  the shell starts (a project script, a test) can still reach a protected place without naming it.
+  That is caught after the fact (below), not prevented.
+- **Codex** runs in `workspace-write` on the native Windows sandbox, **unelevated** (restricted token +
+  ACLs; no UAC prompt, no sandbox users), with every MCP server switched off by name and the
+  apps/plugins/hooks/browser/computer-use features off. Writes outside the working copy (and temp)
+  fail at the OS level, including from scripts and tests the model runs. **Edge:** the unelevated
+  sandbox cannot deny *reads* ("Restricted read-only access requires the elevated Windows sandbox
+  backend"), so a Codex shell could read a credential folder; only its instructions stop it. The
+  elevated backend (separate sandbox users, deny-read ACEs, firewall) needs a one-time UAC install.
+- **Detection** compares names, sizes and modification times (never contents) of the protected
+  places around the model's turn and around Kel's own test runs: the Data root and engine root one
+  level deep, the desktop shell's `store`/`host` folders for new entries only, the app folder, and the
+  credential/protected folders two levels deep. New entries are moved out to the run's
+  `native-logs/<run>/protected-quarantine`; a changed or removed file cannot be put back (no copy is
+  kept) and the step says where to look. Writes deep inside Kel's own busy folders (`native-logs`,
+  `repositories`, `logs`…) and reads are not detected.
+- **Kel's own test runs are not sandboxed**: the project's test command runs on the host as before;
+  a test that writes into a protected place is detected and fails the step, but a test that reads one
+  is not stopped.
+- **The up-front refusal reads the request's words** (paths, `~/.ssh`-style names, "Kel's data
+  folder"); a request that reaches a protected place without naming it is left to the runtime layers.
+- **The desktop still does not set `KEL_PROTECTED_PATHS`**; the installed app folder is protected
+  when the engine runs frozen from inside it (`containment.app_roots`), not when it runs staged
+  elsewhere.
+
 ## V2-14 — network permissions: the honest edges (2026-09-21)
 
 - **The rules govern Kel's own outbound paths**, not the operating system: an installed CLI carries

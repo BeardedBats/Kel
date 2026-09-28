@@ -73,9 +73,13 @@ def _accepts(model,name):
         return False
 
 def _restore_outcome(root):
-    """The last restore attempt recorded beside the data (PER-02), in plain words (FN-02); None if never."""
-    from .backup import read_outcome
-    return read_outcome(root)
+    """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
+    path=Path(root)/'restore-outcome.json'
+    try:
+        data=json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        return None
+    return {'ok':bool(data.get('ok')),'detail':data.get('detail') or '','at':data.get('at')}
 
 
 class Service:
@@ -705,6 +709,13 @@ class Service:
                 if decision['action']=='amend_background_work':
                     return self._amend(sid,cid,text,packet,kind,greenfield_flag,decision)
                 if decision['action']=='start_background_work':
+                    # FN-01 / D-55: a request that asks to touch Kel's own data or app, or a credential
+                    # folder, is answered plainly before anything starts — never promised, then failed.
+                    from .runtime_guard import request_refusal
+                    refusal=request_refusal(text+'\n'+str(decision.get('request') or ''),self.store.root)
+                    if refusal:
+                        self._say(sid,cid,refusal,choice)
+                        return None
                     if decision.get('request') and decision['request']!=text:
                         text=self._rewrite_request(sid,decision['request'])
                     # D-70 item 4: big work (or a plan with open questions) is scoped first; nothing starts.
@@ -2099,12 +2110,6 @@ class Service:
             return backup.inventory()
         if action=='restore':
             return backup.stage_restore(data.get('source'))
-        if action in ('outcome','outcome-seen','outcome-dismiss'):
-            # FN-02: the last restore's outcome for Settings; the one-time notice marks it seen.
-            from .backup import mark_outcome,read_outcome
-            if action=='outcome':return {'outcome':read_outcome(self.store.root)}
-            changes={'notice':False} if action=='outcome-seen' else {'notice':False,'dismissed':True}
-            return {'outcome':mark_outcome(self.store.root,**changes)}
         raise PolicyError('Unknown backup action')
 
     def _capabilities_action(self,data):

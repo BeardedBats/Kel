@@ -57,10 +57,8 @@ class BackupCredentialTests(unittest.TestCase):
         names = {entry.name for entry in (Path(result['folder']) / 'engine').iterdir()}
         self.assertNotIn('kel-credentials.json', names)
         self.assertIn('notes.txt', names)
-        # FN-15: left out on purpose, never reported as a file that was "in use".
-        self.assertNotIn('kel-credentials.json', result['skipped'])
-        self.assertIn('kel-credentials.json', result['left_out'])
-        self.assertIn('on purpose', result['notes'])
+        self.assertIn('kel-credentials.json', result['skipped'])
+        self.assertIn('kel-credentials.json', result['notes'])
 
     def test_the_guard_is_named_for_the_credentials_file(self):
         self.assertIn('kel-credentials.json', NEVER_BACKUP)
@@ -92,29 +90,24 @@ class SnapshotRetentionTests(unittest.TestCase):
         self.assertNotIn('data.pre-restore-20260101-000000', names)
         self.assertTrue((self.root.parent / 'data.pre-restore-20260103-000000' / 'old.txt').exists())
 
-    def test_a_failed_restore_adds_no_snapshot_and_is_not_pending_any_more(self):
-        # FN-02: a rolled-back attempt leaves no new folder and is never retried on a later start.
+    def test_a_failed_restore_still_prunes_and_keeps_its_own_snapshot(self):
         (self.root / STAGING).mkdir(mode=0o700)
         (self.root / 'notes.txt').write_text('live', encoding='utf-8')
         (self.root / STAGING / 'notes.txt').write_text('staged', encoding='utf-8')
         (self.root / MARKER).write_text('{}', encoding='utf-8')
-        original = backup._rename
-        calls = []
+        original = backup._restore_entry
 
         def explode(source, destination):
-            calls.append(source)
-            if len(calls) == 2:  # the live file moved aside; bringing the staged one in fails
-                raise OSError(28, 'No space left on device')
-            return original(source, destination)
+            raise OSError('no space left on device')
 
-        backup._rename = explode
-        self.addCleanup(setattr, backup, '_rename', original)
+        backup._restore_entry = explode
+        self.addCleanup(setattr, backup, '_restore_entry', original)
         self.assertFalse(apply_pending_restore(_Store(self.root)))
-        self.assertEqual(len(self._snapshots()), 3, 'legacy snapshots untouched by a failed attempt')
-        self.assertEqual(list(self.root.parent.glob(backup.BEFORE_PREFIX + '*')), [])
-        self.assertFalse((self.root / MARKER).exists())
-        self.assertEqual((self.root / 'notes.txt').read_text(encoding='utf-8'), 'live')
-        self.assertIn('disk is full', backup.read_outcome(self.root)['detail'])
+        names = self._snapshots()
+        self.assertEqual(len(names), 2, names)
+        self.assertTrue((self.root / MARKER).exists(), 'the restore is still pending')
+        newest = self.root.parent / names[-1]
+        self.assertTrue((newest / 'notes.txt').read_text(encoding='utf-8') == 'live')
 
 
 class ApprovalActorGuardTests(unittest.TestCase):

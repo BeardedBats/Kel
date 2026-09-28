@@ -166,19 +166,3 @@ export function ensureWorkCards(
   }
   return out;
 }
-
-/**
- * LIVE-7: the app chats (donor ids) whose engine conversation gained a message with details
- * (`/api/messages/since` items). A conversation open in two app chats names both.
- */
-export function donorsForMessages(
-  mapping: Record<string, string>,
-  items: Array<{ conversation_id?: unknown }> | undefined
-): string[] {
-  const wanted = new Set(
-    (items || []).map((item) => item?.conversation_id).filter((cid): cid is string => typeof cid === 'string')
-  );
-  return Object.entries(mapping)
-    .filter(([, cid]) => wanted.has(cid))
-    .map(([donorId]) => donorId);
-}

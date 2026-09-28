@@ -444,7 +444,10 @@ class HandoffServiceTests(unittest.TestCase):
     def test_a_named_file_in_a_folder_is_never_a_plain_document_result(self):
         import subprocess
         from pathlib import Path
-        base = Path(self.tmp.name)
+        # Outside Kel's own data folder (the service's root here): Kel refuses work in there (FN-01).
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        base = Path(folder.name)
         outside = base / 'outside'
         outside.mkdir()
         sid = self.service.submit({'text': 'Create a file named hello.txt containing hi in ' + str(outside),

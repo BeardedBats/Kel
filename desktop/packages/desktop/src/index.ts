@@ -30,7 +30,6 @@ import { assertStartupArchitectureCompatible } from './process/startup/architect
 import { classifyBackendStartupFailure } from './process/startup/backendStartupFailure';
 import { registerBackendStartupIpc } from './process/startup/backendStartupIpc';
 import { installQuitCleanup } from './process/startup/quitCleanup';
-import { applyPendingRestoreAtStartup, restoreEngineRoot } from './process/startup/pendingRestore';
 import { shouldRegisterBackendStartup } from './process/startup/singleInstanceGating';
 import { ProcessConfig } from './process/utils/initStorage';
 import type { BackendStartupFailureInfo } from './common/types/platform/electron';
@@ -775,15 +774,6 @@ const handleAppReady = async (): Promise<void> => {
   if (backgroundWindow) {
     session.defaultSession.setPermissionCheckHandler((_webContents, permission) => permission !== 'notifications');
   }
-
-  // FN-02: a staged restore is applied (or rolled back) here — this instance holds the single-instance
-  // lock, and nothing has opened the data yet: initStorage, aioncore, the engine and the window all
-  // start below. Synchronous on purpose.
-  kelBoot('before pending restore');
-  applyPendingRestoreAtStartup({
-    engineRoot: restoreEngineRoot(process.env, app.getPath('appData')),
-    resourcesPath: process.resourcesPath,
-  });
 
   try {
     kelBoot('before initializeProcess');
