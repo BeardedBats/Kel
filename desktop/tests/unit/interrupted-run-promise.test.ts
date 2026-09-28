@@ -2,8 +2,9 @@
  * D19 — the interrupted-run promise.
  *
  * A run that stops mid-flight is fenced by the engine (the milestone stays UNCERTAIN so nothing
- * replays an unconfirmed external writer on its own), the Work page tells the person to reply
- * "continue", and the engine must actually re-arm the work when they do. Before this pin the
+ * replays an unconfirmed external writer on its own), the shared work words (Activity, Home and the
+ * in-chat card; the Work page was retired by D-70) tell the person to reply "continue", and the engine
+ * must actually re-arm the work when they do. Before this pin the
  * person's "continue" attached a conversation link and resumed nothing, while the Work page
  * promised the fenced state would "continue automatically" — a dead control and a state lie.
  */
@@ -11,27 +12,25 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { workWords } from '@renderer/components/kel/workLanguage';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..', '..');
 const read = (relative: string) => readFileSync(path.join(repoRoot, relative), 'utf8');
 
-const workPage = read('desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx');
 const continuation = read('runtime/kel/continuation.py');
 const core = read('runtime/kel/core.py');
 const continuationTests = read('runtime/tests/test_v13_continuation.py');
 
 describe('the interrupted-run promise (D19)', () => {
-  it('the Work page never promises an automatic continuation for a fenced run', () => {
-    expect(workPage).toContain("if (job.state === 'WAITING_RESOURCE' && !job.route_block) {");
-    expect(workPage).toContain('A run stopped mid-flight. Your work is preserved');
-    // The automatic sentence survives only for route-blocked jobs (which really do resume): it is
-    // returned only after the fenced case above has already returned its own sentence.
-    const fenced = workPage.indexOf("if (job.state === 'WAITING_RESOURCE' && !job.route_block) {");
-    const automatic = workPage.indexOf(
-      "if (job.state === 'WAITING_RESOURCE') return 'Waiting for an available model — Kel will continue automatically.';"
-    );
-    expect(automatic).toBeGreaterThan(fenced);
+  it('the work words never promise an automatic continuation for a fenced run', () => {
+    const fenced = workWords({ state: 'WAITING_RESOURCE', route_block: null });
+    expect(fenced.label).toBe('Interrupted');
+    expect(fenced.sentence).toContain('reply “continue”');
+    expect(fenced.sentence).not.toMatch(/on its own|automatically/);
+    // The automatic sentence survives only for route-blocked jobs, which really do resume.
+    const routeBlocked = workWords({ state: 'WAITING_RESOURCE', route_block: 'No model is free right now' });
+    expect(routeBlocked.sentence).toContain('continue on its own');
   });
 
   it('the engine continuation re-arms an interrupted run instead of attaching and stopping', () => {

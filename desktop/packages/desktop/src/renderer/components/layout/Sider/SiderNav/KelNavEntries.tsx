@@ -1,24 +1,22 @@
 /**
- * Kel navigation entries — the primary nav is only the places a user *does* something
- * (Work, Projects) plus the two review surfaces that unblock them (Permissions) and the optional
- * high-level Activity view (D14).
- * Configuration surfaces (Providers, Team, Diagnostics) live in Settings.
+ * Kel navigation entries — the primary nav is only the places a user *does* something (Projects)
+ * plus the optional high-level Activity view (D14). D-70: the Work page is retired (the work cards
+ * at the top of the chat replace it) and Permissions moved to Settings with the other configuration
+ * surfaces (Providers, Diagnostics).
  * Rendered in the fixed nav slot above the scrollable history area. Real buttons, Kel labels,
  * active state from the route.
  */
 import React from 'react';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { Tooltip } from '@arco-design/web-react';
-import { AllApplication, Folder, ListView, Lock, Voice } from '@icon-park/react';
+import { AllApplication, Folder } from '@icon-park/react';
 import classNames from 'classnames';
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { SiderTooltipProps } from '@renderer/utils/ui/siderTooltip';
 
 const ENTRIES = [
-  { id: 'work', path: '/work', label: 'Work', Icon: ListView },
   { id: 'projects', path: '/projects', label: 'Projects', Icon: Folder },
   { id: 'activity', path: '/activity', label: 'Activity', Icon: AllApplication },
-  { id: 'autonomy', path: '/autonomy', label: 'Permissions', Icon: Lock },
 ] as const;
 
 const KelNavEntries: React.FC<{

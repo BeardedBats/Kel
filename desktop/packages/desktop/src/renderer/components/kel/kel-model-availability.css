@@ -1,3 +1,7 @@
 /* CH-2: a model Kel cannot answer with stays visible with its reason but cannot be picked. */
 .kel-mobile-model-picker__choice:disabled { cursor: default; }
 .kel-mobile-model-picker__choice:disabled strong { opacity: .5; }
+
+/* D-69 / D-70 item 3: the picker is Kel's own model; staff use their role models (Settings → Staff & models). */
+.kel-desktop-model-menu__caption { margin: 0; padding: 6px 10px 4px; color: var(--kel-text-3, #8fa9d6); font: 400 12px/16px var(--kel-shell-body); }
+.kel-mobile-model-picker__caption { margin: -4px 0 10px; color: var(--kel-text-3, #8fa9d6); font: 400 13px/18px var(--kel-shell-body); }

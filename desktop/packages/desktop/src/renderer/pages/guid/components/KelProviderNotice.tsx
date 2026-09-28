@@ -52,7 +52,7 @@ const KelProviderNotice: React.FC = () => {
         <span className='kel-sub kel-grow' style={{ margin: 0 }}>
           {message}
         </span>
-        <KelButton variant='primary' onClick={() => navigate('/providers')}>
+        <KelButton variant='primary' onClick={() => navigate('/settings/providers')}>
           Open Providers
         </KelButton>
       </div>

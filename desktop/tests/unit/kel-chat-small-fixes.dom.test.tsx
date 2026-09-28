@@ -168,7 +168,7 @@ describe('Command palette (WK-15)', () => {
     fireEvent.change(input, { target: { value: 'tax return' } });
     const option = await screen.findByRole('option', { name: /Collect receipts/ });
     fireEvent.click(option);
-    expect(screen.getByTestId('where').textContent).toBe('/work?job=job-7');
+    expect(screen.getByTestId('where').textContent).toBe('/activity?job=job-7');
 
     // Reopening re-reads the jobs, so work started since the last open is findable.
     jobs = [...jobs, { id: 'job-8', state: 'RUNNING', contract: { request: 'Water the plants reminder' } }];

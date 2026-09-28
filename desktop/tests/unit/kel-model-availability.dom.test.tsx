@@ -105,7 +105,7 @@ describe('default model settings card', () => {
       <MemoryRouter initialEntries={['/settings/model']}>
         <Routes>
           <Route path='/settings/model' element={<KelDefaultModelCard />} />
-          <Route path='/providers' element={<Where />} />
+          <Route path='/settings/providers' element={<Where />} />
         </Routes>
       </MemoryRouter>
     );
@@ -117,7 +117,7 @@ describe('default model settings card', () => {
     expect(sonnet.textContent).toContain('API key needed');
     expect(sonnet.textContent).toContain('Set up');
     fireEvent.click(sonnet);
-    await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/providers'));
+    await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/settings/providers'));
     expect(request.mock.calls.some(([, body]) => (body as { action?: string })?.action === 'set_default')).toBe(false);
   });
 });

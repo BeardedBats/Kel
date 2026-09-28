@@ -11,7 +11,6 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Activity from '@renderer/pages/kel/activity';
-import Work from '@renderer/pages/kel/work';
 import KelResumptionBrief from '@renderer/pages/guid/components/KelResumptionBrief';
 import { KelWorkChip } from '@renderer/components/kel/KelPrimitives';
 import { workHeadline } from '@renderer/components/kel/KelWorkCard';
@@ -148,11 +147,11 @@ describe('Activity — each job in exactly one section', () => {
     expect(row.className).toContain('kel-work-focus');
   });
 
-  it('opens a waiting job on Work with it selected when its chat is not on this device', async () => {
+  it('highlights a waiting job on Activity when its chat is not on this device', async () => {
     renderAt('/activity', <Activity />);
     await screen.findByText('Book the dentist');
     fireEvent.click(screen.getByRole('button', { name: 'Open the chat for Book the dentist' }));
-    expect((await screen.findByTestId('where')).textContent).toBe('/work?job=ask');
+    expect((await screen.findByTestId('where')).textContent).toBe('/activity?job=ask');
   });
 });
 
@@ -169,42 +168,71 @@ describe('Home "Needs you" — same words, named jobs', () => {
     // Unchecked or failed results are not "waiting on you".
     expect(text).not.toContain('needs a human eye');
     fireEvent.click(within(card).getByText(/Book the dentist/));
-    expect((await screen.findByTestId('where')).textContent).toBe('/work?job=ask');
+    expect((await screen.findByTestId('where')).textContent).toBe('/activity?job=ask');
   });
 });
 
-describe('Work — plain words, one next step, machinery behind Details', () => {
-  it('selects the job from ?job=, keeps steps behind a closed Details, and shows no machinery words', async () => {
-    renderAt('/work?job=meh', <Work />);
-    const summary = await screen.findByTestId('work-selected-summary');
-    expect(summary.textContent).toContain('Kel finished, but could not fully check the result.');
-    const selected = screen.getByRole('button', { name: 'Draft the garden plan', pressed: true });
-    expect(selected).toBeTruthy();
-    const details = screen.getByTestId('work-details') as HTMLDetailsElement;
-    expect(details.open).toBe(false);
-    const page = document.body.textContent ?? '';
-    for (const banned of ['Milestone', 'Worker state', 'Attempts', 'Receipt', 'Team assignments', 'sent to the engine', 'Verification —']) {
-      expect(page).not.toContain(banned);
-    }
-    // One "Save as a recipe" on the surface (JR-29).
-    expect(screen.getAllByRole('button', { name: 'Save as a recipe' })).toHaveLength(1);
-  });
-
-  it('asks before stopping, and shows a pause right away without a reload', async () => {
-    renderAt('/work?job=run', <Work />);
-    await screen.findByTestId('work-selected-summary');
-    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
-    expect(screen.getByTestId('work-stop-confirm').textContent).toContain('Anything already checked is kept.');
-    expect(request.mock.calls.some(([route]) => route === '/api/control')).toBe(false);
-    fireEvent.click(screen.getByRole('button', { name: 'Keep going' }));
-    expect(screen.queryByTestId('work-stop-confirm')).toBeNull();
+describe('Activity keeps what the retired Work page offered (D-70)', () => {
+  it('pauses running work right away without a reload, and resumes paused work', async () => {
+    renderAt('/activity', <Activity />);
+    await screen.findByText('Summarize the meeting notes');
+    // Stop stays on the work card (confirmed there); Activity offers no unconfirmed Stop.
+    expect(screen.queryByRole('button', { name: /^Stop/ })).toBeNull();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Pause Summarize the meeting notes' }));
     });
     expect(request).toHaveBeenCalledWith('/api/control', { job: 'run', action: 'pause' });
     expect(await screen.findByText('Kel is pausing this.')).toBeTruthy();
-    const row = document.querySelector('[data-job-id="run"]') as HTMLElement;
-    await waitFor(() => expect(within(row).getByText('Paused')).toBeTruthy());
+    const section = (title: string) => screen.getByRole('heading', { name: title }).closest('section') as HTMLElement;
+    await waitFor(() => expect(within(section('Waiting on you')).getByText('Summarize the meeting notes')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Resume Rename the holiday photos' }));
+    });
+    expect(request).toHaveBeenCalledWith('/api/control', { job: 'paused', action: 'resume' });
+  });
+
+  it('drafts a recipe from finished work and saves it only on confirmation', async () => {
+    request.mockImplementation(async (route: string, body?: { action?: string }) => {
+      if (route.startsWith('/api/state')) return { jobs: JOBS, routes: {}, providers: [], projects: [] };
+      if (route === '/api/recipes' && body?.action === 'propose_from_job') {
+        return { recipe: { name: 'Weekly summary' }, preview: { steps: ['Gather notes', 'Write summary'], kind: 'writing', milestones: 2 } };
+      }
+      if (route === '/api/recipes' && body?.action === 'save') return { saved: true, digest: 'x' };
+      return {};
+    });
+    renderAt('/activity', <Activity />);
+    await screen.findByText('Write the weekly summary');
+    // One "Save as a recipe" per finished, closed job (JR-29), never on running work.
+    expect(screen.queryByRole('button', { name: 'Save Summarize the meeting notes as a recipe' })).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save Write the weekly summary as a recipe' }));
+    });
+    const draft = await screen.findByRole('group', { name: 'Save Write the weekly summary as a recipe' });
+    expect(draft.textContent).toContain('It is saved only when you confirm.');
+    expect(draft.textContent).toContain('Gather notes · Write summary');
+    expect(request.mock.calls.some(([route, body]) => route === '/api/recipes' && body?.action === 'save')).toBe(false);
+    await act(async () => {
+      fireEvent.click(within(draft).getByRole('button', { name: 'Save recipe' }));
+    });
+    expect(request).toHaveBeenCalledWith('/api/recipes', expect.objectContaining({ action: 'save', confirm: true, conversation: 'engine-ok' }));
+    expect(await screen.findByText('Saved as a recipe. It is in Recipes.')).toBeTruthy();
+  });
+
+  it('says what happened when a pause fails, and changes nothing', async () => {
+    request.mockImplementation(async (route: string) => {
+      if (route.startsWith('/api/state')) return { jobs: JOBS, routes: {}, providers: [], projects: [] };
+      if (route === '/api/control') throw new Error('That work already finished.');
+      return {};
+    });
+    renderAt('/activity', <Activity />);
+    await screen.findByText('Summarize the meeting notes');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Pause Summarize the meeting notes' }));
+    });
+    expect(await screen.findByText("Pause didn't go through, so nothing changed. That work already finished.")).toBeTruthy();
+    const section = (title: string) => screen.getByRole('heading', { name: title }).closest('section') as HTMLElement;
+    expect(within(section('Happening now')).getByText('Summarize the meeting notes')).toBeTruthy();
   });
 });

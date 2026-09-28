@@ -1,0 +1,45 @@
+/*
+ * Settings → Staff & models (D-70 item 3). No Figma frame: the rows reuse the Settings — Model card
+ * language (311:2239): a source card, rows split by a neutral full-width divider (never a one-side
+ * coloured border), a 14px name over a 12px muted line, green/amber status words, and the shared
+ * `.kel-select` control. Recorded in docs/v2/FIGMA_GAPS.md.
+ */
+.kel-staff-models__note {
+  margin: 0 0 6px;
+  color: var(--kel-text-3);
+  font: 400 13px/18px var(--kel-shell-body);
+}
+.kel-staff-models__rows { display: flex; flex-direction: column; }
+.kel-staff-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+}
+.kel-staff-row + .kel-staff-row { box-shadow: 0 -1px 0 rgba(191,216,255,.08); }
+.kel-staff-row[aria-busy='true'] { opacity: .7; }
+.kel-staff-row__main { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; min-width: 0; }
+.kel-staff-row__name { display: flex; flex: 1 1 100%; flex-direction: column; gap: 2px; min-width: 0; }
+.kel-staff-row__name > strong { color: var(--kel-text-1); font: 500 14px/19px var(--kel-shell-heading); }
+.kel-staff-row__name > span { color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
+.kel-staff-row__controls { display: flex; flex: 0 1 auto; align-items: flex-end; gap: 8px; }
+.kel-staff-row__field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kel-staff-row__field > span { color: var(--kel-text-3); font: 500 12px/16px var(--kel-shell-heading); }
+.kel-staff-row__field .kel-select { box-sizing: border-box; width: 150px; height: 34px; padding: 0 8px; }
+.kel-staff-row__field--model .kel-select { width: 256px; }
+.kel-staff-row__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 28px; }
+.kel-staff-row__state { flex: none; font: 700 13px/18px var(--kel-shell-heading); }
+.kel-staff-row__state[data-tone='ok'] { color: var(--kel-status-positive-text, #8fe3b4); }
+.kel-staff-row__state[data-tone='wait'] { color: var(--kel-status-attention-text, #ffc481); }
+.kel-staff-row__detail { flex: 1 1 260px; min-width: 0; color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
+.kel-staff-row__default { flex: none; color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
+.kel-staff-row__foot .kel-grow { flex: 0 0 0; }
+.kel-staff-row__error { margin: 0; color: var(--kel-failed-fg, #ff9a8f); font: 400 13px/18px var(--kel-shell-body); }
+
+@media (max-width: 1100px) {
+  .kel-staff-row__controls { flex: 1 1 100%; flex-wrap: wrap; }
+}
+@media (max-width: 767px) {
+  .kel-staff-row__field { flex: 1 1 100%; }
+  .kel-staff-row__field .kel-select, .kel-staff-row__field--model .kel-select { width: 100%; min-height: 44px; }
+}

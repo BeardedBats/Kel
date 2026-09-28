@@ -11,13 +11,13 @@ const SkillsOverviewSettings = React.lazy(() => import('@renderer/pages/settings
 const ToolsSettings = React.lazy(() => import('@renderer/pages/settings/ToolsSettings'));
 const AppearanceSettings = React.lazy(() => import('@renderer/pages/settings/AppearanceSettings'));
 const ModeSettings = React.lazy(() => import('@renderer/pages/settings/ModeSettings'));
+const StaffModelsSettings = React.lazy(() => import('@renderer/pages/settings/StaffModelsSettings'));
 const SystemSettings = React.lazy(() => import('@renderer/pages/settings/SystemSettings'));
 const WebuiSettings = React.lazy(() => import('@renderer/pages/settings/WebuiSettings'));
 const ArchivedSettings = React.lazy(() => import('@renderer/pages/settings/ArchivedSettings'));
 const LoginPage = React.lazy(() => import('@renderer/pages/login'));
 const ScheduledTasksPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage'));
 const TaskDetailPage = React.lazy(() => import('@renderer/pages/cron/ScheduledTasksPage/TaskDetailPage'));
-const KelWorkCenter = React.lazy(() => import('@renderer/pages/kel/work'));
 const KelTranscription = React.lazy(() => import('@renderer/pages/kel/transcription'));
 const KelTeam = React.lazy(() => import('@renderer/pages/kel/team'));
 const KelProjects = React.lazy(() => import('@renderer/pages/kel/projects'));
@@ -35,6 +35,15 @@ const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentT
     <Component />
   </Suspense>
 );
+
+/**
+ * D-70 item 5: a page that moved keeps its old route as a redirect, query included, so older links
+ * (toasts, Needs you, bookmarks, the palette's history) land on the page's new home.
+ */
+const MovedRoute: React.FC<{ to: string }> = ({ to }) => {
+  const { search } = useLocation();
+  return <Navigate to={`${to}${search}`} replace />;
+};
 
 /**
  * Legacy `/settings/capabilities?tab=tools` deep links now map to the standalone
@@ -69,7 +78,7 @@ const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) =
   const from = location.pathname + location.search;
 
   // V2-05 deep links reach the real routes through this guard, so THIS is where the destination
-  // must be remembered — a catch-all never sees an unauthenticated /work or /conversation/<id>.
+  // must be remembered — a catch-all never sees an unauthenticated /activity or /conversation/<id>.
   // It is written to sessionStorage as well as handed to the sign-in route: the history entry that
   // carries `from` can be replaced while the session check is still in flight (measured on the
   // packaged build), and a reload would drop it entirely.
@@ -95,7 +104,7 @@ const ProtectedLayout: React.FC<{ layout: React.ReactElement }> = ({ layout }) =
 };
 
 // V2-05 deep links: an unauthenticated visitor asked for a specific route (/conversation/<id>,
-// /work, …). The gateway already turns a path-style link into its hash form; these two small gates
+// /activity, …). The gateway already turns a path-style link into its hash form; these two small gates
 // keep the destination through sign-in instead of dropping the visitor on the default page.
 type FromState = { from?: string } | null | undefined;
 
@@ -140,6 +149,12 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             element={<ModeSettings />}
           />
           <Route path='/assistants' element={<Navigate to='/guid' replace />} />
+          {/* D-70 item 3: the model each staff role runs on (Kel's own model stays on Model). */}
+          <Route path='/settings/staff' element={withRouteFallback(StaffModelsSettings)} />
+          {/* D-70 item 5: Permissions, Providers and Diagnostics are configuration, so they live in Settings. */}
+          <Route path='/settings/permissions' element={withRouteFallback(KelAutonomy)} />
+          <Route path='/settings/providers' element={withRouteFallback(KelProviders)} />
+          <Route path='/settings/diagnostics' element={withRouteFallback(KelDiagnostics)} />
           <Route path='/settings/assistants' element={<Navigate to='/settings/model' replace />} />
           <Route path='/settings/agent' element={<Navigate to='/settings/model' replace />} />
           <Route path='/settings/agent/:id/repair' element={<Navigate to='/settings/model' replace />} />
@@ -165,7 +180,9 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/scheduled' element={withRouteFallback(ScheduledTasksPage)} />
           {/* D-57: `/scheduled?origin=<old task id>` (links from before the move) resolves on the list page. */}
           <Route path='/scheduled/:id' element={withRouteFallback(TaskDetailPage)} />
-          <Route path='/work' element={withRouteFallback(KelWorkCenter)} />
+          {/* D-70 item 5: the work cards at the top of the chat replace the Work page. */}
+          <Route path='/work' element={<Navigate to='/guid' replace />} />
+          <Route path='/work/*' element={<Navigate to='/guid' replace />} />
           <Route path='/transcription' element={withRouteFallback(KelTranscription)} />
           <Route path='/transcription/library' element={withRouteFallback(KelTranscription)} />
           <Route
@@ -189,11 +206,11 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
           <Route path='/projects/map' element={withRouteFallback(KelProjects)} />
           <Route path='/projects/recipes' element={withRouteFallback(KelProjects)} />
           <Route path='/projects/list' element={withRouteFallback(KelProjectsList)} />
-          <Route path='/providers' element={withRouteFallback(KelProviders)} />
-          <Route path='/autonomy' element={withRouteFallback(KelAutonomy)} />
+          <Route path='/providers' element={<MovedRoute to='/settings/providers' />} />
+          <Route path='/autonomy' element={<MovedRoute to='/settings/permissions' />} />
           <Route path='/activity' element={withRouteFallback(KelActivity)} />
           <Route path='/onboarding' element={withRouteFallback(KelOnboarding)} />
-          <Route path='/diagnostics' element={withRouteFallback(KelDiagnostics)} />
+          <Route path='/diagnostics' element={<MovedRoute to='/settings/diagnostics' />} />
           {/* V2.0 preflight: reached from Fix Capture and the command palette, deliberately not a sider item. */}
           <Route path='/dogfood' element={withRouteFallback(KelDogfoodFixes)} />
           {/* V2.0 Connections: the one place to see and manage the services Kel can use. A

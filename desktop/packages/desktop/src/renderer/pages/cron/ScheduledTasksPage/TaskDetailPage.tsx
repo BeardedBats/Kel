@@ -17,6 +17,7 @@ import { kelRecipeGet, type KelSchedule, type KelScheduleRun } from '@renderer/c
 import { choiceLabel, useKelModelState } from '@renderer/components/kel/KelModelControl';
 import { GENERAL_PROJECT_ID, GENERAL_PROJECT_NAME, useProjects } from '@renderer/components/kel/activeProject';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
+import { jobRouteFor } from '@renderer/components/kel/needsAttention';
 import { formatNextRun, scheduleSentence } from '@renderer/pages/cron/cronUtils';
 import { scheduleActions, useSchedule } from '@renderer/pages/cron/useSchedules';
 import CreateTaskDialog from './CreateTaskDialog';
@@ -31,7 +32,7 @@ const runTone = (run: KelScheduleRun): string | undefined => {
   return undefined;
 };
 
-/** The route that opens a run: its chat (made on first use), or the job on Work. */
+/** The route that opens a run: its chat (made on first use), or the job on Activity (D-70). */
 export async function runRoute(run: KelScheduleRun): Promise<string | null> {
   if (run.conversation) {
     const open = window.kelAPI?.openEngineConversation;
@@ -46,7 +47,7 @@ export async function runRoute(run: KelScheduleRun): Promise<string | null> {
     const mapped = resolveConversationRoute(`/conversation/${run.conversation}`);
     if (mapped !== `/conversation/${run.conversation}` || !run.job_id) return mapped;
   }
-  return run.job_id ? `/work?job=${encodeURIComponent(run.job_id)}` : null;
+  return run.job_id ? jobRouteFor(run.job_id) : null;
 }
 
 const runSubtitle = (run: KelScheduleRun, schedule: KelSchedule): string =>

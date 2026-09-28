@@ -76,7 +76,7 @@ describe('buildResumptionBrief', () => {
     expect(finished[0].detail.startsWith('Done and checked — ')).toBe(true);
     expect(finished[1].detail.startsWith("Didn't pass its checks — ")).toBe(true);
     expect(finished[2].detail.startsWith('Finished — not fully checked — ')).toBe(true);
-    expect(finished[0].action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/work?job=done' });
+    expect(finished[0].action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/activity?job=done' });
     // Finished-but-unchecked is not "waiting on you".
     expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
     expect(result.summary).toBe('3 finished');
@@ -168,7 +168,7 @@ describe('buildResumptionBrief', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('caps each section and points at Work for the rest', () => {
+  it('caps each section and points at Activity for the rest', () => {
     const many = Array.from({ length: BRIEF_SECTION_CAP + 2 }, (_, index) =>
       job({ id: `wait-${index}`, state: 'AWAITING_USER' })
     );
@@ -176,7 +176,7 @@ describe('buildResumptionBrief', () => {
     const needsYou = result.lines.filter((line) => line.kind === 'needs-you');
     expect(needsYou).toHaveLength(BRIEF_SECTION_CAP + 1); // capped items + the "more" line
     expect(needsYou.at(-1)?.title).toMatch(/2 more things need you/);
-    expect(needsYou.at(-1)?.action?.to).toBe('/work');
+    expect(needsYou.at(-1)?.action?.to).toBe('/activity');
   });
 
   it('adds the informational restore line only while it is fresh, in either time unit', () => {

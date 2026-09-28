@@ -25,6 +25,13 @@ const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>
 export const unavailableNote = (option: ModelOption, provider?: Pick<ProviderRow, 'note'>): string | null =>
   option.available ? null : option.note || provider?.note || 'Needs setup';
 
+/**
+ * D-69: a model picked in a chat (or as the default) is Kel's own — its replies and plans. Staff always
+ * run on their role models, set in Settings → Staff & models (D-70 item 3). Said once, the same way,
+ * wherever Kel's model is picked.
+ */
+export const KEL_MODEL_SCOPE_NOTE = "Kel's model — staff use their own (Settings → Staff & models)";
+
 /** A provider Kel has no way to run yet cannot be fixed from Providers, so it offers no "Set up". */
 export const NOT_SUPPORTED_NOTE = 'Not supported for chat yet';
 
@@ -169,6 +176,9 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   const providers = state.providers ?? [];
   const items = (
     <Menu style={{ maxHeight: 420, overflowY: 'auto', minWidth: 240 }}>
+      <Menu.Item key='kel-model-scope' onClick={() => navigate('/settings/staff')}>
+        <span className='text-12px text-t-secondary'>{KEL_MODEL_SCOPE_NOTE}</span>
+      </Menu.Item>
       {conversationId ? (
         <Menu.ItemGroup title='This chat'>
           <Menu.Item key='chat-global' disabled={false} onClick={() => void setConversation(null)}>
@@ -258,12 +268,14 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
       onChoose={(choice, scope) => scope === 'conversation' ? setConversation(choice) : setDefault(choice)}
       onClose={() => setPopupVisible(false)}
       onAdd={() => { setPopupVisible(false); navigate('/settings/model?add=1'); }}
-      onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }} /> : items}
+      onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }}
+      onStaff={() => { setPopupVisible(false); navigate('/settings/staff'); }} /> : items}
       trigger='click' position={desktop ? 'tr' : 'bl'} unmountOnExit={desktop}
       popupVisible={popupVisible} onVisibleChange={setPopupVisible}>
       <button
         type='button'
         data-testid='kel-model-pill'
+        title={KEL_MODEL_SCOPE_NOTE}
         className={desktop ? 'kel-desktop-model-trigger' : 'flex items-center gap-4px text-12px px-8px h-24px rounded-12px cursor-pointer'}
         style={desktop ? undefined : { background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
       >
@@ -318,7 +330,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
                   disabled={!settable}
                   data-testid={'kel-default-' + provider.id + '-' + option.id}
                   aria-pressed={current}
-                  onClick={() => (!note ? void setDefault({ provider: provider.id, model: option.id }) : navigate('/providers'))}
+                  onClick={() => (!note ? void setDefault({ provider: provider.id, model: option.id }) : navigate('/settings/providers'))}
                   className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
                   style={{
                     background: current ? 'var(--kel-surface-2)' : 'transparent',

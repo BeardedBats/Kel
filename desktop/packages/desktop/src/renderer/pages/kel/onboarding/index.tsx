@@ -172,7 +172,7 @@ export default function KelOnboardingPage() {
         </KelCard>
 
         {!isMobile ? <KelDefaultModelCard compact title='Connect a model' /> : (
-        <KelCard title='Connect a model' actions={<KelButton onClick={() => navigate('/providers')}>Open Providers</KelButton>}>
+        <KelCard title='Connect a model' actions={<KelButton onClick={() => navigate('/settings/providers')}>Open Providers</KelButton>}>
           {providers.length === 0 ? <p className='kel-meta'>No model is connected yet.</p> : providers.map(item => (
             <div className='kel-row' key={item.provider}>
               <span>{item.label}</span><span className='kel-meta'>{STATUS_LABEL[item.status] ?? item.status.replace(/_/g, ' ')}</span>

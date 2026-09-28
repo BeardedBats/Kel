@@ -18,8 +18,8 @@ const projectsPage = readFileSync(
   path.join(repoRoot, 'desktop/packages/desktop/src/renderer/pages/kel/projects/index.tsx'),
   'utf8'
 );
-const workPage = readFileSync(
-  path.join(repoRoot, 'desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx'),
+const activityPage = readFileSync(
+  path.join(repoRoot, 'desktop/packages/desktop/src/renderer/pages/kel/activity/index.tsx'),
   'utf8'
 );
 const service = readFileSync(path.join(repoRoot, 'runtime/kel/service.py'), 'utf8');
@@ -42,16 +42,17 @@ describe('recipe contract (D10)', () => {
 describe('Recipes tab (D10)', () => {
   it('can run a recipe and points at where the run lives', () => {
     expect(projectsPage).toContain('kelRecipeRun(draft.recipeId, values, scope)');
-    expect(projectsPage).toContain('Run request sent — follow it on Work');
+    expect(projectsPage).toContain('Run request sent — follow it in Activity.');
     expect(projectsPage).toContain('Preview (dry run)');
   });
 });
 
 describe('Save as a recipe (D10)', () => {
   it('drafts first and saves only on explicit confirmation', () => {
-    expect(workPage).toContain('Save as a recipe');
-    expect(workPage).toContain('setRecipeDraft(await kelRecipePropose(activeJob.id, jobScope(activeJob)))');
-    expect(workPage).toContain('It is saved only when you confirm.');
-    expect(workPage.match(/kelRecipeSave\(recipeDraft\.recipe, jobScope\(activeJob\)\)/g) ?? []).toHaveLength(1);
+    // D-70: the Work page is retired; finished work is saved as a recipe from Activity.
+    expect(activityPage).toContain('Save as a recipe');
+    expect(activityPage).toContain('const proposal = await kelRecipePropose(job.id, jobScope(job));');
+    expect(activityPage).toContain('It is saved only when you confirm.');
+    expect(activityPage.match(/kelRecipeSave\(current\.recipe, jobScope\(job\)\)/g) ?? []).toHaveLength(1);
   });
 });

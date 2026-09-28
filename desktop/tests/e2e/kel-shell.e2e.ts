@@ -61,7 +61,7 @@ test('desktop surfaces use the built renderer and real state', async ({ page }) 
   await page.setViewportSize({ width: 1440, height: 900 });
   const failures: string[] = [];
   page.on('pageerror', e => failures.push(e.message));
-  for (const [name, route] of Object.entries({ home: '/guid', work: '/work', projects: '/projects', activity: '/activity', permissions: '/autonomy', appearance: '/settings/appearance', model: '/settings/model', connections: '/connections', providers: '/providers', tools: '/settings/tools', remote: '/settings/webui', system: '/settings/system', archived: '/settings/archived', about: '/settings/about', diagnostics: '/diagnostics', scheduled: '/scheduled', onboarding: '/onboarding', ramble: '/transcription', kibble: '/dogfood' })) {
+  for (const [name, route] of Object.entries({ home: '/guid', projects: '/projects', activity: '/activity', permissions: '/settings/permissions', appearance: '/settings/appearance', model: '/settings/model', staff: '/settings/staff', connections: '/connections', providers: '/settings/providers', tools: '/settings/tools', remote: '/settings/webui', system: '/settings/system', archived: '/settings/archived', about: '/settings/about', diagnostics: '/settings/diagnostics', scheduled: '/scheduled', onboarding: '/onboarding', ramble: '/transcription', kibble: '/dogfood' })) {
     await open(page, route);
     if (name === 'projects') await expect(page.locator('#project-knowledge')).toBeVisible({ timeout: 20000 });
     if (name === 'ramble') {
@@ -221,7 +221,7 @@ test('model configuration modal keeps cancel and disabled validation', async ({ 
 
 
 test('provider rows reveal real controls and onboarding keeps five sections', async ({ page }) => {
-  await open(page, '/providers');
+  await open(page, '/settings/providers');
   const provider = page.locator('.kel-shell-provider').filter({ hasText: 'DeepSeek' });
   await provider.locator('summary').click();
   await provider.getByRole('button', { name: 'Set up', exact: true }).click();
@@ -269,11 +269,11 @@ test('audit 2 matches sidebar geometry and visible literal source copy', async (
   await expect(page.locator('.kel-shell-attention-line').first()).toContainText('needs setup so Kel can keep it available.');
   const box = await page.locator('[data-testid="resumption-brief"]').boundingBox();
   expect(box?.x).toBe(388); expect(box?.y).toBe(112); expect(box?.width).toBe(920);
+  // D-70: the Work page is retired; its route lands on the chat home.
   await open(page, '/work');
+  await expect(page).toHaveURL(/#\/guid$/);
   await expect(page.getByText('Select or customize a theme', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Add Theme', exact: true })).toHaveCount(0);
-  const workBox = await page.getByRole('heading', { name: 'Jobs', exact: true }).boundingBox();
-  expect(workBox?.x).toBe(409); expect(workBox?.y).toBe(129);
   await open(page, '/settings/appearance');
   await expect(page.locator('[data-settings-id="pet"]')).toHaveCount(0);
   const modelBox = await page.locator('[data-settings-id="model"]').boundingBox();

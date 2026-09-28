@@ -1,6 +1,6 @@
 /**
- * D12 — route transparency pins: the engine exposes why a run landed on a provider, and the Work
- * page says it in plain language — including honest fallbacks and skipped-provider reasons.
+ * D12 — route transparency pins: the engine exposes why a run landed on a provider, and Activity
+ * (which replaced the Work page, D-70) says it in plain language — including honest fallbacks and skipped-provider reasons.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -13,7 +13,7 @@ const read = (relative: string) => readFileSync(path.join(repoRoot, relative), '
 
 const service = read('runtime/kel/service.py');
 const kelApi = read('desktop/packages/desktop/src/renderer/components/kel/kelApi.ts');
-const workPage = read('desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx');
+const activityPage = read('desktop/packages/desktop/src/renderer/pages/kel/activity/index.tsx');
 const workLanguage = read('desktop/packages/desktop/src/renderer/components/kel/workLanguage.ts');
 
 describe('route contract (D12)', () => {
@@ -46,8 +46,8 @@ describe('route sentence (D12)', () => {
   });
 
   it('renders only when the engine actually recorded a decision', () => {
-    expect(workPage).toContain('routeSentence(routes[activeJob.id], providerLabels)');
-    expect(workPage).toContain('{route && <p className="kel-meta">{route}</p>}');
-    expect(workPage).toContain('setRoutes(state.routes ?? {});');
+    expect(activityPage).toContain('routeSentence(routes[job.id], providerLabels)');
+    expect(activityPage).toContain("{route && <p className='kel-meta kel-activity-route'>{route}</p>}");
+    expect(activityPage).toContain('setRoutes(state.routes ?? {});');
   });
 });

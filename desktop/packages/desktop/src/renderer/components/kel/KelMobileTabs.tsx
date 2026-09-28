@@ -9,7 +9,7 @@ type Tab = { label: string; path: string; icon: string; active: (path: string) =
 const tabs: Tab[] = [
   { label: 'Chats', path: '/guid', icon: chatsIcon, active: (path: string) => path === '/guid' || path.startsWith('/conversation/') },
   { label: 'Ramble', path: '/transcription', icon: rambleIcon, active: (path: string) => path.startsWith('/transcription') },
-  { label: 'Projects', path: '/projects', icon: projectsIcon, active: (path: string) => /^(\/projects|\/work|\/activity|\/autonomy|\/scheduled|\/providers|\/diagnostics)(\/|$)/.test(path) },
+  { label: 'Projects', path: '/projects', icon: projectsIcon, active: (path: string) => /^(\/projects|\/activity|\/scheduled)(\/|$)/.test(path) },
   { label: 'Settings', path: '/settings', icon: settingsIcon, active: (path: string) => path.startsWith('/settings') || path === '/connections' || path === '/dogfood' },
 ];
 

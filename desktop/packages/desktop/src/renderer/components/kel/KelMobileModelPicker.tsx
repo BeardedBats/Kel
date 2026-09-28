@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { unavailableNote, useKelModelState } from './KelModelControl';
+import { KEL_MODEL_SCOPE_NOTE, unavailableNote, useKelModelState } from './KelModelControl';
 import './kel-model-availability.css';
 
 type Scope = 'conversation' | 'default';
@@ -41,6 +41,7 @@ export const KelMobileModelPicker: React.FC<{
       <section className='kel-mobile-model-picker__sheet' role='dialog' aria-modal='true' aria-label='Model'>
         <div className='kel-mobile-model-picker__handle' aria-hidden='true' />
         <h2>Model</h2>
+        <p className='kel-mobile-model-picker__caption'>{KEL_MODEL_SCOPE_NOTE}</p>
         <div className='kel-mobile-model-picker__tabs' role='tablist' aria-label='Model scope'>
           <button type='button' role='tab' aria-selected={scope === 'conversation'} onClick={() => setScope('conversation')}>This chat</button>
           <button type='button' role='tab' aria-selected={scope === 'default'} onClick={() => setScope('default')}>Default for new chats</button>

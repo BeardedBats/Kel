@@ -24,6 +24,7 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
+import { jobRouteFor } from '@renderer/components/kel/needsAttention';
 import {
   kelMapAction,
   kelMemoryAction,
@@ -295,7 +296,7 @@ export default function KelProjectsPage() {
         return;
       }
       const out = await kelRecipeRun(draft.recipeId, values, scope);
-      setNote(`Run request sent — follow it on Work (${String(out.submission).slice(0, 8)}).`);
+      setNote('Run request sent — follow it in Activity.');
       setRunDraft(null);
       await load();
     } catch (err) {
@@ -342,7 +343,6 @@ export default function KelProjectsPage() {
   const desktopListed = (found ?? entries).filter((entry) => desktopRecipeTab === 'All'
     || (desktopRecipeTab === 'Favourites' ? entry.favourite : entry.category === desktopRecipeTab));
   const libraryView = viewFromPath(pathname) === 'recipes';
-  const projectRecipes = entries.filter((entry) => entry.source !== 'builtin');
   const populatedKnowledge = !libraryView && (pathname.startsWith('/projects/knowledge') || proposals.length > 0);
   /** The project a listed recipe belongs to (built-ins have none). */
   function recipeProject(recipeId: string): string | undefined {
@@ -584,15 +584,15 @@ export default function KelProjectsPage() {
           </KelCard>
         )}
 
-        {!error && work && (
-          <KelCard id="project-recipes" title="Recipes" className={libraryView ? 'kel-recipe-library-card' : undefined}
-            actions={libraryView ? <span className="kel-recipe-count">{entries.length} available here</span> : undefined}>
-            {!libraryView ? (
-              !isMobile && projectRecipes.length > 0 ? <div className="kel-project-recipe-links">{projectRecipes.map((entry) => <div className="kel-row" key={`${entry.project_id ?? ''}:${entry.recipe_id ?? entry.id}`}><span className="kel-strong">{recipeName(entry, String(entry.recipe_id ?? entry.id ?? ''))}</span><span className="kel-grow" /><KelButton variant="quiet" onClick={() => navigate('/projects/recipes')}>Open Recipes</KelButton></div>)}</div> : <KelEmpty
-                title={projectRecipes.length === 0 ? 'No recipes in this project yet.' : `${projectRecipes.length} recipes in this project.`}
-                why="Open Recipes to search, preview, and run a workflow."
-              />
-            ) : entries.length === 0 ? (
+        {/* D-70 item 5: Recipes has one entry — the sidebar. The Project page no longer repeats a
+            Recipes card; the library links to Scheduled tasks, which also stays in the Project nav. */}
+        {!error && work && libraryView && (
+          <KelCard id="project-recipes" title="Recipes" className="kel-recipe-library-card"
+            actions={<>
+              <span className="kel-recipe-count">{entries.length} available here</span>
+              <KelButton variant="link" onClick={() => navigate('/scheduled')}>Scheduled tasks</KelButton>
+            </>}>
+            {entries.length === 0 ? (
               <KelEmpty
                 title="No recipes in this project yet."
                 why="Recipes capture a workflow Kel finished and verified, so it can run again with your approval."
@@ -676,7 +676,7 @@ export default function KelProjectsPage() {
                           </div>)}
                         </div>}
                         <div className="kel-recipe-desktop-expanded-actions">
-                          {mobileRecipeDetail.history.length > 0 && <button type="button" onClick={() => navigate('/work')}>Open on Work</button>}
+                          {mobileRecipeDetail.history.length > 0 && <button type="button" onClick={() => navigate(jobRouteFor(mobileRecipeDetail.history[0]?.job_id))}>Open in Activity</button>}
                           <button type="button" onClick={() => setShowRecipeTools((previous) => !previous)}>More actions</button>
                           <KelButton variant="primary" disabled={busy !== null || mobileRecipeDetail.loading}
                             onClick={() => void prepareRecipe(recipeId)}>Run</KelButton>
@@ -905,8 +905,8 @@ export default function KelProjectsPage() {
                       <li key={run.job_id}>
                         <span className="kel-strong">{run.job_id.slice(0, 8)}</span>{' '}
                         {`${run.state ?? 'queued'}${run.verdict ? ` · ${run.verdict}` : ''}`}{' '}
-                        <KelButton variant="quiet" onClick={() => navigate('/work')}>
-                          Open on Work
+                        <KelButton variant="quiet" onClick={() => navigate(jobRouteFor(run.job_id))}>
+                          Open in Activity
                         </KelButton>
                       </li>
                     ))}
