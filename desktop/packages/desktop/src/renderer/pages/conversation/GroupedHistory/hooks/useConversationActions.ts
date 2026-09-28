@@ -6,10 +6,8 @@
 
 import { ipcBridge } from '@/common';
 import type { TChatConversation } from '@/common/config/storage';
-import { requestConversationSendBoxPrefill } from '@/renderer/hooks/chat/useSendBoxDraft';
 import { refreshConversationCache } from '@/renderer/pages/conversation/utils/conversationCache';
 import { syncEngineConversationTitle } from '@/renderer/pages/conversation/utils/engineConversationTitle';
-import { isLegacyReadOnlyConversationType } from '@/renderer/pages/conversation/utils/conversationRuntime';
 import { emitter } from '@/renderer/utils/emitter';
 import { downloadTextContent } from '@/renderer/utils/file/download';
 import { sanitizeFileName } from '@/renderer/utils/chat/conversationExport';
@@ -253,29 +251,16 @@ export const useConversationActions = ({
     setDropdownVisibleId(conversation.id);
   }, []);
 
+  // D-57: open the scheduled-task editor filled in from this chat (its name, request and project).
   const handleCreateCronTask = useCallback(
     (conversation: TChatConversation) => {
-      const prefillPrompt = t('cron.status.defaultPrompt');
       setDropdownVisibleId(null);
-
-      if (isLegacyReadOnlyConversationType(conversation.type)) {
-        void navigate('/guid', {
-          state: {
-            prefillPrompt,
-            preservePrefillDraft: true,
-            focusPrefill: true,
-          },
-        });
-      } else {
-        requestConversationSendBoxPrefill(conversation.id, prefillPrompt);
-        if (id !== conversation.id) {
-          void navigate(`/conversation/${conversation.id}`);
-        }
-      }
-
+      void navigate('/scheduled', {
+        state: { scheduleFromChat: { conversationId: conversation.id, name: conversation.name } },
+      });
       onSessionClick?.();
     },
-    [id, navigate, onSessionClick, t]
+    [navigate, onSessionClick]
   );
 
   /**
