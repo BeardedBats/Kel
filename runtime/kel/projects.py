@@ -139,6 +139,63 @@ def projects_root():
     return Path(os.environ.get('USERPROFILE') or Path.home()) / 'Documents' / 'Kel Projects'
 
 
+# VIS-16 / JR-17: a project Kel makes for the person gets a short, human name and a tidy folder,
+# not a truncated slug of the whole request ("i-want-to-create-a-little-app-that-a-121b").
+_REQUEST_LEAD = re.compile(
+    r"^(?:(?:hey|hi|ok|okay|so|please|kel)[,!.]?\s+)*"
+    r"(?:(?:can|could|would|will) you\s+(?:please\s+)?|i(?:'d| would)?\s+(?:really\s+)?(?:want|like|need)\s+(?:you\s+)?to\s+"
+    r"|let'?s\s+|help me\s+|i'?m\s+(?:going|trying)\s+to\s+)?"
+    r"(?:please\s+)?(?:create|build|make|write|code|develop|set up|start|design|put together)\s+"
+    r"(?:(?:me|us|for me)\s+)?", re.I)
+_LEADING_WORDS = {'a', 'an', 'the', 'my', 'some', 'new', 'simple', 'small', 'quick'}
+_CLAUSE_WORDS = {'that', 'which', 'who', 'to', 'for', 'so', 'where', 'with', 'using', 'in', 'on', 'from',
+                 'and', 'allowing', 'allows', 'lets', 'letting', 'when', 'by', 'of', 'like'}
+PROJECT_NAME_LIMIT = 40
+
+
+def readable_project_name(text, title=None, taken=()):
+    """A short, human name for a project Kel creates: the work's own short title when the model gave
+    one, else the request's subject ("I want to create a little app that…" → "Little app"). A name
+    already in use gets " 2", " 3"…"""
+    request = ' '.join(str(text or '').split())
+    name = ''
+    candidate = ' '.join(str(title or '').split()).strip().strip('"\'').rstrip('.…').strip()
+    # A model title is used when it is short and is not just the start of the request cut off.
+    if 3 <= len(candidate) <= PROJECT_NAME_LIMIT and not request.lower().startswith(candidate.lower()):
+        name = candidate
+    if not name:
+        rest = _REQUEST_LEAD.sub('', request.split('. ')[0]).strip(' .,!?:;')
+        words = re.findall(r"[A-Za-z0-9][A-Za-z0-9'+#-]*", rest)
+        while words and words[0].lower() in _LEADING_WORDS and len(words) > 1:
+            words.pop(0)
+        picked = []
+        for word in words:
+            if picked and word.lower() in _CLAUSE_WORDS:
+                break
+            picked.append(word)
+            if len(picked) == 4:
+                break
+        name = ' '.join(picked)
+    name = (name[:PROJECT_NAME_LIMIT].rsplit(' ', 1)[0] if len(name) > PROJECT_NAME_LIMIT else name).strip()
+    name = (name[:1].upper() + name[1:]) if name else 'New project'
+    taken_lower = {str(item).strip().lower() for item in taken}
+    unique, n = name, 2
+    while unique.lower() in taken_lower:
+        unique, n = '%s %d' % (name, n), n + 1
+    return unique
+
+
+def new_project_folder(name, parent=None):
+    """A folder for a new project under the Kel Projects root, named after it ("Little app" →
+    "little-app"), with "-2", "-3"… only when that folder already exists."""
+    parent = Path(parent) if parent is not None else projects_root()
+    slug = '-'.join(re.findall(r'[a-z0-9]+', str(name or '').lower()))[:40].strip('-') or 'project'
+    folder, n = parent / slug, 2
+    while folder.exists():
+        folder, n = parent / ('%s-%d' % (slug, n)), n + 1
+    return folder
+
+
 def default_general_root():
     """General's default folder (D-62): `%USERPROFILE%/Documents/Kel Projects/General`.
 
