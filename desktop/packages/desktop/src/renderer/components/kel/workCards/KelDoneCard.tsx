@@ -2,17 +2,19 @@
  * D-70 item 2 — the compact done card on Kel's result message (Figma 5d). Title, the verified
  * state ("Done and checked" only for work whose checks passed, D-53), "N of N checks passed", one
  * sentence of the result, where a coding change was applied (D-65 truth from changeApplication.ts)
- * with Undo and Open folder, and Details, which opens the work's top card. Failed, stopped and
- * needs-you results use the same card with their own words. Work without a top card (from before
- * the cards) renders `fallback` instead — today's message details.
+ * with Undo and Open folder (or Apply / Leave it while a checked change waits for Nick), and
+ * Details, which opens the work's top card. Failed, stopped and needs-you results use the same card
+ * with their own words. Work without a top card (from before the cards) renders `fallback` instead
+ * — today's message details.
  */
 import { ipcBridge } from '@/common';
 import type { KelMessageMeta } from '@/common/chat/kelMessageMeta';
 import React, { useCallback, useEffect, useState } from 'react';
 import { applicationLine, isApplied, placeWords } from '../changeApplication';
 import { kelUndoChange, type KelChangeApplication } from '../kelApi';
+import { sendNeedsAnswer } from './needsAnswer';
 import { officeItem, type OfficeItemDetail } from './officeApi';
-import { openWorkCard, refreshWorkCards } from './workCardEvents';
+import { REFRESH_WORK_CARDS_EVENT, openWorkCard, refreshWorkCards } from './workCardEvents';
 import { StateIcon, iconFolder, iconFolder13, iconUndo } from './workCardIcons';
 import { clockTime, detailStateLabel, isUncertain } from './workCardModel';
 import './KelWorkCardsRow5.css';
@@ -102,6 +104,13 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
     void read();
   }, [read]);
 
+  // An answer or Undo on the top card updates this card too (one live view).
+  useEffect(() => {
+    const again = (): void => void read();
+    window.addEventListener(REFRESH_WORK_CARDS_EVENT, again);
+    return () => window.removeEventListener(REFRESH_WORK_CARDS_EVENT, again);
+  }, [read]);
+
   if (noCard) return <>{fallback}</>;
   if (!detail) return null;
 
@@ -114,6 +123,9 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
   const firstSentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
   const sentence = applyWords ? withoutPlace(firstSentence) : firstSentence;
   const checks = checksLine(meta);
+  // D-70: a checked change that waits for Nick (Ask first, or held in Full access) is answered here
+  // too, through the same route as its top card: Apply / Apply anyway, or Leave it.
+  const applyQuestion = detail.state === 'needs_you' && detail.question?.kind === 'apply' ? detail.question : null;
 
   const guarded = async (action: () => Promise<unknown>) => {
     if (busy) return;
@@ -155,6 +167,24 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
         </div>
       ) : null}
       <div className='kel-dc__actions'>
+        {applyQuestion?.options?.map((option) => (
+          <button
+            key={option.id}
+            type='button'
+            className={`kel-wd-button${option.id === 'leave' ? '' : ' kel-wd-button--primary'}`}
+            disabled={busy}
+            onClick={() =>
+              void guarded(async () => {
+                await sendNeedsAnswer(applyQuestion, { option });
+                refreshWorkCards();
+                await read();
+              })
+            }
+            data-testid={`kel-done-card-answer-${option.id}`}
+          >
+            {option.label}
+          </button>
+        ))}
         {applied ? (
           <button
             type='button'

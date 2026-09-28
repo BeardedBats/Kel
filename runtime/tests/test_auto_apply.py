@@ -165,22 +165,98 @@ class FullAccessTests(AutoApplyBase):
 
 
 class AskFirstTests(AutoApplyBase):
-    def test_ask_first_keeps_the_apply_button(self):
+    def test_ask_first_waits_and_the_card_asks_apply_or_leave_it(self):
+        from kel import needs_answer
         authority.set_mode(self.s, 'ask')
         self.assertEqual(settle(self.s, self.j), 'waiting')
         self.untouched()
         self.assertIsNone(application(self.s, self.j))
         text, _ = self.s.publish(self.j)
-        self.assertIn('Apply checked changes will check your original project', text)
+        # The result names the control Nick really has (D-70), never the retired Work-panel button.
+        self.assertIn('Ask first is on, so Kel has not changed source yet.', text)
+        self.assertIn('Choose Apply on its work card at the top of this chat', text)
+        self.assertIn('python -m unittest', text)  # how it was checked
+        for gone in ('Apply checked changes', 'change report', str(self.root)):
+            self.assertNotIn(gone, text)
         card = describe(self.s, [self.j])[self.j]
         self.assertIsNone(card['state'])
         self.assertFalse(card['auto'])
-        self.assertIsNone(card['waiting_reason'])  # Ask first is the reason; the card needs no note
-        self.assertEqual(apply_checked(self.s, self.j, actor='user')['state'], 'APPLIED')
+        self.assertTrue(card['ask_first'])
+        self.assertEqual(card['waiting_reason'], 'Ask first is on')
+        question = needs_answer.question(self.s, self.s.get(self.j))
+        self.assertEqual(question['kind'], 'apply')
+        self.assertEqual(question['text'], 'The change passed its checks. Apply it to source?')
+        self.assertEqual(question['options'], [{'id': 'apply_anyway', 'label': 'Apply'},
+                                               {'id': 'leave', 'label': 'Leave it'}])
+        self.assertIn('Ask first is on, so Kel waits for you', question['detail'])
+        # "Apply" is the existing apply path with Nick as the actor.
+        out = needs_answer.answer_apply(self.s, self.j, 'apply_anyway', actor='user')
+        self.assertEqual(out['application']['state'], 'APPLIED')
         self.applied()
         self.assertEqual(decision(self.s, self.j)['decision'], 'manual')
         self.assertEqual(len(self.events('changes.applied')), 1)
         self.assertEqual(self.events('changes.auto_applied'), [])
+        card = describe(self.s, [self.j])[self.j]
+        self.assertEqual((card['state'], card['waiting_reason'], card['ask_first']), ('APPLIED', None, False))
+        answered = self.events('needs_you.answered')
+        self.assertEqual(answered[0]['payload']['detail']['wait'], 'ask_first')
+        self.assertEqual(sentence_for('needs_you.answered', answered[0]['payload']), 'You applied the checked change.')
+        self.assertEqual(undo_applied(self.s, self.j, actor='user')['state'], 'UNDONE')  # Undo keeps working
+        self.untouched()
+
+    def test_the_plain_apply_route_still_works_under_ask_first(self):
+        authority.set_mode(self.s, 'ask')
+        settle(self.s, self.j)
+        self.assertEqual(apply_checked(self.s, self.j, actor='user')['state'], 'APPLIED')
+        self.applied()
+        self.assertEqual(decision(self.s, self.j)['decision'], 'manual')
+        self.assertIsNone(describe(self.s, [self.j])[self.j]['waiting_reason'])
+
+    def test_leave_it_changes_nothing_and_the_card_stops_asking(self):
+        from kel import needs_answer
+        authority.set_mode(self.s, 'ask')
+        settle(self.s, self.j)
+        self.s.publish(self.j)
+        out = needs_answer.answer_apply(self.s, self.j, 'leave', actor='user')
+        self.assertEqual((out['choice'], out['already']), ('leave', False))
+        self.untouched()
+        card = describe(self.s, [self.j])[self.j]
+        self.assertEqual((card['waiting_reason'], card['ask_first']), (None, False))
+        self.assertEqual(needs_answer.settled_line(self.s, self.s.get(self.j)),
+                         ('done', 'Checked; you chose to leave it unapplied.'))
+        with self.assertRaisesRegex(PolicyError, 'Only you'):
+            needs_answer.answer_apply(self.s, self.j, 'apply_anyway', actor='kel')
+
+    def test_the_handoff_view_keeps_the_line_live_while_the_change_waits(self):
+        from kel import handoff, needs_answer
+        from kel.service import Service
+        authority.set_mode(self.s, 'ask')
+        settle(self.s, self.j)
+        self.s.publish(self.j)
+        handoff.ensure_schema(self.s)
+        conversation = self.s.get(self.j)['conversation']
+        with self.s.transaction() as db:
+            db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',
+                       ('sub', conversation, 'Change app.txt', 'DISPATCHED', None, self.j, time.time()))
+        service = Service.__new__(Service)  # handoff_view reads only the store
+        service.store = self.s
+        view = service.handoff_view(conversation, 'sub')
+        self.assertEqual(view['phase'], 'needs_you')  # not terminal: the in-thread line keeps polling
+        self.assertIn('Ask first is on, so it waits for you to apply it', view['why'])
+        self.assertTrue(view['application']['ask_first'])
+        needs_answer.answer_apply(self.s, self.j, 'apply_anyway', actor='user')
+        self.assertEqual(service.handoff_view(conversation, 'sub')['phase'], 'done')
+
+    def test_after_switching_to_full_access_the_card_says_ask_first_was_on(self):
+        from kel import needs_answer
+        authority.set_mode(self.s, 'ask')
+        settle(self.s, self.j)
+        authority.set_mode(self.s, 'full')
+        self.assertEqual(settle(self.s, self.j), 'waiting')  # never re-decided on its own
+        self.untouched()
+        self.assertEqual(describe(self.s, [self.j])[self.j]['waiting_reason'], 'Ask first was on when it finished')
+        self.assertIn('Ask first was on when it finished, so Kel waits',
+                      needs_answer.question(self.s, self.s.get(self.j))['detail'])
 
     def test_a_waiting_change_stays_waiting_after_a_restart_and_a_mode_change(self):
         authority.set_mode(self.s, 'ask')
@@ -238,6 +314,12 @@ class ProtectedPlaceTests(AutoApplyBase):
         # It names the control the person actually has: Apply anyway on the work card (D-70).
         self.assertIn('Choose Apply anyway on its work card at the top of this chat', text)
         self.assertNotIn('Work context', text)
+        # Full access keeps its own words: "Apply anyway", and the reason it held the change.
+        from kel import needs_answer
+        self.assertFalse(describe(self.s, [self.j])[self.j]['ask_first'])
+        question = needs_answer.question(self.s, self.s.get(self.j))
+        self.assertEqual([o['label'] for o in question['options']], ['Apply anyway', 'Leave it'])
+        self.assertEqual(question['detail'], 'Kel waited because it would change your credentials folder.')
         self.assertEqual(self.events('changes.auto_applied'), [])
 
     def test_a_refused_apply_waits_instead_of_retrying(self):

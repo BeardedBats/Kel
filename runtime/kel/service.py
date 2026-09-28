@@ -1709,6 +1709,11 @@ class Service:
             needed=self._oracle_attention(job)  # D-66: a second opinion's blocker needs Nick
             phase='needs_you'
             view.update(why=needed['why'],next=needed['next'])
+        elif job_state=='CLOSED' and verdict=='VERIFIED' and job['contract'].get('kind')=='coding' and (waiting:=self._apply_wait(job)):
+            phase='needs_you'  # D-70: a checked change waits for Nick's Apply / Leave it on its card
+            view.update(why=('Checked and ready. %s, so it waits for you to apply it.'%waiting['waiting_reason'] if waiting.get('ask_first')
+                             else 'Checked, but Kel did not apply it on its own: %s.'%waiting['waiting_reason']),
+                        next='Choose Apply on its card when you are ready, or Leave it.')
         elif job_state=='CLOSED':
             phase='done' if verdict=='VERIFIED' else 'needs_look'
         elif pending or job_state=='AWAITING_USER' or brief.get('needs_you'):
@@ -1737,6 +1742,15 @@ class Service:
             try:view['office_state']=office_state(self.store,job,brief)[0]
             except Exception:view['office_state']=None
         return view
+
+    def _apply_wait(self,job):
+        """The D-65 application entry when a checked change waits for Nick (unanswered), else None."""
+        from .auto_apply import describe
+        try:
+            entry=describe(self.store,[job['id']]).get(job['id']) or {}
+        except Exception:
+            return None
+        return entry if entry.get('waiting_reason') else None
 
     def _oracle_attention(self,job):
         from .oracle import attention

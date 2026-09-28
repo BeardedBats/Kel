@@ -747,10 +747,10 @@ class Store:
                               '. The code passed its tests and a separate review. '
                               'Download the change report to see what was built, then use Apply checked changes to write the files into the project folder.')
                     else:
-                        text='The change passed its tests and a separate review. It is ready in an isolated project copy. Your original project is unchanged. Download the change report to inspect the diff.'
-                        if job['contract'].get('runtime')=='native-host':
-                            text='The change passed its tests and a separate review. Download the change report to inspect the project copy. Apply checked changes will check your original project for conflicts and save a backup.'
-                    # D-65: Full access applied it (what, where, how it was checked) or says why not.
+                        text=('The change passed its tests and a separate review. '
+                              'Its work card shows whether it is in your project and offers Apply or Undo.')
+                    # D-65: Full access applied it (what, where, how it was checked) or says why not;
+                    # under Ask first it names the Apply on its needs-you card (D-70).
                     from .auto_apply import result_text
                     text=result_text(self,job) or text
                 # D-53: a conversational hand-off gets a lead-in that names the work — and only a

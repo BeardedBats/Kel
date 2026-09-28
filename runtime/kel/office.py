@@ -117,6 +117,9 @@ def state_of(store, job, brief=None):
                 application = describe(store, [job['id']]).get(job['id']) or {}
                 if application.get('state') == 'APPLIED':
                     line = 'Done and checked — applied to your project.'
+                elif application.get('ask_first'):
+                    ask = 'Checked and ready. %s, so it waits for you to apply it.' % application['waiting_reason']
+                    return 'needs_you', ask, True, ask, 'Choose Apply when you are ready, or Leave it.'
                 elif application.get('waiting_reason'):
                     return 'needs_you', 'Checked, but Kel did not apply it on its own: %s.' % \
                         application['waiting_reason'], True, application['waiting_reason'], \

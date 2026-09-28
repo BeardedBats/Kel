@@ -3,8 +3,8 @@
  * in-chat work card and the Work panel so both say the same thing.
  *
  * Full access applies a verified change on its own (it can be undone); a change that failed or
- * skipped its checks, one touching a protected place, or any change under Ask first keeps the
- * "Apply checked changes" button.
+ * skipped its checks, one touching a protected place, or any change under Ask first waits for Nick:
+ * its work card asks "Apply" (under Ask first) or "Apply anyway", or "Leave it" (D-70).
  */
 import type { KelChangeApplication } from './kelApi';
 
@@ -51,6 +51,8 @@ export const applicationLine = (application: KelChangeApplication | null | undef
     return `${application.auto ? 'Applied automatically' : 'Applied'}${where}${filesText(application.files)}. The earlier files are saved.`;
   if (application.state === 'UNDOING') return 'Putting the earlier files back…';
   if (application.state === 'UNDONE') return 'Undone — the earlier files are back.';
+  if (application.waiting_reason && application.ask_first)
+    return `Waiting for you to apply it — ${application.waiting_reason}.`;
   if (application.waiting_reason) return `Waiting for you: Kel did not apply it on its own — ${application.waiting_reason}.`;
   return null;
 };

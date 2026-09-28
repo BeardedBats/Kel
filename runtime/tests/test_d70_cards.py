@@ -102,6 +102,39 @@ class QuestionTests(Base):
         with self.assertRaisesRegex(PolicyError, 'Only you'):
             needs_answer.answer_apply(self.store, job, 'leave', actor='kel')
 
+    def test_ask_first_holds_a_checked_change_as_a_needs_you_card_with_apply(self):
+        from kel import authority
+        authority.set_mode(self.store, 'ask')
+        project = make_project(self.tmp.name)
+        text = 'Change app.txt to say new'
+        job = self.staffed(compile_coding(text, project, ['python', '-c', 'pass']), text)
+        engine = self.engine({'claude-code': FakeCoder(self.store, reports='claude-opus-5-5')})
+        try:
+            self.drive(engine, job, lambda j: bool(office._published(self.store, job)))
+        finally:
+            engine.close()
+        self.assertEqual((project / 'app.txt').read_text(), 'old')  # nothing applied on its own
+        item = office.items(self.store)['items'][0]
+        self.assertEqual((item['state'], item['needs_you'], item['finished']), ('needs_you', True, False))
+        self.assertEqual(item['progress']['label'], 'Waiting for you')
+        self.assertIn('Ask first is on, so it waits for you to apply it', item['status_line'])
+        view = office.detail(self.store, job)
+        self.assertEqual(view['application']['waiting_reason'], 'Ask first is on')
+        question = view['question']
+        self.assertEqual((question['kind'], question['wait']), ('apply', 'Waiting for you to apply it'))
+        self.assertEqual([(o['id'], o['label']) for o in question['options']],
+                         [('apply_anyway', 'Apply'), ('leave', 'Leave it')])
+        self.assertIn('Choose Apply on its work card', view['result'])
+        out = needs_answer.answer_apply(self.store, job, 'apply_anyway', actor='user')
+        self.assertEqual(out['application']['state'], 'APPLIED')
+        self.assertNotEqual((project / 'app.txt').read_text(), 'old')
+        item = office.items(self.store)['items'][0]
+        self.assertEqual((item['state'], item['needs_you']), ('done', False))
+        self.assertIn('applied at your request', item['status_line'])
+        self.assertNotIn('question', office.detail(self.store, job))
+        lines = [e for e in timeline(self.store)['entries'] if e['type'] == 'needs_you.answered']
+        self.assertEqual([e['what'] for e in lines], ['You applied the checked change.'])
+
     def test_only_a_waiting_change_can_be_answered(self):
         job = self.staffed(writing('Write a haiku about autumn'))
         with self.assertRaisesRegex(PolicyError, 'not waiting'):

@@ -141,8 +141,10 @@ def sentence_for(event_type, payload):
         return 'You started %s with Kel’s best guess; its assumptions are recorded.' % (
             ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
     if event_type == 'needs_you.answered':
-        return ('You chose to apply the checked change anyway.' if detail.get('choice') == 'apply_anyway'
-                else 'You chose to leave the checked change unapplied.')
+        if detail.get('choice') == 'apply_anyway':
+            return ('You applied the checked change.' if detail.get('wait') == 'ask_first'
+                    else 'You chose to apply the checked change anyway.')
+        return 'You chose to leave the checked change unapplied.'
     if event_type == 'office.dismissed':
         return 'You removed finished work from the top of the chat.'
     if event_type == 'budget.raised':
