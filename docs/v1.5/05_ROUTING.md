@@ -41,6 +41,9 @@ Rules held by this increment:
 
 - `quality_by_kind` weighting (task-class-specific quality) is not yet consumed by `select`;
   today the task class is *recorded* per outcome so the signal exists when consumed.
+  **Update (Routing 2, 2026-09-27):** consumed for staffed work — outcomes are kept per (task class,
+  model) and move models within each class's ranked list (`kel/task_routing.py`,
+  `routing_evidence.class_summary`); see `docs/v2/design/ROUTING_2.md`. `select` itself is unchanged.
 - rate-limit observation beyond the Codex quota endpoint remains unknown (`03_PROVIDER_RUNTIME.md`).
 - verification-cost modeling (routing to reduce review cost) is not implemented; recorded for the
   ledger/backlog rather than claimed.

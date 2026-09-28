@@ -251,9 +251,12 @@ The renderer needs: a read-only "How Kel picks models" table per task class unde
    for him. He may prefer higher ceilings or no cost ceiling for subscription runtimes.
 3. **Model strength ranks** (1–3) are coarse catalog values inferred from list price tier; he may want
    to set them.
-4. **Codex version.** Kel picks the newest installed CLI (npm-global 0.144.5 today) or
-   `KEL_CODEX_PATH`. Updating the npm-global Codex (latest 0.157+) is Nick's call; GPT-6 models need
-   it for his account.
+4. **Codex version.** Kel picks the newest installed CLI or `KEL_CODEX_PATH`. With Nick's approval
+   the npm-global Codex was updated to 0.157.1 (by the coordinating agent, 2026-09-27), and one-line
+   `codex exec` calls ran GPT-6 Astra and Luna on his account with it — the live check's refusals were
+   the old 0.142.5 on PATH. A refusal remembered from one CLI version no longer applies once the
+   version changes. The desktop app's bundled 0.142.5 stays on PATH; nothing else needs Nick unless
+   he wants a fixed path.
 5. **OpenRouter scope.** Built only as a second route to catalog models (DeepSeek Flash). Which other
    OpenRouter models to offer (and whether) is his decision.
 6. **Subscription cost.** Codex and Claude Code dollar figures are API-equivalent effort; Automatic
@@ -262,12 +265,34 @@ The renderer needs: a read-only "How Kel picks models" table per task class unde
    Oracle are) — recording them is cheap if he wants Kel's own replies in the numbers.
 
 ## 7. Built vs still open after this work
-Built by the increments above: dispatch tiers, per-class ranking, measured cost/latency, per-class
-outcome evidence with promotion and demotion, budget governor with reserve-before-spawn, model-primary
-classification, DeepSeek/OpenRouter adapters, calibration harness (fixture), read-only ranking API.
+Built (2026-09-27, one commit each on `main`):
+
+| Increment | Commit | doc 10 |
+|---|---|---|
+| §5.0 live-check fixes (Codex CLI choice + version on staff rows, refusal reading and plain reasons, honest notes, run-time hand-over for planner / Verifier / Oracle, coding floor) | `7dd0611` | §3, §6 |
+| §5.1 task classes, dispatch tiers, per-class ranking, tier → reasoning, `/api/model {action:'ranking'}` | `d26a4ee` | §1.2, §2 |
+| §5.2 measured tokens / wall-clock / cost per call (`provider_usage`), fed to the router and the ranking | `96a8360` | §5 accounting, §1 cost ordering |
+| §5.3 outcome evidence per (task class, model), promotion and demotion with bounds, "Why this model?" for staff | `1225bf4` | §1.7, §7 floors |
+| §5.4 budget governor: classes, ceilings, reserve-before-spawn, plain stop, `raise_budget` | `c0cd740` | §5 |
+| §5.5 model-primary classification (class + tier), regex floors as safety net | `3969511` | §1.2 (tier per task) |
+| §5.6 DeepSeek Flash + OpenRouter workers, key injection from the desktop's custody | `c1ddfe2` | §6 credentials |
+| §5.7 calibration harness (fixture run), advisory in the ranking API; migration 37 | `1806050` | §7 |
+
+Engine API added for the renderer (no guard change needed): `POST /api/model {action:'ranking'}`
+(per class: role, mode, tier, models with rank / runnable / protected / why / evidence / measured /
+calibration); `POST /api/office {action:'raise_budget', id}`; `GET /api/office/item` now carries
+`budget {class, ceilings, used, held, stopped, can_raise}` and each staff row's `runtime_version`;
+`/api/model {action:'roles'}` rows say `available:false` with the refusal reason, and each model row
+carries `runtime_version`. What the renderer would need: a read-only "How Kel picks models" table
+per task class under Staff & models; a "Raise budget" button on a budget-stopped card; the runtime
+version on the staff row.
+
 Still open: per-model overlays (§4, registry stays empty), local-only mission routing beyond the
 privacy filter, quota-pace projection and subscription burn weighting (Forge), a live calibration
-campaign, and the Settings UI for the ranking.
+campaign, Kel's own turn/reply/plan calls in the usage record, and the renderer surfaces above.
+Known limits: an outcome is recorded only for a reviewed verdict or a failed step, so work whose
+contract has no review check never adds a success to the evidence; the coding path needs the
+project folder to be a git repository (a plain folder fails to start with git's own message).
 
 ## 8. Reproduction note (backslash paths)
 In a JavaScript string literal `'C:\Users\Nick\R6Proj'` is `C:UsersNickR6Proj` (unknown escapes
