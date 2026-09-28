@@ -258,6 +258,11 @@ def top(store, task_class, *, adapters, tier=None, purpose=None, set_aside=None,
 def overview(store, adapters):
     """The read-only per-class ranking for the engine API (`/api/model {action:'ranking'}`)."""
     from .role_models import MODE_LABELS, ROLE_LABELS, setting
+    try:
+        from .calibration import summary as calibration_summary
+        calibrated = calibration_summary(store, live_only=True)  # advisory: shown, never ranked by
+    except Exception:
+        calibrated = {}
     classes = []
     for task_class in TASK_CLASSES:
         role = CLASS_ROLE[task_class]
@@ -271,11 +276,13 @@ def overview(store, adapters):
                            'evidence': {k: entry['evidence'].get(k) for k in
                                         ('sentence', 'rate', 'samples', 'verdict')}
                            if entry['evidence'] else None,
-                           'measured': entry['measured'] or None})
+                           'measured': entry['measured'] or None,
+                           'calibration': (calibrated.get(task_class) or {}).get(entry['model'])})
         classes.append({'task_class': task_class, 'label': label(task_class), 'role': role,
                         'role_label': ROLE_LABELS[role], 'mode': current['mode'],
                         'mode_label': MODE_LABELS[current['mode']], 'tier': tier,
                         'tier_label': TIER_LABELS[tier], 'models': models})
-    return {'classes': classes,
+    return {'classes': classes, 'calibration_note': 'Calibration results are advisory: they are shown, never used '
+                                                    'to reorder models (real reviewed outcomes are).',
             'tiers': [{'id': t, 'label': TIER_LABELS[t], 'reasoning': TIER_REASONING[t] or 'model default'}
                       for t in TIERS]}
