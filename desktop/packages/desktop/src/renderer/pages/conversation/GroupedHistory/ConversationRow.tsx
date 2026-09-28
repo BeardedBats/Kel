@@ -38,6 +38,7 @@ import { useTranslation } from 'react-i18next';
 import type { ConversationRowProps } from './types';
 import { isConversationPinned } from './utils/groupingHelpers';
 import { useKelLiveWork } from '@/renderer/components/kel/useKelLiveWork';
+import { findByAttribute, useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
 
 const ConversationRow: React.FC<ConversationRowProps> = (props) => {
   const {
@@ -92,6 +93,15 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
   const siderTooltipProps = getSiderTooltipProps(tooltipEnabled);
   const inlineNameTooltipEnabled = !collapsed && !isMobile && !!conversation.name;
   const displayName = conversation.name?.trim() || t('conversation.historySearch.untitled');
+  // VIS-10: the row menu works from the keyboard like the project chip — focus moves in, arrows move,
+  // Escape closes and returns to the ⋯ button, and changing page closes it.
+  const menuTriggerRef = React.useRef<HTMLButtonElement>(null);
+  useMenuKeyboard({
+    open: Boolean(menuVisible),
+    onClose: () => onMenuVisibleChange(conversation.id, false),
+    getMenu: () => findByAttribute('data-kel-row-menu', conversation.id),
+    triggerRef: menuTriggerRef,
+  });
 
   const renderLeadingIcon = () => {
     if (cronStatus !== 'none') {
@@ -295,7 +305,7 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
               'absolute end-8px top-1/2 -translate-y-1/2 items-center justify-end !collapsed-hidden',
               {
                 flex: isMobile || menuVisible,
-                'hidden group-hover:flex': !isMobile && !menuVisible,
+                'hidden group-hover:flex group-focus-within:flex': !isMobile && !menuVisible,
               }
             )}
             onClick={(event) => {
@@ -306,6 +316,8 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
               droplist={
                 <Menu
                   className='kel-shell-chat-menu'
+                  data-kel-row-menu={conversation.id}
+                  aria-label={`${displayName} options`}
                   onClickMenuItem={(key) => {
                     if (key === 'pin') {
                       onTogglePin(conversation);
@@ -387,22 +399,28 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
               getPopupContainer={() => document.body}
               unmountOnExit={false}
             >
-              <span
+              <button
+                type='button'
+                ref={menuTriggerRef}
                 data-testid={`conversation-row-menu-${conversation.id}`}
+                aria-label={`${displayName} options`}
+                aria-haspopup='menu'
+                aria-expanded={Boolean(menuVisible)}
                 className={classNames(
-                  'flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20px rd-4px sider-action-btn',
+                  'flex-center cursor-pointer transition-colors text-t-secondary hover:text-t-primary size-20px rd-4px sider-action-btn border-none bg-transparent p-0',
                   {
                     flex: isMobile || menuVisible,
-                    'hidden group-hover:flex': !isMobile && !menuVisible,
+                    'hidden group-hover:flex group-focus-within:flex': !isMobile && !menuVisible,
                   }
                 )}
                 onClick={(event) => {
                   event.stopPropagation();
                   onOpenMenu(conversation);
                 }}
+                onKeyDown={(event) => event.stopPropagation()}
               >
                 <MoreOne theme='outline' size='14' fill='currentColor' className='block leading-none' />
-              </span>
+              </button>
             </Dropdown>
           </div>
         )}

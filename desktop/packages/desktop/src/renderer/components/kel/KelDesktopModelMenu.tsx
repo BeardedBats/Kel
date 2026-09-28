@@ -17,7 +17,9 @@ export const KelDesktopModelMenu: React.FC<{
   onSettings: () => void;
   /** D-69/D-70: staff run on their own role models; this opens Settings → Staff & models. */
   onStaff?: () => void;
-}> = ({ state, hasConversation, onChoose, onClose, onAdd, onSettings, onStaff }) => {
+  /** Lets the opener find this menu for keyboard handling (VIS-10). */
+  menuId?: string;
+}> = ({ state, hasConversation, onChoose, onClose, onAdd, onSettings, onStaff, menuId }) => {
   const [scope, setScope] = useState<Scope>(hasConversation ? 'conversation' : 'default');
   const [pending, setPending] = useState(false);
   const selected = scope === 'conversation' ? state.conversation : state.default;
@@ -28,7 +30,7 @@ export const KelDesktopModelMenu: React.FC<{
     catch (error) { Message.error((error as Error).message || 'Kel could not change the model just now.'); }
     finally { setPending(false); }
   };
-  return <div className='kel-desktop-model-menu kel-desktop-picker' data-testid='kel-desktop-model-menu' aria-label='Model picker' onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } }}>
+  return <div className='kel-desktop-model-menu kel-desktop-picker' data-testid='kel-desktop-model-menu' data-kel-model-menu={menuId} role='dialog' aria-label='Model picker' onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } }}>
     <p className='kel-desktop-model-menu__caption' data-testid='kel-model-menu-caption'>{KEL_MODEL_SCOPE_NOTE}</p>
     <div className='kel-desktop-model-menu__scope' role='tablist' aria-label='Model scope'>
       <button type='button' role='tab' aria-selected={scope === 'conversation'} disabled={!hasConversation || pending} onClick={() => setScope('conversation')}>This chat</button>

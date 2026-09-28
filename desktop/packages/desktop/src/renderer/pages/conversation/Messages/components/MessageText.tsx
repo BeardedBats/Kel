@@ -35,6 +35,7 @@ import { stripSkillSuggest, hasSkillSuggest } from '@renderer/utils/chat/skillSu
 import { isForkEnabled } from '@/common/chat/forkConversation';
 import { useForkConversation } from '@/renderer/hooks/chat/useForkConversation';
 import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
+import { findByAttribute, useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
 
 /**
  * Format a timestamp for message display.
@@ -67,19 +68,29 @@ const CODE_STYLE = { marginTop: 4, marginBlock: 4 };
 
 // D-59: replies carry Copy (and Fork when available) only; the old thumbs up/down wrote to local
 // storage and changed nothing, so they are gone.
-const ReplyActions: React.FC<{
+export const ReplyActions: React.FC<{
   onCopy: () => void;
   directCopy?: React.ReactNode;
   onFork?: () => void;
 }> = ({ onCopy, directCopy, onFork }) => {
   const { t } = useTranslation();
+  // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to ⋯, closes on page change).
+  const [open, setOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const menuId = React.useId();
+  useMenuKeyboard({
+    open,
+    onClose: () => setOpen(false),
+    getMenu: () => findByAttribute('data-kel-reply-menu', menuId),
+    triggerRef,
+  });
   return <>
     {directCopy}
-    <Dropdown trigger='click' position='bl' droplist={<Menu>
-      <Menu.Item key='copy' onClick={onCopy}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
-      {onFork && <Menu.Item key='fork' onClick={onFork}>{t('messages.fork.action')}</Menu.Item>}
+    <Dropdown trigger='click' position='bl' popupVisible={open} onVisibleChange={setOpen} droplist={<Menu data-kel-reply-menu={menuId} aria-label='Reply actions'>
+      <Menu.Item key='copy' onClick={() => { setOpen(false); onCopy(); }}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
+      {onFork && <Menu.Item key='fork' onClick={() => { setOpen(false); onFork(); }}>{t('messages.fork.action')}</Menu.Item>}
     </Menu>}>
-      <button type='button' aria-label='More reply actions' className='kel-shell-message-action'>
+      <button ref={triggerRef} type='button' aria-label='More reply actions' aria-haspopup='menu' aria-expanded={open} className='kel-shell-message-action'>
         <img src={moreIcon} alt='' width={16} height={16} />
       </button>
     </Dropdown>
