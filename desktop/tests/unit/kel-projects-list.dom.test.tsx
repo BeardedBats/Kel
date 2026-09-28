@@ -87,6 +87,8 @@ describe('All projects page (D-54)', () => {
     expect(screen.queryByText('acp-temp-9z')).toBeNull();
     expect(screen.getByText('Your active project is the same on every device.')).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/Workspace/);
+    // VIS-15: one primary per view — "New project"; each row's Open is a secondary button.
+    expect(Array.from(document.querySelectorAll('.kel-btn--primary')).map((button) => button.textContent)).toEqual(['New project']);
   });
 
   it('opens a project by making it active and going to its Knowledge', async () => {

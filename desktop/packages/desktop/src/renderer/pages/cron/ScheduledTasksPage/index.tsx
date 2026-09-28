@@ -86,13 +86,12 @@ export default function ScheduledTasksPage() {
       {loading ? <Spin /> : error && shown.length === 0 ? (
         <KelEmpty title='Scheduled tasks are unavailable right now.' why={`${error} Your tasks are kept; try again in a moment.`} />
       ) : shown.length === 0 ? (
+        // VIS-17: the header's "New task" is the one primary; the empty state explains, it adds no second.
         <KelEmpty
           title='No scheduled tasks yet.'
           why={hiddenElsewhere > 0
             ? `This project has none. ${hiddenElsewhere} ${hiddenElsewhere === 1 ? 'task belongs' : 'tasks belong'} to other projects — switch to All projects to see ${hiddenElsewhere === 1 ? 'it' : 'them'}.`
-            : 'A scheduled task asks Kel to do the same thing on a schedule — for example, “every weekday at 9, summarize my inbox”. Each run shows up here with its result.'}
-          actionLabel='New task'
-          onAction={openBlank}
+            : 'A scheduled task asks Kel to do the same thing on a schedule — for example, “every Friday at 4, summarize what changed in this project this week”. Each run shows up here with its result.'}
         />
       ) : <div>
         {shown.map(schedule => {
