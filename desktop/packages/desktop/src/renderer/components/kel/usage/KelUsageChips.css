@@ -1,0 +1,30 @@
+/*
+ * D-72 usage chips under a Kel reply. No Figma frame: the composer footer's stat chips
+ * (`.kel-shell-composer-metrics` in 185:4284 — 16px icon, 8px gap, muted secondary text) at the
+ * 12px secondary-meta size and 16px gaps, so the row reads quieter than the reply. Recorded in
+ * docs/v2/FIGMA_GAPS.md.
+ */
+.kel-usage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 6px;
+  color: var(--kel-text-3, #8fa9d6);
+  font: 400 12px/16px var(--kel-shell-body);
+  white-space: nowrap;
+}
+.kel-usage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+.kel-usage-chip > img {
+  display: block;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  opacity: .85;
+}
+html[data-theme='light'] .kel-usage-chip > img { filter: brightness(.4); }

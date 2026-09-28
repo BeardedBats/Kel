@@ -13,6 +13,7 @@ import type { OfficeFinding, OfficeItem, OfficeItemDetail, OfficeStaff, OfficeSt
 import { officeItem } from './officeApi';
 import { KelAnsweredLine, KelNeedsAnswer, type AnsweredNote } from './KelNeedsAnswer';
 import { refreshWorkCards } from './workCardEvents';
+import { usageHeaderLine } from '../usage/usageWords';
 import {
   StateIcon,
   StatusDot,
@@ -302,6 +303,8 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
     projectName || null,
   ].filter(Boolean);
 
+  // D-72: what the work has used so far (cost or "Included in your plan", tokens, model time).
+  const usageLine = usageHeaderLine(view.usage);
   const resultText = (view.result ?? '').trim() || (view.status_line ?? '').trim();
   const attention = view.state === 'needs_you' || view.state === 'failed' || view.state === 'stopped';
   const attentionText = [view.why, view.next].filter((part) => part && part.trim()).join(' ');
@@ -329,6 +332,11 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
             </span>
             {subtitle.length ? <span className='kel-wd-state__meta'>{`·  ${subtitle.join('  ·  ')}`}</span> : null}
           </div>
+          {usageLine ? (
+            <div className='kel-wd-usage' data-testid='kel-office-usage'>
+              {usageLine}
+            </div>
+          ) : null}
         </div>
         <span className='kel-wc-push' />
         {confirming ? (

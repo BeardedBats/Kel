@@ -3,6 +3,9 @@
  * Only allowlisted routes reach the engine — see process/services/kel/KelService.ts.
  */
 import { type EngineStateFrame } from './engineFailure';
+import type { KelUsage } from '@/common/chat/kelMessageMeta';
+
+export type { KelUsage };
 
 export interface KelAssignment {
   assignment_id: string;
@@ -1704,7 +1707,24 @@ export interface KelOfficeDetail extends KelOfficeItem {
   /** The published result, shortened, once there is one. */
   result: string | null;
   links: { conversation_id: string | null; submission_id: string | null; message_seq: number | null };
+  /** D-72: the work's totals — tokens, time and approximate cost — for the detail header. */
+  usage?: KelUsage | null;
 }
+
+/** D-72: what Kel's messages in one conversation used ({message seq: usage}), or one job's totals. */
+export type KelUsageView = {
+  conversation?: string;
+  messages?: Record<string, KelUsage>;
+  job?: string;
+  usage?: KelUsage | null;
+};
+
+export const kelUsage = (scope: { conversation: string } | { job: string }) =>
+  call<KelUsageView>(
+    'conversation' in scope
+      ? `/api/usage?conversation=${encodeURIComponent(scope.conversation)}`
+      : `/api/usage?job=${encodeURIComponent(scope.job)}`
+  );
 
 /** The work cards for one chat, one project, or everything (`'*'`). */
 export const kelOffice = (scope: { conversation: string } | { project: string } | '*' = '*') => {

@@ -10,6 +10,25 @@
  */
 export type KelWorkerLabel = { provider?: string | null; model?: string | null; label?: string | null };
 
+/**
+ * D-72: what one of Kel's messages (or one piece of work) used, as the engine measured it. `billing`
+ * 'plan' means every call ran on a subscription (its cost is included in the plan, never $0.00);
+ * 'metered' means none did; 'mixed' both. Unknown numbers stay null — never shown as zero.
+ */
+export type KelUsage = {
+  calls?: number | null;
+  tokens?: number | null;
+  ms?: number | null;
+  cost?: number | null;
+  cost_basis?: 'reported' | 'estimated' | string | null;
+  billing?: 'plan' | 'metered' | 'mixed' | string | null;
+  plan_calls?: number | null;
+  plan_cost_equivalent?: number | null;
+  model?: string | null;
+  model_label?: string | null;
+  models?: string[] | null;
+};
+
 export type KelMessageMeta = {
   kind?: 'result' | 'stopped' | 'amendment' | string;
   answered_by?: KelWorkerLabel | null;
@@ -26,6 +45,8 @@ export type KelMessageMeta = {
   job?: string | null;
   /** D-70: Kel's "before I start" questions (`kind: 'scoping'`) are this scoping record. */
   scoping?: string | null;
+  /** D-72: what Kel's own calls for this message used (the usage chips under the reply). */
+  usage?: KelUsage | null;
 };
 
 /** Notes Kel posts about the conversation itself, shown as quiet system lines. */
@@ -41,5 +62,7 @@ export const shownKelMeta = (meta: unknown): KelMessageMeta | null => {
   if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return null;
   const value = meta as KelMessageMeta;
   if (value.kind === 'result' || value.kind === 'scoping' || isKelNoteMeta(value) || value.fallback_from) return value;
+  // D-72: a plain reply keeps only its usage (the chips), not the rest of its record.
+  if (value.usage && typeof value.usage === 'object') return { usage: value.usage };
   return null;
 };

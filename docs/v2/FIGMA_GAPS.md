@@ -81,6 +81,15 @@ The scoping colour ice/300 `#CFE7FF` is now a token (`--kel-figma-color-ice-300`
 | Scoping top card click | not drawn | Scrolls to the scoping card in the thread (or opens its chat); no detail panel, since nothing has started. | `KelWorkCardRow.tsx` |
 | Needs you (home) | "Needs you" card lists only what needs you | Finished ("Done and checked") and still-running work no longer appear there; a job that has a card is answered on it ("Answer on its card" opens the chat with that card's panel open). | `resumptionBrief.ts`, `needsAttention.ts` |
 
+## Polish batch after D-72 — 2026-09-28
+
+No new Figma frames were drawn for these; each reuses the nearest existing component.
+
+| State / element | Nearest Figma source | Inference | Implementation |
+| --- | --- | --- | --- |
+| Usage chips under a Kel reply | Composer footer stat chips in Chat `185:4284` (cost / tokens icons + muted text) | The same icons and muted text at the 12px secondary-meta size, 14px icons, 16px gaps: cost ("Included in your plan" for a subscription call, never "$0.00"; "~" for an estimate), tokens, time, model. Unknown numbers are left out. No cache or context chip (those are the conversation's, not the reply's). | `usage/KelUsageChips.tsx`, `usage/usageWords.ts` |
+| Cost and time in a work card's detail header | Detail header state meta in 4b/4d | One more line in the state meta's type under the state row: cost (or plan), tokens, "N min of model time". | `KelOfficeDetail.tsx`, `KelWorkCards.css` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.

@@ -148,7 +148,7 @@ class UsageTurn(FakeTurn):
         return out
 
 
-class KelsOwnCallsAreRecorded(unittest.TestCase):  # item 6
+class ServiceCase(unittest.TestCase):
     def setUp(self):
         from kel.service import Service
         self.tmp = tempfile.TemporaryDirectory()
@@ -178,6 +178,9 @@ class KelsOwnCallsAreRecorded(unittest.TestCase):  # item 6
                 return row['state']
             time.sleep(.02)
         raise TimeoutError(sid)
+
+
+class KelsOwnCallsAreRecorded(ServiceCase):  # item 6
 
     def test_a_turn_decision_is_recorded_with_its_conversation_and_message(self):
         self.service.model = UsageTurn({'action': 'reply', 'text': 'Six to eight hours of sun.'})

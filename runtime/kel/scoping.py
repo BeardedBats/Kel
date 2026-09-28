@@ -246,6 +246,7 @@ def open_scope(service, sid, cid, text, packet, kind, greenfield, decision, choi
     scoping_id = uid()
     project_id = (packet.get('project') or {}).get('id')
     vetting = Vetting(service.store, conversation=cid)  # its schema is checked outside the transaction
+    usage_meta = service._usage_meta(sid, None)  # what Kel's turn used, for the chips under its line
     with service.store.transaction() as db:
         if not service._still_planning(db, sid):
             return None  # stopped before Kel asked: nothing is said
@@ -253,7 +254,7 @@ def open_scope(service, sid, cid, text, packet, kind, greenfield, decision, choi
             db, project_id, cid, title, [{'id': q['id'], 'prompt': q['prompt'], 'options': q['options']}
                                          for q in questions])
         say, meta = service._with_choice(db, cid, _message(plan), choice)
-        meta = dict(meta or {}, kind='scoping', scoping=scoping_id)
+        meta = dict(meta or {}, **(usage_meta or {}), kind='scoping', scoping=scoping_id)
         seq = db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
                          (cid, 'assistant', say, time.time(), encode(meta))).lastrowid
         db.execute('INSERT INTO scopings(id,submission_id,conversation_id,project_id,title,request,kind,packet,'
