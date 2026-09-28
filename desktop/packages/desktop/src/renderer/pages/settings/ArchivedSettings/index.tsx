@@ -257,7 +257,14 @@ const ArchivedSettings: React.FC = () => {
       if (scope.type === 'project' || scope.type === 'dir') {
         const key = scope.type === 'project' ? scope.project_id : scope.key;
         const projectId = scope.type === 'project' ? scope.project_id : undefined;
-        const name = archivedGroupName(scope, kelProjectList ?? [], chatProjects?.[token], t('settings.archived.noProject'));
+        const noProject = t('settings.archived.noProject');
+        const name = archivedGroupName(scope, kelProjectList ?? [], chatProjects?.[token], noProject);
+        // A chat folder that belongs to no project joins the one "No project" group instead of
+        // repeating that title once per folder (only when it has no further page of its own).
+        if (scope.type === 'dir' && name === noProject && !hasMore) {
+          noProjectRows.push(...rows);
+          continue;
+        }
         archivedBlocks.push({ key, name, rows, projectId, scopeToken: token, hasMore, cursor });
       } else {
         // Ordinary archived chats are still grouped as a project-like block, named "No project".

@@ -79,6 +79,7 @@ describe('Archived groups (VIS-25)', () => {
     expect(await screen.findByText('Garden planner')).toBeTruthy();
     expect(await screen.findByText('Family recipes')).toBeTruthy();
     expect(await screen.findByText('No project')).toBeTruthy();
+    expect(screen.getAllByText('No project')).toHaveLength(1);
     expect(document.body.textContent).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-/);
   });
 
