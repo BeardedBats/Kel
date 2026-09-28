@@ -171,8 +171,9 @@ def serve(store,run_id):
             while True:
                 try:event=connection.events.get_nowait()
                 except queue.Empty:break
-                # Exclude reasoning/token deltas. Keep complete protocol receipts.
-                if 'id' in event or event.get('method') in ('item/started','item/completed','turn/completed','kel/connectionClosed','kel/toolBoundary','kel/runtime'):
+                # Exclude reasoning/token deltas. Keep complete protocol receipts, and the runtime's own
+                # token counts (one small notice per model request; Routing 2 §5.2).
+                if 'id' in event or event.get('method') in ('item/started','item/completed','turn/completed','kel/connectionClosed','kel/toolBoundary','kel/runtime','thread/tokenUsage/updated'):
                     payload=encode(event)
                     if len(payload)>2_000_000:raise PolicyError('Native event exceeds the receipt limit')
                     with store.transaction() as db:db.execute('INSERT INTO coding_events(run_id,event) VALUES(?,?)',(run_id,payload))

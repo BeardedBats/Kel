@@ -82,7 +82,7 @@ class InternalAdapter:
             {'name': 'submit_result', 'description': 'Submit the final Markdown artifact. Required for completion.',
              'input_schema': {'type': 'object', 'properties': {'text': {'type': 'string'}},
                               'required': ['text'], 'additionalProperties': False}}]
-        output_tokens, calls = 0, []
+        output_tokens, input_tokens, calls = 0, 0, []
         try:
             for iteration in range(self.max_iterations):
                 if cancel and cancel.is_set():
@@ -94,6 +94,7 @@ class InternalAdapter:
                     'system': system or LEAF_SYSTEM,
                     'messages': messages, 'tools': tools, 'tool_choice': {'type': 'any'}}, remaining_time)
                 output_tokens += int(data.get('usage', {}).get('output_tokens', 0))
+                input_tokens += int(data.get('usage', {}).get('input_tokens', 0))
                 served = data.get('model') or self.model  # D-67: the model the API says answered
                 if output_tokens>self.max_output_tokens:
                     return {'outcome':'FAILED','error':'Provider output exceeded the token budget'}
@@ -116,7 +117,8 @@ class InternalAdapter:
                         return {'outcome': 'SUCCESS', 'text': args['text'], 'session_id': run_id,
                                 'output_tokens': output_tokens, 'iterations': iteration+1, 'tool_calls': calls,
                                 'model': self.model, 'provider': 'internal', 'model_used': served,
-                                'reasoning_used': 'auto'}
+                                'reasoning_used': 'auto',
+                                'usage': {'input_tokens': input_tokens, 'output_tokens': output_tokens}}
                     replies.append({'type': 'tool_result', 'tool_use_id': block['id'], 'content': prompt[:40000]})
                 if not replies:
                     return {'outcome': 'FAILED', 'error': 'Missing required structured result'}

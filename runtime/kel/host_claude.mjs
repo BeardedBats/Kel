@@ -27,7 +27,7 @@ function run(prompt,turn){
  });
  child.stderr.on('data',data=>{error=(error+data).slice(-4000);});
  const finish=code=>{if(finished)return;finished=true;child=null;resuming=true;
-  if(code===0&&result?.subtype==='success'&&!result.is_error){event('item/completed',{threadId:session,item:{type:'agentMessage',text:result.result||''}});event('turn/completed',{threadId:session,turn:{id:turn,status:'completed'},usage:result.usage,cost_usd:result.total_cost_usd});}
+  if(code===0&&result?.subtype==='success'&&!result.is_error){event('item/completed',{threadId:session,item:{type:'agentMessage',text:result.result||''}});event('turn/completed',{threadId:session,turn:{id:turn,status:'completed'},usage:result.usage,cost_usd:result.total_cost_usd,duration_ms:result.duration_ms});}
   else event('turn/completed',{threadId:session,turn:{id:turn,status:interrupted?'interrupted':'failed',error:result?.errors||error||'Native Claude did not finish'}});
  };
  child.on('error',e=>{error=String(e);finish(1);});child.on('close',finish);

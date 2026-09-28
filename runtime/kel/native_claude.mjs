@@ -41,7 +41,7 @@ async function run(prompt,turn){
   }
   if(result?.subtype==='success'&&!result.is_error){
    event('item/completed',{threadId:session,item:{type:'agentMessage',text:result.result||''}});
-   event('turn/completed',{threadId:session,turn:{id:turn,status:'completed'},usage:result.usage,cost_usd:result.total_cost_usd});
+   event('turn/completed',{threadId:session,turn:{id:turn,status:'completed'},usage:result.usage,cost_usd:result.total_cost_usd,duration_ms:result.duration_ms});
   }else event('turn/completed',{threadId:session,turn:{id:turn,status:abort.signal.aborted?'interrupted':'failed',error:result?.errors||'Native Claude did not complete'}});
  }catch(error){event('turn/completed',{threadId:session,turn:{id:turn,status:abort.signal.aborted?'interrupted':'failed',error:String(error)}});}
  finally{active=false;resuming=true;}
