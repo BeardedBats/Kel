@@ -30,7 +30,11 @@ from .core import encode
 
 DAY = 86400.0
 WINDOW_DAYS = 30.0
-KINDS = ('work', 'check', 'oracle', 'plan', 'turn', 'calibration')
+KINDS = ('work', 'check', 'oracle', 'plan', 'turn', 'reply', 'calibration')
+# D-72 item 6: Kel's own calls (a turn decision, a direct reply, a plan) are recorded too, with the
+# conversation and submission they belong to, so each of Kel's messages can say what it used.
+KEL_KINDS = ('turn', 'reply', 'plan')
+EXTRA_KEYS = ('conversation_id', 'submission_id', 'role', 'asked_model', 'why')
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS provider_usage(
@@ -39,6 +43,7 @@ CREATE TABLE IF NOT EXISTS provider_usage(
 CREATE INDEX IF NOT EXISTS provider_usage_provider ON provider_usage(provider, at);
 CREATE INDEX IF NOT EXISTS provider_usage_call ON provider_usage(json_extract(data,'$.call_id'));
 CREATE INDEX IF NOT EXISTS provider_usage_job ON provider_usage(json_extract(data,'$.job_id'));
+CREATE INDEX IF NOT EXISTS provider_usage_submission ON provider_usage(json_extract(data,'$.submission_id'));
 """
 _READY = set()
 _STATS = {}
@@ -164,15 +169,23 @@ def wall_ms(result):
 
 
 def record(store, call_id, *, job_id=None, milestone_id=None, kind='work', adapter=None, model=None,
-           task_class=None, result=None, wall=None, db=None, at=None):
-    """Write one usage row for one call (idempotent per call id). Returns the row's data."""
-    from .role_models import catalog_id
+           task_class=None, result=None, wall=None, db=None, at=None, extra=None):
+    """Write one usage row for one call (idempotent per call id). Returns the row's data.
+
+    `extra` may carry the conversation and submission a call of Kel's own belongs to, its role and
+    the model it was asked for (EXTRA_KEYS); nothing else is stored."""
+    from .role_models import catalog_id, is_subscription
     catalog = catalog_id((result or {}).get('model_used') or model, adapter)
     data = {'event': 'run', 'call_id': str(call_id), 'job_id': job_id, 'milestone_id': milestone_id,
             'kind': kind if kind in KINDS else 'work', 'adapter': adapter, 'model': catalog,
             'raw_model': str((result or {}).get('model_used') or model or '')[:120] or None,
             'task_class': task_class, 'outcome': (result or {}).get('outcome'),
-            'wall_ms': wall if wall is not None else wall_ms(result)}
+            'wall_ms': wall if wall is not None else wall_ms(result),
+            'subscription': is_subscription(adapter)}
+    for key in EXTRA_KEYS:
+        value = (extra or {}).get(key)
+        if value is not None:
+            data[key] = str(value)[:300]
     data.update(normalize(result, model=catalog))
 
     def write(conn):
@@ -192,13 +205,16 @@ def record(store, call_id, *, job_id=None, milestone_id=None, kind='work', adapt
         return write(conn)
 
 
-def rows(store, *, job_id=None, window_days=WINDOW_DAYS, now=None):
+def rows(store, *, job_id=None, submission_id=None, window_days=WINDOW_DAYS, now=None):
     now = float(now if now is not None else time.time())
     with contextlib.closing(store.connect()) as db:
         ensure(db, getattr(store, 'root', None))
         if job_id:
             found = db.execute("SELECT at, data FROM provider_usage WHERE json_extract(data,'$.job_id')=? "
                                "AND json_extract(data,'$.event')='run'", (job_id,)).fetchall()
+        elif submission_id:
+            found = db.execute("SELECT at, data FROM provider_usage WHERE json_extract(data,'$.submission_id')=? "
+                               "AND json_extract(data,'$.event')='run'", (submission_id,)).fetchall()
         else:
             found = db.execute("SELECT at, data FROM provider_usage WHERE at>=? AND "
                                "json_extract(data,'$.event')='run'", (now - window_days * DAY,)).fetchall()

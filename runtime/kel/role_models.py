@@ -54,12 +54,30 @@ MODELS = {
 # input, output) used only to *estimate* a run's cost when its runtime reports tokens but no cost.
 # Sources, read 2026-09-27: DeepSeek's own pricing page (peak rates) and OpenRouter's public model
 # list. None = no published price Kel can rely on (the cost stays unknown, never "free").
-STRENGTH = {'gpt-6-luna': 1, 'gpt-6-astra': 3, 'codex': 2, 'claude-opus-5-5': 3,
-            'claude-fable-5-1': 3, 'claude-sonnet': 2, 'deepseek-flash': 1}
 PRICES = {'gpt-6-luna': (0.10, 0.01, 0.50), 'gpt-6-astra': (10.0, 1.0, 50.0),
           'claude-opus-5-5': (4.0, 0.20, 20.0), 'claude-fable-5-1': (10.0, 0.25, 50.0),
           'deepseek-flash': (0.30, 0.006, 1.20), 'codex': None, 'claude-sonnet': None}
 PRICE_SOURCE = 'list price (DeepSeek pricing page, OpenRouter model list), read 2026-09-27'
+# D-72 item 3: strength ranks start from the list-price estimate (output price per million tokens:
+# under $5 → 1, under $15 → 2, else 3); a model with no published price is "balanced" (2). Outcome
+# evidence then moves a model within its class ranking (`task_routing`, promote / demote) — the
+# starting rank itself is never rewritten.
+STRENGTH_BANDS = ((5.0, 1), (15.0, 2))
+UNPRICED_STRENGTH = 2
+
+
+def strength_from_price(model_id):
+    """The starting strength rank (1–3) a model's list price implies (D-72 item 3)."""
+    price = PRICES.get(model_id)
+    if not price:
+        return UNPRICED_STRENGTH
+    for ceiling, rank in STRENGTH_BANDS:
+        if price[2] < ceiling:
+            return rank
+    return 3
+
+
+STRENGTH = {model_id: strength_from_price(model_id) for model_id in PRICES}
 
 # runtime -> the engine adapters that run it, per purpose ('code' repository work, 'text' writing
 # or review, 'web' live web research), and its own plain name.
@@ -70,7 +88,17 @@ RUNTIMES = {
     'deepseek': {'label': 'DeepSeek API', 'code': None, 'text': 'deepseek', 'web': None},
 }
 # Routing 2 §5.6: OpenRouter is a second route to catalog models that name an `openrouter_arg`.
+# D-72 item 4: for now that is DeepSeek Flash only (one catalog model names an `openrouter_arg`,
+# and the OpenRouter worker refuses any other model id).
 OPENROUTER = 'openrouter'
+# D-72 item 5: Codex and Claude Code run on Nick's subscriptions — their calls cost nothing extra per
+# run when Kel ranks models (the dollar figure they report is API-equivalent effort, shown as
+# "included in your plan"); the plan's quota still counts.
+SUBSCRIPTION_ADAPTERS = ('codex', 'codex-code', 'claude', 'claude-code')
+
+
+def is_subscription(adapter):
+    return adapter in SUBSCRIPTION_ADAPTERS
 CLAUDE_EFFORT = ('low', 'medium', 'high', 'xhigh', 'max')
 CODEX_EFFORT = ('low', 'medium', 'high', 'xhigh')  # when Codex's own catalog is unreadable
 

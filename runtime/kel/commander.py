@@ -82,9 +82,10 @@ class Commander:
         return {'provider': getattr(model, 'provider', None),
                 'model': getattr(model, 'model', None)}
 
-    def plan(self, request, context=None, model=None):
+    def plan(self, request, context=None, model=None, on_result=None):
         """`model` (D-67): Kel's own role model; without it the planner is the default reviewer
-        model, as before."""
+        model, as before. `on_result(model, result, wall_ms)` sees every planner call's raw result
+        (D-72 item 6: Kel's plan calls are recorded in usage)."""
         planner=model or self.model
         prompt=('Plan a bounded Markdown document job. Do not execute it. Return a JSON object with a milestones array, '
                 'one to three items. Each item has a unique id, objective, unique filename (simple .md name), depends_on (IDs), '
@@ -110,10 +111,16 @@ class Commander:
             seen.add(key);chain.append(candidate)
         result={'outcome':'FAILED','error':'No planner is available'};used=planner
         for candidate in chain:
+            started=time.monotonic()
             try:
                 result=candidate.execute(prompt)
             except Exception as exc:
                 result={'outcome':'FAILED','error':type(exc).__name__}
+            if on_result is not None:
+                try:
+                    on_result(candidate,result if isinstance(result,dict) else {},int((time.monotonic()-started)*1000))
+                except Exception:
+                    pass
             used=candidate
             if result.get('outcome')=='SUCCESS':
                 break

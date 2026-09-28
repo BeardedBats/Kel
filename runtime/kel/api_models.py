@@ -29,6 +29,8 @@ ENDPOINTS = {
     'openrouter': {'base_url': 'https://openrouter.ai/api/v1', 'env': 'OPENROUTER_API_KEY',
                    'label': 'OpenRouter', 'default_model': 'deepseek/deepseek-v4.1-flash'},
 }
+# D-72 item 4: OpenRouter carries only DeepSeek Flash for now (one setting to widen later).
+ALLOWED_MODELS = {'openrouter': ('deepseek/deepseek-v4.1-flash',)}
 INPUT_LIMIT = 60000
 RESPONSE_LIMIT = 2_000_000
 
@@ -88,6 +90,10 @@ class OpenAICompatAdapter:
         if len(prompt) > INPUT_LIMIT:
             return {'outcome': 'FAILED', 'error': 'Context exceeds the %d-character input budget; refusing '
                                                   'silent truncation' % INPUT_LIMIT}
+        allowed = ALLOWED_MODELS.get(self.provider)
+        if allowed and self.model not in allowed:
+            return {'outcome': 'FAILED', 'provider': self.provider, 'wall_ms': 0,
+                    'error': '%s runs only DeepSeek Flash in Kel for now' % ENDPOINTS[self.provider]['label']}
         if cancel and cancel.is_set():
             return {'outcome': 'CANCELLED'}
         body = {'model': self.model, 'max_tokens': self.max_tokens, 'stream': False,
