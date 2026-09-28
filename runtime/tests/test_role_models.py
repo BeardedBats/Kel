@@ -152,11 +152,11 @@ class ResolveTests(Base):
 
     def test_a_refused_model_is_skipped_for_a_day(self):
         with self.store.transaction() as db:
-            db.execute("INSERT INTO staff_model_status VALUES('claude-opus-5-5','rejected','model not found',?)",
-                       (__import__('time').time(),))
+            db.execute("INSERT INTO staff_model_status(model,status,reason,at) "
+                       "VALUES('claude-opus-5-5','rejected','model not found',?)", (__import__('time').time(),))
         out = role_models.resolve(self.store, 'builder', adapters=ALL, purpose='code')
         self.assertEqual(out['model'], 'codex')
-        self.assertIn('refused', out['why'])
+        self.assertIn("Claude Opus 5.5 can't run here: model not found", out['why'])
 
     def test_web_research_runs_sonnet_on_the_api_worker(self):
         out = role_models.resolve(self.store, 'discovery', adapters=ALL, purpose='web')

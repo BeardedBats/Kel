@@ -209,13 +209,15 @@ def _member(call, runs, job):
         asked_view = {'model_label': asked_label,
                       'reasoning': REASONING_LABELS.get(asked.get('reasoning') or 'auto')}
     note = call.get('why')
+    if "can't run here" in str(call.get('summary') or ''):
+        note = call['summary']  # the runtime refused the model: its plain reason is the note
     if ran.get('independence') == 'reduced':
         note = note or 'This review is less independent: no model from another family could run it.'
     return {'id': call['id'], 'role': call['role'], 'role_label': ROLE_LABELS.get(call['role'], call['role']),
             'instance': call.get('instance'), 'doing': _doing(call, state, job), 'state': state,
             'model': ran.get('model') if confirmed else None, 'model_label': label, 'version': version,
             'model_confirmed': confirmed, 'provider': PROVIDER_LABELS.get(family), 'runtime': RUNTIME_LABELS.get(adapter),
-            'runtime_version': None, 'reasoning': REASONING_LABELS.get(reasoning, reasoning) if reasoning else None,
+            'runtime_version': ran.get('runtime_version'), 'reasoning': REASONING_LABELS.get(reasoning, reasoning) if reasoning else None,
             'asked': asked_view, 'note': note, 'independence': ran.get('independence'),
             'step': call.get('milestone_id'), 'started_at': call.get('started'), 'finished_at': call.get('finished')}
 

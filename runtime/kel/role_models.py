@@ -17,6 +17,7 @@ which model *ran* — that is recorded from what the runtime reported (`kel.staf
 import contextlib
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -190,20 +191,175 @@ def reset_role(store, role):
 
 # ---- availability and rejected models ----------------------------------------------------------
 
-def rejected(store, model_id, now=None):
-    """A plain reason when this model was refused by its runtime in the last day, else None."""
-    with contextlib.closing(store.connect()) as db:
-        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='staff_model_status'").fetchone():
-            return None
-        row = db.execute('SELECT * FROM staff_model_status WHERE model=?', (model_id,)).fetchone()
-    stamp = time.time() if now is None else now
-    if row and row['status'] == 'rejected' and stamp - row['at'] < REJECTION_HOURS * 3600:
-        return row['reason'] or 'its runtime refused it recently'
+# What a runtime's refusal of a model means, in plain words (the live check: Codex answered HTTP 400
+# "The 'gpt-6-luna' model is not supported when using Codex with a ChatGPT account" and "The
+# 'gpt-6-astra' model requires a newer version of Codex"). Order matters: the first match wins.
+_REFUSALS = (
+    ('runtime_old', re.compile(r'requires? a newer version|newer version of (?:codex|claude)|upgrade to the '
+                               r'latest|please (?:upgrade|update) (?:codex|claude|the cli)|cli (?:is )?too old',
+                               re.IGNORECASE)),
+    ('account', re.compile(r'not supported (?:when|with|for) (?:using )?(?:codex )?(?:with )?(?:a |your )?'
+                           r'(?:chatgpt|plan|account|subscription)|not (?:available|supported) (?:on|for|with) '
+                           r'(?:your|this) (?:plan|account|subscription)|(?:plan|account|subscription) does not '
+                           r'(?:include|support|allow)', re.IGNORECASE)),
+    ('no_access', re.compile(r'(?:no|not have|lacks?) access to (?:the |this )?model|model[^.]{0,60}\b(?:not '
+                             r'allowed|access denied|permission denied)', re.IGNORECASE)),
+    ('not_found', re.compile(r'(?:model|model_id)\b.{0,80}\b(?:not found|not supported|not available|does not '
+                             r"exist|unknown|invalid|isn't available|is not available|unsupported|not "
+                             r'recognized)|\b(?:unknown|invalid|unsupported) model\b|model_not_found',
+                             re.IGNORECASE)),
+)
+RUNTIME_NAMES = {'codex': 'Codex', 'claude': 'Claude Code', 'api': 'the Anthropic API',
+                 'deepseek': 'the DeepSeek API'}
+
+
+def classify_refusal(error, model_id=None):
+    """(kind, plain reason) when `error` is a runtime refusing the model, else None."""
+    text = str(error or '')
+    if not text:
+        return None
+    runtime = RUNTIME_NAMES.get((MODELS.get(model_id) or {}).get('runtime'), 'its runtime')
+    for kind, pattern in _REFUSALS:
+        if pattern.search(text):
+            if kind == 'runtime_old':
+                return kind, 'the %s on this computer is too old for it (update %s)' % (runtime, runtime)
+            if kind == 'account':
+                return kind, ("your ChatGPT account doesn't offer it in Codex" if runtime == 'Codex'
+                              else "your account doesn't offer it in %s" % runtime)
+            if kind == 'no_access':
+                return kind, "your account doesn't have access to it"
+            return kind, '%s does not know this model' % runtime
     return None
 
 
-def adapter_for(model_id, purpose, adapters):
-    """(adapter name, why-not) for running this model for a purpose with the adapters present."""
+def _ensure_status_columns(db):
+    columns = {row[1] for row in db.execute('PRAGMA table_info(staff_model_status)')}
+    for name in ('kind', 'runtime_version'):
+        if columns and name not in columns:
+            db.execute('ALTER TABLE staff_model_status ADD COLUMN %s TEXT' % name)
+
+
+def note_refusal(store, model_id, error, runtime_version=None, db=None):
+    """Remember that a runtime refused this model, with its plain reason (True when it was one).
+
+    Recorded at the first refusal from any call site, so the same model is not tried again: a
+    runtime-too-old refusal lasts until that runtime's version changes, the others for a day."""
+    if not model_id or model_id not in MODELS:
+        return False
+    found = classify_refusal(error, model_id)
+    if not found:
+        return False
+    kind, reason = found
+
+    def write(conn):
+        if not conn.execute("SELECT 1 FROM sqlite_master WHERE name='staff_model_status'").fetchone():
+            return False
+        _ensure_status_columns(conn)
+        conn.execute('INSERT INTO staff_model_status(model,status,reason,at,kind,runtime_version) '
+                     'VALUES(?,?,?,?,?,?) ON CONFLICT(model) DO UPDATE SET status=excluded.status, '
+                     'reason=excluded.reason, at=excluded.at, kind=excluded.kind, '
+                     'runtime_version=excluded.runtime_version',
+                     (model_id, 'rejected', reason, time.time(), kind, runtime_version))
+        return True
+
+    if db is not None:
+        return write(db)
+    from .staff import ensure_schema
+    ensure_schema(store)
+    with store.transaction() as conn:
+        return write(conn)
+
+
+def _current_runtime_version(model_id):
+    runtime = (MODELS.get(model_id) or {}).get('runtime')
+    if runtime not in ('codex', 'claude'):
+        return None
+    try:
+        from .native import runtime_version
+        return runtime_version(runtime)
+    except Exception:
+        return None
+
+
+def rejected(store, model_id, now=None):
+    """A plain reason when this model's runtime refused it (and the refusal still applies), else None.
+
+    Also reads Codex's own model list for this account (`~/.codex/models_cache.json`) when it was
+    fetched by the very Codex version Kel runs: a model missing from it is not offered here."""
+    with contextlib.closing(store.connect()) as db:
+        row = None
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='staff_model_status'").fetchone():
+            row = db.execute('SELECT * FROM staff_model_status WHERE model=?', (model_id,)).fetchone()
+    stamp = time.time() if now is None else now
+    if row and row['status'] == 'rejected':
+        row = dict(row)
+        if row.get('kind') == 'runtime_old' and row.get('runtime_version'):
+            current = _current_runtime_version(model_id)
+            if current is None or current == row['runtime_version']:
+                return row['reason']
+        elif stamp - row['at'] < REJECTION_HOURS * 3600:
+            return row['reason'] or 'its runtime refused it recently'
+    offered = codex_offers(model_id)
+    if offered is False:
+        return "the Codex on this computer doesn't list it for your account"
+    return None
+
+
+_CACHE_READ = {}
+
+
+def _models_cache():
+    """Codex's `models_cache.json` (parsed once per file change), or None."""
+    home = os.environ.get('CODEX_HOME') or os.path.join(os.path.expanduser('~'), '.codex')
+    path = Path(home, 'models_cache.json')
+    try:
+        stamp = path.stat().st_mtime
+    except OSError:
+        return None
+    cached = _CACHE_READ.get(str(path))
+    if cached and cached[0] == stamp:
+        return cached[1]
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    _CACHE_READ[str(path)] = (stamp, data if isinstance(data, dict) else None)
+    return _CACHE_READ[str(path)][1]
+
+
+def codex_offers(model_id):
+    """True / False when Codex's cached model list (fetched by the same Codex version Kel runs) says
+    whether it offers this model; None when that list is missing, stale for this version, or the
+    model is not a Codex model."""
+    info = MODELS.get(model_id) or {}
+    if info.get('runtime') != 'codex' or not info.get('arg'):
+        return None
+    data = _models_cache()
+    if data is None:
+        return None
+    try:
+        from .native import codex_executable, parse_version
+        running = parse_version(codex_executable().get('version'))
+    except Exception:
+        running = None
+    fetched_by = None
+    try:
+        from .native import parse_version as _parse
+        fetched_by = _parse(data.get('client_version'))
+    except Exception:
+        fetched_by = None
+    if not running or not fetched_by or running[:3] != fetched_by[:3]:
+        return None  # another Codex (the desktop app) fetched it; its list says nothing about ours
+    slugs = {item.get('slug') for item in data.get('models') or [] if isinstance(item, dict)}
+    return info['arg'] in slugs
+
+
+def adapter_for(model_id, purpose, adapters, set_aside=None):
+    """(adapter name, why-not) for running this model for a purpose with the adapters present.
+
+    `set_aside` ({adapter: plain reason}) names runtimes that are installed but not offered for
+    this step (e.g. the engine's provider diversity after two failed tries) — so the reason says
+    that, never "not set up on this computer" for a runtime that is set up (the live check)."""
     info = MODELS.get(model_id)
     if not info:
         return None, 'is not a model Kel knows'
@@ -217,6 +373,8 @@ def adapter_for(model_id, purpose, adapters):
         return None, "can't do this kind of work here"
     if name not in adapters:
         what = RUNTIMES[runtime]['label']
+        if set_aside and name in set_aside:
+            return None, 'runs on %s, which %s' % (what, set_aside[name])
         return None, ('needs %s, which is not set up on this computer' % what)
     return name, None
 
@@ -237,13 +395,16 @@ def effort_arg(model_id, reasoning):
 
 # ---- resolution ----------------------------------------------------------------------------------
 
-def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=None):
+def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=None, exclude=(),
+            set_aside=None):
     """Resolve one staff role to what should run, with the truth of what was asked and why.
 
     Returns `{'role','mode','asked':{...},'adapter','model','model_arg','fallback_arg',
     'effort_arg','family','why','independence','waiting'}`. `adapter` None with `waiting` False
     means "Kel's usual routing decides" (Automatic, or a Preferred model that is not available);
     `waiting` True means a Fixed model cannot run here and the step must wait with `why`.
+    `exclude` names models already tried for this call (a review hands over to the next one);
+    `set_aside` is passed to `adapter_for`.
     """
     current = setting(store, role)
     asked = {'role': role, 'mode': current['mode'], 'model': current['model'],
@@ -272,15 +433,21 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
         order = candidates
     skipped = []
     for model_id in order:
-        adapter, why_not = adapter_for(model_id, purpose, adapters)
-        if adapter is None:
-            skipped.append('%s %s' % ((MODELS.get(model_id) or {}).get('label', model_id), why_not))
+        label = (MODELS.get(model_id) or {}).get('label', model_id)
+        if model_id in (exclude or ()):
+            skipped.append('%s did not run for this call' % label)
             continue
-        reason = rejected(store, model_id, now=now)
+        # A refusal is the truest reason (the runtime said so), so it is checked first.
+        reason = rejected(store, model_id, now=now) if model_id in MODELS else None
         if reason:
-            skipped.append('%s was refused recently (%s)' % (MODELS[model_id]['label'], reason))
+            skipped.append("%s can't run here: %s" % (label, reason))
+            continue
+        adapter, why_not = adapter_for(model_id, purpose, adapters, set_aside)
+        if adapter is None:
+            skipped.append('%s %s' % (label, why_not))
             continue
         info = MODELS[model_id]
+        asked['resolved'] = model_id
         out.update(adapter=adapter, model=model_id, model_arg=model_arg(model_id, adapter),
                    fallback_arg=info.get('cli_fallback') if adapter in ('claude', 'claude-code') else None,
                    effort_arg=effort_arg(model_id, current['reasoning']), family=info['family'])
@@ -340,6 +507,10 @@ def listing(store, adapters):
                 adapter, why_not = adapter_for(current['model'], 'text', adapters)
             available = adapter is not None
             note = None if available else '%s %s' % (MODELS[current['model']]['label'], why_not)
+            refused = rejected(store, current['model'])
+            if refused:
+                # The live check: a runtime that refuses the model is the truth, whatever is installed.
+                available, note = False, "%s can't run here: %s" % (MODELS[current['model']]['label'], refused)
         default_mode, default_model, default_reasoning_level = DEFAULTS[role]
         rows.append({'role': role, 'label': ROLE_LABELS[role], 'mode': current['mode'],
                      'mode_label': MODE_LABELS[current['mode']], 'model': current['model'],
@@ -357,10 +528,13 @@ def listing(store, adapters):
         adapter, why_not = adapter_for(model_id, 'text', adapters)
         if adapter is None and info['runtime'] in ('claude', 'codex'):
             adapter, why_not = adapter_for(model_id, 'code', adapters)
+        refused = rejected(store, model_id)
         models.append({'id': model_id, 'label': info['label'], 'version': info['version'],
                        'runtime': RUNTIMES[info['runtime']]['label'],
-                       'available': adapter is not None,
-                       'note': None if adapter else '%s %s' % (info['label'], why_not),
-                       'reasoning_options': list(reasoning_options(model_id))})
+                       'available': adapter is not None and not refused,
+                       'note': ("%s can't run here: %s" % (info['label'], refused)) if refused else
+                       (None if adapter else '%s %s' % (info['label'], why_not)),
+                       'reasoning_options': list(reasoning_options(model_id)),
+                       'runtime_version': _current_runtime_version(model_id)})
     return {'roles': rows, 'models': models, 'modes': [
         {'id': mode, 'label': MODE_LABELS[mode]} for mode in MODES]}

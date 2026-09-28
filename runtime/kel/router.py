@@ -27,6 +27,41 @@ TOOL_REQUEST_RE = re.compile(
     re.IGNORECASE)
 
 
+# A code change asked for after a short lead-in ("In this project, add…", "please fix…", "can you
+# refactor…"), or a change verb together with a code file or a code noun. The live check: "In this
+# project, add a multiply(a, b) function to calc.py and a pytest test for it" missed the old
+# starts-with-a-verb floor and became a document job. A floor only: callers apply it inside a project
+# that has a folder and a test command.
+_CODE_VERBS = (r'(?:fix|build|implement|change|add|remove|update|refactor|test|write|create|rename|delete|'
+               r'edit|modify|move|extract|replace|debug|port|migrate|optimi[sz]e|clean\s+up)')
+_LEAD_IN = (r'^(?:(?:(?:in|for|inside|within|on)\s+(?:this|the|my|our)\s+(?:project|repo(?:sitory)?|codebase|'
+            r'code|app|folder)|please|pls|kel|hey\s+kel|ok(?:ay)?|now|next|also|then)\s*[,:;-]?\s*'
+            r'|(?:can|could|would|will)\s+you\s+(?:please\s+)?)*')
+# Opening verbs exclude write/create: "write a blog post about unit tests" is writing. Those count
+# only with a code file named (the second rule).
+CODE_LEAD_RE = re.compile(_LEAD_IN + r'(?:fix|build|implement|change|add|remove|update|refactor|test|rename|'
+                          r'delete|edit|modify|debug|optimi[sz]e)\b', re.IGNORECASE)
+CODE_VERB_RE = re.compile(r'\b' + _CODE_VERBS + r'\b', re.IGNORECASE)
+CODE_THING_RE = re.compile(
+    r'\b[\w.-]+\.(?:py|pyi|js|jsx|ts|tsx|mjs|cjs|go|rs|java|kt|cs|cpp|cc|c|h|hpp|rb|php|swift|sql|sh|ps1|'
+    r'vue|svelte|css|scss|html)\b'
+    r'|\b(?:function|method|class|module|endpoint|unit\s+tests?|pytest|test\s+file|test\s+suite|'
+    r'failing\s+tests?|stack\s+trace|traceback|exception|type\s+error|compile\s+error|build\s+error|bug)\b',
+    re.IGNORECASE)
+
+
+def coding_intent(text):
+    """True when the message asks for a code change even though it does not open with the verb."""
+    text = str(text or '').strip()
+    if not text:
+        return False
+    if CODE_LEAD_RE.match(text) and CODE_THING_RE.search(text):
+        return True
+    return bool(CODE_VERB_RE.search(text) and CODE_THING_RE.search(text) and
+                re.search(r'\.(?:py|pyi|js|jsx|ts|tsx|mjs|cjs|go|rs|java|kt|cs|cpp|cc|c|h|hpp|rb|php|swift|'
+                          r'sql|sh|ps1|vue|svelte|css|scss|html)\b', text, re.IGNORECASE))
+
+
 def needs_work(text):
     """True when the message asks for something only real work can do (a command, a service)."""
     return bool(TOOL_REQUEST_RE.search(str(text or '')))
