@@ -148,7 +148,7 @@ export default function KelOnboardingPage() {
             <h1 className='kel-h1'>Set up Kel</h1>
           </div>
           <span className='kel-grow' />
-          <KelButton variant='primary' onClick={() => navigate('/settings/model')}>Add Model</KelButton>
+          <KelButton variant='primary' onClick={() => navigate('/settings/model')}>Add model</KelButton>
         </div>
 
         {!isMobile && <nav className='kel-shell-setup-progress' aria-label='Setup steps'>{STEPS.map((label, i) => <button key={label} type='button' aria-label={`Step ${i + 1}: ${label}`} aria-current={i === index ? 'step' : undefined} data-visited={i < index} onClick={() => selectStep(label)} />)}</nav>}

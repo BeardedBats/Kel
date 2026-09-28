@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { KelCard } from './KelPrimitives';
 import { kelRequest } from './kelApi';
 import { KelDesktopModelMenu } from './KelDesktopModelMenu';
+import plugIcon from '@renderer/assets/figma/model/plug.svg';
 
 export type Choice = { provider: string | null; model: string | null };
 /** `note` says, in plain words, why an option cannot answer in chat (CH-2), e.g. "Not supported for chat yet". */
@@ -21,9 +22,15 @@ export type ModelState = { default: Choice | null; conversation: Choice | null; 
 
 const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
-/** Why an option cannot be picked, in the engine's plain words; null when it can answer in chat. */
-export const unavailableNote = (option: ModelOption, provider?: Pick<ProviderRow, 'note'>): string | null =>
-  option.available ? null : option.note || provider?.note || 'Needs setup';
+/** Engine notes that all mean the person can fix it in Providers; JR-42 says them as "Needs setup". */
+const SETUP_NOTES = new Set(['api key needed', 'sign-in needed', 'not connected yet']);
+
+/** Why an option cannot be picked, in plain words; null when it can answer in chat. */
+export const unavailableNote = (option: ModelOption, provider?: Pick<ProviderRow, 'note'>): string | null => {
+  if (option.available) return null;
+  const note = option.note || provider?.note || 'Needs setup';
+  return SETUP_NOTES.has(note.toLowerCase()) ? 'Needs setup' : note;
+};
 
 /**
  * D-69: a model picked in a chat (or as the default) is Kel's own — its replies and plans. Staff always
@@ -337,7 +344,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
                     border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
                   }}
                 >
-                  <span className='kel-shell-default-model-lead' aria-hidden='true'>⌁</span>
+                  <span className='kel-shell-default-model-lead' aria-hidden='true'><img src={plugIcon} alt='' width={14} height={14} /></span>
                   <span className='kel-shell-default-model-name'>{option.label}<span>{provider.label}</span></span>
                   <span className={`kel-shell-default-model-status${note ? ' kel-shell-default-model-status--wait' : ''}`}>
                     {current && !note ? 'Current' : note ?? 'Available'}
