@@ -36,7 +36,14 @@ import '@renderer/styles/kel-work.css';
  */
 export const modelNames = (provider: Pick<KelProviderStatus, 'label' | 'models'>): string =>
   (provider.models ?? [])
-    .filter((model) => model.label && model.label !== model.id && model.label !== provider.label)
+    .filter(
+      (model) =>
+        model.label &&
+        model.label !== model.id &&
+        model.label !== provider.label &&
+        // "Codex (built-in)" under "Codex" only repeats the provider.
+        !model.label.startsWith(`${provider.label} (`)
+    )
     .map((model) => model.label)
     .join(' · ');
 

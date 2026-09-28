@@ -86,6 +86,7 @@ describe('Providers lists models by name, never by id (VIS-24)', () => {
         ],
       })
     ).toBe('DeepSeek Flash · DeepSeek V4 Pro');
+    expect(modelNames({ label: 'Codex', models: [{ id: 'codex-native', capabilities: [], label: 'Codex (built-in)' }] })).toBe('');
     // An engine without names (older build) shows nothing rather than a raw id.
     expect(modelNames({ label: 'OpenRouter', models: [{ id: 'deepseek/deepseek-v4.1-flash', capabilities: [] }] })).toBe('');
   });
