@@ -1,9 +1,11 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import Ramble from '@renderer/pages/kel/transcription';
 import { Message } from '@arco-design/web-react';
+
+const ProvidersProbe = () => <div data-testid='providers-probe'>{useLocation().search}</div>;
 
 // Ramble's shared modal reads theme context; persisted theme IO belongs to its own tests.
 vi.mock('@renderer/hooks/context/ThemeContext', () => ({ useThemeContext: () => ({ theme: 'dark' }) }));
@@ -104,20 +106,17 @@ it('ST-18: Escape cancels naming a new folder; blank names keep New Folder; fail
 });
 
 
-it('lets a connected desktop key be replaced without saving a canceled draft', async () => {
+it('D-75.3: the API Key button opens the Muse key in Settings → Providers (no key box of its own)', async () => {
   const { requests } = libraryTransport([], true);
-  render(<MemoryRouter><Ramble /></MemoryRouter>);
+  render(<MemoryRouter initialEntries={['/transcription']}><Routes>
+    <Route path='/transcription' element={<Ramble />} />
+    <Route path='/settings/providers' element={<ProvidersProbe />} />
+  </Routes></MemoryRouter>);
   await waitFor(() => expect(requests.some(r => r.body.action === 'status')).toBe(true));
   fireEvent.click(screen.getByTestId('transcription-settings'));
-  const input = await screen.findByTestId('key-input');
-  fireEvent.change(input, { target: { value: 'synthetic-unsaved-key' } });
-  expect((screen.getByTestId('key-save') as HTMLButtonElement).disabled).toBe(false);
-  expect(screen.getByTestId('key-clear')).not.toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel', exact: true }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-  fireEvent.click(screen.getByTestId('transcription-settings'));
-  expect((await screen.findByTestId('key-input') as HTMLInputElement).value).toBe('');
-  expect(requests.some(r => r.body.action === 'set_key')).toBe(false);
+  expect((await screen.findByTestId('providers-probe')).textContent).toBe('?provider=muse');
+  expect(screen.queryByTestId('key-input')).toBeNull();
+  expect(requests.some(r => r.body.action === 'set_key' || r.body.action === 'clear_key')).toBe(false);
 });
 
 it('VIS-19: with recordings saved, opens on the library (not the empty state) with one Upload button', async () => {

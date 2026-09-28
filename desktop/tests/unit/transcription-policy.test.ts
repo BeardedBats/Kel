@@ -41,8 +41,6 @@ describe('transcription page policy (D4)', () => {
       "action: 'stream_finish'",
       "action: 'combine'",
       "action: 'export_audio'",
-      "action: 'set_key'",
-      "action: 'clear_key'",
       "action: 'folder_create'",
       "action: 'assign'",
       "action: 'rename'",

@@ -26,6 +26,7 @@ import {
   setCredential,
 } from './kelCredentials';
 import { registerKelCredentialIpc } from './kelCredentialIpc';
+import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
@@ -134,6 +135,9 @@ function spawnEngine(root: string): ChildProcess {
   if (deepseekKey) injectedEnv.DEEPSEEK_API_KEY = deepseekKey;
   const openrouterKey = getCredential('openrouter', 'api_key');
   if (openrouterKey) injectedEnv.OPENROUTER_API_KEY = openrouterKey;
+  // D-75.3: the Muse (Ramble) key from the same custody; the engine takes it out of its environment.
+  const museKey = getCredential(MUSE_PROVIDER, MUSE_FIELD);
+  if (museKey) injectedEnv[MUSE_ENV] = museKey;
   const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
     cwd: spec.cwd,
     detached: true,
@@ -393,6 +397,10 @@ export async function initializeKel(port: number): Promise<void> {
   } catch (error) {
     console.warn('[Kel] Connection custody push failed; the assistant will ask again when a credential changes.', error);
   }
+  // D-75.3: the key Ramble saved before moves into custody once; the engine holds the custody key.
+  await syncMuseCustody(kelRequest, { get: getCredential, set: setCredential })
+    .then((outcome) => console.log('[KEL-BOOT] initializeKel Muse key: ' + outcome))
+    .catch((): undefined => undefined);
   const mapPath = path.join(root, 'aion-conversations.json');
   const historyPath = path.join(root, 'aion-history.json');
   const mapping: Record<string, string> = fs.existsSync(mapPath) ? JSON.parse(fs.readFileSync(mapPath, 'utf8')) : {};

@@ -19,6 +19,7 @@
 import { ipcMain } from 'electron';
 import { assertTrustedSender } from '../../../common/senderGuard';
 import { CONNECTION_NAMESPACE } from './kelCredentials';
+import { MUSE_PROVIDER, museClear, museSupply } from './museCustody';
 
 export interface KelCredentialIpcDeps {
   status: () => unknown;
@@ -28,7 +29,7 @@ export interface KelCredentialIpcDeps {
   remove: (provider: string) => { provider: string; removed: number };
   /** Best-effort metadata sync into the engine store that owns this kind of credential. */
   sync: (
-    route: '/api/providers' | '/api/connections',
+    route: '/api/providers' | '/api/connections' | '/api/transcription',
     body: Record<string, unknown>
   ) => Promise<unknown>;
   /** Which field names the shell holds for a connection (names only). */
@@ -123,6 +124,12 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
     ): Promise<{ provider: string; fields: string[] }> => {
       assertTrustedSender(event, { allowDevServer: true });
       const stored = deps.set(provider, field, value);
+      if (provider === MUSE_PROVIDER) {
+        // D-75.3: the running engine uses the new Muse key at once (memory only), and Ramble's older
+        // plaintext copy is dropped; the value never goes back to the page.
+        await deps.sync('/api/transcription', museSupply(value)).catch((): undefined => undefined);
+        return { provider: stored.provider, fields: stored.fields };
+      }
       const target = metadataFor(provider, stored.fields, field);
       await deps.sync(target.route, target.body).catch((): undefined => undefined);
       if (isConnection(provider)) await pushCustody(connectionId(provider));
@@ -135,6 +142,10 @@ export const registerKelCredentialIpc = (deps: KelCredentialIpcDeps): void => {
     async (event, provider: string): Promise<{ provider: string; removed: number }> => {
       assertTrustedSender(event, { allowDevServer: true });
       const removed = deps.remove(provider);
+      if (provider === MUSE_PROVIDER) {
+        await deps.sync('/api/transcription', museClear()).catch((): undefined => undefined);
+        return removed;
+      }
       const body = isConnection(provider)
         ? { action: 'delete_credential', id: connectionId(provider) }
         : { action: 'delete_credential', provider };

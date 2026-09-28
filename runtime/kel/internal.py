@@ -12,7 +12,8 @@ from .core import uid
 
 # The canonical Kel-managed provider credentials; containment helpers (native child envs,
 # test commands, redaction) all reason over exactly this set.
-SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY')
+SECRET_ENV_KEYS = ('ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'DEEPSEEK_API_KEY', 'OPENROUTER_API_KEY',
+                   'MUSE_CUSTODY_KEY')  # D-75.3: the Muse key from the desktop's custody
 
 
 def child_env(*, keep=()):
