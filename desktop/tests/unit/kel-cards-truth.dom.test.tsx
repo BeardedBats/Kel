@@ -306,6 +306,8 @@ describe('the detail says it plainly', () => {
     expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Couldn’t fully check');
     expect(within(dialog).getByTestId('kel-office-verification-word').textContent).toBe('Couldn’t fully check');
     expect(dialog.textContent).not.toContain('Didn’t pass');
+    // A caution, not a failure: the uncertain tone replaces the red failed one.
+    expect(dialog.className).toContain('is-uncertain');
   });
 
   it('shows commands without backticks and the place only once (LIVE-10)', async () => {
