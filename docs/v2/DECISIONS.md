@@ -879,3 +879,14 @@ start of launch — before storage, aioncore, the engine and the window — thro
 parts already swapped; every attempt clears the pending marker and records one plain-words outcome
 (JR-8), so a restore is never re-applied. One "Kel data before restore <date>" folder is kept per applied
 restore (newest two kept). Keys and sign-ins stay on this PC across a restore.
+
+## D-77 — One chat store: the engine (staged; recommended values under the "execute everything" instruction)
+
+**Adopted 2026-09-28** (Claude's recommendation from docs/v2/design/CP-10a_ONE_CHAT_STORE.md, not
+Nick's explicit pick). Kel's engine becomes the single source of truth for chats; aioncore keeps running
+live turns and becomes a disposable cache. Stages 0 (read-only report) and 1 (one link table in the
+engine) proceed now behind the `chat_store` switch (`legacy` rolls back; nothing is deleted). Stages 2–3
+(history and chat state from the engine) wait for Nick to review the stage-0 report of his real chats
+(4 chats exist only in aioncore; 23 empty chats point at missing engine chats). Deleting a chat hides it
+and keeps its work in Activity. Stage 4 (bypassing aioncore) is decided after stage 3 has run a week.
+Real Data migrates only at an install point, after the automatic backup.
