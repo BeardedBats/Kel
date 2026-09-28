@@ -15,6 +15,9 @@ import {
   MODE_HINTS,
   MODE_LABELS,
   STAFF_DESCRIPTIONS,
+  TIER_WORDS,
+  fellBackLine,
+  kelStaffRanking,
   kelScopingThreshold,
   kelSetScopingThreshold,
   kelStaffResetRole,
@@ -22,6 +25,8 @@ import {
   kelStaffSetRole,
   orderRoles,
   reasoningLabel,
+  type RankingClass,
+  type RankingView,
   type ScopingThresholdView,
   type StaffListing,
   type StaffMode,
@@ -92,6 +97,7 @@ function StaffRow({
   const unavailable = !automatic && row.model && row.available === false;
   const description = STAFF_DESCRIPTIONS[row.role];
   const fallbackDefault = defaultSentence(listing, row);
+  const fellBack = fellBackLine(row.last_run);
 
   const changeMode = (mode: StaffMode) => {
     if (mode === row.mode) return;
@@ -200,12 +206,102 @@ function StaffRow({
           <span className='kel-staff-row__default'>Default</span>
         )}
       </div>
+      {fellBack && (
+        <p className='kel-staff-row__last' data-testid={`staff-last-${row.role}`}>
+          {fellBack}
+        </p>
+      )}
       {error && (
         <p className='kel-staff-row__error' role='alert'>
           {error}
         </p>
       )}
     </div>
+  );
+}
+
+/** One kind of work in "How Kel picks models": who governs it, how much model it gets, the order. */
+function RankingRow({ entry }: { entry: RankingClass }) {
+  const runnable = entry.models.filter((model) => model.runnable).sort((a, b) => a.rank - b.rank);
+  const blocked = entry.models.length - runnable.length;
+  const first = runnable[0];
+  const order = runnable.slice(0, 3).map((model) => model.label);
+  return (
+    <tr data-testid={`ranking-row-${entry.task_class}`}>
+      <th scope='row'>{entry.label}</th>
+      <td>{`${entry.role_label} · ${MODE_LABELS[entry.mode] ?? entry.mode_label ?? entry.mode}`}</td>
+      <td>{TIER_WORDS[entry.tier] ?? entry.tier_label ?? entry.tier}</td>
+      <td>
+        {order.length ? (
+          <>
+            <span className='kel-staff-ranking__order'>{order.join(', then ')}</span>
+            {first?.why ? <span className='kel-staff-ranking__why'>{`${first.label}: ${first.why}.`}</span> : null}
+          </>
+        ) : (
+          <span className='kel-staff-ranking__why'>Nothing can run this here yet.</span>
+        )}
+        {blocked > 0 ? (
+          <span className='kel-staff-ranking__why'>{`${blocked} other model${blocked === 1 ? '' : 's'} can't run here.`}</span>
+        ) : null}
+      </td>
+    </tr>
+  );
+}
+
+/**
+ * Read-only "How Kel picks models" (Routing 2 §5.8): per kind of work, the Settings row that governs
+ * it, how much model it gets, and the order Kel would try models in, with the reason for the first.
+ */
+export function RankingCard() {
+  const [view, setView] = useState<RankingView | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    kelStaffRanking()
+      .then((next) => {
+        if (alive) setView(next);
+      })
+      .catch((reason: unknown) => {
+        if (alive) setError(`Kel couldn't read how it picks models. ${failureSentence(reason, 'Try again in a moment.')}`);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return (
+    <KelCard title='How Kel picks models'>
+      <p className='kel-staff-models__note'>
+        For each kind of work: the staff setting that decides it, how much model it gets, and the order Kel tries models in.
+        Your choices above always come first; recent results only reorder the rest.
+      </p>
+      {error ? (
+        <p className='kel-staff-row__error' role='alert'>
+          {error}
+        </p>
+      ) : !view ? (
+        <KelLoading rows={3} />
+      ) : (
+        <div className='kel-staff-ranking__scroll'>
+          <table className='kel-staff-ranking' data-testid='staff-ranking'>
+            <thead>
+              <tr>
+                <th scope='col'>Work</th>
+                <th scope='col'>Decided by</th>
+                <th scope='col'>Effort</th>
+                <th scope='col'>Kel tries</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.classes.map((entry) => (
+                <RankingRow key={entry.task_class} entry={entry} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </KelCard>
   );
 }
 
@@ -369,6 +465,7 @@ const StaffModelsSettings: React.FC = () => {
           </KelCard>
         )}
         {listing && !loadError ? <ScopingThresholdCard /> : null}
+        {listing && !loadError ? <RankingCard /> : null}
       </div>
     </SettingsPageWrapper>
   );

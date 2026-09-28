@@ -26,7 +26,28 @@ export interface StaffRoleRow {
   /** Models the role falls back to (labels) when its preferred one cannot run. */
   fallbacks?: string[];
   default?: { mode: StaffMode; model: string | null; reasoning: string } | null;
+  /** What this role's last run asked for and what actually ran (the engine's record). */
+  last_run?: StaffLastRun | null;
 }
+
+export interface StaffLastRun {
+  asked?: string | null;
+  asked_label?: string | null;
+  ran?: string | null;
+  ran_label?: string | null;
+  /** False until the runtime reported the model (then `ran` is the model Kel handed the work to). */
+  confirmed?: boolean;
+  fell_back?: boolean;
+  at?: number | null;
+  why?: string | null;
+}
+
+/** "Fell back to Codex last time: <why>." — null when the last run ran what was asked. */
+export const fellBackLine = (last: StaffLastRun | null | undefined): string | null => {
+  if (!last?.fell_back || !last.ran_label) return null;
+  const why = String(last.why ?? '').trim().replace(/[.\s]+$/, '');
+  return `Fell back to ${last.ran_label} last time${last.asked_label ? ` (asked for ${last.asked_label})` : ''}${why ? `: ${why}` : ''}.`;
+};
 
 export interface StaffModelOption {
   id: string;
@@ -166,3 +187,47 @@ export const kelScopingThreshold = async (): Promise<ScopingThresholdView> =>
 
 export const kelSetScopingThreshold = async (value: string): Promise<ScopingThresholdView> =>
   normaliseThreshold(await kelRequest<unknown>('/api/scoping', { action: 'set_threshold', value }));
+
+/* ─── How Kel picks models: the read-only per-task-class ranking (Routing 2 §5.8) ────────────── */
+
+export interface RankingModel {
+  id: string;
+  label: string;
+  rank: number;
+  runnable: boolean;
+  protected?: boolean;
+  why?: string | null;
+}
+
+export interface RankingClass {
+  task_class: string;
+  label: string;
+  role: string;
+  role_label: string;
+  mode: StaffMode;
+  mode_label?: string | null;
+  tier: string;
+  tier_label?: string | null;
+  models: RankingModel[];
+}
+
+export interface RankingView {
+  classes: RankingClass[];
+  calibration_note?: string | null;
+}
+
+export const kelStaffRanking = async (): Promise<RankingView> => {
+  const payload = (await kelRequest<unknown>('/api/model', { action: 'ranking' })) as Partial<RankingView> | null;
+  const classes = Array.isArray(payload?.classes)
+    ? payload!.classes.filter((entry) => entry && typeof entry.task_class === 'string' && Array.isArray(entry.models))
+    : [];
+  return { classes, calibration_note: payload?.calibration_note ?? null };
+};
+
+/** How much model each kind of work gets, in plain words (the engine's dispatch tiers). */
+export const TIER_WORDS: Record<string, string> = {
+  fast: 'Quick',
+  standard: 'Standard',
+  deep: 'Thorough',
+  assurance: 'Most careful',
+};

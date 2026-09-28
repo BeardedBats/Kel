@@ -611,9 +611,53 @@ def describe_model(model_id=None, adapter=None, raw=None):
     return text, text
 
 
+def last_runs(store):
+    """{role: what its last run asked for and what actually ran} — for "fell back to X last time".
+
+    Staff roles read their newest staff call (the model the runtime confirmed, else the one Kel
+    resolved to); Kel reads its newest own call in the usage record (D-72 item 6). `fell_back` is
+    True only when a model was asked for and a different one ran."""
+    out = {}
+    try:
+        with contextlib.closing(store.connect()) as db:
+            found = db.execute("SELECT 1 FROM sqlite_master WHERE name='staff_calls'").fetchone()
+            rows = db.execute('SELECT role, asked, ran, why, started FROM staff_calls ORDER BY started DESC').fetchall() \
+                if found else []
+    except Exception:
+        rows = []
+    for row in rows:
+        role = row['role']
+        if role in out or role not in ROLES:
+            continue
+        try:
+            asked, ran = json.loads(row['asked'] or '{}'), json.loads(row['ran'] or '{}')
+        except (TypeError, ValueError):
+            continue
+        confirmed = bool(ran.get('model_confirmed') and ran.get('model'))
+        ran_model = catalog_id(ran.get('model'), ran.get('adapter')) if confirmed else asked.get('resolved')
+        out[role] = _last_entry(asked.get('model'), ran_model, confirmed, row['started'], row['why'])
+    try:
+        from .usage import rows as usage_rows
+        kel = [i for i in usage_rows(store) if i.get('role') == 'kel' and i.get('model')]
+    except Exception:
+        kel = []
+    if kel:
+        item = max(kel, key=lambda i: i.get('at') or 0)
+        out['kel'] = _last_entry(item.get('asked_model'), item.get('model'), True, item.get('at'), item.get('why'))
+    return out
+
+
+def _last_entry(asked, ran, confirmed, at, why):
+    label = lambda model_id: (MODELS.get(model_id) or {}).get('label') if model_id else None  # noqa: E731
+    fell_back = bool(asked and ran and asked != ran)
+    return {'asked': asked, 'asked_label': label(asked), 'ran': ran, 'ran_label': label(ran),
+            'confirmed': confirmed, 'fell_back': fell_back, 'at': at, 'why': why if fell_back else None}
+
+
 def listing(store, adapters):
     """Every role row for Settings, with the choosable models and whether each can run here."""
     rows = []
+    last = last_runs(store)
     for role in ROLES:
         current = setting(store, role)
         purpose = 'code' if role == 'builder' else 'text'
@@ -638,6 +682,7 @@ def listing(store, adapters):
                      if current['model'] else ['auto'],
                      'available': available, 'note': note, 'is_default': current['is_default'],
                      'fallbacks': [MODELS[m]['label'] for m in FALLBACKS.get(role, ())],
+                     'last_run': last.get(role),
                      'default': {'mode': default_mode, 'model': default_model,
                                  'reasoning': default_reasoning_level}})
     models = []
