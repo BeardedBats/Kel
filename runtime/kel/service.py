@@ -200,6 +200,8 @@ class Service:
         ensure_parallel_schema(self.store)
         from .staff import ensure_schema as ensure_staff_schema
         ensure_staff_schema(self.store)  # D-66/D-67: migration 36
+        from .calibration import ensure_schema as ensure_routing_schema
+        ensure_routing_schema(self.store)  # Routing 2: migration 37 (calibration runs, raised budgets)
         Connections(self.store)
         # D-54: projects are the one context boundary (migration 32 runs here, once).
         from .projects import Projects
