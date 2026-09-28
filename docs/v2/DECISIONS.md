@@ -847,3 +847,15 @@ They are recommendations, not Nick's explicit picks — each is one setting to c
 4. **Card row scope.** In an open chat, the card row shows that chat's project's work; on Home / new
    chat it follows the active project (or All projects).
 5. **Save as a recipe** is offered only for work that finished and passed its checks.
+
+## D-74 — Live-audit questions (recommended values, adopted under the "execute everything" instruction)
+
+**Adopted 2026-09-28** (Claude's recommendations, not Nick's explicit picks; each is easy to change).
+1. **Web research runs through the coding runtimes' own web tools** (Claude Code / Codex web search on
+   Nick's subscriptions) when no Anthropic API key is present; when no route can do research, the
+   Discovery row and the card say so plainly.
+2. **Kel never creates a separate new project while a project with a folder is active**, unless the
+   request explicitly asks for a new or separate project. "This/the/my project" means the active one.
+3. **An open scoping card can be dismissed** ("Not now"), which cancels the scoping without starting work.
+4. **The engine keeps running if the app window dies** so work isn't lost (durability), and exits on
+   its own once its work is settled and no app has reattached for 10 minutes.
