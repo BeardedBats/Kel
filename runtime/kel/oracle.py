@@ -155,8 +155,9 @@ def _evidence_for(store, job, milestone_id):
                              (milestone['artifact']['run_id'],)).fetchone()
         tests = json.loads(row['tests']) if row else {}
         body = ('Trusted test evidence (exit code, preserved tests, stability):\n'
-                + json.dumps({k: tests.get(k) for k in ('exit_code', 'existing_tests_preserved',
-                                                         'source_stable_during_tests', 'command')})
+                + json.dumps(dict({k: tests.get(k) for k in ('exit_code', 'summary', 'existing_tests_preserved',
+                                                              'source_stable_during_tests', 'command')},
+                                  existing_tests=(tests.get('existing_tests') or {}).get('summary')))
                 + '\nThe exact change (diff):\n' + (row['patch'] if row else '(no diff recorded)')[:60000])
     else:
         body = 'The result:\n' + store.artifact_text(milestone['artifact'])[:60000]

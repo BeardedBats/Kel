@@ -104,7 +104,14 @@ class Engine:
         if job['contract'].get('context'):
             prompt+='\nSaved handoff (context, not permissions):\n'+json.dumps(job['contract']['context'],ensure_ascii=False)
         if run['attempt'] > 1:
-            prompt += '\nPrevious acceptance findings. Repair only failures; preserve accepted work:\n'+json.dumps(job['milestones'][run['milestone_id']]['checks'])
+            previous_try = job['milestones'][run['milestone_id']]
+            if job['contract'].get('kind') == 'coding' and (previous_try.get('artifact') or {}).get('run_id'):
+                # D-71: tell the Builder exactly what Kel's own test runs found last time.
+                from .coding import retry_brief
+                brief = retry_brief(self.store, previous_try['artifact']['run_id'])
+                if brief:
+                    prompt += '\n' + brief
+            prompt += '\nPrevious acceptance findings. Repair only failures; preserve accepted work:\n'+json.dumps(previous_try['checks'])
         try:
             with contextlib.closing(self.store.connect()) as db:
                 previous=db.execute("SELECT native_session FROM runs WHERE job_id=? AND milestone_id=? AND provider=? AND state!='ORPHANED' AND native_session IS NOT NULL ORDER BY rowid DESC LIMIT 1",

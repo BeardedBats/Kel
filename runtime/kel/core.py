@@ -596,8 +596,8 @@ class Store:
                 text = self.artifact_text(m['artifact'])
                 checks.append(dict(kind='artifact_digest', verdict='VERIFIED', subject=m['artifact']['sha256']))
                 if job['contract'].get('kind')=='coding':
-                    from .coding import check_evidence
-                    checks.append(dict(kind='repository_evidence',verdict=check_evidence(self,m['artifact']['run_id'])))
+                    from .coding import repository_check
+                    checks.append(repository_check(self,m['artifact']['run_id']))
                 if m['provider']=='research' or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])):
                     from .research import check_research_evidence
                     checks.append(dict(kind='research_evidence',verdict='VERIFIED' if check_research_evidence(self,m['artifact']['run_id'],text) else 'UNCERTAIN'))
@@ -616,6 +616,13 @@ class Store:
             verdict = aggregate([c['verdict'] for c in checks])
             old_state = m['state']
             m.update(checks=checks, state='ACCEPTED' if verdict == 'VERIFIED' else ('NEEDS_REPAIR' if verdict == 'FAILED' else 'UNCERTAIN'))
+            if old_state == 'CHECKING' and any(c.get('failure') == 'existing_tests' for c in checks):
+                # D-71: an original test that fails (or a removed test file) is deterministic — the
+                # same kind of change fails the same way on any model. The next try is told exactly
+                # what failed (engine prompt); if that informed try fails the same way, stop.
+                m['gate_failures'] = m.get('gate_failures', 0) + 1
+                if m['gate_failures'] >= 2 and m['state'] == 'NEEDS_REPAIR':
+                    m['state'] = 'EXHAUSTED'
             if old_state == 'CHECKING':
                 job['spent'] += 1
                 job['reserved'] -= 1
@@ -1191,22 +1198,50 @@ def explain_failure(job):
     # A verdict explains only a settled job: a job still being prepared carries the
     # placeholder UNCERTAIN verdict and is described by its state branch instead.
     if verdict in ('UNCERTAIN', 'FAILED') and state == 'CLOSED':
-        blockers = []
-        for m in job.get('milestones', {}).values():
+        errors, failed, unsure = [], [], []
+        milestones = list(job.get('milestones', {}).values())
+        for m in milestones:
             if m.get('error'):
-                blockers.append(str(m['error']))
+                errors.append(str(m['error']))
             for c in m.get('checks', []):
                 if c.get('verdict') == 'UNCERTAIN' and c.get('reason'):
-                    blockers.append(str(c['reason']))
+                    unsure.append(str(c['reason']))
                 elif c.get('verdict') == 'FAILED':
-                    blockers.append('failed check ' + str(c.get('kind')) + ': expected ' + str(c.get('expected')))
+                    failed.append(plain_check(c))
+        blockers = errors + (failed + unsure if verdict == 'FAILED' else unsure + failed)
         why = blockers[0] if blockers else 'the required checks could not be confirmed.'
         if verdict == 'FAILED':
+            coding = (job.get('contract') or {}).get('kind') == 'coding'
+            tries = max([m.get('attempts') or 0 for m in milestones] or [0])
+            tries_text = '%d tr%s' % (tries, 'y' if tries == 1 else 'ies')
+            gate = [c for m in milestones for c in m.get('checks', [])
+                    if c.get('verdict') == 'FAILED' and c.get('failure') == 'existing_tests']
+            if coding and gate and not errors:
+                # D-71: an original test does not pass (or a test file was removed).
+                stopped = any(m.get('state') == 'EXHAUSTED' for m in milestones)
+                return _explain(
+                    "The change didn't pass Kel's checks, so nothing was applied to your project.",
+                    why,
+                    'Kel ran your tests on the change, and again with your original test files and test '
+                    'settings put back. ' + (
+                        'After the first failure Kel told the Builder exactly what failed and gave it one more '
+                        'try; it failed the same way, so Kel stopped rather than repeat it.' if stopped else
+                        'The Builder had %s.' % tries_text),
+                    'If the behaviour that test checks is meant to change, update or remove that test in your '
+                    'project yourself, then ask again. Otherwise ask Kel to try again with more detail about '
+                    'the approach.')
+            if coding:
+                return _explain(
+                    "The change didn't pass Kel's checks, so nothing was applied to your project.",
+                    why,
+                    "Kel ran your tests after each of the Builder's %s and stopped before applying anything."
+                    % tries_text,
+                    'Ask Kel to try again with more detail about the approach.')
             return _explain(
                 'The result did not pass its checks.',
                 why,
                 'Kel ran its verification checks and stopped before applying anything.',
-                'Review the failed check, fix the issue, and re-request the task.')
+                'Ask Kel to try again with more detail about what you need.')
         return _explain(
             'Kel could not fully verify the result.',
             why,
@@ -1214,6 +1249,27 @@ def explain_failure(job):
             'Provide the missing environment or evidence, then re-request the task.')
 
     return None
+
+
+def plain_check(check):
+    """What one failed check found, in plain words (never its internal kind or expected value)."""
+    if check.get('reason'):
+        return str(check['reason'])
+    kind = check.get('kind')
+    if kind == 'min_chars':
+        return 'the result was shorter than %s characters.' % check.get('expected')
+    if kind == 'contains':
+        return 'the result did not include "%s".' % check.get('expected')
+    if kind == 'manual_review':
+        findings = [str(f) for f in check.get('findings') or [] if str(f).strip()]
+        return findings[0] if findings else 'the independent review did not approve it.'
+    if kind == 'repository_evidence':
+        return 'the tests did not pass.'
+    if kind == 'research_evidence':
+        return 'its sources could not be confirmed.'
+    if kind in ('artifact_digest', 'artifact_integrity'):
+        return 'the saved result could not be read back intact.'
+    return 'a required check did not pass.'
 
 
 def explain_approval(summary):
@@ -1315,7 +1371,10 @@ def verification_summary(job):
     checks = [c for m in milestones for c in m.get('checks', []) if isinstance(c, dict)]
     lines = [{'VERIFIED': 'Verified', 'UNCERTAIN': 'Uncertain', 'FAILED': 'Failed'}[verdict]]
     repository = [c for c in checks if c.get('kind') == 'repository_evidence']
-    if repository:
+    if repository and (repository[0].get('tests') or repository[0].get('existing')):
+        # D-71: both trusted runs in plain words — the configured run and the original tests.
+        lines += ['• ' + str(repository[0][key]) for key in ('tests', 'existing') if repository[0].get(key)]
+    elif repository:
         lines.append('• Tests: ' + {'VERIFIED': 'passed', 'FAILED': 'failed'}.get(repository[0].get('verdict'), 'could not be confirmed'))
     research = [c for c in checks if c.get('kind') == 'research_evidence']
     if research:
@@ -1323,9 +1382,12 @@ def verification_summary(job):
                                       else 'citation evidence could not be confirmed'))
     failures = [c for c in checks if c.get('verdict') == 'FAILED' and c.get('kind') != 'repository_evidence']
     if failures:
-        lines.append('• Failed check: ' + str(failures[0].get('kind')) + ' (expected ' + str(failures[0].get('expected')) + ')')
+        found = plain_check(failures[0])
+        lines.append('• Failed check: ' + found[:1].upper() + found[1:])
     limits = []
     for c in checks:
+        if verdict == 'FAILED' and c.get('kind') == 'manual_review' and not c.get('reviewer_id'):
+            continue  # the review never runs on a change that already failed a hard check
         if c.get('verdict') == 'UNCERTAIN' and c.get('reason') and str(c['reason']) not in limits:
             limits.append(str(c['reason']))
     for m in milestones:

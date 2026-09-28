@@ -226,6 +226,17 @@ def _member(call, runs, job):
             'step': call.get('milestone_id'), 'started_at': call.get('started'), 'finished_at': call.get('finished')}
 
 
+def _standard_plan_note(job):
+    """Coding and research always start from Kel's standard plan by design (the Builder or the research
+    worker does the thinking); only other work falls back to it when no planning model answered."""
+    compiler = ((job.get('contract') or {}).get('planner') or {}).get('compiler') or         (job.get('contract') or {}).get('compiler')
+    if compiler == 'coding-contract-v2' or (job.get('contract') or {}).get('kind') == 'coding':
+        return 'Kel used its standard coding plan.'
+    if compiler == 'research-v1':
+        return 'Kel used its standard research plan.'
+    return 'Kel used its standard plan for this kind of work.'
+
+
 def _kel_member(job):
     from .role_models import describe_model
     planner = (job.get('contract') or {}).get('planner') or {}
@@ -236,7 +247,7 @@ def _kel_member(job):
             'model': model, 'model_label': label, 'version': version, 'model_confirmed': bool(model),
             'provider': None, 'runtime': RUNTIME_LABELS.get(planner.get('provider')), 'runtime_version': None,
             'reasoning': None, 'asked': None,
-            'note': None if model else 'Kel planned this from its fixed templates (no model call).',
+            'note': None if model else _standard_plan_note(job),
             'independence': None, 'step': None, 'started_at': (job.get('contract') or {}).get('staffing', {}).get('decided_at'),
             'finished_at': None}
 
@@ -379,6 +390,7 @@ def detail(store, job_id):
         step_state = {'ACCEPTED': 'done', 'RUNNING': 'working', 'CHECKING': 'in_review',
                       'UNCERTAIN': 'in_review' if job.get('state') != 'CLOSED' else 'failed',
                       'NEEDS_REPAIR': 'working' if job.get('state') != 'CLOSED' else 'failed',
+                      'EXHAUSTED': 'failed',
                       'CANCELLED': 'stopped'}.get(raw, 'waiting')
         at = max([c.get('finished') or c.get('started') or 0 for c in job_calls
                   if c.get('milestone_id') == spec['id']] or [0]) or None
