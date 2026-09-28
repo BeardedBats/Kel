@@ -1,6 +1,118 @@
+# KEL V2.0 — FEATURE LEDGER
+
+## Current state — 2026-09-28 (read this first; CP-20)
+
+This block is the current truth. Everything under **History** below is the dated record as it was
+written; it is kept, not rewritten. Where a later decision or build changed a statement, the statement is
+marked *(Superseded 2026-09-28: …)*. Blanket supersessions for the history: every "App stays / still
+packages `8c67121`" or "App contains `6b90dbe`" line is superseded by the install below; the **Work page**
+is retired (D-70 — work cards and Activity replace it, `/work` redirects to Home); the word
+**Workspace** left the UI (D-54 — "Projects"); the **Desktop Pet**, the **updater** and "Update
+available" are gone (D-56); the **language selector** is gone (D-61, English only); reply **reactions**
+are gone (D-59); the **Autonomy** choice is settled as Full access with an "Ask first" switch (D-64); the
+donor **cron** scheduler is retired (D-57).
+
+**Source.** `main` at `C:\Users\Nick\Desktop\Kel\Kel`, pushed to `github.com/BeardedBats/Kel`.
+
+**Installed App.** Source **`5294c27`**, installed 2026-09-28 (`App\kel-install-provenance.json`):
+an `electron-builder --dir` package whose `resources/app.asar`, `app.asar.unpacked` and `kel-engine`
+replaced the previous ones (Kel.exe, bundled AionCore, hub and fonts kept). Previous install `44d4115`;
+rollback copy `Tools\.app-rollback-44d4115-to-5294c27`; Data backup
+`Data\backups\pre-install-2026-09-28-5294c27`; migrations 36+ applied on first launch. Checks recorded
+at install: desktop typecheck clean and 112 files / 866 tests; engine 1,645 passed; the packaged build
+ran a real coding job off-screen on a copy of real Data (Claude Opus 5.5 built it, GPT-6 Astra verified
+it, the original-tests gate passed, it was applied on its own with Undo); the installed app launched
+off-screen on real Data (engine up, Full access, 10 staff roles, Staff & models page, no console errors).
+
+**On `main`, not installed yet** (after `5294c27`): D-72 recorded and applied in the engine
+(`0577e58`, `1c97fbe`); off-screen test runs never raise desktop notifications (`edf999b`); usage shown
+for each reply and piece of work (`b96f713`); the result card names the project and folder once
+(`7eb8285`); Nick chooses when Kel scopes first, and typed scoping answers reach the open card
+(`4f64e2a`, `f46da65`); Staff & models shows per-role fall-backs and how Kel picks models, and a card
+stopped on its budget offers Raise budget (`5cda011`, `74d490a`); and the 2026-09-28 leftovers batch — "Create scheduled task" from a chat opens
+the D-57 editor filled in (`d2b65b4`), plain Connections wording (`40f6ae5`), e2e/packaged checks on
+today's screens (`c42533d`), engine messages name the work card instead of "Work context" (`eda6f27`,
+`2b4fa14`), dead code and the unused Monaco dependency removed (`5683226`), and this docs
+consolidation.
+
+**Workforce live (D-66, D-67, D-69).** Every real-work job is staffed; each staff role runs on its own
+model with a real reasoning level (D-67 table, changeable per role in Settings → Staff & models); a
+model picked in a chat applies only to Kel's own replies; the pod's lens review and the Oracle (a
+different model family where possible, reduced independence recorded) run before anything is applied;
+`/api/office` feeds the work cards. Design: `design/D-66_WORKFORCE_LIVE.md`.
+
+**Routing 2** (`design/ROUTING_2.md`): §5.0–§5.7 built — task classes and dispatch tiers, measured
+tokens/time/cost per staffed call, outcome-aware promotion and demotion, a budget governor that
+reserves before each step, model-primary classification with regex floors, DeepSeek Flash with
+OpenRouter as a second route, and an advisory calibration harness. D-72 adopted the recommended defaults
+(they are recommendations, not Nick's explicit picks). Still open: per-model overlays, local-only mission
+routing beyond the privacy filter, quota-pace projection and a live calibration campaign. The renderer's "How Kel picks models" table
+and "Raise budget" button are on `main` (`5cda011`, `74d490a`), not installed.
+
+**Decisions D-53..D-72 — where each stands** (text in `DECISIONS.md`):
+
+| Decision | State |
+| --- | --- |
+| D-53 background hand-off, chat stays usable | Built (`daa510c`), installed |
+| D-54 "Projects" is the one term; engine-backed Project switcher | Built (`d1857cc`, `a676200`), installed |
+| D-55 ask before starting; restart running work with a change | Built (`586ee8d`), installed |
+| D-56 no consumer updater, no Desktop Pet | Built (`b3b4ad2`, `6039891`, `5ca82a6`), installed |
+| D-57 scheduled tasks are scheduled Recipes in the engine | Built (`1384716`, `e72ef40`), installed; chat-menu entry opens the editor on `main` (`d2b65b4`) |
+| D-58 Data and repository clean-up | Done (`549969f`, `1ecc462`) |
+| D-59 reactions removed | Built (`150765b`), installed |
+| D-60 Settings show only what Kel has built | Built (`23f2b1a`), installed |
+| D-61 English only | Built (`35c1cf4`), installed; the preload's leftover initial-language hand-off removed on `main` |
+| D-62 General gets a default folder | Built (`a5b8684`), installed |
+| D-63 history rewrite and branch pruning | **Approved, not done** — old branches (`audit/*`, `dev/*`, `fix/*`, `integration/v2`) still exist and no backup bundle is in `Tools` |
+| D-64 Full access by default | Built (`a5b8684`, `ddcfcad`), installed |
+| D-65 Full access applies verified changes, with Undo | Built (`5b5b6ea`), installed |
+| D-66/D-67/D-69 live workforce, role models, Oracle | Built (`4ee8a61`, `5472836`, `1edb4d6`, `61c73ff`), installed |
+| D-68 work cards across the top of the chat | Built (`26196ea`), installed |
+| D-70 answer on the card, one live view, Staff & models, scoping, navigation clean-up | Built (`a728c4b`, `1adf219`, `da8d6e3`), installed; scoping threshold choice on `main` (`4f64e2a`) |
+| D-71 "existing tests preserved" = original tests still pass | Built (`f75c7aa`), installed |
+| D-72 routing defaults | Recorded and applied on `main` (`0577e58`, `1c97fbe`), not installed |
+
+**Phase table (unchanged by D-53..D-72).** Built: V2-00–V2-04 (with V2-04a and V2-04b), V2-06–V2-14,
+V2-17. Partial: V2-05, V2-16, V2-18, V2-19. Planned: V2-15, V2-20. Mobile stays paused; desktop first.
+
+**Open, and what needs Nick.**
+- **"Ask first" has no Apply button today.** A verified change that waits only because the mode is Ask
+  first has no Apply control: "Apply checked changes" lived in the Work & context drawer, which has not
+  been mounted since 2026-09-21, and the work card offers "Apply anyway" only when Kel had its own reason
+  to wait. The result text in that case still mentions "Download the change report" and "Apply checked
+  changes". Full access (the default) is unaffected.
+- **The Work & context drawer is dead code with no other home for some of its parts**
+  (`components/chat/KelWorkPanel.tsx`: its Vetting tab — the command palette still says "Vetting lives
+  in the Work panel" — and the change-report download). Decide: re-home those parts or delete it.
+- D-66's open questions: a schedule's model is Kel's own, not staff's; work from before staffing never
+  becomes a card.
+- D-72's six values are recommendations; D-63 is not executed.
+- Live acceptance still open: a physical iPhone, real personal services (Google Drive needs Nick's own
+  Google OAuth client — see `CONNECTION_FRAMEWORK.md`), fresh Muse audio, remote first response.
+
+**Ledger rows added 2026-09-28** (one row per decision family; evidence is the commit and its tests):
+
+| Feature | State | Evidence |
+| --- | --- | --- |
+| D-54 Projects as the one context (engine-backed switcher, migration 32) | **BUILT, installed** | `d1857cc`, `a676200`; `design/D-54_PROJECTS.md` |
+| D-55 ask before starting, restart with a change | **BUILT, installed** | `586ee8d` |
+| D-56/D-59/D-60/D-61 trimmed product (no updater, Pet, reactions, marketplace, other languages) | **BUILT, installed** | `b3b4ad2`, `6039891`, `150765b`, `23f2b1a`, `35c1cf4` |
+| D-57 scheduled Recipes in the engine (donor cron retired, old tasks migrated) | **BUILT, installed**; chat-menu entry opens the editor on `main` | `1384716`, `e72ef40`, `d2b65b4`; `design/D-57_SCHEDULED_RECIPES.md` |
+| D-62/D-64/D-65 General folder, Full access, auto-apply with Undo | **BUILT, installed** | `a5b8684`, `ddcfcad`, `5b5b6ea` |
+| D-66/D-67/D-69 live workforce: staffing, role models, lens review, Oracle, `/api/office` | **BUILT, installed** | `4ee8a61`, `5472836`, `1edb4d6`, `61c73ff`; `design/D-66_WORKFORCE_LIVE.md` |
+| D-68/D-70 work cards, answer on the card, one live view, scoping card, Staff & models, navigation | **BUILT, installed** (scoping threshold choice on `main`) | `26196ea`, `a728c4b`, `1adf219`, `da8d6e3`, `4f64e2a` |
+| D-71 original-tests gate | **BUILT, installed** | `f75c7aa` |
+| Routing 2 §5.0–§5.7 + D-72 defaults | **BUILT** (§5.0–§5.7 installed; D-72 defaults on `main`) | `design/ROUTING_2.md` §7; `1c97fbe` |
+| Usage per reply and per piece of work | **BUILT on `main`**, not installed | `b96f713` |
+
+## History
+
+The dated record below is kept as written (newest checkpoints were prepended above older ones, so the
+order is roughly newest first). Read it for evidence and provenance, not for current state.
+
 ## Desktop installed milestone (2026-09-26)
 
-[Installed milestone](evidence/figma-full-audit/DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](evidence/figma-full-audit/DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
+[Installed milestone](evidence/figma-full-audit/DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](evidence/figma-full-audit/DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open *(Superseded 2026-09-28: Autonomy is settled as Full access (D-64) and the Pet is removed (D-56); live acceptance and Light palette remain open)*; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
 
 ## Desktop Chat/task/Tools batch (2026-09-26)
 
@@ -10,7 +122,7 @@
 
 [Milestone package](evidence/figma-full-audit/DESKTOP_SOURCE_COMPLETION_MILESTONE_PACKAGE.md) at b8c84ae passes eight grouped 1440/800px probes: Setup retention, legacy Workspace, Light Workspace/File, Light Ramble key/Merge/Vetting, populated Chat type, Light Tools and Light task form. All 266 renderer files match; native rebuilding and full 63-file/443-test regression pass. Normal bundled renderer, no Vite/history interception. Scoped real isolated actions and injected/intercepted limits are recorded; settings/messages restored and apps closed. Canonical App remains 8c67121; Data untouched. Full Chat/task/icon acceptance, live journeys and V2-19 remain partial. Mobile paused.
 
-# KEL V2.0 — FEATURE LEDGER
+### Original heading: KEL V2.0 — FEATURE LEDGER
 
 ## Desktop Workspace header and Light surfaces checkpoint (2026-09-26)
 
@@ -63,7 +175,7 @@ Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historica
 | V2-18 | Synthetic V2 acceptance journeys | **PARTIAL — in progress** | `docs/v2/evidence/v2-18/ACCEPTANCE_MATRIX.md` + `runtime/tools/acceptance_journeys.py`. J-WORK, J-RECOV, J-ATTN, J-RECIPE, and J-ACTIVITY passed on the refreshed r25 packaged engine. J-REMOTE's backend half passed in the slice-5 run; the Shell/phone half remains. Cancelled Build Update and no-job submission states were corrected and packaged after consolidation. The full engine suite now passes 1,289 tests and 14 subtests. |
 | V2-19 | Full V2 regression | **PARTIAL — full engine and desktop suites pass; packaged visual and live paths remain** | Canonical engine: 1,289 passed plus 14 subtests. Desktop: 52 files / 396 passed, with TypeScript clean. Historical r23–r62 package evidence remains in `docs/v2/evidence/v2-19/`. The current App covers Tools status glass, enabled Image Model, and local WebUI step 2 at 1440/800px. Figma parity still has gaps in `docs/v2/evidence/figma-full-audit/README.md`. Live services, remote session, real Muse audio, and physical iPhone remain open. |
 | V2-20 | V2 release candidate | queued | — |
-| D-53 | Conversational background hand-off (warm acknowledgement, work runs in the background, composer stays usable, checked result posted back; plus model-preference replies, JSON-RPC error codes, reply-only Stop, all-conversation state scope, honest file-in-folder routing) | **BUILT — source only, not installed** (2026-09-26) | `runtime/kel/turn.py`, `runtime/kel/handoff.py`, `submission_acks`/`handoff_notices` tables, `/api/handoff`, `/api/state?conversation=*`, ACP `kel-work:` card; desktop `KelWorkCard`, `ensureWorkCards`, never-stopping poll. Engine suite 1,320 passed + 14 subtests (`tests/test_turn_handoff.py` 23 new); desktop unit 63 files / 371 tests; `tsc --noEmit` clean. D-53 |
+| D-53 | Conversational background hand-off (warm acknowledgement, work runs in the background, composer stays usable, checked result posted back; plus model-preference replies, JSON-RPC error codes, reply-only Stop, all-conversation state scope, honest file-in-folder routing) | **BUILT — source only, not installed** (2026-09-26) *(Superseded 2026-09-28: installed with App `5294c27`)* | `runtime/kel/turn.py`, `runtime/kel/handoff.py`, `submission_acks`/`handoff_notices` tables, `/api/handoff`, `/api/state?conversation=*`, ACP `kel-work:` card; desktop `KelWorkCard`, `ensureWorkCards`, never-stopping poll. Engine suite 1,320 passed + 14 subtests (`tests/test_turn_handoff.py` 23 new); desktop unit 63 files / 371 tests; `tsc --noEmit` clean. D-53 |
 
 Removed from the intended V2 connection list by the directive: **Gmail** and **Slack** (they are not
 V2 scope; do not re-add them without a recorded decision).
