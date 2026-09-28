@@ -931,13 +931,37 @@ const statusCopy =
           )}
 
           <div className={styles.workspaceScroll}>
-            {!selected && (
+            {/* VIS-19: with recordings saved, the page opens on the library, not the first-run empty
+                state; "Upload audio" lives once, in the header. */}
+            {!selected && recent.length === 0 && (
               <KelEmpty
                 title='Your transcripts live here'
                 why='Record with the button above, or drop an MP3 or MP4 file anywhere on this page. Everything is saved automatically.'
-                actionLabel='Upload audio'
-                onAction={() => fileInputRef.current?.click()}
               />
+            )}
+            {!selected && recent.length > 0 && (
+              <section className='kel-shell-ramble-library' aria-label='Your recordings' data-testid='ramble-library'>
+                <h2 className={styles.documentTitle}>Your recordings</h2>
+                <p className={styles.rowMeta}>Choose one to read its transcript, or record a new one.</p>
+                <div className='kel-shell-ramble-library-list'>
+                  {recent.map((item) => (
+                    <button
+                      key={item.id}
+                      type='button'
+                      className={styles.transcriptRow}
+                      onClick={() => setSelectedId(item.id)}
+                      data-testid='ramble-library-row'
+                    >
+                      <img className='kel-shell-ramble-row-icon' src={rambleMobileMicIcon} alt='' />
+                      <span className={styles.rowName} title={item.name}>{item.name}</span>
+                      <span className={styles.rowMeta}>
+                        {formatWhen(item.created)}
+                        {item.status === 'complete' ? (item.duration_ms ? ` · ${formatDuration(item.duration_ms)}` : '') : ` · ${item.status}`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             )}
             {selected && (
               <>

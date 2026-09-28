@@ -119,3 +119,29 @@ it('lets a connected desktop key be replaced without saving a canceled draft', a
   expect((await screen.findByTestId('key-input') as HTMLInputElement).value).toBe('');
   expect(requests.some(r => r.body.action === 'set_key')).toBe(false);
 });
+
+it('VIS-19: with recordings saved, opens on the library (not the empty state) with one Upload button', async () => {
+  libraryTransport([
+    { id: 'a', name: 'Standup notes', text: 'A: notes', created: 3, updated: 3, folder_id: null, source_type: 'record', source_filename: null, duration_ms: 21000, status: 'complete', has_audio: true },
+    { id: 'b', name: 'Groceries', text: 'B: milk', created: 2, updated: 2, folder_id: null, source_type: 'record', source_filename: null, duration_ms: 14000, status: 'complete', has_audio: true },
+  ]);
+  render(<MemoryRouter><Ramble /></MemoryRouter>);
+  const library = await screen.findByTestId('ramble-library');
+  expect(screen.queryByText('Your transcripts live here')).toBeNull();
+  expect(screen.getAllByTestId('ramble-library-row').map((row) => row.textContent)).toEqual([
+    expect.stringContaining('Standup notes'),
+    expect.stringContaining('Groceries'),
+  ]);
+  expect(screen.getAllByRole('button', { name: /upload audio/i })).toHaveLength(1);
+  fireEvent.click(screen.getAllByTestId('ramble-library-row')[1]);
+  expect(await screen.findByTestId('transcript-name')).toBeTruthy();
+  expect(screen.getByTestId('transcript-name').textContent).toBe('Groceries');
+  expect(library.isConnected).toBe(false);
+});
+
+it('VIS-19: with no recordings, the empty state explains without a second Upload button', async () => {
+  libraryTransport([]);
+  render(<MemoryRouter><Ramble /></MemoryRouter>);
+  expect(await screen.findByText('Your transcripts live here')).toBeTruthy();
+  expect(screen.getAllByRole('button', { name: /upload audio/i })).toHaveLength(1);
+});
