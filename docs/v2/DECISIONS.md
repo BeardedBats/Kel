@@ -869,3 +869,13 @@ They are recommendations, not Nick's explicit picks — each is one setting to c
    regenerate its last reply — ChatGPT/Claude parity. Work already handed off is not silently re-run.
 3. **One key flow.** The Muse (Ramble) key is managed where the other keys are (Settings → Providers),
    through the same credential custody; Ramble links there instead of keeping its own paste box.
+
+## D-76 — Restores apply once, all or nothing, before anything opens the data
+
+**Decided 2026-09-28** (fixes FN-02; supersedes D-45's in-engine `apply_pending_restore` at start with a
+`…pre-restore-<timestamp>` rollback copy). The desktop main process applies a staged restore at the very
+start of launch — before storage, aioncore, the engine and the window — through the engine's applier
+(`KelEngine.exe --apply-restore`). Every part is swapped by journaled renames; any failure rolls back the
+parts already swapped; every attempt clears the pending marker and records one plain-words outcome
+(JR-8), so a restore is never re-applied. One "Kel data before restore <date>" folder is kept per applied
+restore (newest two kept). Keys and sign-ins stay on this PC across a restore.
