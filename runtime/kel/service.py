@@ -924,9 +924,13 @@ class Service:
                 # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
                 # workspace: a fresh git repo under Documents/Kel Projects with a
                 # deterministic smoke-test command the worker must make pass.
-                slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
-                from .projects import projects_root
-                root=projects_root()/f'{slug}-{secrets.token_hex(2)}'
+                # VIS-16: a short human name (the work's own title when it has one) and a tidy folder.
+                from .projects import new_project_folder,readable_project_name
+                with contextlib.closing(self.store.connect()) as db:
+                    ack=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
+                    taken=[row['name'] for row in db.execute('SELECT name FROM projects')]
+                name=readable_project_name(text,ack['title'] if ack else None,taken)
+                root=new_project_folder(name)
                 # V1.5: creating project files is an effect; it crosses the boundary under the
                 # user-project-create policy (user actor, confined to the Kel Projects root).
                 from .authorize import authorize
@@ -948,7 +952,7 @@ class Service:
                         capture_output=True,check=False)
                 tests=['python','smoke_test.py']
                 # D-54: a project Kel makes for the person is theirs (a user project), folder and test set.
-                project_id=self.projects.create(slug,root=str(root),test_command=tests,
+                project_id=self.projects.create(name,root=str(root),test_command=tests,
                                                 context='Created by Kel for: '+text[:120])['id']
             else:
                 with contextlib.closing(self.store.connect()) as db:

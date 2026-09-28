@@ -120,6 +120,13 @@ class RoutingTests(unittest.TestCase):
             self.assertTrue(contract.get('greenfield'))
             self.assertEqual(contract['test_command'], ['python', 'smoke_test.py'])
             self.assertEqual(Path(contract['root']).parent.name, 'Kel Projects')
+            # VIS-16: a short human project name and a tidy folder, not a slug of the whole request.
+            project = self.service.projects.row(contract['project_id'])
+            self.assertLessEqual(len(project['name']), 40)
+            self.assertNotIn('i-want-to', project['name'].lower())
+            self.assertNotIn('i want to', project['name'].lower())
+            self.assertRegex(Path(contract['root']).name, r'^[a-z0-9]+(-[a-z0-9]+)*$')
+            self.assertNotIn('i-want-to', Path(contract['root']).name)
             self.assertNotEqual(str(Path(contract['root'])), str(Path(self.tmp.name)/'rooted'))
             self.assertTrue(Path(contract['root']).is_dir())
             self.assertTrue((Path(contract['root'])/'.git').is_dir())
