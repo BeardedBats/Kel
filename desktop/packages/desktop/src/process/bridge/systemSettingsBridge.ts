@@ -16,6 +16,7 @@ import { ipcBridge } from '@/common';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { createOrUpdateTray, destroyTray, setCloseToTrayEnabled } from '@process/utils/tray';
 import { readCloseToTraySetting, writeCloseToTraySetting } from '@process/utils/closeToTraySetting';
+import { readNotificationSetting, writeNotificationSetting } from '@process/utils/notificationSetting';
 import {
   applyKeepAwake,
   isKeepAwakeActive,
@@ -34,6 +35,13 @@ export function initSystemSettingsBridge(): void {
     } else {
       destroyTray();
     }
+  });
+
+  // D-73.1: Notifications — stored in the backend and copied into the main process's config, which
+  // is what showNotification() checks.
+  ipcBridge.systemSettings.getNotificationEnabled.provider(async () => readNotificationSetting());
+  ipcBridge.systemSettings.setNotificationEnabled.provider(async ({ enabled }) => {
+    await writeNotificationSetting(enabled);
   });
 
   // Keep the computer awake: the stored choice and the live inhibition travel together, so the

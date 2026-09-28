@@ -79,6 +79,7 @@ import {
   setIsQuitting,
 } from './process/utils/tray';
 import { readCloseToTraySetting } from './process/utils/closeToTraySetting';
+import { readNotificationSetting } from './process/utils/notificationSetting';
 import { debugPortRefusal } from './process/utils/debugPortPolicy';
 import { configureSenderGuard } from './common/senderGuard';
 import { installWebContentsSecurity } from './process/utils/windowSecurity';
@@ -1079,6 +1080,9 @@ const handleAppReady = async (): Promise<void> => {
         // Ignore storage read errors, default to false
       }
     }
+    // D-73.1: copy the Notifications switch from the backend into the config the notification
+    // gate reads, so a choice made in Settings holds from the first notification after start-up.
+    void readNotificationSetting().catch(() => {});
 
     const showMainWindowOnReady = !(wasLaunchedAtLogin() && getCloseToTrayEnabled());
 
