@@ -50,7 +50,7 @@ const Providers: React.FC = () => {
   const [capability, setCapability] = useState('text');
   const [prefer, setPrefer] = useState('');
   const [readiness, setReadiness] = useState<{
-    chosen: { provider: string; model: string; label: string } | null;
+    chosen: { provider: string; model: string; label: string; model_label?: string } | null;
     chain: string[];
     reasons: string[];
     reason: string;
