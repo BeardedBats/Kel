@@ -43,6 +43,7 @@ import {
   type FrequencyType,
 } from '@renderer/pages/cron/cronUtils';
 import { scheduleActions } from '@renderer/pages/cron/useSchedules';
+import { scheduleDraftFromChat, type ScheduleFromChatRequest } from '@renderer/pages/cron/scheduleFromChat';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 
 const FormItem = Form.Item;
@@ -56,6 +57,8 @@ interface CreateTaskDialogProps {
   editSchedule?: KelSchedule;
   /** The app chat a new task may keep running in ("Ongoing conversation"). */
   conversation_id?: string;
+  /** A new task made from a chat's menu: filled in from that chat (name, request, project). */
+  fromChat?: ScheduleFromChatRequest;
 }
 
 const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
@@ -70,7 +73,8 @@ const modelChoice = (value: string): KelModelChoice | null => {
 
 type RecipeEntry = { recipe_id: string; name: string };
 
-const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ visible, onClose, editSchedule, conversation_id }) => {
+const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ visible, onClose, editSchedule, conversation_id: chatId, fromChat }) => {
+  const conversation_id = chatId ?? fromChat?.conversationId;
   const isMobile = Boolean(useLayoutContext()?.isMobile);
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -154,6 +158,28 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ visible, onClose, e
       alive = false;
     };
   }, [visible, editSchedule, conversation_id]);
+
+  // Made from a chat's menu: fill in what the person has not typed yet, once the chat is read.
+  useEffect(() => {
+    if (!visible || editSchedule || !fromChat) return;
+    let alive = true;
+    void scheduleDraftFromChat(fromChat).then((draft) => {
+      if (!alive) return;
+      const typed = form.getFieldsValue(['name', 'prompt']) as { name?: string; prompt?: string };
+      form.setFieldsValue({
+        name: String(typed.name ?? '').trim() ? typed.name : draft.name,
+        prompt: String(typed.prompt ?? '').trim() ? typed.prompt : draft.prompt,
+      });
+      if (draft.projectId) {
+        setProjectId(draft.projectId);
+        // The project lives under Advanced settings; show it when it is not the default one.
+        if (draft.projectId !== GENERAL_PROJECT_ID) setAdvancedOpen(true);
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [visible, editSchedule, fromChat, form]);
 
   // Recipes of the chosen project (only read once the person asks for one).
   useEffect(() => {
