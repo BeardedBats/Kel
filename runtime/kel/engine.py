@@ -315,8 +315,11 @@ class Engine:
                                   (n!='research' or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])))]
                     required={'repository_edit'} if job['contract'].get('kind')=='coding' else set(spec.get('required_capabilities',job['contract'].get('required_capabilities',['text'])))
                     candidates=[c for c in candidates if required.issubset(c.capabilities)]
+                    set_aside={}
                     if m['attempts']>=2 and not (spec.get('provider') or job['contract'].get('provider')) and len(candidates)>1:
                         candidates=[c for c in candidates if c.name!=m['provider']]
+                        # Installed, but set aside for provider diversity: say so, never "not set up".
+                        set_aside[m['provider']]="didn't finish this step on its earlier tries"
                     pref = None
                     from .model_prefs import ModelPrefs, adapter_names, runtime_model
                     try:
@@ -330,7 +333,7 @@ class Engine:
                     explicit = spec.get('provider') or job['contract'].get('provider')
                     # D-67/D-69: a staffed step runs on its role's model. A model picked in a chat (or
                     # named by a schedule) is Kel's own; it never steers staff, not even as a hint.
-                    binding = self._role_binding(job, spec, role, candidates) if role else None
+                    binding = self._role_binding(job, spec, role, candidates, set_aside) if role else None
                     if role:
                         prefer, aliases, pref = None, (), None
                     if binding:
@@ -377,12 +380,12 @@ class Engine:
         needs = spec.get('required_capabilities', job['contract'].get('required_capabilities', []))
         return 'web' if 'web_research' in (needs or []) else 'text'
 
-    def _role_binding(self, job, spec, role, candidates):
+    def _role_binding(self, job, spec, role, candidates, set_aside=None):
         """D-67: what this step's role asks for, resolved against the adapters that can run it."""
         from .role_models import MODELS, ROLE_LABELS, resolve
         try:
             binding = resolve(self.store, role, adapters={c.name for c in candidates},
-                              purpose=self._purpose(job, spec))
+                              purpose=self._purpose(job, spec), set_aside=set_aside)
         except Exception:
             return None  # an unreadable role setting never blocks work; routing decides
         if binding['waiting']:
@@ -420,14 +423,20 @@ class Engine:
             why = binding.get('why')
         else:
             asked.update(model_arg=None, fallback_arg=None, effort_arg=None)
+            asked.pop('resolved', None)  # the runtime's own default model runs, not the role's pick
             why = (binding or {}).get('why')
             if binding and binding.get('adapter'):
                 why = ('%s was not used for this step: this work names another model'
                        % (asked.get('label') or 'The role model'))
             why = why or route.get('why')
+        try:
+            from .native import runtime_version
+            version = runtime_version(route['selected'])
+        except Exception:
+            version = None
         return {'role': role, 'asked': asked, 'uses_role_model': uses, 'why': why,
                 'ran': {'adapter': route['selected'], 'model': model if not uses else None,
-                        'model_confirmed': False}}
+                        'model_confirmed': False, 'runtime_version': version}}
 
     def _attach_role(self, job, mid, run):
         """Kel attaches a role snapshot to every run (V1.5 G3).

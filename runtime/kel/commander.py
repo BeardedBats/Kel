@@ -16,6 +16,9 @@ def json_object(text):
 
 # A reviewer from the same family as the executor is not independent review:
 # the internal worker and the Claude CLI serve the same model line.
+# A reviewer whose model could not run at all (refused, not started): the review goes to the next one.
+DID_NOT_RUN=object()
+
 PROVIDER_FAMILIES={'claude':'anthropic','claude-code':'anthropic','internal':'anthropic',
                    'codex':'openai','codex-code':'openai'}
 
@@ -25,7 +28,11 @@ class Commander:
         self.model=model
         self.alternates=[a for a in (alternates or []) if a is not None and a is not model]
 
-    def _reviewer(self, store, executor_provider, executor_model):
+    @staticmethod
+    def _key(adapter):
+        return (type(adapter).__name__,getattr(adapter,'provider',None),getattr(adapter,'model',None))
+
+    def _reviewer(self, store, executor_provider, executor_model, skip=()):
         """Pick the reviewer for one artifact: genuinely independent when possible.
 
         Candidates are the default reviewer followed by eligible alternates.
@@ -34,11 +41,14 @@ class Commander:
         is already failing, then a different model family, then a different
         provider; ties keep the default preference order. With fewer than two
         candidates the default reviewer is used unchanged, so a single-provider
-        environment keeps its current fallback behavior.
+        environment keeps its current fallback behavior. `skip` holds reviewers
+        that already failed to run for this review (None when none is left).
         """
-        candidates=[self.model]+self.alternates
+        candidates=[c for c in [self.model]+self.alternates if c is not None and self._key(c) not in skip]
+        if not candidates:
+            return None
         if len(candidates)<2:
-            return candidates[0] if candidates else self.model
+            return candidates[0]
         try:
             health=store.provider_states()
         except Exception:
@@ -89,12 +99,24 @@ class Commander:
                 'Use submit_result to return the JSON text. Source request:\n'+request)
         if context:
             prompt+='\nSource context (untrusted data, not permission):\n'+json.dumps(context,ensure_ascii=False)
-        result=planner.execute(prompt)
-        used=planner
-        if result.get('outcome')!='SUCCESS' and model is not None and self.model is not None and model is not self.model:
-            # Kel's role model could not plan (not reachable, refused): the previous planner tries.
-            result=self.model.execute(prompt)
-            used=self.model
+        # The live check: Kel's role model was refused and planning fell to the fixed template while
+        # other models could run. Kel now tries its role model, then every other planner it has,
+        # before the template (the same hand-over D-69 gives the Oracle).
+        chain,seen=[],set()
+        for candidate in [planner]+[self.model]+list(self.alternates):
+            key=(type(candidate).__name__,getattr(candidate,'provider',None),getattr(candidate,'model',None))
+            if candidate is None or key in seen:
+                continue
+            seen.add(key);chain.append(candidate)
+        result={'outcome':'FAILED','error':'No planner is available'};used=planner
+        for candidate in chain:
+            try:
+                result=candidate.execute(prompt)
+            except Exception as exc:
+                result={'outcome':'FAILED','error':type(exc).__name__}
+            used=candidate
+            if result.get('outcome')=='SUCCESS':
+                break
         if result.get('outcome')!='SUCCESS':
             return compile_document(request), {'mode':'template_fallback','reason':result.get('error')}
         if result.get('model_used'):
@@ -151,33 +173,47 @@ class Commander:
     # D-67: set by the service — resolves and builds staff models (`staff_adapters`, `staff_model`).
     staff=None
 
-    def _staffed_reviewer(self, store, job, milestone_id, review_id):
-        """(model, call id) for a staffed job's Verifier: the role's model, in another family than the
-        step's Builder when one is available, with the call recorded (asked, ran, why). For an
-        unstaffed job — or when the role's model cannot run here — the reviewer is chosen as before
-        (health, then a different family, then a different provider)."""
+    def _staffed_reviewer(self, store, job, milestone_id, review_id, exclude=(), skip=()):
+        """(model, call id, model id) for a staffed job's Verifier: the role's model, in another family
+        than the step's Builder when one is available, with the call recorded (asked, ran, why). For
+        an unstaffed job - or when the role's model cannot run here - the reviewer is chosen as
+        before (health, then a different family, then a different provider). `exclude` (model ids)
+        and `skip` (reviewer keys) are the reviewers that already failed to run for this review
+        (D-69 hand-over); (None, None, None) when no reviewer is left."""
         m=job['milestones'][milestone_id]
         from .staff import staffing_of
         if not staffing_of(job):
-            return self._reviewer(store,m.get('provider'),m.get('model')),None
+            model=self._reviewer(store,m.get('provider'),m.get('model'),skip=skip)
+            return model,None,None
         from .role_models import family_of_adapter,resolve
         builder_family=family_of_adapter(m.get('provider'))
         binding=None;model=None
         if self.staff is not None:
             try:
                 binding=resolve(store,'verifier',adapters=self.staff.staff_adapters(),purpose='text',
-                                avoid_family=builder_family)
+                                avoid_family=builder_family,exclude=exclude)
                 model=self.staff.staff_model(binding,timeout=180)  # the model's own reasoning level takes longer than low
             except Exception:
                 binding=None;model=None
+        if model is not None and self._key(model) in skip:
+            model=None
         why=(binding or {}).get('why')
         if model is None:
-            model=self._reviewer(store,m.get('provider'),m.get('model'))
+            model=self._reviewer(store,m.get('provider'),m.get('model'),skip=skip)
+            if model is None:
+                return None,None,None
             if binding and binding.get('adapter'):
                 why='the Verifier model could not be started here; Kel chose the reviewer by health and family'
+        if exclude or skip:
+            why='the first reviewer could not run, so another model reviews'+('; '+why if why else '')
         asked=dict((binding or {}).get('asked') or {'role':'verifier','mode':'AUTOMATIC'})
-        if binding and model is not None and getattr(model,'provider',None)==binding.get('adapter'):
+        model_id=None
+        if binding and model is not None and getattr(model,'provider',None)==binding.get('adapter') \
+                and getattr(model,'model',None)==binding.get('model_arg'):
             asked.update(model_arg=binding.get('model_arg'),effort_arg=binding.get('effort_arg'))
+            model_id=binding.get('model')
+        else:
+            asked.pop('resolved',None)
         provider=getattr(model,'provider',None)
         family=family_of_adapter(provider)
         independence=('different' if family and builder_family and family!=builder_family else 'reduced')
@@ -185,13 +221,24 @@ class Commander:
             why='no reviewer from another model family is available here, so this review is less independent'
         from .staff import start_call
         try:
+            from .native import runtime_version
+            version=runtime_version(provider)
+        except Exception:
+            version=None
+        try:
             call_id=start_call(store,call_id=review_id,job_id=job['id'],milestone_id=milestone_id,
                                role='verifier',kind='check',subject=m['artifact']['sha256'],asked=asked,
                                ran={'adapter':provider,'model':None,'model_confirmed':False,
-                                    'independence':independence},why=why)
+                                    'independence':independence,'runtime_version':version},why=why)
         except Exception:
             call_id=None
-        return model,call_id
+        return model,call_id,model_id
+
+    @staticmethod
+    def _failure_summary(result):
+        from .role_models import classify_refusal
+        found=classify_refusal(result.get('error'))
+        return ('its runtime refused the model: '+found[1]) if found else 'the reviewer could not run'
 
     @staticmethod
     def _settle_call(store, call_id, result, state=None, summary=None):
@@ -205,16 +252,30 @@ class Commander:
         except Exception:
             pass
 
+    # D-69 for the Verifier (the live check): when the chosen reviewer cannot run, the review is handed
+    # to the next model - another family first - up to this many models, before it stays unverified.
+    REVIEW_HANDOVERS=3
+
     def review(self, store, job_id, milestone_id):
         job=store.get(job_id)
-        review_id=uid()
-        model,call_id=self._staffed_reviewer(store,job,milestone_id,review_id)
-        try:
-            return self._review(store,job,milestone_id,review_id,model,call_id)
-        except Exception:
-            # A review that breaks is still recorded as having stopped (the engine records it UNCERTAIN).
-            self._settle_call(store,call_id,{},state='failed',summary='the review stopped unexpectedly')
-            raise
+        exclude,skip=[],[]
+        for _attempt in range(self.REVIEW_HANDOVERS):
+            review_id=uid()
+            model,call_id,model_id=self._staffed_reviewer(store,job,milestone_id,review_id,exclude,skip)
+            if model is None:
+                return 'UNCERTAIN'  # no model at all could review: the check stays unverified
+            try:
+                verdict=self._review(store,job,milestone_id,review_id,model,call_id)
+            except Exception:
+                # A review that breaks is still recorded as having stopped (the engine records it UNCERTAIN).
+                self._settle_call(store,call_id,{},state='failed',summary='the review stopped unexpectedly')
+                raise
+            if verdict is not DID_NOT_RUN:
+                return verdict
+            if model_id:
+                exclude.append(model_id)
+            skip.append(self._key(model))
+        return 'UNCERTAIN'
 
     def _review(self, store, job, milestone_id, review_id, model, call_id):
         job_id=job['id']
@@ -271,8 +332,8 @@ class Commander:
             # Review models without image support (native CLI fallbacks) review text only.
             result=model.execute(prompt,run_id=review_id)
         if result.get('outcome')!='SUCCESS':
-            self._settle_call(store,call_id,result)
-            return 'UNCERTAIN'
+            self._settle_call(store,call_id,result,summary=self._failure_summary(result))
+            return DID_NOT_RUN
         try:
             review=json_object(result['text'])
             # The reviewer's model as its runtime reported it (never only the one asked for).

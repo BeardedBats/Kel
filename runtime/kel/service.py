@@ -20,7 +20,7 @@ from .native import NativeAdapter
 from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
-from .router import needs_work, file_action
+from .router import coding_intent, needs_work, file_action
 from . import handoff
 from .turn import decide as decide_turn, amend_ack, guard_ack, guard_reply, template_ack, title_for
 
@@ -324,9 +324,16 @@ class Service:
         name=(binding or {}).get('adapter')
         if name in ('codex','claude') and name in self.engine.adapters:
             from .native import DEFAULT_EFFORT
-            return NativeAdapter(name,self.store.root/'workspaces'/name,self.store.root/'logs',timeout=timeout,
-                                 model=binding.get('model_arg'),fallback_model=binding.get('fallback_arg'),
-                                 effort='low' if turn else binding.get('effort_arg'))
+            adapter=NativeAdapter(name,self.store.root/'workspaces'/name,self.store.root/'logs',timeout=timeout,
+                                  model=binding.get('model_arg'),fallback_model=binding.get('fallback_arg'),
+                                  effort='low' if turn else binding.get('effort_arg'))
+            model_id=binding.get('model')
+            if model_id and binding.get('model_arg'):
+                # The live check: a refused model is remembered at its first refusal (turn, plan,
+                # review), so Kel does not ask for it again and the Settings row says why.
+                from .role_models import note_refusal
+                adapter.on_refusal=lambda error,version:note_refusal(self.store,model_id,error,version)
+            return adapter
         if name=='internal' and isinstance(self.model,InternalAdapter):
             return InternalAdapter(model=binding.get('model_arg') or self.model.model,
                                    timeout=20 if turn else self.model.timeout)
@@ -411,6 +418,19 @@ class Service:
 
     def _turn_model(self,cid='main'):
         return self._turn_choice(cid)[0]
+
+    def _code_in_project(self,text,packet):
+        """The coding floor beyond "starts with a coding verb" (the live check): a code change asked
+        for after a lead-in, or naming a code file, inside a project with a folder and a test command."""
+        project=(packet or {}).get('project') or {}
+        if not project.get('root') or not project.get('id') or not coding_intent(text):
+            return False
+        with contextlib.closing(self.store.connect()) as db:
+            return db.execute('SELECT 1 FROM project_tests WHERE project_id=?',(project['id'],)).fetchone() is not None
+
+    @staticmethod
+    def _model_key(model):
+        return (type(model).__name__,getattr(model,'provider',None),getattr(model,'model',None))
 
     def _runnable_provider(self,provider_id):
         """Whether a registered engine adapter can run this catalog provider right now (CH-2)."""
@@ -528,6 +548,7 @@ class Service:
                     return None  # stopped before it was picked up
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
+            code_floor=coding_verb or self._code_in_project(text,packet)
             explicit_job=(packet.get('continuation') or {}).get('job_id')
             continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             jid=None
@@ -553,7 +574,7 @@ class Service:
             else:
                 # D-53 floors: these messages are work no matter what the turn model says.
                 forced=bool(needs_work(text) or file_action(text) or kind in ('research','coding') or lower.startswith(RESEARCH_PREFIXES)
-                            or (coding_verb and packet['project']['root'])
+                            or (code_floor and packet['project']['root'])
                             or (packet.get('kind_source')=='client' and kind not in CONVERSATION_KINDS))
                 running=handoff.running_work(self.store,cid)
                 has_images=any(f.get('image_path') for f in packet.get('files') or [])
@@ -562,11 +583,19 @@ class Service:
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
                     decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
+                    if decision is None and not cancel.is_set():
+                        # The live check: Kel's model was refused and the turn fell to the keyword
+                        # gate. The refusal is now remembered, so a second look picks the next model.
+                        retry_model,retry_choice=self._turn_choice(cid,images=has_images)
+                        if retry_model is not None and self._model_key(retry_model)!=self._model_key(turn_model):
+                            turn_model,choice=retry_model,retry_choice
+                            images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
+                            decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
                 if cancel.is_set():
                     return None  # stopped while deciding: nothing is said and nothing starts
                 if decision is None:
                     # Today's keyword gate: no turn model, or it could not be reached.
-                    gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not coding_verb) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
+                    gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not code_floor) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
                     choice=None  # no model spoke: the template or the reply model below does
                     if forced or not gate_reply:
                         decision={'action':'start_background_work','title':title_for(text),
@@ -723,7 +752,7 @@ class Service:
     def _compile_work(self,sid,cid,text,packet,kind,greenfield_flag):
         """The work contract for one request (a file action, coding, research, or a planned document)."""
         lower=text.lower().strip()
-        coding_verb=lower.startswith(CODING_VERBS)
+        coding_verb=lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)
         coding=kind=='coding' or (packet['project']['root'] and coding_verb)
         target=file_action(text)
         if target and kind=='coding' and packet.get('kind_source')=='client':

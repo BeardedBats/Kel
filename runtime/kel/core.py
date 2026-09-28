@@ -501,14 +501,17 @@ class Store:
     def _settle_staff_call(db, run_id, state, result):
         """D-66: settle a staffed step's call with what its runtime reported (no-op when unstaffed)."""
         try:
-            from .staff import note_rejection, update_call
+            from .staff import note_rejection, refusal_summary, update_call
+            summary = None
             if state == 'failed':
                 note_rejection(db, run_id, result.get('error'))
+                summary = refusal_summary(db, run_id, result.get('error')) or result.get('error')
             update_call(None, run_id, state=state, db=db,
                         ran={'model': result.get('model_used'),
                              'reasoning': result.get('reasoning_used'),
-                             'model_confirmed': True if result.get('model_used') else None},
-                        summary=(result.get('error') if state == 'failed' else None))
+                             'model_confirmed': True if result.get('model_used') else None,
+                             'runtime_version': result.get('runtime_version')},
+                        summary=summary)
         except Exception:
             pass  # the record is additive; it never blocks settlement
 

@@ -205,20 +205,28 @@ def run(store, job_id, staff):
         return None
 
 
-def _review(store, job, milestone_id, subject, staff):
+# D-69 at run time (the live check): a model that cannot run hands the second opinion to the next.
+HANDOVERS = 3
+
+
+def _pick(store, job, milestone_id, subject, staff, exclude, skip):
+    """(model, call id, provider, independence) for one Oracle attempt, the call recorded; the model
+    is None (and the call failed) when nothing is left to run it."""
     from .role_models import family_of_adapter, resolve
     from .staff import start_call, update_call
-    from . import assurance
     builder = job['milestones'][milestone_id].get('provider')
     builder_family = family_of_adapter(builder)
     binding, model = None, None
     if staff is not None:
         try:
             binding = resolve(store, 'oracle', adapters=staff.staff_adapters(), purpose='text',
-                              avoid_family=builder_family)
+                              avoid_family=builder_family, exclude=exclude)
             model = staff.staff_model(binding, timeout=180)
         except Exception:
             binding, model = None, None
+    key = (type(model).__name__, getattr(model, 'provider', None), getattr(model, 'model', None))
+    if model is not None and key in skip:
+        model = None
     call_id = 'orc_' + uid()
     asked = dict((binding or {}).get('asked') or {'role': 'oracle', 'mode': 'PREFERRED'})
     if binding and model is not None:
@@ -227,21 +235,54 @@ def _review(store, job, milestone_id, subject, staff):
     independence = None
     if model is not None:
         independence = 'different' if family_of_adapter(provider) != builder_family else 'reduced'
+    why = (binding or {}).get('why')
+    if exclude or skip:
+        why = 'the first model could not run the second opinion, so another model does' + ('; ' + why if why else '')
+    try:
+        from .native import runtime_version
+        version = runtime_version(provider)
+    except Exception:
+        version = None
     start_call(store, call_id=call_id, job_id=job['id'], milestone_id=milestone_id, role='oracle',
                kind='oracle', subject=subject, asked=asked,
                ran={'adapter': provider, 'model': None, 'model_confirmed': False,
-                    'independence': independence},
-               why=(binding or {}).get('why'), state='running' if model is not None else 'failed')
+                    'independence': independence, 'runtime_version': version},
+               why=why, state='running' if model is not None else 'failed')
     if model is None:
-        why = 'no model can run the second opinion on this computer'
-        update_call(store, call_id, state='failed', summary=why)
-        _settle(store, job['id'], subject, FAILED, {'why': why})
-        return None
-    result = model.execute(_evidence_for(store, job, milestone_id), run_id=call_id)
-    update_call(store, call_id, ran={'model': result.get('model_used'), 'reasoning': result.get('reasoning_used'),
-                                     'model_confirmed': True if result.get('model_used') else None})
-    if result.get('outcome') != 'SUCCESS':
-        update_call(store, call_id, state='failed', summary='the second opinion did not finish')
+        update_call(store, call_id, state='failed', summary='no model can run the second opinion on this computer')
+    return model, call_id, provider, independence, (binding or {}).get('model'), key
+
+
+def _review(store, job, milestone_id, subject, staff):
+    from .role_models import classify_refusal, family_of_adapter
+    from .staff import update_call
+    from . import assurance
+    builder = job['milestones'][milestone_id].get('provider')
+    exclude, skip = [], []
+    result = None
+    for _attempt in range(HANDOVERS):
+        model, call_id, provider, independence, model_id, key = _pick(
+            store, job, milestone_id, subject, staff, exclude, skip)
+        if model is None:
+            if not exclude and not skip:
+                why = 'no model can run the second opinion on this computer'
+                _settle(store, job['id'], subject, FAILED, {'why': why})
+                return None
+            break
+        result = model.execute(_evidence_for(store, job, milestone_id), run_id=call_id)
+        update_call(store, call_id, ran={'model': result.get('model_used'), 'reasoning': result.get('reasoning_used'),
+                                         'model_confirmed': True if result.get('model_used') else None})
+        if result.get('outcome') == 'SUCCESS':
+            break
+        found = classify_refusal(result.get('error'))
+        update_call(store, call_id, state='failed',
+                    summary=('its runtime refused the model: ' + found[1]) if found
+                    else 'the second opinion did not finish')
+        if model_id:
+            exclude.append(model_id)
+        skip.append(key)
+        result = None
+    if result is None:
         _settle(store, job['id'], subject, INTERRUPTED, {'why': 'the second opinion did not finish'})
         return None
     try:

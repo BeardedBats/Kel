@@ -142,7 +142,7 @@ class EngineBindingTests(Base):
         self.tick_until({'claude-code': claude, 'codex-code': codex}, job,
                         lambda j: j['milestones']['code']['attempts'] >= 2
                         and j['milestones']['code']['state'] not in ('READY', 'RUNNING'))
-        self.assertIn('refused', role_models.rejected(self.store, 'claude-opus-5-5'))
+        self.assertEqual(role_models.rejected(self.store, 'claude-opus-5-5'), 'Claude Code does not know this model')
         calls = staff.calls(self.store, job)
         self.assertEqual(calls[0]['state'], 'failed')
         self.assertEqual(calls[1]['ran']['adapter'], 'codex-code')

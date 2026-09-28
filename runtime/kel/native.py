@@ -6,6 +6,7 @@ edit, ACP permission streaming, cost metering or arbitrary tool isolation.
 from __future__ import annotations
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -16,9 +17,126 @@ from .containment import cleanup_session, scrub_secrets, session_dir
 from .internal import SECRET_ENV_KEYS
 
 
+_VERSION_RE = re.compile(r'(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?')
+_VERSIONS = {}
+_VERSIONS_LOCK = threading.Lock()
+
+
+def parse_version(text):
+    """(major, minor, patch, release flag) from a CLI's `--version` text; a pre-release (`-alpha.5`)
+    sorts below its release. None when the text carries no version."""
+    match = _VERSION_RE.search(str(text or ''))
+    if not match:
+        return None
+    return (int(match.group(1)), int(match.group(2)), int(match.group(3)), 0 if match.group(4) else 1)
+
+
+def version_of(path):
+    """The `--version` line of one executable (asked once per process), or None."""
+    key = str(path)
+    with _VERSIONS_LOCK:
+        if key in _VERSIONS:
+            return _VERSIONS[key]
+    text = None
+    try:
+        result = subprocess.run([key, '--version'], capture_output=True, text=True, encoding='utf-8',
+                                errors='replace', timeout=15,
+                                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+                                env=child_env('codex'))
+        if result.returncode == 0:
+            text = (result.stdout or '').strip().splitlines()[0].strip() if (result.stdout or '').strip() else None
+    except (OSError, subprocess.SubprocessError, ValueError):
+        text = None
+    with _VERSIONS_LOCK:
+        _VERSIONS[key] = text
+    return text
+
+
+def codex_candidates(env=None):
+    """Every Codex CLI binary Kel can see: `KEL_CODEX_PATH` alone when it is set (Nick's config);
+    otherwise each `codex.exe` on PATH (the Codex desktop app ships one), the npm-global package's
+    native binary (never its .cmd wrapper) and the desktop app's own bin folder."""
+    env = os.environ if env is None else env
+    configured = str(env.get('KEL_CODEX_PATH') or '').strip()
+    if configured:
+        return [configured] if Path(configured).is_file() else []
+    names = ('codex.exe',) if os.name == 'nt' else ('codex',)
+    found = []
+    for folder in str(env.get('PATH') or '').split(os.pathsep):
+        for name in names:
+            candidate = Path(folder.strip('"')) / name if folder else None
+            if candidate is not None and candidate.is_file():
+                found.append(str(candidate))
+    appdata = env.get('APPDATA')
+    if appdata:
+        package = Path(appdata) / 'npm' / 'node_modules' / '@openai' / 'codex'
+        for arch, triple in (('x64', 'x86_64-pc-windows-msvc'), ('arm64', 'aarch64-pc-windows-msvc')):
+            for base in (package / 'node_modules' / '@openai' / ('codex-win32-' + arch),
+                         Path(appdata) / 'npm' / 'node_modules' / '@openai' / ('codex-win32-' + arch),
+                         package):
+                candidate = base / 'vendor' / triple / 'bin' / 'codex.exe'
+                if candidate.is_file():
+                    found.append(str(candidate))
+                candidate = base / 'vendor' / triple / 'codex' / 'codex.exe'
+                if candidate.is_file():
+                    found.append(str(candidate))
+    local = env.get('LOCALAPPDATA')
+    if local:
+        candidate = Path(local) / 'Programs' / 'OpenAI' / 'Codex' / 'bin' / 'codex.exe'
+        if candidate.is_file():
+            found.append(str(candidate))
+    unique = []
+    for item in found:
+        try:
+            resolved = str(Path(item).resolve())
+        except OSError:
+            resolved = item
+        if resolved.lower() not in {u.lower() for u in unique}:
+            unique.append(resolved)
+    return unique
+
+
+_CODEX_CHOICE = {}
+
+
+def codex_executable(refresh=False, env=None):
+    """{'path', 'version'} of the Codex CLI Kel runs: the configured one, else the newest installed
+    (the first on PATH can be an old bundled copy — the live check found 0.142.5 ahead of 0.144.5).
+    `path` is None when no Codex CLI is installed."""
+    key = 'default' if env is None else id(env)
+    if not refresh and key in _CODEX_CHOICE:
+        return dict(_CODEX_CHOICE[key])
+    best, best_version, best_text = None, None, None
+    for candidate in codex_candidates(env):
+        text = version_of(candidate)
+        parsed = parse_version(text) or (0, 0, 0, 0)
+        if best is None or parsed > best_version:
+            best, best_version, best_text = candidate, parsed, text
+    choice = {'path': best, 'version': best_text}
+    _CODEX_CHOICE[key] = choice
+    return dict(choice)
+
+
+def runtime_version(provider):
+    """Plain runtime name and version ("Codex CLI 0.144.5", "Claude Code 2.1.283"), or None."""
+    try:
+        if provider in ('codex', 'codex-code'):
+            text = codex_executable().get('version')
+            parsed = parse_version(text)
+            return ('Codex CLI %s' % _VERSION_RE.search(text).group(0)) if parsed else None
+        if provider in ('claude', 'claude-code'):
+            text = version_of(executable('claude')[0])
+            parsed = parse_version(text)
+            return ('Claude Code %s' % _VERSION_RE.search(text).group(0)) if parsed else None
+    except Exception:
+        return None
+    return None
+
+
 def executable(provider):
     if provider == 'codex':
-        return [shutil.which('codex') or 'codex']
+        chosen = codex_executable().get('path')
+        return [chosen or shutil.which('codex') or 'codex']
     if provider == 'claude':
         candidate = Path(os.environ.get('APPDATA', '')) / 'npm/node_modules/@anthropic-ai/claude-code/bin/claude.exe'
         if candidate.is_file():
@@ -76,6 +194,9 @@ class NativeAdapter:
         self.model = model or None
         self.fallback_model = fallback_model or None
         self.effort = effort
+        # Called with (error, runtime version) when a run on an explicit model fails, so a refused
+        # model is remembered at its first refusal from any call site (turn, plan, review, Oracle).
+        self.on_refusal = None
         self.processes = {}
         self.lock = threading.Lock()
 
@@ -167,13 +288,16 @@ class NativeAdapter:
                             session_id=session_id, duration=time.monotonic()-started)
             result = self.parse(output, session_id)
             if process.returncode != 0:
+                reported = result.get('error') if result.get('outcome') == 'FAILED' else None
                 result.update(outcome='FAILED', error=f'Native CLI exited {process.returncode}; inspect local log {stderr_path.name}')
+                if reported and reported not in ('Malformed native JSON', 'Native turn failed'):
+                    result['error'] += ' — ' + str(reported)[:300]  # the runtime's own words
                 result.pop('model_used', None)
                 try:
                     # A model the runtime refused says so on stderr; keep one plain line for D-67's
                     # "record what was asked, what ran, and why".
                     tail = stderr_path.read_text(encoding='utf-8', errors='replace').strip().splitlines()
-                    if tail and 'model' in tail[-1].lower():
+                    if tail and 'model' in tail[-1].lower() and tail[-1][:200] not in result['error']:
                         result['error'] += ' — ' + tail[-1][:200]
                 except OSError:
                     pass
@@ -183,6 +307,12 @@ class NativeAdapter:
             if result.get('outcome') == 'SUCCESS':
                 result.setdefault('reasoning_used', self.reasoning())
             result.update(duration=round(time.monotonic()-started, 3), logs=str(stdout_path), provider=self.provider)
+            result.setdefault('runtime_version', runtime_version(self.provider))
+            if result.get('outcome') == 'FAILED' and self.on_refusal is not None and self.model:
+                try:
+                    self.on_refusal(result.get('error'), result.get('runtime_version'))
+                except Exception:
+                    pass  # remembering a refusal is additive; the caller still sees the failure
             return result
         except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
             return dict(outcome='FAILED', error=str(exc), provider=self.provider)
@@ -207,14 +337,21 @@ class NativeAdapter:
                        text=record.get('result', ''), session_id=record.get('session_id', session_id),
                        usage=record.get('usage'), cost_usd=record.get('total_cost_usd'),
                        native_subtype=record.get('subtype'))
+            if isinstance(record.get('duration_ms'), (int, float)):
+                out['runtime_ms'] = int(record['duration_ms'])
+            if record.get('is_error') and record.get('result'):
+                out['error'] = str(record.get('result'))[:500]
             if used:
                 out['model_used'] = used
             return out
         text, events, errors = [], [], []
+        usage = None
         for line in output.splitlines():
             try:
                 record = json.loads(line)
             except json.JSONDecodeError:
+                continue
+            if not isinstance(record, dict):
                 continue
             events.append(record.get('type'))
             if record.get('type') == 'thread.started':
@@ -222,10 +359,21 @@ class NativeAdapter:
             item = record.get('item', {})
             if record.get('type') == 'item.completed' and item.get('type') == 'agent_message':
                 text.append(item.get('text', ''))
+            if record.get('type') == 'turn.completed' and isinstance(record.get('usage'), dict):
+                # Codex exec reports the turn's tokens here (input includes the cached part).
+                usage = dict(record['usage'])
             if record.get('type') in ('error', 'turn.failed'):
-                errors.append(record.get('message', 'Native turn failed'))
-        return dict(outcome='SUCCESS' if text and not errors else 'FAILED', text='\n'.join(text),
-                    session_id=session_id, native_events=events, error='; '.join(errors) or None)
+                # The live check: a refused model arrives as {"type":"turn.failed","error":{"message":…}};
+                # reading only a top-level message turned every refusal into "Native turn failed".
+                nested = record.get('error')
+                message = record.get('message') or (nested.get('message') if isinstance(nested, dict)
+                                                    else nested if isinstance(nested, str) else None)
+                errors.append(str(message or 'Native turn failed'))
+        out = dict(outcome='SUCCESS' if text and not errors else 'FAILED', text='\n'.join(text),
+                   session_id=session_id, native_events=events, error='; '.join(dict.fromkeys(errors)) or None)
+        if usage is not None:
+            out['usage'] = usage
+        return out
 
 
 class FixtureAdapter:

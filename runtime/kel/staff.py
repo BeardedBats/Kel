@@ -73,6 +73,11 @@ def ensure_schema(store):
     ensure_workforce_schema(store)
     with contextlib.closing(store.connect()) as db:
         db.executescript(DDL)
+        # Routing 2 (live check): a refusal keeps its kind and the runtime version that refused it.
+        columns = {row[1] for row in db.execute('PRAGMA table_info(staff_model_status)')}
+        for name in ('kind', 'runtime_version'):
+            if name not in columns:
+                db.execute('ALTER TABLE staff_model_status ADD COLUMN %s TEXT' % name)
         if not db.execute('SELECT 1 FROM schema_migrations WHERE version=?',
                           (MIGRATION_VERSION,)).fetchone():
             db.execute('INSERT OR IGNORE INTO schema_migrations(version,name,applied,note) '
@@ -422,27 +427,41 @@ def binding_for_run(store, run_id):
                                             'reasoning', 'role')}
 
 
-REJECTION = re.compile(r'(?:model|model_id)\b.{0,80}\b(?:not found|not supported|not available|does not '
-                       r"exist|unknown|invalid|isn't available|is not available|no access|not allowed|"
-                       r'unsupported|not recognized)|\b(?:unknown|invalid|unsupported) model\b|model_not_found',
-                       re.IGNORECASE)
+def refusal_summary(db, call_id, error):
+    """"<Model> can't run here: <plain reason>" when a staff call failed because its runtime refused
+    the model (what the card shows), else None."""
+    if not error or not _has_table(db, 'staff_calls'):
+        return None
+    row = db.execute('SELECT asked FROM staff_calls WHERE id=?', (call_id,)).fetchone()
+    try:
+        asked = json.loads(row['asked'] or '{}') if row else {}
+    except (TypeError, ValueError):
+        return None
+    model = asked.get('resolved') or (asked.get('model') if asked.get('model_arg') else None)
+    from .role_models import MODELS, classify_refusal
+    found = classify_refusal(error, model) if model else None
+    if not found:
+        return None
+    return "%s can't run here: %s" % ((MODELS.get(model) or {}).get('label', model), found[1])
 
 
 def note_rejection(db, call_id, error):
-    """A runtime that refused the asked model: remember it for a day so the next step falls back."""
-    if not error or not REJECTION.search(str(error)) or not _has_table(db, 'staff_model_status'):
+    """A runtime that refused the model a staff call ran on: remember it with the plain reason
+    (`role_models.note_refusal`) so the next step, review or plan falls back at once."""
+    if not error or not _has_table(db, 'staff_model_status'):
         return False
-    row = db.execute('SELECT asked FROM staff_calls WHERE id=?', (call_id,)).fetchone()
+    row = db.execute('SELECT asked, ran FROM staff_calls WHERE id=?', (call_id,)).fetchone()
     try:
-        model = json.loads(row['asked'] or '{}').get('model') if row else None
+        asked = json.loads(row['asked'] or '{}') if row else {}
+        ran = json.loads(row['ran'] or '{}') if row else {}
     except (TypeError, ValueError):
-        model = None
+        asked, ran = {}, {}
+    # The model that was actually sent to the runtime (a fallback may differ from the role's pick).
+    model = asked.get('resolved') or (asked.get('model') if asked.get('model_arg') else None)
     if not model:
         return False
-    db.execute('INSERT INTO staff_model_status(model,status,reason,at) VALUES(?,?,?,?) '
-               'ON CONFLICT(model) DO UPDATE SET status=excluded.status, reason=excluded.reason, '
-               'at=excluded.at', (model, 'rejected', 'its runtime refused it', time.time()))
-    return True
+    from .role_models import note_refusal
+    return note_refusal(None, model, error, ran.get('runtime_version'), db=db)
 
 
 def calls(store, job_id):
