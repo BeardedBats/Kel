@@ -925,7 +925,8 @@ class Service:
                 # workspace: a fresh git repo under Documents/Kel Projects with a
                 # deterministic smoke-test command the worker must make pass.
                 slug='-'.join(''.join(ch if ch.isalnum() else ' ' for ch in lower).split())[:36] or 'app'
-                root=Path.home()/'Documents'/'Kel Projects'/f'{slug}-{secrets.token_hex(2)}'
+                from .projects import projects_root
+                root=projects_root()/f'{slug}-{secrets.token_hex(2)}'
                 # V1.5: creating project files is an effect; it crosses the boundary under the
                 # user-project-create policy (user actor, confined to the Kel Projects root).
                 from .authorize import authorize
