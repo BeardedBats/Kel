@@ -477,6 +477,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 type RawTextMessageContent = {
   content?: unknown;
+  kel_meta?: unknown;
   replace?: unknown;
   cronMeta?: unknown;
   teammateMessage?: unknown;
@@ -531,9 +532,13 @@ const normalizeTextMessageContentObject = (
   const cronMeta = isCronMessageMeta(data.cronMeta) ? data.cronMeta : undefined;
   const replace = options?.replace === true || data.replace === true;
   const teammateMessage = Boolean(data.teammateMessage) || Boolean(data.teammate_message);
+  // CH-2/CP-14/D-70: the engine's details for a Kel message (a result's checks and job, a scoping
+  // card, a quiet note) must survive normalisation, or the chat can never show them.
+  const kelMeta = isObject(data.kel_meta) ? (data.kel_meta as IMessageText['content']['kel_meta']) : undefined;
 
   return {
     content,
+    ...(kelMeta ? { kel_meta: kelMeta } : {}),
     ...(replace ? { replace: true } : {}),
     ...(cronMeta ? { cronMeta } : {}),
     ...(teammateMessage ? { teammateMessage: true } : {}),

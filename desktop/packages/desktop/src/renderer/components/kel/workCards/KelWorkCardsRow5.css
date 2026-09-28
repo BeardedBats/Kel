@@ -4,7 +4,7 @@
    in-thread pieces sit outside the row, so each carries the font itself. */
 .kel-wc--scoping.kel-wc--row { border-color: rgba(207, 231, 255, 0.3); }
 .kel-wc--scoping .kel-wc-state-label { color: var(--kel-figma-color-status-scoping, #cfe7ff); }
-.kel-wc-progress--none { background: transparent; }
+.kel-wc-progress.kel-wc-progress--none { background: transparent; }
 
 .kel-na, .kel-na-answered, .kel-wl, .kel-dc, .kel-sc, .kel-sc-collapsed, .kel-chips, .kel-answer {
   --kel-wc-font: var(--kel-shell-body, 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);

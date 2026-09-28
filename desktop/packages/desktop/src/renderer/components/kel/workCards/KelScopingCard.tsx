@@ -16,10 +16,8 @@ import { iconChat, iconCheck, iconSparkle } from './workCardIcons';
 import { clockTime } from './workCardModel';
 import './KelWorkCardsRow5.css';
 
-const NUMBERS = ['no', 'one', 'two', 'three', 'four'];
-
-export const scopingHeading = (count: number): string =>
-  `Before I start · ${NUMBERS[count] ?? count} quick question${count === 1 ? '' : 's'}`;
+/** Figma 5e: "Before I start · 3 quick questions". */
+export const scopingHeading = (count: number): string => `Before I start · ${count} quick question${count === 1 ? '' : 's'}`;
 
 type Picks = Record<string, { option?: string; other?: boolean; text?: string }>;
 
