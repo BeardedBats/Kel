@@ -4,7 +4,7 @@
 }
 .kel-file-preview .kel-file-tabs {
   min-height: 76px !important; padding: 42px 12px 0; background: transparent !important;
-  border-bottom-color: rgba(191,216,255,.12) !important; box-sizing: border-box;
+  border-bottom-color: var(--kel-figma-color-glass-edge) !important; box-sizing: border-box;
 }
 .kel-file-tabs > div:first-child { height: 34px; align-items: end; }
 .kel-file-tabs [data-file-tab] { height: 34px; gap: 8px; padding: 8px 12px; box-sizing: border-box; border-radius: 8px 8px 0 0; color: #c4d4e8; font: 500 13px/18px var(--kel-shell-heading); }
@@ -27,7 +27,7 @@
 .kel-file-code .cm-gutters { border-right: 0 !important; color: #8fa9d6; }
 .kel-file-code .cm-activeLine, .kel-file-code .cm-activeLineGutter { background: rgba(191,216,255,.03) !important; }
 .kel-file-code-split .kel-file-code { margin-inline: 7px; }
-.kel-file-status { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid rgba(191,216,255,.12); }
+.kel-file-status { display: flex; flex-shrink: 0; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--kel-figma-color-glass-edge); }
 .kel-file-status > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body); }
 @container kel-file (max-width: 500px) {
   .kel-file-toolbar { flex-wrap: wrap; gap: 4px; }

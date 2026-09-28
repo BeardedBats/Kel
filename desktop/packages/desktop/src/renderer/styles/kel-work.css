@@ -7,83 +7,14 @@
 /* A job the person arrived at from a link (work card "View in Activity", palette, Needs you). */
 .kel-work-focus {
   border-radius: var(--kel-radius-control, 8px);
-  background: var(--kel-accent-soft, rgba(47, 107, 224, 0.12));
-  box-shadow: inset 3px 0 0 var(--kel-accent, #2f6be0);
+  background: var(--kel-accent-soft, var(--kel-figma-color-glass-card-blue));
+  box-shadow: inset 3px 0 0 var(--kel-accent, var(--kel-figma-color-accent-blue));
   padding-inline: 10px !important;
 }
 
 /* ── Jobs: one stacked row per job ─────────────────────────────────────────────────────────── */
-.kel-work-rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.kel-work-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 12px;
-  min-width: 0;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--kel-border, rgba(191, 216, 255, 0.08));
-}
-
-.kel-work-row:last-child {
-  border-bottom: 0;
-}
-
-.kel-work-row__main {
-  display: flex;
-  flex: 1 1 260px;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.kel-work-row__title {
-  overflow: hidden;
-  max-width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--kel-text-1);
-  font: inherit;
-  font-weight: 600;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.kel-work-row__title:hover,
-.kel-work-row__title[aria-pressed='true'] {
-  color: var(--kel-accent, #2f6be0);
-}
-
-.kel-work-row__detail {
-  overflow-wrap: anywhere;
-}
-
-.kel-work-row__side {
-  display: flex;
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-  margin-left: auto;
-}
 
 /* ── Selected job: plain summary first, machinery behind Details ─────────────────────────────── */
-.kel-work-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 
 .kel-work-confirm {
   display: flex;
@@ -91,29 +22,6 @@
   align-items: center;
   gap: 8px;
   margin: 8px 0;
-}
-
-.kel-work-steps {
-  display: flex;
-  flex-direction: column;
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.kel-work-steps > li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--kel-border, rgba(191, 216, 255, 0.08));
-}
-
-.kel-work-steps > li > :first-child {
-  flex: 1 1 220px;
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 .kel-work-details {
@@ -134,13 +42,10 @@
 }
 
 /* Disabled maintenance controls say why in visible text, not only a tooltip. */
-.kel-work-why-disabled {
-  margin: 4px 0 0;
-}
 
 /* D-70 item 5: Activity keeps the Work page's Pause/Resume note and "Save as a recipe" draft under
    the job's own row (no second row, no accent rail). */
 .kel-activity-job-extra { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
 .kel-activity-job-extra > .kel-meta { margin: 0; }
-.kel-activity-recipe-draft { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid rgba(191,216,255,.12); border-radius: 10px; }
+.kel-activity-recipe-draft { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--kel-figma-color-glass-edge); border-radius: 10px; }
 .kel-activity-recipe-draft > p { margin: 0; }

@@ -146,7 +146,6 @@
 }
 
 /* Focus: one visible ring for every interactive element (fixes the V1.3 audit). */
-.kel-focus:focus-visible,
 .kel-scope :is(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--kel-accent);
   outline-offset: 2px;

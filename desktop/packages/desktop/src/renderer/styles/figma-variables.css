@@ -59,4 +59,8 @@
   --kel-figma-color-newchat-base: rgba(15, 45, 100, 1);
   --kel-figma-color-newchat-light: rgba(154, 178, 234, 1);
   --kel-figma-color-newchat-rim: rgba(169, 191, 240, 1);
+  /* Button fills (Button / Primary and the green Approve button). Not Figma variables in the file —
+     the gradient is drawn on the components — collected here so every filled button reads one value. */
+  --kel-figma-fill-button-primary: linear-gradient(#6493f8, #2356b3);
+  --kel-figma-fill-button-approve: linear-gradient(#2e7939, #1f5e30);
 }

@@ -79,39 +79,8 @@ body,
 }
 
 /* 团队 warmup 进度条：无确定进度时来回扫动 */
-@keyframes team-warmup-sweep {
-  0% {
-    width: 20%;
-    margin-inline-start: 0;
-  }
-  50% {
-    width: 60%;
-    margin-inline-start: 40%;
-  }
-  100% {
-    width: 20%;
-    margin-inline-start: 0;
-  }
-}
-
-.team-warmup-sweep {
-  animation: team-warmup-sweep 1.4s ease-in-out infinite;
-}
 
 /* 团队 warmup 头像「唤醒中」：pending 成员轻柔呼吸 */
-@keyframes team-warmup-breathe {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 0.9;
-  }
-}
-
-.team-warmup-breathe {
-  animation: team-warmup-breathe 1.6s ease-in-out infinite;
-}
 
 .collapsed {
   .collapsed-hidden {
@@ -124,15 +93,6 @@ body,
 
 /* Safe area utilities for mobile devices */
 /* iOS 17+ Chrome, Safari need env() in CSS, not inline styles */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top, 0px);
-  }
-}
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {

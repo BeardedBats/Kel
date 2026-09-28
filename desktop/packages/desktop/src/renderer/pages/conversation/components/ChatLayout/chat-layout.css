@@ -1,14 +1,5 @@
 /* Chat layout header styles */
 
-.chat-layout-header--mobile-unified {
-  height: 46px !important;
-  min-height: 46px;
-  padding: 0 12px !important;
-  background: linear-gradient(180deg, var(--bg-2) 0%, transparent 100%) !important;
-  border-bottom: none;
-  box-shadow: none;
-}
-
 .chat-layout-header--glass {
   position: relative;
   isolation: isolate;

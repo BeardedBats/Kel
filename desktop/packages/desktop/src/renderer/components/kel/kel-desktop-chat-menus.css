@@ -27,7 +27,7 @@
   .kel-memory-review__actions > .arco-space-item:nth-child(2) { order: 2; }
   .kel-memory-review__actions > .arco-space-item:nth-child(1) { order: 3; }
   html body .kel-memory-review__actions .arco-btn { height: 34px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: #9fc3ff; font: 600 14px/20px var(--kel-shell-heading); box-shadow: none; }
-  html body .kel-memory-review__actions [data-testid='kel-memory-accept'] { padding: 0 14px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(#2e7939,#1f5e30); color: #fff1f0; box-shadow: inset 0 1px rgba(255,255,255,.1),0 4px 6px rgba(0,0,0,.25); }
+  html body .kel-memory-review__actions [data-testid='kel-memory-accept'] { padding: 0 14px; border: 1px solid var(--kel-figma-color-glass-button-edge); background: var(--kel-figma-fill-button-approve); color: #fff1f0; box-shadow: inset 0 1px rgba(255,255,255,.1),0 4px 6px rgba(0,0,0,.25); }
   .kel-memory-review__more { display: none; }
   html body [data-testid='kel-memory-pill'] { background: transparent !important; border: 0 !important; color: #ffb764 !important; padding: 5px 4px; font: 600 13px/18px var(--kel-shell-heading); }
   .kel-memory-review__chevron { display: inline; font-size: 14px; }

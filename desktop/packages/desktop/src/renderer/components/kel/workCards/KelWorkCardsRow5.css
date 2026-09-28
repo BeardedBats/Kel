@@ -62,7 +62,7 @@ html[data-theme='light'] {
   padding: 6px 12px;
   border: 1px solid rgba(127, 160, 255, 0.35);
   border-radius: 8px;
-  background: rgba(47, 107, 224, 0.12);
+  background: var(--kel-figma-color-glass-card-blue);
   color: var(--kel-wc-soft);
   font: 500 13px/17px var(--kel-wc-font);
   white-space: nowrap;
@@ -72,9 +72,9 @@ html[data-theme='light'] {
 .kel-chip-pick:hover:not(:disabled):not(.is-picked) { background: rgba(47, 107, 224, 0.22); }
 .kel-chip-pick:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 2px; }
 .kel-chip-pick:disabled { opacity: 0.55; cursor: default; }
-.kel-chip-pick.is-picked { border-color: rgba(140, 150, 167, 0.5); background: linear-gradient(#6493f8, #2356b3); color: #fff1f0; }
+.kel-chip-pick.is-picked { border-color: var(--kel-figma-color-glass-button-edge); background: var(--kel-figma-fill-button-primary); color: #fff1f0; }
 .kel-chip-pick--other { border-style: dashed; border-color: rgba(127, 160, 255, 0.4); background: transparent; color: var(--kel-wc-muted); }
-.kel-chip-pick--other.is-picked { border-color: rgba(127, 160, 255, 0.8); background: rgba(47, 107, 224, 0.12); color: var(--kel-wc-soft); }
+.kel-chip-pick--other.is-picked { border-color: var(--kel-figma-color-control-focus); background: var(--kel-figma-color-glass-card-blue); color: var(--kel-wc-soft); }
 
 /* Answer input (reusable). */
 .kel-answer { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
@@ -84,24 +84,24 @@ html[data-theme='light'] {
   min-width: 0;
   height: 36px;
   padding: 0 12px;
-  border: 1px solid rgba(127, 160, 255, 0.28);
+  border: 1px solid var(--kel-figma-color-control-edge);
   border-radius: 8px;
-  background: linear-gradient(rgba(47, 107, 224, 0.1), rgba(47, 107, 224, 0.1)), rgba(6, 18, 46, 0.55);
+  background: linear-gradient(var(--kel-figma-color-control-fill), var(--kel-figma-color-control-fill)), rgba(6, 18, 46, 0.55);
   color: var(--kel-wc-text);
   font: 400 14px/20px var(--kel-wc-font);
   outline: none;
 }
 .kel-answer__box::placeholder { color: var(--kel-wc-muted); }
-.kel-answer__box:focus { border-color: rgba(127, 160, 255, 0.8); }
+.kel-answer__box:focus { border-color: var(--kel-figma-color-control-focus); }
 .kel-answer .kel-wd-button--primary {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   height: 34px;
   padding: 0 14px;
-  border: 1px solid rgba(140, 150, 167, 0.5);
+  border: 1px solid var(--kel-figma-color-glass-button-edge);
   border-radius: 8px;
-  background: linear-gradient(#6493f8, #2356b3);
+  background: var(--kel-figma-fill-button-primary);
   color: #fff1f0;
   font: 600 14px/20px var(--kel-wc-font);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 6px rgba(0, 0, 0, 0.25);
@@ -117,7 +117,7 @@ html[data-theme='light'] {
   padding: 14px 16px;
   border: 1px solid rgba(252, 172, 81, 0.35);
   border-radius: 10px;
-  background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
+  background: linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), rgba(15, 45, 100, 0.35);
 }
 .kel-na p { margin: 0; }
 .kel-na__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -138,7 +138,7 @@ html[data-theme='light'] {
   padding: 10px 14px;
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 10px;
-  background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
+  background: linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), rgba(15, 45, 100, 0.35);
 }
 .kel-na-answered__check { display: block; flex: none; width: 14px; height: 14px; }
 .kel-na-answered__words { min-width: 0; overflow: hidden; color: var(--kel-wc-done-text); font: 600 13px/17px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
@@ -194,7 +194,7 @@ html[data-theme='light'] {
   padding: 12px 12px 10px 14px;
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 10px;
-  background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
+  background: linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), rgba(15, 45, 100, 0.35);
 }
 .kel-dc p { margin: 0; }
 .kel-dc__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -233,8 +233,8 @@ html[data-theme='light'] {
 .kel-dc .kel-wd-button:disabled, .kel-sc .kel-wd-button:disabled { opacity: 0.55; cursor: default; }
 .kel-sc .kel-wd-button--primary {
   padding: 0 14px;
-  border: 1px solid rgba(140, 150, 167, 0.5);
-  background: linear-gradient(#6493f8, #2356b3);
+  border: 1px solid var(--kel-figma-color-glass-button-edge);
+  background: var(--kel-figma-fill-button-primary);
   color: #fff1f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 6px rgba(0, 0, 0, 0.25);
 }
@@ -252,7 +252,7 @@ html[data-theme='light'] {
   padding: 14px 16px;
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 12px;
-  background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
+  background: linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), rgba(15, 45, 100, 0.35);
   color: var(--kel-wc-text);
 }
 .kel-sc p, .kel-sc h3 { margin: 0; }
@@ -270,7 +270,7 @@ html[data-theme='light'] {
 .kel-sc__prompt { color: var(--kel-wc-text); font: 600 14px/18px var(--kel-wc-font); overflow-wrap: anywhere; }
 /* Answers typed in the chat, understood by Kel, are pre-picked below this line (no Figma frame). */
 .kel-sc__typed { margin: 0; color: var(--kel-wc-link); font: 500 13px/18px var(--kel-wc-font); }
-.kel-sc__divider { height: 1px; background: rgba(191, 216, 255, 0.12); }
+.kel-sc__divider { height: 1px; background: var(--kel-figma-color-glass-edge); }
 .kel-sc__summary { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .kel-sc__summary > img { display: block; flex: none; width: 14px; height: 14px; }
 .kel-sc__summary > p { flex: 1 1 0; min-width: 0; color: var(--kel-wc-text-2); font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
@@ -287,7 +287,7 @@ html[data-theme='light'] {
   padding: 9px 12px;
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 8px;
-  background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
+  background: linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), rgba(15, 45, 100, 0.35);
 }
 .kel-sc-collapsed > img { display: block; flex: none; width: 13px; height: 13px; }
 .kel-sc-collapsed__word { flex: none; color: var(--kel-wc-done-text); font: 600 13px/17px var(--kel-wc-font); }
@@ -302,7 +302,7 @@ html[data-theme='light'] {
 html[data-theme='light'] .kel-wc-backdrop { background: rgba(20, 32, 52, 0.28); }
 html[data-theme='light'] .kel-wc--row { border-color: #c9d4e5; background: #ffffff; box-shadow: 0 1px 2px rgba(20, 35, 60, 0.06); }
 html[data-theme='light'] .kel-wc--row:hover:not(.is-selected) { background: #f1f5fb; }
-html[data-theme='light'] .kel-wc--row.is-selected { border-color: #2f6be0; background: #e9f0fc; }
+html[data-theme='light'] .kel-wc--row.is-selected { border-color: var(--kel-figma-color-accent-blue); background: #e9f0fc; }
 html[data-theme='light'] .kel-wc--scoping.kel-wc--row { border-color: #93abd0; }
 html[data-theme='light'] .kel-wc-progress { background: #dde5f0; }
 html[data-theme='light'] .kel-wc-progress.kel-wc-progress--none { background: transparent; }
@@ -310,7 +310,7 @@ html[data-theme='light'] :is(.kel-wc-avatar, .kel-wd-avatar) { background: #e8ef
 html[data-theme='light'] .kel-wc__remove:hover:not(:disabled) { background: rgba(20, 45, 80, 0.08); }
 html[data-theme='light'] .kel-wc-overflow { border-color: #c9d4e5; background: #f4f7fc; }
 html[data-theme='light'] .kel-wc-overflow:hover:not(.is-open) { background: #eaf0f9; }
-html[data-theme='light'] .kel-wc-overflow.is-open { border-color: #2f6be0; background: #e3ecfb; }
+html[data-theme='light'] .kel-wc-overflow.is-open { border-color: var(--kel-figma-color-accent-blue); background: #e3ecfb; }
 html[data-theme='light'] :is(.kel-wc-menu, .kel-wd) {
   border-color: #c4cee0;
   background: #ffffff;
@@ -329,9 +329,9 @@ html[data-theme='light'] .kel-sc__divider { background: #d3dcea; }
 html[data-theme='light'] .kel-chip-pick { border-color: #b3c2da; background: #eef3fb; }
 html[data-theme='light'] .kel-chip-pick:hover:not(:disabled):not(.is-picked) { background: #e2eaf7; }
 html[data-theme='light'] .kel-chip-pick--other { border-color: #8fa3c2; background: transparent; }
-html[data-theme='light'] .kel-chip-pick--other.is-picked { border-color: #2f6be0; background: #eef3fb; }
+html[data-theme='light'] .kel-chip-pick--other.is-picked { border-color: var(--kel-figma-color-accent-blue); background: #eef3fb; }
 html[data-theme='light'] .kel-answer__box { border-color: #b3c2da; background: #ffffff; }
-html[data-theme='light'] .kel-answer__box:focus { border-color: #2f6be0; }
+html[data-theme='light'] .kel-answer__box:focus { border-color: var(--kel-figma-color-accent-blue); }
 /* The Figma icons are drawn for the dark surfaces; on light ones they are darkened to keep 3:1. The
    Kel mark and icons on a filled (primary / picked) control keep their own colours. */
 html[data-theme='light'] :is(.kel-wc-host, .kel-na, .kel-na-answered, .kel-wl, .kel-dc, .kel-sc, .kel-sc-collapsed, .kel-chips)

@@ -31,9 +31,6 @@
    while --text-secondary (#ced3da) is too bright; pick a mid-gray
    shared by sidebar section titles and settings group headers. */
 /* Kel: sidebar section labels use the Figma accent (#9fc3ff), set in kel-shell.css. */
-[data-theme='dark'] .settings-sider__group-header {
-  color: #9098a1;
-}
 
 /* Layout sider base styles */
 .layout-sider {
@@ -74,8 +71,7 @@
 }
 
 /* Sidebar item transitions (shared by chat-history and settings-sider) */
-.chat-history__item,
-.settings-sider__item {
+.chat-history__item {
   transition:
     padding 0.2s ease,
     margin 0.2s ease,
@@ -83,8 +79,7 @@
 }
 
 .chat-history__item-name,
-.chat-history__item-editor,
-.settings-sider__item-label {
+.chat-history__item-editor {
   transition:
     opacity 0.25s ease,
     transform 0.25s ease;
@@ -96,10 +91,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-}
-
-.settings-sider__item-label {
-  display: block;
 }
 
 .chat-history__placeholder,
@@ -135,19 +126,11 @@
   transform: translateX(-8px);
 }
 
-.settings-sider--collapsed .settings-sider__item-label {
-  opacity: 0;
-  transform: translateX(-8px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chat-history,
   .chat-history__item,
   .chat-history__item-name,
   .chat-history__item-editor,
-  .settings-sider,
-  .settings-sider__item,
-  .settings-sider__item-label,
   .chat-history__placeholder,
   .chat-history__section {
     transition: none;
@@ -237,12 +220,6 @@
     border-radius: 8px !important;
   }
 
-  .sider-action-icon-btn-mobile {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 8px !important;
-  }
-
   .sider-footer-btn-mobile {
     min-height: 34px !important;
     padding: 6px 10px !important;
@@ -267,9 +244,6 @@
 }
 
 /* Direction-implying icons (chevrons meaning "enter/forward") must mirror under RTL. */
-[dir='rtl'] .rtl-mirror {
-  transform: scaleX(-1);
-}
 
 /* LTR islands (paths, file names) inside an RTL layout: pin the text to the
    page's reading edge. LTR pages keep the island's natural left alignment. */
