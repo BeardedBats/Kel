@@ -131,6 +131,11 @@ def _measured(store, adapters_by_model):
             row['cost_basis'] = state.get('cost_basis') or 'recent runs on this runtime'
         if row.get('median_ms') is None and isinstance(state.get('latency'), (int, float)):
             row['median_ms'] = int(state['latency'] * 1000)
+        # Two currencies (Forge's lesson): a subscription runtime with observed paid capacity costs
+        # nothing extra per run; its dollar figure stays visible as API-equivalent effort.
+        subscription = state.get('cost') == 0 and str(state.get('cost_basis') or '').startswith('subscription')
+        row['marginal_cost'] = 0.0 if subscription else row.get('avg_cost')
+        row['subscription'] = bool(subscription)
         out[model_id] = row
     return out
 
@@ -195,7 +200,7 @@ def ranking(store, task_class, *, adapters, tier=None, purpose=None, set_aside=N
     rest = [e for m, e in entries.items() if m not in head]
 
     def cost_key(entry):
-        cost = entry['measured'].get('avg_cost')
+        cost = entry['measured'].get('marginal_cost')
         latency = entry['measured'].get('median_ms')
         return (cost is None, cost or 0, latency is None, latency or 0)
 
@@ -223,9 +228,22 @@ def _why(entry, current, tier, role):
         parts.append('moved down: ' + (sentence or 'recent results are weak'))
     parts.append('%s fit for %s work' % ('a close' if entry['effective_fit'] == 0 else 'a looser', tier))
     cost = entry['measured'].get('avg_cost')
-    if cost is not None:
+    if entry['measured'].get('subscription'):
+        parts.append('covered by your subscription' + (' (about $%.3f a run API-equivalent)' % cost
+                                                        if cost is not None else ''))
+    elif cost is not None:
         parts.append('about $%.3f a run' % cost)
+    latency = entry['measured'].get('median_ms')
+    if latency is not None:
+        parts.append('usually %s' % _duration(latency))
     return '; '.join(parts)
+
+
+def _duration(ms):
+    seconds = ms / 1000.0
+    if seconds < 90:
+        return '%d s' % max(1, round(seconds))
+    return '%d min' % round(seconds / 60)
 
 
 def top(store, task_class, *, adapters, tier=None, purpose=None, set_aside=None, exclude=(), now=None):

@@ -224,8 +224,11 @@ class CodingAdapter:
             run_options={'model':binding.get('model_arg'),
                          'effort':binding.get('effort_arg') if binding else 'low'}
         observed={}
+        from .usage import TurnTokens
+        tokens=TurnTokens()  # Routing 2 §5.2: the runtime's own token counts for this turn
         def progress(event):
             method=event.get('method','');params=event.get('params',{})
+            tokens.observe(method,params)
             if method in ('kel/runtime','kel/thread') and (params.get('model') or params.get('reasoningEffort') or params.get('effort')):
                 # What the runtime itself reports running — the only source for "ran".
                 observed.update({k:v for k,v in {'model_used':params.get('model'),
@@ -259,6 +262,7 @@ class CodingAdapter:
                     session_id=session_id,cancel=cancel,on_event=progress,
                     on_approval=lambda m,p:self.approval(run,m,p,cancel),**run_options)
             result.update(observed)
+            tokens.apply(result)
             if result['outcome']!='SUCCESS':return result
             if not phase or phase['phase']=='TURN_DISPATCHED':
                 result['_checkpoint_manifest']=file_manifest(workspace)

@@ -449,6 +449,7 @@ class Store:
                         job['state'] = 'PAUSED' if job['state'] == 'PAUSING' else 'CANCELLED'
                     db.execute("UPDATE inbox SET handled=1 WHERE id=?", (event['id'],))
                     self._settle_staff_call(db, run['id'], 'stopped', result)
+                    self._record_usage(db, job, run, result)
                     self._save(db, job, 'run.stopped', {'run_id': run['id'], 'receipt': result.get('outcome')})
                     count += 1
                     continue
@@ -493,9 +494,26 @@ class Store:
                            (encode(result), result.get('session_id'), held, run['id']))
                 db.execute("UPDATE inbox SET handled=1 WHERE id=?", (event['id'],))
                 self._settle_staff_call(db, run['id'], 'done' if m['state'] == 'CHECKING' else 'failed', result)
+                self._record_usage(db, job, run, result)
                 self._save(db, job, 'worker.result_recorded', {'run_id': run['id'], 'outcome': outcome})
                 count += 1
         return count
+
+    def _record_usage(self, db, job, run, result):
+        """Routing 2 §5.2: the run's measured tokens, wall-clock and cost (additive; never blocks)."""
+        try:
+            from .staff import step_routing
+            from .usage import record
+            task_class = step_routing(job, run['milestone_id'])[0]
+            if task_class is None:
+                from .task_routing import class_for_role
+                kind = job['contract'].get('kind')
+                task_class = class_for_role(None, 'code' if kind == 'coding' else kind)
+            record(self, run['id'], job_id=job['id'], milestone_id=run['milestone_id'], kind='work',
+                   adapter=run['provider'], model=result.get('model_used') or run['model'],
+                   task_class=task_class, result=result, db=db)
+        except Exception:
+            pass
 
     @staticmethod
     def _settle_staff_call(db, run_id, state, result):

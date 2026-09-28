@@ -112,7 +112,8 @@ class ResearchAdapter:
                 db.execute('INSERT INTO research_evidence VALUES(?,?,?,?,?)',
                     (run_id,encode(response),digest(response),digest(text.encode()),time.time()))
             return {'outcome':'SUCCESS','text':text,'provider':'research','searches':queries,
-                    'sources':len(sources),'usage':response.get('usage'),'model':self.model.model}
+                    'sources':len(sources),'usage':response.get('usage'),'model':self.model.model,
+                    'model_used':response.get('model') or self.model.model}
         except Exception as exc:return {'outcome':'FAILED','error':redact(type(exc).__name__+': '+str(exc))}
 
 

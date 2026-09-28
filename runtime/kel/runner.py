@@ -282,7 +282,13 @@ def run_broker(store,run_id):
                     if digest(raw)!=f['sha256']:raise PolicyError('Image changed after handoff')
                     images.append({'mime':f['mime'],'data':base64.b64encode(raw).decode()})
                 if images:kwargs['images']=images
+            started=time.monotonic()
             result=adapter.execute(row['prompt'],run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
+            if isinstance(result,dict):
+                # Routing 2 §5.2: every run's wall-clock is measured here, so coding runs report one too
+                # (and the router's per-runtime latency is a measurement, not a guess).
+                result.setdefault('wall_ms',int((time.monotonic()-started)*1000))
+                result.setdefault('duration',round(result['wall_ms']/1000,3))
         except Exception as exc:result={'outcome':'FAILED','error':type(exc).__name__+': '+str(exc),'uncertain':row['provider'] in ('codex-code','claude-code')}
         if row['provider'] in ('codex-code','claude-code') and result.get('uncertain'):
             fence_uncertain_code(store,run_id,result.get('error') or 'Native execution outcome is unknown')

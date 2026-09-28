@@ -523,6 +523,26 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
     return out
 
 
+def catalog_id(raw, adapter=None):
+    """The catalog model a runtime-reported id stands for ('claude-opus-5-5[1m]' → 'claude-opus-5-5',
+    'sonnet' → 'claude-sonnet'); a Codex run with no model named ran Codex's default ('codex');
+    None when it is not a catalog model."""
+    text = str(raw or '').strip().split('[')[0].lower()
+    if not text:
+        return 'codex' if adapter in ('codex', 'codex-code') else None
+    if text in MODELS:
+        return text
+    for model_id, info in MODELS.items():
+        if text in {str(info.get('arg') or '').lower(), str(info.get('api_arg') or '').lower()} - {''}:
+            return model_id
+    for model_id in MODELS:
+        if text.startswith(model_id + '-') or text.startswith(model_id + '@'):
+            return model_id  # a dated or suffixed variant of a catalog model
+    if 'sonnet' in text and text.startswith('claude'):
+        return 'claude-sonnet'
+    return None
+
+
 def describe_model(model_id=None, adapter=None, raw=None):
     """Plain label/version for a model that ran (catalog id, runtime-reported id, or unknown)."""
     if model_id in MODELS:

@@ -270,7 +270,11 @@ def _review(store, job, milestone_id, subject, staff):
                 _settle(store, job['id'], subject, FAILED, {'why': why})
                 return None
             break
+        started = time.monotonic()
         result = model.execute(_evidence_for(store, job, milestone_id), run_id=call_id)
+        from .commander import Commander
+        Commander._record_usage(store, call_id, job['id'], milestone_id, 'oracle', model, result,
+                                int((time.monotonic() - started) * 1000))
         update_call(store, call_id, ran={'model': result.get('model_used'), 'reasoning': result.get('reasoning_used'),
                                          'model_confirmed': True if result.get('model_used') else None})
         if result.get('outcome') == 'SUCCESS':

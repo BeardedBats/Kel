@@ -236,6 +236,17 @@ class Commander:
         return model,call_id,model_id
 
     @staticmethod
+    def _record_usage(store, call_id, job_id, milestone_id, kind, model, result, wall):
+        """Routing 2 §5.2: a review's measured tokens, wall-clock and cost (additive)."""
+        try:
+            from .usage import record
+            record(store,call_id,job_id=job_id,milestone_id=milestone_id,kind=kind,
+                   adapter=getattr(model,'provider',None),model=getattr(model,'model',None),
+                   task_class='review',result=result if isinstance(result,dict) else {},wall=wall)
+        except Exception:
+            pass
+
+    @staticmethod
     def _failure_summary(result):
         from .role_models import classify_refusal
         found=classify_refusal(result.get('error'))
@@ -327,11 +338,14 @@ class Commander:
         lenses=lenses_for(job)
         if lenses:
             prompt+=lens_prompt(lenses)
+        started=time.monotonic()
         try:
             result=model.execute(prompt,run_id=review_id,**kwargs)
         except TypeError:
             # Review models without image support (native CLI fallbacks) review text only.
             result=model.execute(prompt,run_id=review_id)
+        self._record_usage(store,review_id,job_id,milestone_id,'check',model,result,
+                           int((time.monotonic()-started)*1000))
         if result.get('outcome')!='SUCCESS':
             self._settle_call(store,call_id,result,summary=self._failure_summary(result))
             return DID_NOT_RUN
