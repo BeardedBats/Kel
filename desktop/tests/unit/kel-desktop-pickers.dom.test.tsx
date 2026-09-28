@@ -13,7 +13,7 @@ describe('Desktop model picker scopes', () => {
     const onChoose = vi.fn(() => new Promise<void>(resolve => { finish = resolve; }));
     const onClose = vi.fn();
     render(<KelDesktopModelMenu state={state} hasConversation onChoose={onChoose} onClose={onClose} onAdd={vi.fn()} onSettings={vi.fn()} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Default for new chats' }));
+    fireEvent.click(screen.getByRole('tab', { name: "Kel's model" }));
     fireEvent.click(screen.getByRole('button', { name: /^Automatic/ }));
     expect(onChoose).toHaveBeenCalledWith(null, 'default');
     expect(onClose).not.toHaveBeenCalled();
