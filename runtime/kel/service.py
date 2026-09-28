@@ -155,6 +155,7 @@ class Service:
         self.handoff_lock=threading.RLock()
         # CH-3: the Stop signal for each message still being answered (submission id -> Event).
         self._cancels={};self._cancels_lock=threading.Lock()
+        self.drafts={}  # D-75.1: submission id -> the words of a direct reply written so far
         # KEL_TURN_MODEL=none keeps the deterministic keyword gate (tests, headless setups).
         self.turn_mode=(os.environ.get('KEL_TURN_MODEL') or '').strip().lower()
         self._last_follow_up=0.0
@@ -680,7 +681,8 @@ class Service:
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
                     decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel,
-                                         on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall))
+                                         on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall),
+                                         on_text=lambda words:self._draft(sid,words))
                     if decision is None and not cancel.is_set():
                         # The live check: Kel's model was refused and the turn fell to the keyword
                         # gate. The refusal is now remembered, so a second look picks the next model.
@@ -688,8 +690,10 @@ class Service:
                         if retry_model is not None and self._model_key(retry_model)!=self._model_key(turn_model):
                             turn_model,choice=retry_model,retry_choice
                             images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
+                            self.drafts.pop(sid,None)
                             decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel,
-                                                 on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall))
+                                                 on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall),
+                                                 on_text=lambda words:self._draft(sid,words))
                 if cancel.is_set():
                     return None  # stopped while deciding: nothing is said and nothing starts
                 model_decided=decision is not None
@@ -723,6 +727,9 @@ class Service:
                         kwargs['images']=self._images(packet)
                     if _accepts(model,'cancel'):
                         kwargs['cancel']=cancel
+                    if _accepts(model,'on_text'):
+                        from .turn import ReplyStream
+                        kwargs['on_text']=ReplyStream(lambda words:self._draft(sid,words),prose=True)
                     answer_packet=dict(packet,running_work=running)
                     started=time.monotonic()
                     result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
@@ -743,8 +750,18 @@ class Service:
         finally:
             with self._cancels_lock:
                 self._cancels.pop(sid,None)
+            self.drafts.pop(sid,None)
             self.wake.set()
         return None
+
+    def _draft(self,sid,words):
+        """D-75.1: the words of a direct reply so far, while its submission is still being answered."""
+        if sid in self._cancels and not self._cancels[sid].is_set():
+            self.drafts[sid]=str(words)
+
+    def draft(self,sid):
+        """GET /api/draft: a reply's words so far (empty once it is posted, stopped or handed off)."""
+        return {'id':sid,'text':self.drafts.get(sid) or ''}
 
     def _classify(self,sid,text,packet,kind,greenfield_flag,decision):
         """Routing 2 §5.5: what kind of work this is and how much it deserves. The turn model's reading
@@ -2537,6 +2554,9 @@ def serve(root,port=0):
                         # CP-2: the desktop's 5 s liveness ping — no database work at all.
                         self.reply(200,{'ok':True,'engine_version':ENGINE_VERSION,'draining':service.draining});return
                     if parsed.path=='/api/office':self.reply(200,service.office(query));return
+                    if parsed.path=='/api/draft':
+                        # D-75.1: the chat's cheap poll for a reply's words while they are written.
+                        self.reply(200,service.draft((query.get('id') or [''])[0]));return
                     if parsed.path=='/api/scoping':
                         from .scoping import view as scoping_view
                         self.reply(200,scoping_view(service.store,(query.get('id') or [''])[0],

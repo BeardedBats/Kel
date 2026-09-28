@@ -217,7 +217,7 @@ class NativeAdapter:
         except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
             return dict(provider=self.provider, installed=False, error=str(exc))
 
-    def argv(self, session_id=None):
+    def argv(self, session_id=None, stream=False):
         if self.provider == 'codex':
             args = executable('codex') + ['exec', '--ignore-user-config', '--skip-git-repo-check', '--json',
                     '-c', 'approval_policy="never"', '-c', 'web_search="disabled"']
@@ -239,6 +239,10 @@ class NativeAdapter:
         args = executable('claude') + ['-p', '--safe-mode', '--tools', '', '--disable-slash-commands',
                 '--permission-mode', 'dontAsk', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
                 '--output-format', 'json', '--max-budget-usd', '0.50']
+        if stream:
+            # D-75.1: the reply's words as they are written (the last line is the same result record).
+            args[args.index('--output-format') + 1] = 'stream-json'
+            args += ['--verbose', '--include-partial-messages']
         if self.model:
             args += ['--model', self.model]
             if self.fallback_model and self.fallback_model != self.model:
@@ -249,15 +253,19 @@ class NativeAdapter:
             args += ['--resume', session_id]
         return args
 
-    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None):
+    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None):
+        """`on_text(answer so far)` (D-75.1): Claude Code streams its words; Codex exec reports a
+        message only once it is complete, so its answer arrives whole."""
         run_id = run_id or uid()
+        stream = on_text is not None and self.provider == 'claude'
+        streamed = {'offset': 0, 'text': '', 'rest': b''}
         stdout_path, stderr_path = self.logs/(run_id+'.stdout'), self.logs/(run_id+'.stderr')
         started = time.monotonic()
         session = session_dir(self.logs.parent, run_id)
         env = child_env(self.provider, session=session)
         try:
             with stdout_path.open('wb') as out, stderr_path.open('wb') as err:
-                process = subprocess.Popen(self.argv(session_id), cwd=self.workspace, stdin=subprocess.PIPE,
+                process = subprocess.Popen(self.argv(session_id, stream=stream), cwd=self.workspace, stdin=subprocess.PIPE,
                     stdout=out, stderr=err, env=env, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
                 if process_observer:
                     try:process_observer(process.pid,stdout_path,self.timeout)
@@ -280,6 +288,8 @@ class NativeAdapter:
                         process.kill()
                         process.wait(timeout=10)
                         break
+                    if stream:
+                        self._stream_words(stdout_path, streamed, on_text)
                     time.sleep(.1)
             output = stdout_path.read_text(encoding='utf-8', errors='replace')
             # Logs stay local. Return only bounded diagnostics; never inspect credential files.
@@ -321,12 +331,54 @@ class NativeAdapter:
                 self.processes.pop(run_id, None)
             cleanup_session(session)
 
+    @staticmethod
+    def _stream_words(stdout_path, streamed, on_text):
+        """Read Claude Code's new stream-json lines and pass the answer so far to `on_text`."""
+        try:
+            with stdout_path.open('rb') as handle:
+                handle.seek(streamed['offset'])
+                chunk = handle.read()
+        except OSError:
+            return
+        if not chunk:
+            return
+        streamed['offset'] += len(chunk)
+        lines = (streamed['rest'] + chunk).split(b'\n')
+        streamed['rest'] = lines.pop()
+        grew = False
+        for line in lines:
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            event = record.get('event') if isinstance(record, dict) and record.get('type') == 'stream_event' else None
+            delta = (event or {}).get('delta') if isinstance(event, dict) and event.get('type') == 'content_block_delta' else None
+            if isinstance(delta, dict) and delta.get('type') == 'text_delta' and isinstance(delta.get('text'), str):
+                streamed['text'] += delta['text']
+                grew = True
+        if grew:
+            try:
+                on_text(streamed['text'])
+            except Exception:
+                pass  # showing words early is additive; the run's result is unchanged
+
     def parse(self, output, session_id=None):
         if self.provider == 'claude':
             try:
                 record = json.loads(output)
             except json.JSONDecodeError:
-                return dict(outcome='FAILED', error='Malformed native JSON')
+                # D-75.1: a streamed run ends with the same result record on its last line.
+                record = None
+                for line in reversed(output.splitlines()):
+                    try:
+                        candidate = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(candidate, dict) and candidate.get('type') == 'result':
+                        record = candidate
+                        break
+                if record is None:
+                    return dict(outcome='FAILED', error='Malformed native JSON')
             usage_by_model = record.get('modelUsage') if isinstance(record.get('modelUsage'), dict) else {}
             used = None
             if usage_by_model:
