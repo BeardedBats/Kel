@@ -1441,10 +1441,10 @@ export const theme = {
 export const systemSettings = {
   getCloseToTray: bridge.buildProvider<boolean, void>('system-settings:get-close-to-tray'),
   setCloseToTray: bridge.buildProvider<void, { enabled: boolean }>('system-settings:set-close-to-tray'),
-  getNotificationEnabled: httpGetClientSetting<boolean>('notificationEnabled'),
-  setNotificationEnabled: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
-    notificationEnabled: p.enabled,
-  })),
+  // D-73.1: the Notifications switch must reach the main-process gate, so, like Close to tray, it
+  // goes through the main process, which stores it in the backend and in its own config.
+  getNotificationEnabled: bridge.buildProvider<boolean, void>('system-settings:get-notification-enabled'),
+  setNotificationEnabled: bridge.buildProvider<void, { enabled: boolean }>('system-settings:set-notification-enabled'),
   getCronNotificationEnabled: httpGetClientSetting<boolean>('cronNotificationEnabled'),
   setCronNotificationEnabled: httpPut<void, { enabled: boolean }>('/api/settings/client', (p) => ({
     cronNotificationEnabled: p.enabled,

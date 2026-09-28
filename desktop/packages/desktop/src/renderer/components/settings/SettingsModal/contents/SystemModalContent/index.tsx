@@ -117,6 +117,16 @@ const SystemModalContent: React.FC = () => {
         .catch(() => {});
     }
     setNotificationEnabled(configService.get('system.notificationEnabled') ?? true);
+    if (isDesktop) {
+      // The main process holds the value its notification gate uses (D-73.1); show that one.
+      ipcBridge.systemSettings.getNotificationEnabled
+        .invoke()
+        .then((enabled) => {
+          setNotificationEnabled(enabled);
+          configService.setLocal('system.notificationEnabled', enabled);
+        })
+        .catch(() => {});
+    }
     setCronNotificationEnabled(configService.get('system.cronNotificationEnabled') ?? false);
     setSaveUploadToWorkspace(configService.get('upload.saveToWorkspace') ?? false);
   }, [isDesktop]);
@@ -249,13 +259,25 @@ const SystemModalContent: React.FC = () => {
     [startOnBoot, t]
   );
 
-  const handleNotificationEnabledChange = useCallback((checked: boolean) => {
-    setNotificationEnabled(checked);
-    configService.set('system.notificationEnabled', checked).catch(() => {
-      setNotificationEnabled(!checked);
-      configService.setLocal('system.notificationEnabled', !checked);
-    });
-  }, []);
+  // D-73.1: on the desktop the switch goes through the main process so its notification gate
+  // follows it; the local copy keeps the renderer's own checks in step straight away.
+  const handleNotificationEnabledChange = useCallback(
+    (checked: boolean) => {
+      setNotificationEnabled(checked);
+      configService.setLocal('system.notificationEnabled', checked);
+      const rollback = () => {
+        setNotificationEnabled(!checked);
+        configService.setLocal('system.notificationEnabled', !checked);
+        Message.error('Kel could not change that setting. Try again.');
+      };
+      if (isDesktop) {
+        ipcBridge.systemSettings.setNotificationEnabled.invoke({ enabled: checked }).catch(rollback);
+        return;
+      }
+      configService.set('system.notificationEnabled', checked).catch(rollback);
+    },
+    [isDesktop]
+  );
 
   const handleCronNotificationEnabledChange = useCallback((checked: boolean) => {
     setCronNotificationEnabled(checked);
@@ -373,6 +395,13 @@ const SystemModalContent: React.FC = () => {
       key: 'closeToTray',
       label: t('settings.closeToTray'),
       component: <Switch checked={closeToTray} onChange={handleCloseToTrayChange} />,
+    },
+    {
+      key: 'notifications',
+      label: 'Notifications',
+      component: (
+        <Switch aria-label='Notifications' checked={notificationEnabled} onChange={handleNotificationEnabledChange} />
+      ),
     },
     ...(isDesktop && gpuStatus
       ? [
@@ -498,9 +527,9 @@ const SystemModalContent: React.FC = () => {
     [systemInfo, form, saveDirConfigValidate, t]
   );
 
-  const desktopOrder = ['language', 'startOnBoot', 'closeToTray', 'hardwareAcceleration', 'crossSessionMessage', 'promptTimeout', 'agentIdleTimeout', 'previewTextSizeLimit'];
+  const desktopOrder = ['startOnBoot', 'closeToTray', 'notifications', 'hardwareAcceleration', 'crossSessionMessage', 'promptTimeout', 'agentIdleTimeout', 'previewTextSizeLimit'];
   const desktopLabels: Record<string, string> = {
-    startOnBoot: 'Start on boot', closeToTray: 'Close to tray', hardwareAcceleration: 'Hardware acceleration',
+    startOnBoot: 'Start on boot', closeToTray: 'Close to tray', notifications: 'Notifications', hardwareAcceleration: 'Hardware acceleration',
     crossSessionMessage: 'Messages between chats', promptTimeout: 'Prompt timeout',
     agentIdleTimeout: 'Idle timeout', previewTextSizeLimit: 'Preview size limit',
   };
@@ -514,6 +543,7 @@ const SystemModalContent: React.FC = () => {
   const desktopDescriptions: Record<string, string | undefined> = {
     startOnBoot: startOnBootReason,
     closeToTray: 'Closing the window keeps Kel running in the tray so background work continues.',
+    notifications: 'Tell you on the desktop when work finishes or Kel needs you while its window is in the background.',
     hardwareAcceleration: gpuStatus?.autoDisabled
       ? 'Turned off automatically after repeated graphics crashes. Switch it on to try again (Kel restarts).'
       : 'Use the graphics card to draw Kel. Turn off if the window flickers or crashes. Kel restarts to apply.',
@@ -534,13 +564,17 @@ const SystemModalContent: React.FC = () => {
           <div className='kel-shell-settings-card kel-shell-system-general px-[12px] md:px-[32px] py-16px bg-2 rd-8px space-y-12px'>
             <ShellSourceCardHeader title='General' />
             <div className='w-full flex flex-col divide-y divide-border-2'>
+              {/* VIS-20: first in General, as in the Figma System frame (it used to follow the
+                  language row, which D-61 removed, and vanished with it). */}
+              {isDesktop && <KelKeepAwakeCard compact />}
               {visiblePreferences.map((item) => (
-                <React.Fragment key={item.key}><PreferenceRow
+                <PreferenceRow
+                  key={item.key}
                   label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}
                   description={isDesktopPage ? desktopDescriptions[item.key] ?? item.description : item.description}
                 >
                   {item.component}
-                </PreferenceRow>{item.key === 'language' && <KelKeepAwakeCard compact />}</React.Fragment>
+                </PreferenceRow>
               ))}
             </div>
 
