@@ -5,7 +5,7 @@
 
 export interface JobLabelSource {
   id: string;
-  contract?: { request?: string; handoff?: { title?: string | null } | null };
+  contract?: { request?: string; handoff?: { title?: string | null } | null; recipe?: { name?: string | null } | null };
 }
 
 /** The engine's shortening of a request for a title (office.py `_short`): whole words, one line. */
@@ -28,7 +28,21 @@ export function workTitle(
 ): string {
   const handoff = job?.contract?.handoff?.title?.trim();
   if (handoff) return handoff;
+  const recipe = recipeRunTitle(job?.contract);
+  if (recipe) return recipe;
   return shortRequest(job?.contract?.request) || fallback;
+}
+
+/**
+ * FN-12: a recipe run is named after its recipe — "Ran Weekly rankings" — never its version or id
+ * (office.py `recipe_title`); runs from before the name travelled with the work are read from their
+ * request line ("Run recipe <name> v1.0.0 (<id>).").
+ */
+const OLD_RECIPE_LINE = /^Run recipe (.+?) v\d+\.\d+\.\d+ \([^)]*\)\.?/;
+export function recipeRunTitle(contract: JobLabelSource['contract'] | null | undefined): string | null {
+  let name = contract?.recipe?.name?.trim() ?? '';
+  if (!name) name = OLD_RECIPE_LINE.exec(String(contract?.request ?? '').trim())?.[1]?.trim() ?? '';
+  return name ? `Ran ${shortRequest(name, 56)}` : null;
 }
 
 const FALLBACK_WORK_LABEL = 'Work item';

@@ -7,6 +7,7 @@ no tiers, lease ids, run ids or event names. A model is only named once its runt
 
 Design: `docs/v2/design/D-66_WORKFORCE_LIVE.md` §4.
 """
+import re
 import contextlib
 import json
 import time
@@ -46,7 +47,22 @@ def _short(text, limit=90):
 
 def _title(job):
     handoff = (job.get('contract') or {}).get('handoff') or {}
-    return handoff.get('title') or _short((job.get('contract') or {}).get('request'), 60) or 'Your request'
+    return (handoff.get('title') or recipe_title(job.get('contract'))
+            or _short((job.get('contract') or {}).get('request'), 60) or 'Your request')
+
+
+# FN-12: a recipe run is named after its recipe ("Ran Weekly rankings"), never its version or id;
+# runs from before the name travelled in the contract are read from their request line.
+_OLD_RECIPE_LINE = re.compile(r'^Run recipe (.+?) v\d+\.\d+\.\d+ \([^)]*\)\.?')
+
+
+def recipe_title(contract):
+    contract = contract or {}
+    name = ((contract.get('recipe') or {}).get('name') or '').strip()
+    if not name:
+        match = _OLD_RECIPE_LINE.match(str(contract.get('request') or '').strip())
+        name = match.group(1).strip() if match else ''
+    return ('Ran ' + _short(name, 56)) if name else None
 
 
 # LIVE-12: what happens to finished work afterwards (applying, undoing, removing its card, Nick's

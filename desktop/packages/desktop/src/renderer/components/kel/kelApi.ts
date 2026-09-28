@@ -655,7 +655,7 @@ export const kelRecipes = (scope: string | KelScope = GENERAL_SCOPE) =>
   call<Record<string, unknown>>('/api/recipes', { action: 'list', ...scopeBody(scope) });
 
 export const kelRecipeGet = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ recipe: { recipe_id: string; name: string; inputs: KelRecipeInput[]; steps: Array<{ id: string; title: string }> } }>('/api/recipes', {
+  call<{ recipe: { recipe_id: string; name: string; description?: string; inputs: KelRecipeInput[]; steps: Array<{ id: string; title: string; objective?: string }> } }>('/api/recipes', {
     action: 'get', recipe_id: recipeId, ...scopeBody(scope),
   });
 
@@ -741,6 +741,22 @@ export const kelRecipeFavourite = (recipeId: string, favourite: boolean, scope: 
   });
 
 /** Copy a recipe inside this project (the engine keeps the copy in the project scope). */
+/** FN-12: one step as the Recipes page writes it (an existing step keeps its id). */
+export type KelRecipeStepDraft = { id?: string; title?: string; objective: string };
+
+/** FN-12: write a new recipe in this project (saved at once). */
+export const kelRecipeCreate = (
+  draft: { name: string; description?: string; steps: KelRecipeStepDraft[] },
+  scope: string | KelScope = GENERAL_SCOPE
+) => call<{ saved: boolean; recipe_id?: string }>('/api/recipes', { action: 'create', ...draft, ...scopeBody(scope) });
+
+/** FN-12: rename or edit a recipe (a new version in this project; history is kept). */
+export const kelRecipeUpdate = (
+  recipeId: string,
+  changes: { name?: string; description?: string; steps?: KelRecipeStepDraft[] },
+  scope: string | KelScope = GENERAL_SCOPE
+) => call<{ saved: boolean; reason?: string }>('/api/recipes', { action: 'update', recipe_id: recipeId, ...changes, ...scopeBody(scope) });
+
 export const kelRecipeDuplicate = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe_id?: string; id?: string } & Record<string, unknown>>('/api/recipes', {
     action: 'duplicate',

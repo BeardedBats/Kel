@@ -822,7 +822,7 @@ class Projects:
 
 # -- '*' (All projects) reads ---------------------------------------------------------------------
 MEMORY_READS = ('proposals', 'proposal', 'history', 'learnings', 'learning')
-RECIPE_WRITES = ('run', 'save', 'duplicate')
+RECIPE_WRITES = ('run', 'save', 'duplicate', 'create', 'update')
 
 
 def recipe_writes(data):
