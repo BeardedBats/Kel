@@ -38,8 +38,14 @@ framework is a module, table, worker or workflow per service — that is the who
 7. **Kel says how sure it is.** A service row carries `documented`, `assumed` or `to-confirm`, and the
    surface repeats that sentence. An address Kel does not know is not invented.
 8. **No switch a service could not honour.** A capability (the plain-word toggles in `capabilities.py`) is
-   offered only when a production path can honour it. That is why there is no Connections switch yet: the
-   assistant cannot call a connection action (see *Not in the framework* below).
+   offered only when a production path can honour it. The Connections capability exists because the
+   assistant can now call an action through `connection_tools.py` (V2-04a, D-32); before that there was
+   no switch. *(Superseded 2026-09-28: this rule used to end "That is why there is no Connections switch
+   yet".)*
+9. **The words say what the service does and needs.** A row's `credential` names exactly what Nick has to
+   fetch and the field names the engine reads (`client_id`/`client_secret` for an account sign-in,
+   `username`/`password` for basic auth); its `note` says what Kel can see or do there. The Connections page
+   shows these words as they are — it keeps no copy of its own. A test pins the field names.
 
 ## Adding a service
 
@@ -103,13 +109,16 @@ rule; a rule without a test is a rule that will be broken by the next change.
 
 ## Not in the framework (and why)
 
-- **A tool the assistant can call.** The engine and the Connections page can run an action when Nick asks;
-  nothing in a conversation can yet. The assistant's tools come from the coding runtime the desktop agent
-  runs, so this is a bridge to build deliberately — with the same one-request rule, the same mutating
-  confirmation, and a capability switch added only when it can be honoured. Until then no Connections
-  switch is offered.
-- **The OAuth account sign-in step.** The template exists and says so: a Google Drive token has to be
-  pasted until the sign-in flow is built.
+- ~~**A tool the assistant can call.**~~ *Built (V2-04a, D-32/D-33):* `connection_tools.py` lets the
+  coding runtime call an action through `kel.conn`, behind the Connections capability, with the same
+  one-request rule and the same approval for anything mutating.
+- ~~**The OAuth account sign-in step.**~~ *Built (V2-04b, D-34/D-35):* `connection_oauth.py` runs the
+  browser sign-in (state + PKCE, tokens in the same custody, refresh and revoke). What it still needs from
+  Nick: **his own sign-in app** for the provider. For Google Drive that is an OAuth client of the "Desktop
+  app" type from Google Cloud Console, saved as the credentials `client_id` and `client_secret`; then
+  **Connect** opens the browser. Kel asks Google only for `drive.metadata.readonly` — the names and types
+  of files, never their contents. A pasted access token still works, but Google expires it after about
+  an hour and Kel cannot refresh it. Kel does not ship a shared Google client of its own.
 - **Network rules.** V2-14 owns them; they belong inside `perform_request`.
 - **Actions that change things.** The machinery and the confirmation gate are built and tested, but no
   write action is shipped yet: that is a product decision Nick should make explicitly.

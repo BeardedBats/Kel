@@ -590,6 +590,13 @@ describe('Connections — the central management surface', () => {
     expect(await screen.findByText(/Kel does not know this address/)).toBeTruthy();
   });
 
+  it('shows a known service’s own note beside what it needs', async () => {
+    rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
+    renderPage();
+    const note = await screen.findByText(/Raptive's API address comes with your credential/);
+    expect(note.closest('.kel-connections-available')).toBeTruthy();
+  });
+
   it('does one thing with a service when Nick asks', async () => {
     rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
     stored = ['connection:github:api_key=ghp_token'];

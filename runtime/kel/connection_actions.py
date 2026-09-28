@@ -8,8 +8,8 @@ the same way, and V2-14's network rules still cover every one of them.
 Rules this file exists to keep:
 
 - **Only documented addresses.** Every `path` below is the one the service's own documentation publishes.
-  Where Kel does not know a service's addresses (Raptive) or the service cannot work without an account
-  sign-in step that is not built yet (Google Drive), there are no actions rather than invented ones.
+  Where Kel does not know a service's addresses (Raptive), there are no actions rather than invented ones.
+  An account-sign-in service (Google Drive) says which permission each action needs (`scopes`).
 - **`mutating` is honest.** A row that changes something in Nick's account must say so, and `run()` refuses
   it unless Nick confirmed. Today every action here is a read, so nothing Kel can do changes anything.
 - **No payloads.** An action's answer goes back to the caller and is never written down; what is recorded is
