@@ -24,7 +24,7 @@ class V1Tests(unittest.TestCase):
         c=self.context.conversation();a=self.context.attach('main','a.txt',b'private')
         with self.assertRaises(PolicyError):self.context.handoff(c,'read',[a])
     def test_changed_attachment_is_rejected(self):
-        a=self.context.attach('main','a.txt',b'original');(self.store.root/'attachments'/a).write_bytes(b'changed')
+        a=self.context.attach('main','a.txt',b'original');(self.store.root/'attachments'/'main'/a).write_bytes(b'changed')
         with self.assertRaises(PolicyError):self.context.handoff('main','read',[a])
     def test_context_overflow_never_truncates_request(self):
         with self.assertRaises(PolicyError):self.context.handoff('main','x'*33000)

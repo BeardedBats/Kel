@@ -57,10 +57,14 @@ class Context:
         if not isinstance(name,str) or Path(name).name!=name or any(c in name for c in '/\\:') or name.startswith('.'):
             raise PolicyError('Attachment needs a simple filename')
         if not isinstance(content,bytes) or not 0<len(content)<=5_000_000:raise PolicyError('File must be 1 byte to 5 MB')
-        aid=uid();folder=self.store.root/'attachments';folder.mkdir(exist_ok=True)
+        # FN-04: each conversation keeps its files in its own folder under Kel's data (backed up with it).
+        # Older rows keep their flat `attachments/<id>` path; the stored relative path is what is read.
+        safe=''.join(ch for ch in str(conversation_id) if ch.isalnum() or ch in '-_')[:64] or 'main'
+        aid=uid();folder=self.store.root/'attachments'/safe
         target=folder/aid
         with self.store.transaction() as db:
             if not db.execute('SELECT 1 FROM conversations WHERE id=?',(conversation_id,)).fetchone():raise PolicyError('Conversation missing')
+            folder.mkdir(parents=True,exist_ok=True)
             target.write_bytes(content)
             db.execute('INSERT INTO attachments VALUES(?,?,?,?,?,?,?,?)',
                        (aid,conversation_id,name,str(target.relative_to(self.store.root)),digest(content),len(content),mime,time.time()))

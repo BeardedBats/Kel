@@ -66,6 +66,41 @@ def _failure_sentence(submission):
     return 'Something went wrong before I could answer that. Try sending it again.'
 
 
+FILES_MARKER = '[[AION_FILES]]'
+ATTACHMENT_LIMIT = 5_000_000
+
+
+def _local_path(line):
+    """An absolute local file path from one marker line, or None (URLs, UNC shares, prose)."""
+    candidate = line.strip()
+    if not candidate or '://' in candidate or candidate.startswith(('\\\\', '//')):
+        return None
+    if not (candidate.startswith('/') or (len(candidate) > 2 and candidate[1] == ':' and candidate[2] in '\\/')):
+        return None
+    return candidate
+
+
+def split_file_marker(text):
+    """(text without the block, [paths]) for the desktop's ``[[AION_FILES]]`` block (FN-04).
+
+    The shell sends files the person attached as a trailing marker block of absolute paths — the
+    same format its message view parses (fileMarker.ts): the last marker line, then one path per
+    non-empty line until the next ``[[…]]`` line. A block holding anything but local absolute paths
+    is not a file block and the text is returned untouched (a message that only mentions the marker).
+    """
+    lines = text.split('\n')
+    marker = next((i for i in range(len(lines) - 1, -1, -1) if lines[i].strip() == FILES_MARKER), -1)
+    if marker < 0:
+        return text, []
+    end = next((i for i in range(marker + 1, len(lines)) if lines[i].strip().startswith('[[')), len(lines))
+    entries = [line.strip() for line in lines[marker + 1:end] if line.strip()]
+    paths = [_local_path(line) for line in entries]
+    if not paths or any(path is None for path in paths):
+        return text, []
+    kept = lines[:marker] + lines[end:]
+    return '\n'.join(kept).strip(), paths
+
+
 class MethodNotFound(ValueError):
     """JSON-RPC -32601: the host asked for a method this agent does not implement."""
 
@@ -337,12 +372,40 @@ class ACPHost:
             raise ValueError('Kel denies tool permissions on this surface by policy (V1.5)')
         raise MethodNotFound('Unsupported ACP method: ' + method)
 
+    def _attach(self, cid, name, mime, raw):
+        return self.client.call('/api/attach', {'conversation': cid, 'name': name, 'mime': mime,
+                                                'content': base64.b64encode(raw).decode()})['id']
+
+    @staticmethod
+    def _read_local(path_text):
+        """(bytes, file name) of one file the person attached, with the same limits as a link."""
+        try:
+            path = Path(path_text).resolve(strict=True)
+        except (OSError, RuntimeError):
+            raise ValueError("Kel couldn't find the attached file " + Path(path_text).name +
+                             '. Attach it again.') from None
+        if not path.is_file() or not 0 < path.stat().st_size <= ATTACHMENT_LIMIT:
+            raise ValueError('Attachment must be a file between 1 byte and 5 MB')
+        return path.read_bytes(), path.name
+
     def content(self, cid, blocks):
-        texts, attachments = [], []
+        texts, attachments, seen_paths = [], [], set()
         for index, block in enumerate(blocks):
             kind = block.get('type')
             if kind == 'text':
-                texts.append(block['text'])
+                # FN-04: files attached in the composer arrive as the shell's [[AION_FILES]] block of
+                # local paths. Each file is copied into Kel's own attachment store (this conversation's
+                # folder under Kel's data) and the block leaves the text Kel reads.
+                body, paths = split_file_marker(block['text'])
+                texts.append(body)
+                for path_text in paths:
+                    key = os.path.normcase(os.path.abspath(path_text))
+                    if key in seen_paths:
+                        continue
+                    seen_paths.add(key)
+                    raw, name = self._read_local(path_text)
+                    mime = mimetypes.guess_type(name)[0] or 'text/plain'
+                    attachments.append(self._attach(cid, name, mime, raw))
                 continue
             if kind == 'image':
                 mime = block.get('mimeType', '')
@@ -362,16 +425,19 @@ class ACPHost:
                 if uri.scheme != 'file' or uri.netloc not in ('', 'localhost'):
                     raise ValueError('Attach a local file or embed its contents; remote resource links are unsupported')
                 path = Path(url2pathname(uri.path)).resolve(strict=True)
-                if not path.is_file() or not 0 < path.stat().st_size <= 5_000_000:
+                if not path.is_file() or not 0 < path.stat().st_size <= ATTACHMENT_LIMIT:
                     raise ValueError('Attachment must be a file between 1 byte and 5 MB')
+                key = os.path.normcase(str(path))
+                if key in seen_paths:
+                    continue  # the same file also named in the marker block: attach it once
+                seen_paths.add(key)
                 raw = path.read_bytes()
                 name = path.name
                 mime = block.get('mimeType') or mimetypes.guess_type(name)[0] or 'text/plain'
             else:
                 raise ValueError('Unsupported ACP content type: ' + str(kind))
-            attachments.append(self.client.call('/api/attach', {'conversation': cid, 'name': name,
-                                                                 'mime': mime, 'content': base64.b64encode(raw).decode()})['id'])
-        text = '\n'.join(texts).strip()
+            attachments.append(self._attach(cid, name, mime, raw))
+        text = '\n'.join(t for t in texts if t).strip()
         if not text:
             raise ValueError('Add a text request with the attachment')
         return text, attachments
