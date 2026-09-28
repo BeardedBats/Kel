@@ -137,3 +137,32 @@ export const orderRoles = (rows: StaffRoleRow[]): StaffRoleRow[] => {
   };
   return rows.toSorted((a, b) => rank(a.role) - rank(b.role));
 };
+
+/* ─── When Kel asks scoping questions first (D-70 item 4's one threshold setting) ──────────── */
+
+export interface ScopingThresholdOption {
+  id: string;
+  label: string;
+  hint?: string | null;
+}
+
+export interface ScopingThresholdView {
+  threshold: string;
+  default?: string;
+  options: ScopingThresholdOption[];
+}
+
+const normaliseThreshold = (payload: unknown): ScopingThresholdView => {
+  const data = (payload && typeof payload === 'object' ? payload : {}) as Partial<ScopingThresholdView>;
+  return {
+    threshold: typeof data.threshold === 'string' ? data.threshold : 'D2',
+    default: typeof data.default === 'string' ? data.default : undefined,
+    options: Array.isArray(data.options) ? data.options.filter((option) => option && typeof option.id === 'string') : [],
+  };
+};
+
+export const kelScopingThreshold = async (): Promise<ScopingThresholdView> =>
+  normaliseThreshold(await kelRequest<unknown>('/api/scoping', { action: 'threshold' }));
+
+export const kelSetScopingThreshold = async (value: string): Promise<ScopingThresholdView> =>
+  normaliseThreshold(await kelRequest<unknown>('/api/scoping', { action: 'set_threshold', value }));

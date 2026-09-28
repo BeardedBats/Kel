@@ -40,9 +40,23 @@ CREATE TABLE IF NOT EXISTS scoping_prefs(key TEXT PRIMARY KEY, value TEXT NOT NU
 OPEN, STARTED, BEST_GUESS = 'open', 'started', 'best_guess'
 
 # The one threshold setting (D-70: "until Nick sets one"): the smallest staffing tier that is scoped
-# first. D2 = a Builder + Verifier pod; 'off' never scopes by size (open questions still do).
-THRESHOLDS = ('D1', 'D2', 'D3', 'D4', 'off')
+# first. D2 = a Builder + Verifier pod; 'off' never scopes by size (open questions still do);
+# 'never' never asks first at all (Settings → Staff & models: "Never").
+THRESHOLDS = ('D1', 'D2', 'D3', 'D4', 'off', 'never')
 DEFAULT_THRESHOLD = 'D2'
+# What Settings offers, in plain words (the first three); the others are named if already set.
+THRESHOLD_CHOICES = (
+    ('D2', 'Always for bigger work', "When Kel would put a team on it (a Builder with a Verifier, or more). "
+                                     "This is the default."),
+    ('D3', 'Only for very big work', 'When the work is big enough for several staff at once, or high-risk.'),
+    ('never', 'Never', 'Kel starts straight away and decides the details itself.'),
+)
+THRESHOLD_OTHERS = {
+    'D1': ('For any work Kel hands to its staff', 'Whenever a staff member would do the work.'),
+    'D4': ('Only for high-risk work', 'Only when the work needs the most careful checking.'),
+    'off': ('Only when Kel has open questions', "Never because of size; only when Kel's plan has questions "
+                                                'that change the result.'),
+}
 TIER_RANK = {'D0': 0, 'D1': 1, 'D2': 2, 'D3': 3, 'D4': 4}
 
 MAX_QUESTIONS = 3
@@ -101,9 +115,19 @@ def threshold(store):
     return value if value in THRESHOLDS else DEFAULT_THRESHOLD
 
 
+def threshold_view(store):
+    """The setting for Settings: the current value and the plain choices."""
+    current = threshold(store)
+    options = [{'id': key, 'label': label, 'hint': hint} for key, label, hint in THRESHOLD_CHOICES]
+    if current in THRESHOLD_OTHERS:
+        label, hint = THRESHOLD_OTHERS[current]
+        options.append({'id': current, 'label': label, 'hint': hint})
+    return {'threshold': current, 'default': DEFAULT_THRESHOLD, 'options': options}
+
+
 def set_threshold(store, value):
     if value not in THRESHOLDS:
-        raise PolicyError('Choose D1, D2, D3, D4 or off.')
+        raise PolicyError('Choose D1, D2, D3, D4, off or never.')
     ensure_schema(store)
     with store.transaction() as db:
         db.execute('INSERT INTO scoping_prefs(key,value,updated) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE '
@@ -176,6 +200,8 @@ def consider(store, text, kind, decision):
     proposed = (decision or {}).get('scoping') if isinstance((decision or {}).get('scoping'), dict) else {}
     questions = clean_questions(proposed.get('questions'))
     limit = threshold(store)
+    if limit == 'never':
+        return None  # Nick chose "Never": Kel starts straight away
     guess = estimate(store, text, kind)
     big = limit != 'off' and TIER_RANK.get(guess['tier'], 0) >= TIER_RANK[limit]
     if not big and not questions:
@@ -454,6 +480,11 @@ def start(service, scoping_id, answers=None, best_guess=False, conversation=None
 def action(service, data):
     """POST /api/scoping: `start` (with answers) or `best_guess` for one open scoping card."""
     verb = data.get('action')
+    if verb == 'threshold':
+        return threshold_view(service.store)
+    if verb == 'set_threshold':
+        set_threshold(service.store, str(data.get('value') or ''))
+        return threshold_view(service.store)
     scoping_id = str(data.get('id') or '')
     if not scoping_id:
         raise PolicyError('Pick the questions to answer first.')
