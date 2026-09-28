@@ -81,9 +81,13 @@ class Search:
                         'id': row['id'], 'title': row['title'] or 'Conversation', 'snippet': '',
                     })
                 if len(results['conversations']) < limit:
+                    # D-75.2: messages an edit or a regenerate rewound are no longer part of the chat.
+                    rewound = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                                         "AND name='rewound_messages'").fetchone()
+                    visible = 'AND seq NOT IN (SELECT seq FROM rewound_messages) ' if rewound else ''
                     for row in db.execute(
                             "SELECT conversation_id AS id, text FROM messages "
-                            "WHERE text LIKE ? ESCAPE '\\' ORDER BY seq DESC LIMIT ?", (pattern, limit)):
+                            "WHERE text LIKE ? ESCAPE '\\' " + visible + 'ORDER BY seq DESC LIMIT ?', (pattern, limit)):
                         if all(item['id'] != row['id'] for item in results['conversations']):
                             results['conversations'].append({
                                 'id': row['id'],

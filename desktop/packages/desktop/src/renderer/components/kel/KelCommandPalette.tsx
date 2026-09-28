@@ -40,8 +40,24 @@ type PaletteItem = {
   hint?: string;
   /** Extra text the filter matches (a job's full request) without showing it. */
   search?: string;
+  /** FN-08: the query a search hit was found for (the engine or chat store matched its full text). */
+  matched?: string;
   icon?: string;
   run: () => void;
+};
+
+/**
+ * FN-08: the part of a long message around the first match, so the hint shows why a chat was found
+ * (the word may be far past the first 80 characters).
+ */
+export const snippetAround = (text: string, needle: string, width = 80): string => {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  if (flat.length <= width) return flat;
+  const at = needle ? flat.toLowerCase().indexOf(needle.toLowerCase()) : -1;
+  if (at < 0) return `${flat.slice(0, width - 1).trimEnd()}…`;
+  const start = Math.max(0, Math.min(at - Math.floor((width - needle.length) / 2), flat.length - width));
+  const end = Math.min(flat.length, start + width);
+  return `${start > 0 ? '…' : ''}${flat.slice(start, end).trim()}${end < flat.length ? '…' : ''}`;
 };
 
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
@@ -226,20 +242,22 @@ const KelCommandPalette: React.FC = () => {
             items.push({
               id: `found-chat-${row.conversation.id}`, group: 'Chats',
               label: row.conversation.name || 'Chat',
-              hint: preview.length > 80 ? `${preview.slice(0, 79)}…` : preview || 'open the chat',
+              hint: snippetAround(preview, needle) || 'open the chat',
+              search: preview,
+              matched: needle,
               icon: chatIcon,
               run: () => navigate(`/conversation/${row.conversation.id}`),
             });
           });
           (data.transcripts ?? []).forEach((row) => items.push({
             id: `found-transcript-${row.id}`, group: 'Transcripts',
-            label: row.title, hint: row.snippet || 'open Ramble',
+            label: row.title, hint: row.snippet || 'open Ramble', matched: needle,
             run: () => navigate('/transcription'),
           }));
           // Vetting runs in its chat (the Work panel is gone): a session opens the chat it lives in; when
           // the engine does not say which, a new chat, where "start design vetting: …" picks it up.
           (data.vetting ?? []).forEach((row) => items.push({
-            id: `found-vetting-${row.id}`, group: 'Vetting',
+            id: `found-vetting-${row.id}`, group: 'Vetting', matched: needle,
             label: row.title, hint: row.snippet || (row.conversation_id ? 'open its chat to continue' : 'continue it in a chat'),
             run: () => {
               const open = (window as unknown as { kelAPI?: { openEngineConversation?: (cid: string) => Promise<string | null> } }).kelAPI?.openEngineConversation;
@@ -254,7 +272,7 @@ const KelCommandPalette: React.FC = () => {
           }));
           // The engine's chat rows only when the chats themselves could not be searched.
           if (!chats) (data.conversations ?? []).forEach((row) => items.push({
-            id: `found-engine-chat-${row.id}`, group: 'Chats',
+            id: `found-engine-chat-${row.id}`, group: 'Chats', matched: needle,
             label: row.title, hint: row.snippet || 'open the chat list',
             run: () => navigate('/guid'),
           }));
@@ -318,7 +336,7 @@ const KelCommandPalette: React.FC = () => {
     if (!needle && mode === 'command') return [...preferred, actions[0], actions[2], ...dynamic.filter((item) => item.group === 'Recipes').slice(0, 1), ...dynamic.filter((item) => item.group === 'Chats').slice(0, 2)].filter(Boolean);
     if (!needle) return all.slice(0, 24);
     return all
-      .filter((item) => `${item.label} ${item.hint ?? ''} ${item.search ?? ''}`.toLowerCase().includes(needle))
+      .filter((item) => (item.matched !== undefined && needle.includes(item.matched.toLowerCase())) || `${item.label} ${item.hint ?? ''} ${item.search ?? ''}`.toLowerCase().includes(needle))
       .slice(0, 24);
   }, [dynamic, found, mode, navigate, query]);
 
@@ -407,6 +425,7 @@ const KelCommandPalette: React.FC = () => {
                 role='option'
                 aria-selected={index === active}
                 className='kel-palette__item'
+                title={item.matched !== undefined ? item.hint : undefined}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => { item.run(); close(); }}
               >
