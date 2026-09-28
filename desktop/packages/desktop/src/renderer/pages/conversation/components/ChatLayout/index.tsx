@@ -265,6 +265,8 @@ const ChatLayout: React.FC<{
           <div className='shrink-0 kel-shell-chat-header-wrap'>{headerBlock}</div>
           {/* D-68: the work cards sit directly under the chat title; their detail dims this column. */}
           {isDesktop && <KelWorkCardRow conversationId={conversation_id} />}
+          {/* On the phone the same cards are a sideways strip under the header; a card opens a sheet. */}
+          {isMobile && <KelWorkCardRow conversationId={conversation_id} phone />}
           <div className='flex flex-1 min-h-0 relative'>
             {/* Chat area - always mounted, never unmounted on preview toggle */}
             <div

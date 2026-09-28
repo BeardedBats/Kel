@@ -38,7 +38,7 @@ under the row, 340px menu right-aligned 6px under it). Differences that remain, 
 | Result line for an applied change | "Applied to Documents › Receipts › 2026 at 9:40 AM. You can undo it." | The shared D-65 sentence ("Applied automatically to <folder> (N files). The earlier files are saved.") so the card, Work and this detail say the same thing. | `changeApplication.ts` |
 | Stop confirmation | not drawn | The in-chat work card's confirm ("Stop this work? Anything already checked is kept." · Keep going · Stop it) in the header, with a red-outlined Stop it. | `KelOfficeDetail.tsx` |
 | Focus | not drawn | Opening the detail focuses the dialog (no button looks pre-selected); Tab stays inside; Escape returns focus to the card. | `KelOfficeDetail.tsx` |
-| Narrow windows / phone | desktop 1440 only | The row fits as many cards as the measured width allows; below 1100px the detail's columns wrap. The row is desktop-only (no phone frame). | `KelWorkCardRow.tsx`, `KelWorkCards.css` |
+| Narrow windows / phone | desktop 1440 only | The row fits as many cards as the measured width allows; below 1100px the detail's columns wrap. The phone has its own treatment — see "Work cards on the phone" below. | `KelWorkCardRow.tsx`, `KelWorkCards.css` |
 
 ## Staff & models and the navigation clean-up (D-70 items 3 and 5) — 2026-09-27
 
@@ -164,6 +164,38 @@ None of these is drawn. Each reuses the nearest drawn control; none is claimed a
 | Palette hit past the first words (FN-08) | Command palette rows | The row stays its label; the words around the match show on hover (tooltip). | `KelCommandPalette.tsx` |
 | Diagnostics Maintenance (FN-14) | Diagnostics `76:4130` | The Clear / Restart rows are removed (they could never run); "First model reply" shows measured times. This supersedes the earlier "present and disabled" inference above. | `diagnostics/index.tsx` |
 | New chat composer attachments (FN-17) | Composer `185:4284` | No "File(n)" label beside +; the file chips under the box are the only list. | `GuidActionRow.tsx` |
+
+## Work cards on the phone (D-68, D-70) — 2026-09-28
+
+No phone frame exists for the cards. The phone treatment is derived from the Office row-4/5 card family and
+the phone sheets **M / Approval details** `299:12281` and **M / Model picker** `299:12372` (page `319:3858`,
+393×852). Checked in headless Edge at 390×844 with touch, both themes, against the packaged renderer with
+fixture work (no live engine work existed in the Data copy); not yet on a physical iPhone.
+
+| State / element | Nearest Figma source | Inference | Implementation |
+| --- | --- | --- | --- |
+| Where the row sits | M / Chat `299:11571` (header, then the thread) | A strip directly under the phone header, above the thread; nothing when there is no work, so the chat keeps its height. | `ChatLayout/index.tsx`, `KelWorkCardRow.tsx` (`phone`) |
+| The strip | Office 4a card row | Every card in one row that scrolls sideways (snap to card starts, no scrollbar, 16px gutters that grow to the side safe-area insets). No "+N more" menu: scrolling replaces it. | `KelWorkCardsPhone.css` |
+| Compact card | 4a card (198px) | 164px wide so a second card and the edge of a third show at 390pt. Same fills, border, bar and state words; the team (up to two avatars) moves beside the title so "Needs you 2 of 4" keeps its room. No hover tint on touch; a pressed tint instead. | `KelOfficeCard.tsx` (`strip`), `KelWorkCardsPhone.css` |
+| Removing finished work | 4a card × (12px) | No × on the phone card (too small to tap); Remove is a 44pt action in the sheet. | `KelWorkCardRow.tsx` |
+| Detail | 4b/4d panel; M / Approval details sheet | A bottom sheet over a scrim: 20px top radius, 36×5 grabber, the phone sheet's glass (Light: white on a #C9D4E5 edge), title 20/24. Team, Steps, Files changed, then Review and checks in one scrolling column; the Needs-you question with its quick picks (Apply anyway / Leave it …) and answer box, the Result, Undo and Remove as on desktop. Tap the scrim or press Escape to close; the page behind does not scroll. | `KelOfficeDetail.tsx` (`sheet`), `KelWorkCardsPhone.css` |
+| Actions | Approval details: full-width primary, link-style secondaries under it | A foot that stays in reach: "Talk to Kel about this" full width (44px), then Stop / Remove / Undo as 44px link-style buttons on one line; Stop's confirmation replaces them in place. The foot sits above the home indicator (`env(safe-area-inset-bottom)`). | `KelOfficeDetail.tsx`, `KelWorkCardsPhone.css` |
+| Open folder | 4d | Not offered on the phone: that folder is on the PC running Kel. | `KelWorkCardRow.tsx` |
+| Answer box | 5a answer box (14px) | 16px text and 44px height inside the sheet so iOS does not zoom into it. | `KelWorkCardsPhone.css` |
+| Sheet height | Approval details (433px) | Grows with its content up to the screen height less the status bar (at least 48px, or the top inset + 24px); the middle scrolls, the handle, title and foot stay. | `KelWorkCardsPhone.css` |
+| Wrapped meta lines | 4b state meta on one line | On the phone the state meta ("Step 3 of 5 · Started … · Personal") and the Result's "Applied to …" line take their own line instead of truncating. | `KelOfficeDetail.tsx`, `KelWorkCardsPhone.css` |
+
+## Sentinel and the Red Team in Review and checks (bc873da) — 2026-09-28
+
+Not drawn; each reuses the Oracle row of 4b/4d (dot, name, model, the conclusion line, then the quieter lines).
+
+| State / element | Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Order | 4b/4d: Verifier, Oracle, Verification | Verifier, then **Sentinel**, Oracle, **Red Team** (the order the engine runs them), then Verification. | `KelOfficeDetail.tsx`, `workCardModel.ts` (`REVIEW_PASSES`) |
+| When they show | — | Sentinel and the Red Team appear only when the engine has something to say: not needed with no reason → left out; not needed with a reason → one compact line ("Not needed: an earlier review already stands."). The Oracle always shows, as drawn. | `workCardModel.ts` (`showReviewPass`, `oracleLines`) |
+| Lines | Oracle lines (LIVE-10) | What it concluded first, then "What it looked at: …", then why it was asked and how independent it was. While waiting / running: "Security and data-safety check before hand-over." / "Checking it for security and data safety now."; "Will try to break the accepted result before hand-over." / "Trying to break the accepted result now." | `workCardModel.ts` |
+| Staff rows | Team column | "Sentinel" and "Red Team" rows with the review ring colour; the engine's own "doing" words. | `workCardModel.ts` (`ROLE_NAMES`, `REVIEW_ROLES`) |
+| Needs you from a pass | 5a | The engine's question already names the pass ("Sentinel's security check raised a problem. Apply the change anyway?"); same chips and answer box. | `KelNeedsAnswer.tsx` (unchanged) |
 
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 

@@ -37,6 +37,8 @@ import {
   failedChecks,
   independenceWords,
   isCommander,
+  REVIEW_PASSES,
+  showReviewPass,
   isFinished,
   isUncertain,
   isUndone,
@@ -69,6 +71,12 @@ type Props = {
   onOpenSettings?: (path: string) => void;
   /** Open a folder on this computer (injected so tests and the remote surface can decide). */
   openFolder?: (path: string) => Promise<unknown>;
+  /**
+   * `panel` drops down under the desktop row (Figma 4b/4d). `sheet` is the phone's bottom sheet
+   * (inferred from the phone sheets, docs/v2/FIGMA_GAPS.md): one column that scrolls, with the
+   * actions in a foot that stays in reach above the home indicator.
+   */
+  variant?: 'panel' | 'sheet';
 };
 
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -119,6 +127,16 @@ const SectionHead: React.FC<{ title: string; meta?: string | null; id?: string }
   </div>
 );
 
+/** The phone sheet scrolls its middle; the desktop panel scrolls as one. */
+const SheetBody: React.FC<{ sheet: boolean; children: React.ReactNode }> = ({ sheet, children }) =>
+  sheet ? (
+    <div className='kel-wd-sheet__body' data-testid='kel-office-sheet-body'>
+      {children}
+    </div>
+  ) : (
+    <>{children}</>
+  );
+
 const Member: React.FC<{ member: OfficeStaff; itemState: string }> = ({ member, itemState }) => {
   const commander = isCommander(member);
   const tone = commander && !member.state ? 'working' : ringTone(member, itemState);
@@ -152,7 +170,9 @@ export const KelOfficeDetail: React.FC<Props> = ({
   onChanged,
   onOpenSettings,
   openFolder,
+  variant = 'panel',
 }) => {
+  const sheet = variant === 'sheet';
   const [detail, setDetail] = useState<OfficeItemDetail | null>(null);
   const [unreadable, setUnreadable] = useState(false);
   const [handoffApplication, setHandoffApplication] = useState<KelChangeApplication | null>(null);
@@ -324,13 +344,6 @@ export const KelOfficeDetail: React.FC<Props> = ({
   const reviewPassed = passed(view);
   const reviewFailed = failedChecks(view);
   const verifier = staff.find((member) => (member.role ?? '').toLowerCase() === 'verifier');
-  const oracleStaff = staff.find((member) => (member.role ?? '').toLowerCase() === 'oracle');
-  const oracleModel =
-    view.oracle?.model_label
-      ? [view.oracle.model_label, reasoningLabel(view.oracle.reasoning)].filter(Boolean).join(' · ')
-      : oracleStaff
-        ? modelLine(oracleStaff)
-        : null;
   const uncertain = finished && isUncertain(view);
   const reviewTone = findings.length ? 'review' : reviewPassed ? 'done' : reviewFailed ? 'failed' : 'review';
   const reviewWord = findings.length
@@ -374,9 +387,25 @@ export const KelOfficeDetail: React.FC<Props> = ({
       : 'Not run';
   // VIS-4: the summary as a list — no second verdict, no bullets, one "Built by · Checked by" line.
   const verificationList = verificationLines(verification?.summary, staff, review?.checked_by);
-  const oracle = oracleLines(view.oracle);
-  const coverage = oracleCoverage(view.oracle);
-  const oracleIndependence = independenceWords(view.oracle?.independence, 'second_opinion', view.oracle?.independence_label);
+  // bc873da: Sentinel → Oracle → Red Team, each in the Oracle's shape; Sentinel and the Red Team only
+  // when the engine has something to say about them.
+  const passes = REVIEW_PASSES.filter(({ kind }) => showReviewPass(kind, view[kind])).map(({ kind, name }) => {
+    const pass = view[kind];
+    const member = staff.find((row) => (row.role ?? '').toLowerCase() === kind);
+    const model = pass?.model_label
+      ? [pass.model_label, reasoningLabel(pass.reasoning)].filter(Boolean).join(' · ')
+      : member
+        ? modelLine(member)
+        : null;
+    return {
+      kind,
+      name,
+      model,
+      lines: oracleLines(pass, kind),
+      coverage: oracleCoverage(pass),
+      independence: independenceWords(pass?.independence, 'second_opinion', pass?.independence_label),
+    };
+  });
   const reviewIndependence = independenceWords(review?.independence, 'check', review?.independence_label);
 
   const started = clockTime(view.started_at);
@@ -407,10 +436,53 @@ export const KelOfficeDetail: React.FC<Props> = ({
   const appliedLine = coding ? (undone ? undoneLine({ undone: view.undone, application }) : applicationLine(application)) : null;
   const titleId = `kel-office-detail-title-${job}`;
 
+  const actions = confirming ? (
+    <div className='kel-wd-confirm' data-testid='kel-office-stop-confirm'>
+      <span>Stop this work? Anything already checked is kept.</span>
+      <button type='button' className='kel-wd-button' disabled={busy} onClick={() => setConfirming(false)}>
+        Keep going
+      </button>
+      <button type='button' className='kel-wd-button kel-wd-button--danger' disabled={busy} onClick={() => void stop()} data-testid='kel-office-stop-yes'>
+        Stop it
+      </button>
+    </div>
+  ) : (
+    <div className='kel-wd-actions'>
+      {running ? (
+        <button type='button' className='kel-wd-button' disabled={busy} onClick={() => setConfirming(true)} data-testid='kel-office-stop'>
+          <img src={iconStop} alt='' />
+          Stop
+        </button>
+      ) : (
+        <>
+          <button type='button' className='kel-wd-button' disabled={busy} onClick={() => onRemove(item)} data-testid='kel-office-remove'>
+            <img src={iconRemove} alt='' />
+            Remove
+          </button>
+          {applied ? (
+            <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void undo()} data-testid='kel-office-undo'>
+              <img src={iconUndo} alt='' />
+              Undo
+            </button>
+          ) : null}
+          {applied && folder && openFolder ? (
+            <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void showFolder()} data-testid='kel-office-open-folder'>
+              <img src={iconFolder} alt='' />
+              Open folder
+            </button>
+          ) : null}
+        </>
+      )}
+      <button type='button' className='kel-wd-button kel-wd-button--primary' onClick={() => onTalk(item)} data-testid='kel-office-talk'>
+        Talk to Kel about this
+      </button>
+    </div>
+  );
+
   return (
     <div
       ref={dialogRef}
-      className={`kel-wd kel-wd--${view.state}${uncertain ? ' is-uncertain' : ''}`}
+      className={`kel-wd kel-wd--${view.state}${sheet ? ' kel-wd--sheet' : ''}${uncertain ? ' is-uncertain' : ''}`}
       role='dialog'
       aria-modal='true'
       aria-labelledby={titleId}
@@ -418,6 +490,7 @@ export const KelOfficeDetail: React.FC<Props> = ({
       onKeyDown={onKeyDown}
       data-testid='kel-office-detail'
     >
+      {sheet ? <div className='kel-wd-sheet__handle' aria-hidden='true' /> : null}
       <div className='kel-wd-head'>
         <div className='kel-wd-title'>
           <h2 id={titleId}>{view.title}</h2>
@@ -426,7 +499,7 @@ export const KelOfficeDetail: React.FC<Props> = ({
             <span className='kel-wd-state__label' data-testid='kel-office-detail-state'>
               {detailStateLabel(view)}
             </span>
-            {subtitle.length ? <span className='kel-wd-state__meta'>{`·  ${subtitle.join('  ·  ')}`}</span> : null}
+            {subtitle.length ? <span className='kel-wd-state__meta'>{sheet ? subtitle.join('  ·  ') : `·  ${subtitle.join('  ·  ')}`}</span> : null}
           </div>
           {usageLine ? (
             <div className='kel-wd-usage' data-testid='kel-office-usage'>
@@ -435,283 +508,254 @@ export const KelOfficeDetail: React.FC<Props> = ({
           ) : null}
         </div>
         <span className='kel-wc-push' />
-        {confirming ? (
-          <div className='kel-wd-confirm' data-testid='kel-office-stop-confirm'>
-            <span>Stop this work? Anything already checked is kept.</span>
-            <button type='button' className='kel-wd-button' disabled={busy} onClick={() => setConfirming(false)}>
-              Keep going
-            </button>
-            <button type='button' className='kel-wd-button kel-wd-button--danger' disabled={busy} onClick={() => void stop()} data-testid='kel-office-stop-yes'>
-              Stop it
-            </button>
-          </div>
-        ) : (
-          <div className='kel-wd-actions'>
-            {running ? (
-              <button type='button' className='kel-wd-button' disabled={busy} onClick={() => setConfirming(true)} data-testid='kel-office-stop'>
-                <img src={iconStop} alt='' />
-                Stop
-              </button>
-            ) : (
-              <>
-                <button type='button' className='kel-wd-button' disabled={busy} onClick={() => onRemove(item)} data-testid='kel-office-remove'>
-                  <img src={iconRemove} alt='' />
-                  Remove
-                </button>
-                {applied ? (
-                  <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void undo()} data-testid='kel-office-undo'>
-                    <img src={iconUndo} alt='' />
-                    Undo
-                  </button>
-                ) : null}
-                {applied && folder && openFolder ? (
-                  <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void showFolder()} data-testid='kel-office-open-folder'>
-                    <img src={iconFolder} alt='' />
-                    Open folder
-                  </button>
-                ) : null}
-              </>
-            )}
-            <button type='button' className='kel-wd-button kel-wd-button--primary' onClick={() => onTalk(item)} data-testid='kel-office-talk'>
-              Talk to Kel about this
-            </button>
-          </div>
-        )}
+        {sheet ? null : actions}
       </div>
-      {notice ? (
-        <p className='kel-wd-notice' role='alert'>
-          {notice}
-        </p>
-      ) : null}
-      {/* D-70 (5a/5b): Kel's question, or the answer just sent, sits above the bar. */}
-      {budgetNote ? (
-        <section className='kel-wd-result' aria-label='Budget raised' data-testid='kel-budget-raised'>
-          <p>{budgetNote}</p>
-        </section>
-      ) : view.budget?.stopped && !finished ? (
-        // Routing 2 §5.4: stopped on its budget — the numbers, and "Raise budget" (Nick's own act).
-        <KelBudgetStop
-          job={job}
-          budget={view.budget}
-          onRaised={(words) => {
-            setBudgetNote(words);
-            onChanged();
-            refreshWorkCards();
-            void read();
-          }}
-        />
-      ) : answered && (!view.question || view.question.text === answered.question) ? (
-        <KelAnsweredLine note={answered} />
-      ) : view.state === 'needs_you' && view.question ? (
-        <KelNeedsAnswer
-          question={view.question}
-          onOpenSettings={onOpenSettings}
-          onAnswered={(note) => {
-            setAnswered({ ...note, question: view.question?.text ?? '' });
-            onChanged();
-            refreshWorkCards();
-            void read();
-          }}
-        />
-      ) : !finished && view.state === 'needs_you' && attentionText ? (
-        <section className='kel-wd-result kel-wd-result--needs' aria-label='What Kel needs' data-testid='kel-office-needs'>
-          <div className='kel-wd-result__head'>
-            <StatusDot tone='needs' />
-            <strong>Needs you</strong>
-          </div>
-          <p>{attentionText}</p>
-        </section>
-      ) : null}
-      <div className='kel-wc-progress kel-wd-progress' aria-hidden='true'>
-        <span className='kel-wc-progress__fill' style={{ width: `${(progressFraction(view) * 100).toFixed(2)}%` }} />
-      </div>
-      {finished && (resultText || appliedLine) ? (
-        <section className='kel-wd-result' aria-label='Result' data-testid='kel-office-result'>
-          <div className='kel-wd-result__head'>
-            <StateIcon state={view.state} size='detail' uncertain={uncertain} />
-            <strong>Result</strong>
-            {appliedLine ? (
-              <span className='kel-wd-meta' data-testid='kel-office-applied'>
-                {appliedLine}
-              </span>
-            ) : null}
-          </div>
-          {resultText ? <p>{resultText}</p> : null}
-          {attention && attentionText ? <p className='kel-wd-result__why'>{attentionText}</p> : null}
-        </section>
-      ) : null}
-      {detail === null && unreadable ? <p className='kel-wd-loading'>Kel couldn’t read the details just now. It will try again.</p> : null}
-      {detail === null && !unreadable ? <p className='kel-wd-loading'>Reading the details…</p> : null}
-      {detail ? (
-        <div className='kel-wd-columns'>
-          <section className='kel-wd-col kel-wd-col--team' aria-labelledby={`${titleId}-team`}>
-            <SectionHead id={`${titleId}-team`} title='Team' meta={teamMeta} />
-            {staff.length ? (
-              <ul className='kel-wd-list'>
-                {staff.map((member) => (
-                  <Member key={member.id} member={member} itemState={view.state} />
-                ))}
-              </ul>
-            ) : (
-              <p className='kel-wd-empty'>Kel is handling this alone.</p>
-            )}
+      <SheetBody sheet={sheet}>
+        {notice ? (
+          <p className='kel-wd-notice' role='alert'>
+            {notice}
+          </p>
+        ) : null}
+        {/* D-70 (5a/5b): Kel's question, or the answer just sent, sits above the bar. */}
+        {budgetNote ? (
+          <section className='kel-wd-result' aria-label='Budget raised' data-testid='kel-budget-raised'>
+            <p>{budgetNote}</p>
           </section>
-          <div className='kel-wd-col kel-wd-col--steps'>
-            <section aria-labelledby={`${titleId}-steps`}>
-              <SectionHead id={`${titleId}-steps`} title='Steps' meta={stepMeta} />
-              {steps.length ? (
-                <ol className='kel-wd-list kel-wd-steps'>
-                  {steps.map((step, index) => {
-                    const phase = stepPhase(step);
-                    const at = phase === 'done' || phase === 'failed' ? clockTime(step.at) : null;
-                    return (
-                      <li key={step.id} className={`kel-wd-step kel-wd-step--${phase}`} data-testid='kel-office-step'>
-                        <span className='kel-wd-step__lead' aria-hidden='true'>
-                          <img
-                            src={
-                              phase === 'done'
-                                ? iconCheck14
-                                : phase === 'now'
-                                  ? iconLoader
-                                  : phase === 'failed'
-                                    ? iconWarning
-                                    : phase === 'paused' || phase === 'interrupted'
-                                      ? iconWarningAmber
-                                      : stepPending
-                            }
-                            alt=''
-                          />
-                        </span>
-                        <span className='kel-wd-step__label'>{step.label}</span>
-                        <span className='kel-wd-step__when'>
-                          {phase === 'now'
-                            ? 'Now'
-                            : phase === 'paused'
-                              ? 'Paused'
-                              : phase === 'interrupted'
-                                ? 'Interrupted'
-                                : phase === 'pending'
-                                ? index === firstPending && running && !stalled
-                                  ? 'Next'
-                                  : ''
-                                : (at ?? '')}
-                        </span>
-                        <span className='kel-wc-sr'>
-                          {phase === 'done'
-                            ? ', done'
-                            : phase === 'now'
-                              ? ', in progress'
-                              : phase === 'paused'
-                                ? ', paused here'
-                                : phase === 'interrupted'
-                                  ? ', stopped part-way when Kel’s worker stopped'
-                                  : phase === 'failed'
-                                  ? ', did not finish'
-                                  : ', not started'}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : (
-                <p className='kel-wd-empty'>No steps reported yet.</p>
-              )}
-            </section>
-            {Array.isArray(files) ? (
-              <section aria-labelledby={`${titleId}-files`}>
-                <SectionHead
-                  id={`${titleId}-files`}
-                  title='Files changed'
-                  meta={`${files.length} file${files.length === 1 ? '' : 's'}`}
-                />
-                {files.length ? (
-                  <ul className='kel-wd-list'>
-                    {files.map((path) => (
-                      <li key={path} className='kel-wd-file'>
-                        <img src={iconFile} alt='' />
-                        <span>{path}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className='kel-wd-empty'>No files changed.</p>
-                )}
-                {reportSteps.length ? (
-                  <button
-                    type='button'
-                    className='kel-wd-button kel-wd-files__report'
-                    disabled={busy}
-                    onClick={() => void downloadReport()}
-                    data-testid='kel-office-report'
-                  >
-                    <img src={iconFile} alt='' />
-                    Download change report
-                  </button>
-                ) : null}
-              </section>
-            ) : null}
-          </div>
-          <section className='kel-wd-col kel-wd-col--review' aria-labelledby={`${titleId}-review`}>
-            <SectionHead id={`${titleId}-review`} title='Review and checks' />
-            <div className='kel-wd-finding' data-testid='kel-office-review'>
-              <div className='kel-wd-finding__head'>
-                <StatusDot tone={reviewTone} />
-                <strong>Verifier</strong>
-                {verifier ? <span className='kel-wc-sr'>{`, ${modelLine(verifier)}`}</span> : null}
-                <span className='kel-wc-push' />
-                <span className={`kel-wd-finding__word kel-wd-tone--${reviewTone}`}>{reviewWord}</span>
-              </div>
-              {reviewText ? <p>{reviewText}</p> : null}
-              {reviewIndependence ? <p className='kel-wd-note'>{reviewIndependence}</p> : null}
+        ) : view.budget?.stopped && !finished ? (
+          // Routing 2 §5.4: stopped on its budget — the numbers, and "Raise budget" (Nick's own act).
+          <KelBudgetStop
+            job={job}
+            budget={view.budget}
+            onRaised={(words) => {
+              setBudgetNote(words);
+              onChanged();
+              refreshWorkCards();
+              void read();
+            }}
+          />
+        ) : answered && (!view.question || view.question.text === answered.question) ? (
+          <KelAnsweredLine note={answered} />
+        ) : view.state === 'needs_you' && view.question ? (
+          <KelNeedsAnswer
+            question={view.question}
+            onOpenSettings={onOpenSettings}
+            onAnswered={(note) => {
+              setAnswered({ ...note, question: view.question?.text ?? '' });
+              onChanged();
+              refreshWorkCards();
+              void read();
+            }}
+          />
+        ) : !finished && view.state === 'needs_you' && attentionText ? (
+          <section className='kel-wd-result kel-wd-result--needs' aria-label='What Kel needs' data-testid='kel-office-needs'>
+            <div className='kel-wd-result__head'>
+              <StatusDot tone='needs' />
+              <strong>Needs you</strong>
             </div>
-            <div className='kel-wd-oracle' data-testid='kel-office-oracle'>
-              <StatusDot tone='next' />
-              <span className='kel-wd-member__text'>
-                <span className='kel-wd-member__line'>
-                  <strong>Oracle</strong>
-                  {oracleModel ? <span className='kel-wd-model'>{oracleModel}</span> : null}
+            <p>{attentionText}</p>
+          </section>
+        ) : null}
+        <div className='kel-wc-progress kel-wd-progress' aria-hidden='true'>
+          <span className='kel-wc-progress__fill' style={{ width: `${(progressFraction(view) * 100).toFixed(2)}%` }} />
+        </div>
+        {finished && (resultText || appliedLine) ? (
+          <section className='kel-wd-result' aria-label='Result' data-testid='kel-office-result'>
+            <div className='kel-wd-result__head'>
+              <StateIcon state={view.state} size='detail' uncertain={uncertain} />
+              <strong>Result</strong>
+              {appliedLine ? (
+                <span className='kel-wd-meta' data-testid='kel-office-applied'>
+                  {appliedLine}
                 </span>
-                <span className='kel-wd-oracle__line' data-testid='kel-office-oracle-line'>
-                  {oracle.line}
-                </span>
-                {coverage ? (
-                  <span className='kel-wd-oracle__why' data-testid='kel-office-oracle-coverage'>
-                    {coverage}
-                  </span>
-                ) : null}
-                {oracle.why || oracleIndependence ? (
-                  <span className='kel-wd-oracle__why' data-testid='kel-office-oracle-why'>
-                    {[oracle.why, oracleIndependence]
-                      .filter((part): part is string => Boolean(part))
-                      .map((part) => (/[.!?…]$/.test(part) ? part : `${part}.`))
-                      .join(' ')}
-                  </span>
-                ) : null}
-              </span>
-            </div>
-            <div className='kel-wd-verification' data-testid='kel-office-verification'>
-              <div className='kel-wd-verification__head'>
-                <strong>Verification</strong>
-                <span className={`kel-wd-tone--${verificationTone}`} data-testid='kel-office-verification-word'>
-                  {verificationWord}
-                </span>
-              </div>
-              {verificationList.length ? (
-                <ul className='kel-wd-verification__list' data-testid='kel-office-verification-list'>
-                  {verificationList.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
               ) : null}
             </div>
+            {resultText ? <p>{resultText}</p> : null}
+            {attention && attentionText ? <p className='kel-wd-result__why'>{attentionText}</p> : null}
           </section>
+        ) : null}
+        {detail === null && unreadable ? <p className='kel-wd-loading'>Kel couldn’t read the details just now. It will try again.</p> : null}
+        {detail === null && !unreadable ? <p className='kel-wd-loading'>Reading the details…</p> : null}
+        {detail ? (
+          <div className='kel-wd-columns'>
+            <section className='kel-wd-col kel-wd-col--team' aria-labelledby={`${titleId}-team`}>
+              <SectionHead id={`${titleId}-team`} title='Team' meta={teamMeta} />
+              {staff.length ? (
+                <ul className='kel-wd-list'>
+                  {staff.map((member) => (
+                    <Member key={member.id} member={member} itemState={view.state} />
+                  ))}
+                </ul>
+              ) : (
+                <p className='kel-wd-empty'>Kel is handling this alone.</p>
+              )}
+            </section>
+            <div className='kel-wd-col kel-wd-col--steps'>
+              <section aria-labelledby={`${titleId}-steps`}>
+                <SectionHead id={`${titleId}-steps`} title='Steps' meta={stepMeta} />
+                {steps.length ? (
+                  <ol className='kel-wd-list kel-wd-steps'>
+                    {steps.map((step, index) => {
+                      const phase = stepPhase(step);
+                      const at = phase === 'done' || phase === 'failed' ? clockTime(step.at) : null;
+                      return (
+                        <li key={step.id} className={`kel-wd-step kel-wd-step--${phase}`} data-testid='kel-office-step'>
+                          <span className='kel-wd-step__lead' aria-hidden='true'>
+                            <img
+                              src={
+                                phase === 'done'
+                                  ? iconCheck14
+                                  : phase === 'now'
+                                    ? iconLoader
+                                    : phase === 'failed'
+                                      ? iconWarning
+                                      : phase === 'paused' || phase === 'interrupted'
+                                        ? iconWarningAmber
+                                        : stepPending
+                              }
+                              alt=''
+                            />
+                          </span>
+                          <span className='kel-wd-step__label'>{step.label}</span>
+                          <span className='kel-wd-step__when'>
+                            {phase === 'now'
+                              ? 'Now'
+                              : phase === 'paused'
+                                ? 'Paused'
+                                : phase === 'interrupted'
+                                  ? 'Interrupted'
+                                  : phase === 'pending'
+                                  ? index === firstPending && running && !stalled
+                                    ? 'Next'
+                                    : ''
+                                  : (at ?? '')}
+                          </span>
+                          <span className='kel-wc-sr'>
+                            {phase === 'done'
+                              ? ', done'
+                              : phase === 'now'
+                                ? ', in progress'
+                                : phase === 'paused'
+                                  ? ', paused here'
+                                  : phase === 'interrupted'
+                                    ? ', stopped part-way when Kel’s worker stopped'
+                                    : phase === 'failed'
+                                    ? ', did not finish'
+                                    : ', not started'}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                ) : (
+                  <p className='kel-wd-empty'>No steps reported yet.</p>
+                )}
+              </section>
+              {Array.isArray(files) ? (
+                <section aria-labelledby={`${titleId}-files`}>
+                  <SectionHead
+                    id={`${titleId}-files`}
+                    title='Files changed'
+                    meta={`${files.length} file${files.length === 1 ? '' : 's'}`}
+                  />
+                  {files.length ? (
+                    <ul className='kel-wd-list'>
+                      {files.map((path) => (
+                        <li key={path} className='kel-wd-file'>
+                          <img src={iconFile} alt='' />
+                          <span>{path}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className='kel-wd-empty'>No files changed.</p>
+                  )}
+                  {reportSteps.length ? (
+                    <button
+                      type='button'
+                      className='kel-wd-button kel-wd-files__report'
+                      disabled={busy}
+                      onClick={() => void downloadReport()}
+                      data-testid='kel-office-report'
+                    >
+                      <img src={iconFile} alt='' />
+                      Download change report
+                    </button>
+                  ) : null}
+                </section>
+              ) : null}
+            </div>
+            <section className='kel-wd-col kel-wd-col--review' aria-labelledby={`${titleId}-review`}>
+              <SectionHead id={`${titleId}-review`} title='Review and checks' />
+              <div className='kel-wd-finding' data-testid='kel-office-review'>
+                <div className='kel-wd-finding__head'>
+                  <StatusDot tone={reviewTone} />
+                  <strong>Verifier</strong>
+                  {verifier ? <span className='kel-wc-sr'>{`, ${modelLine(verifier)}`}</span> : null}
+                  <span className='kel-wc-push' />
+                  <span className={`kel-wd-finding__word kel-wd-tone--${reviewTone}`}>{reviewWord}</span>
+                </div>
+                {reviewText ? <p>{reviewText}</p> : null}
+                {reviewIndependence ? <p className='kel-wd-note'>{reviewIndependence}</p> : null}
+              </div>
+              {passes.map((pass) => {
+                const id = pass.kind === 'oracle' ? 'kel-office-oracle' : `kel-office-${pass.kind.replace('_', '-')}`;
+                return (
+                  <div key={pass.kind} className='kel-wd-oracle' data-testid={id} data-pass={pass.kind}>
+                    <StatusDot tone='next' />
+                    <span className='kel-wd-member__text'>
+                      <span className='kel-wd-member__line'>
+                        <strong>{pass.name}</strong>
+                        {pass.model ? <span className='kel-wd-model'>{pass.model}</span> : null}
+                      </span>
+                      <span className='kel-wd-oracle__line' data-testid={`${id}-line`}>
+                        {pass.lines.line}
+                      </span>
+                      {pass.coverage ? (
+                        <span className='kel-wd-oracle__why' data-testid={`${id}-coverage`}>
+                          {pass.coverage}
+                        </span>
+                      ) : null}
+                      {pass.lines.why || pass.independence ? (
+                        <span className='kel-wd-oracle__why' data-testid={`${id}-why`}>
+                          {[pass.lines.why, pass.independence]
+                            .filter((part): part is string => Boolean(part))
+                            .map((part) => (/[.!?…]$/.test(part) ? part : `${part}.`))
+                            .join(' ')}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                );
+              })}
+              <div className='kel-wd-verification' data-testid='kel-office-verification'>
+                <div className='kel-wd-verification__head'>
+                  <strong>Verification</strong>
+                  <span className={`kel-wd-tone--${verificationTone}`} data-testid='kel-office-verification-word'>
+                    {verificationWord}
+                  </span>
+                </div>
+                {verificationList.length ? (
+                  <ul className='kel-wd-verification__list' data-testid='kel-office-verification-list'>
+                    {verificationList.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </section>
+          </div>
+        ) : null}
+        <p className='kel-wd-footer'>
+          {finished
+            ? `Finished work stays at the top until you remove it. ${sheet ? 'Tap' : 'Click'} anywhere outside to close.`
+            : `Read-only. Kel runs the team; ask Kel for any change. ${sheet ? 'Tap' : 'Click'} anywhere outside to close.`}
+        </p>
+      </SheetBody>
+      {sheet ? (
+        <div className='kel-wd-sheet__foot' data-testid='kel-office-sheet-foot'>
+          {actions}
         </div>
       ) : null}
-      <p className='kel-wd-footer'>
-        {finished
-          ? 'Finished work stays at the top until you remove it. Click anywhere outside to close.'
-          : 'Read-only. Kel runs the team; ask Kel for any change. Click anywhere outside to close.'}
-      </p>
     </div>
   );
 };

@@ -23,9 +23,9 @@ import './KelWorkCardsRow5.css';
 
 const MAX_AVATARS = 3;
 
-export const KelAgentStack: React.FC<{ team: OfficeTeamChip[]; itemState: string }> = ({ team, itemState }) => {
+export const KelAgentStack: React.FC<{ team: OfficeTeamChip[]; itemState: string; max?: number }> = ({ team, itemState, max = MAX_AVATARS }) => {
   if (!team.length) return null;
-  const shown = team.slice(0, MAX_AVATARS);
+  const shown = team.slice(0, max);
   return (
     <span className='kel-wc-agents' aria-hidden='true'>
       {shown.map((member, index) => (
@@ -60,7 +60,8 @@ export const cardAccessibleName = (item: OfficeItem, team: OfficeTeamChip[]): st
 type Props = {
   item: OfficeItem;
   team: OfficeTeamChip[];
-  variant?: 'row' | 'menu';
+  /** `strip` is the phone's compact card: the team sits beside the title so the state row fits. */
+  variant?: 'row' | 'menu' | 'strip';
   selected?: boolean;
   removing?: boolean;
   onOpen: (item: OfficeItem, trigger: HTMLElement) => void;
@@ -98,7 +99,7 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
 
   return (
     <div
-      className={`kel-wc kel-wc--${variant} kel-wc--${item.state}${selected ? ' is-selected' : ''}${removable ? ' has-remove' : ''}${uncertain ? ' is-uncertain' : ''}${notNow ? ' has-not-now' : ''}`}
+      className={`kel-wc kel-wc--${variant === 'strip' ? 'row kel-wc--strip' : variant} kel-wc--${item.state}${selected ? ' is-selected' : ''}${removable ? ' has-remove' : ''}${uncertain ? ' is-uncertain' : ''}${notNow ? ' has-not-now' : ''}`}
       data-testid='kel-office-card'
       data-job={item.job_id}
       data-state={item.state}
@@ -111,7 +112,22 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
         aria-label={cardAccessibleName(item, team)}
         onClick={(event) => onOpen(item, event.currentTarget)}
       >
-        {variant === 'row' ? (
+        {variant === 'strip' ? (
+          <>
+            <span className='kel-wc__title-row'>
+              <span className='kel-wc__title'>{item.title}</span>
+              {finished || scoping ? null : <KelAgentStack team={team} itemState={item.state} max={2} />}
+            </span>
+            {progress}
+            <span className='kel-wc__state-row'>
+              <StateIcon state={item.state} uncertain={uncertain} />
+              {labelText}
+              {count ? <span className='kel-wc-count'>{count}</span> : null}
+              <span className='kel-wc-push' />
+              {finished && at ? <span className='kel-wc-time'>{at}</span> : null}
+            </span>
+          </>
+        ) : variant === 'row' ? (
           <>
             <span className='kel-wc__title-row'>
               <span className='kel-wc__title'>{item.title}</span>

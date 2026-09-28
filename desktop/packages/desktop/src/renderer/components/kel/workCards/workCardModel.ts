@@ -185,7 +185,7 @@ export const fitCards = (width: number, count: number): number => {
 /* ─── Staff ───────────────────────────────────────────────────────────────────────────────── */
 
 const COMMANDER_ROLES = new Set(['kel', 'commander']);
-const REVIEW_ROLES = new Set(['verifier', 'oracle']);
+const REVIEW_ROLES = new Set(['verifier', 'oracle', 'sentinel', 'red_team']);
 
 export const isCommander = (member: Pick<OfficeStaff, 'role'>): boolean => COMMANDER_ROLES.has(word(member.role));
 
@@ -200,6 +200,7 @@ const ROLE_NAMES: Record<string, string> = {
   utility: 'Utility',
   architect: 'Architect',
   sentinel: 'Sentinel',
+  red_team: 'Red Team',
   release: 'Release',
 };
 
@@ -315,15 +316,51 @@ const sentence = (text: string): string => {
  * The Oracle's lines under its name (LIVE-10): what it concluded first — "No problems found." or its
  * open findings — and why it was asked second. While it has not concluded, why it is being asked.
  */
-export const oracleLines = (oracle: OfficeOracle | null | undefined): { line: string; why: string | null } => {
+/** The independent passes after the checks, in the order the engine runs them (bc873da). */
+export type ReviewPassKind = 'sentinel' | 'oracle' | 'red_team';
+export const REVIEW_PASSES: ReadonlyArray<{ kind: ReviewPassKind; name: string }> = [
+  { kind: 'sentinel', name: 'Sentinel' },
+  { kind: 'oracle', name: 'Oracle' },
+  { kind: 'red_team', name: 'Red Team' },
+];
+const PASS_WAITING: Record<ReviewPassKind, string> = {
+  sentinel: 'Security and data-safety check before hand-over.',
+  oracle: 'Second opinion before hand-over.',
+  red_team: 'Will try to break the accepted result before hand-over.',
+};
+const PASS_RUNNING: Record<ReviewPassKind, string> = {
+  sentinel: 'Checking it for security and data safety now.',
+  oracle: 'Giving a second opinion now.',
+  red_team: 'Trying to break the accepted result now.',
+};
+
+/**
+ * Sentinel and the Red Team only show when they have something to say: a pass the engine did not
+ * need and gave no reason for is left out (the Oracle always shows, as Figma 4b/4d draw it).
+ */
+export const showReviewPass = (kind: ReviewPassKind, pass: OfficeOracle | null | undefined): boolean => {
+  if (kind === 'oracle') return true;
+  if (!pass || !pass.state) return false;
+  if (pass.state !== 'not_needed') return true;
+  return Boolean((pass.why ?? '').trim() || (pass.conclusion ?? '').trim());
+};
+
+export const oracleLines = (
+  oracle: OfficeOracle | null | undefined,
+  kind: ReviewPassKind = 'oracle'
+): { line: string; why: string | null } => {
   const why = (oracle?.why ?? '').trim();
   switch (oracle?.state) {
-    case 'not_needed':
+    case 'not_needed': {
+      // A skipped pass says why in the engine's words ("An earlier review already stands.").
+      const told = (oracle.conclusion ?? '').trim() || why;
+      if (kind !== 'oracle' && told) return { line: `Not needed: ${lowerFirst(sentence(told))}`, why: null };
       return { line: 'Not asked for this work.', why: null };
+    }
     case 'waiting':
-      return { line: 'Second opinion before hand-over.', why: why ? `Asked because: ${why}` : null };
+      return { line: PASS_WAITING[kind], why: why ? `Asked because: ${why}` : null };
     case 'running':
-      return { line: 'Giving a second opinion now.', why: why ? `Asked because: ${why}` : null };
+      return { line: PASS_RUNNING[kind], why: why ? `Asked because: ${why}` : null };
     case 'could_not_run': {
       const told = (oracle.conclusion ?? '').trim();
       if (told) return { line: sentence(told), why: null };

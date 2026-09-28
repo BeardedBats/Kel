@@ -1,0 +1,151 @@
+/* D-68 on the phone (no Figma frame — inferred, docs/v2/FIGMA_GAPS.md "Work cards on the phone").
+   The row becomes a compact strip under the phone header that scrolls sideways; a card opens its
+   detail as a bottom sheet. Sources: the card family of Office row 4 (fills, rings, bar, state words)
+   and the phone sheets M / Approval details 299:12281 and M / Model picker 299:12372 (20px top
+   radius, 36×5 grabber, glass material, 16px gutters, 44px primary, link-style secondaries). */
+
+/* ─── The strip ─────────────────────────────────────────────────────────────────────────── */
+.kel-wc-host.kel-wc-host--phone {
+  width: 100%;
+  max-width: none;
+  margin: 4px 0 6px;
+}
+.kel-wc-row.kel-wc-row--phone {
+  gap: 8px;
+  padding: 2px max(16px, env(safe-area-inset-right)) 4px max(16px, env(safe-area-inset-left));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: max(16px, env(safe-area-inset-left));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.kel-wc-row--phone::-webkit-scrollbar { display: none; }
+.kel-wc-row--phone .kel-wc-slot { scroll-snap-align: start; }
+/* A compact card: 164px so a second card and the edge of a third show at 390pt, which says "scroll". */
+.kel-wc-host--phone .kel-wc--row { width: 164px; }
+.kel-wc-host--phone .kel-wc__open {
+  gap: 5px;
+  min-height: 44px;
+  padding: 8px 10px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.kel-wc-host--phone .kel-wc__state-row { height: 18px; }
+/* The strip card carries its team (up to two) beside the title, so the state words keep their room. */
+.kel-wc--strip .kel-wc__title-row { height: 20px; gap: 6px; }
+.kel-wc--strip .kel-wc-agents { margin-left: auto; }
+/* No hover on touch: the resting fill stays until the card is tapped. */
+@media (hover: none) {
+  .kel-wc-host--phone .kel-wc--row:hover:not(.is-selected) {
+    background:
+      linear-gradient(rgba(47, 107, 224, 0.14), rgba(47, 107, 224, 0.14)),
+      rgba(15, 45, 100, 0.55);
+  }
+  html[data-theme='light'] .kel-wc-host--phone .kel-wc--row:hover:not(.is-selected) { background: #ffffff; }
+}
+.kel-wc-host--phone .kel-wc--row:active:not(.is-selected) {
+  background:
+    linear-gradient(rgba(47, 107, 224, 0.22), rgba(47, 107, 224, 0.22)),
+    rgba(15, 45, 100, 0.6);
+}
+html[data-theme='light'] .kel-wc-host--phone .kel-wc--row:active:not(.is-selected) { background: #f1f5fb; }
+/* "Not now" on a scoping card is a text button; it gets a phone-sized hit area without growing. */
+.kel-wc-host--phone .kel-wc__not-now { min-height: 32px; }
+
+/* ─── The sheet ─────────────────────────────────────────────────────────────────────────── */
+.kel-wc-sheet { position: fixed; inset: 0; z-index: 2200; }
+.kel-wc-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(6, 18, 46, 0.6);
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-theme='light'] .kel-wc-sheet__scrim { background: rgba(20, 32, 52, 0.28); }
+
+.kel-wd.kel-wd--sheet {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  gap: 12px;
+  width: 100%;
+  max-height: calc(100dvh - max(48px, env(safe-area-inset-top) + 24px));
+  overflow: hidden;
+  padding: 8px 0 0;
+  border: 1px solid rgba(191, 216, 255, 0.16);
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+  background:
+    linear-gradient(180deg, rgba(191, 216, 255, 0.08), rgba(191, 216, 255, 0)),
+    rgba(15, 45, 100, 0.94);
+  box-shadow: 0 20px 24px rgba(0, 0, 0, 0.35), inset 0 1px rgba(191, 216, 255, 0.18);
+}
+html[data-theme='light'] .kel-wd.kel-wd--sheet { border-color: #c9d4e5; background: #ffffff; box-shadow: 0 -8px 24px rgba(20, 35, 60, 0.16); }
+.kel-wd-sheet__handle { flex: none; width: 36px; height: 5px; margin: 0 auto; border-radius: 3px; background: rgba(191, 216, 255, 0.3); }
+html[data-theme='light'] .kel-wd-sheet__handle { background: #c4cedf; }
+/* The sheet takes focus on open so its title is announced; its own frame is the visible cue. */
+.kel-wc-sheet .kel-wd:focus, .kel-wc-sheet .kel-wd:focus-visible { outline: none; }
+
+.kel-wd--sheet > .kel-wd-head { flex: none; padding: 0 16px; }
+.kel-wd--sheet .kel-wd-title { width: 100%; }
+.kel-wd--sheet .kel-wd-title h2 { font-size: 20px; line-height: 24px; white-space: normal; overflow-wrap: anywhere; }
+.kel-wd--sheet .kel-wd-state { flex-wrap: wrap; row-gap: 2px; }
+.kel-wd--sheet .kel-wd-state__meta { flex-basis: 100%; white-space: normal; }
+/* The result's "where it went" line takes its own line under the Result head on a narrow screen. */
+.kel-wd--sheet .kel-wd-result__head { flex-wrap: wrap; row-gap: 2px; }
+.kel-wd--sheet .kel-wd-result__head > .kel-wd-meta { flex-basis: 100%; }
+.kel-wd--sheet .kel-na__head { flex-wrap: wrap; row-gap: 2px; }
+.kel-wd--sheet .kel-na__meta { white-space: normal; }
+.kel-wd--sheet .kel-wd-files__report { height: 44px; }
+
+.kel-wd-sheet__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 0 16px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+/* One column: Team, then Steps and Files, then Review and checks. */
+.kel-wd--sheet .kel-wd-columns { flex-direction: column; align-items: stretch; gap: 18px; }
+.kel-wd--sheet .kel-wd-col { flex: none; width: 100%; }
+.kel-wd--sheet .kel-wd-result p { font-size: 15px; line-height: 20px; }
+.kel-wd--sheet .kel-wd-step, .kel-wd--sheet .kel-wd-file { min-height: 28px; }
+/* iOS zooms into a field under 16px; the answer box keeps its box and takes the phone size. */
+.kel-wd--sheet .kel-answer__box { height: 44px; font-size: 16px; }
+.kel-wd--sheet .kel-answer .kel-wd-button--primary { height: 44px; }
+.kel-wd--sheet .kel-chip-pick { min-height: 36px; }
+
+.kel-wd-sheet__foot {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(191, 216, 255, 0.12);
+}
+html[data-theme='light'] .kel-wd-sheet__foot { border-top-color: #dde5f0; }
+.kel-wd-sheet__foot .kel-wd-button { justify-content: center; height: 44px; }
+.kel-wd-sheet__foot .kel-wd-button--primary { order: -1; width: 100%; }
+.kel-wd-sheet__foot .kel-wd-actions { flex-wrap: wrap; justify-content: center; gap: 4px 24px; }
+.kel-wd-sheet__foot .kel-wd-confirm { flex-direction: column; align-items: stretch; gap: 6px; }
+.kel-wd-sheet__foot .kel-wd-confirm > span { text-align: center; }
+.kel-wd-sheet__foot .kel-wd-button--danger { width: 100%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .kel-wd--sheet { animation: kel-wd-sheet-in 260ms cubic-bezier(0.32, 0.72, 0, 1); }
+  .kel-wc-sheet__scrim { animation: kel-wd-scrim-in 200ms ease-out; }
+}
+@keyframes kel-wd-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes kel-wd-scrim-in { from { opacity: 0; } to { opacity: 1; } }

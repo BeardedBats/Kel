@@ -5,9 +5,14 @@
  * project (every project on "All projects"). Cards that do not fit go behind a "+N more" control measured from the real width;
  * finished work stays until Nick removes it; a card opens the read-only detail over a dimmed chat.
  * With no work the row renders nothing, so the chat keeps its height.
+ *
+ * On the phone (`phone`) the same cards sit in a compact strip under the header that scrolls
+ * sideways (no "+N more" menu), and a card opens its detail as a bottom sheet over the chat
+ * (inferred from the phone sheets — docs/v2/FIGMA_GAPS.md "Work cards on the phone").
  */
 import { ipcBridge } from '@/common';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { getRouteConversationIdForKelId, resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import { resolveEngineConversation } from '../KelApprovalCard';
@@ -42,6 +47,7 @@ import {
 import { OPEN_WORK_CARD_EVENT, REFRESH_WORK_CARDS_EVENT, refreshWorkCards, takePendingWorkCard } from './workCardEvents';
 import './KelWorkCards.css';
 import './KelWorkCardsRow5.css';
+import './KelWorkCardsPhone.css';
 
 const hidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden';
 
@@ -240,9 +246,18 @@ type Props = {
   pollActiveMs?: number;
   pollIdleMs?: number;
   openFolder?: (path: string) => Promise<unknown>;
+  /** The phone layout: a sideways-scrolling strip, and the detail as a bottom sheet. */
+  phone?: boolean;
 };
 
-export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth, pollActiveMs, pollIdleMs, openFolder = defaultOpenFolder }) => {
+export const KelWorkCardRow: React.FC<Props> = ({
+  conversationId,
+  availableWidth,
+  pollActiveMs,
+  pollIdleMs,
+  openFolder = defaultOpenFolder,
+  phone = false,
+}) => {
   const navigate = useNavigate();
   const { active, projects } = useProjects();
   // D-73.4: an open chat shows its own project's work; a chat Kel has not seen yet (its project is
@@ -294,7 +309,7 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
 
   // Measure the real width, and again whenever it changes.
   useLayoutEffect(() => {
-    if (availableWidth !== undefined) return;
+    if (availableWidth !== undefined || phone) return;
     const node = rowRef.current;
     if (!node) return;
     const read = () => setMeasured(node.getBoundingClientRect().width || node.clientWidth || 0);
@@ -306,10 +321,11 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
     const observer = new ResizeObserver(read);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [availableWidth, ordered.length > 0]);
+  }, [availableWidth, phone, ordered.length > 0]);
 
   const width = availableWidth ?? measured;
-  const visibleCount = fitCards(width, ordered.length);
+  // The phone strip scrolls, so every card is in it; the desktop row fits what the width allows.
+  const visibleCount = phone ? ordered.length : fitCards(width, ordered.length);
   const visible = ordered.slice(0, visibleCount);
   const overflow = ordered.slice(visibleCount);
   const openItem = openJob ? ordered.find((item) => item.job_id === openJob) ?? null : null;
@@ -546,6 +562,16 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
     };
   }, [menuOpen, openJob, closeDetail]);
 
+  // The phone sheet holds the page still behind it (the chat does not scroll under the scrim).
+  useEffect(() => {
+    if (!phone || !openJob || typeof document === 'undefined') return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [phone, openJob]);
+
   // Forget a removal once a read that started after the engine confirmed it has arrived.
   useEffect(() => {
     if (![...dismissed.values()].some((seq) => seq < readSeq)) return;
@@ -565,18 +591,20 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
   const dots = overflow.slice(0, OVERFLOW_MAX_DOTS);
 
   return (
-    <div className='kel-wc-host' data-testid='kel-work-card-row'>
-      {openItem ? <div className='kel-wc-backdrop' data-testid='kel-office-backdrop' aria-hidden='true' onMouseDown={() => closeDetail(false)} /> : null}
+    <div className={`kel-wc-host${phone ? ' kel-wc-host--phone' : ''}`} data-testid='kel-work-card-row' data-layout={phone ? 'phone' : 'desktop'}>
+      {openItem && !phone ? <div className='kel-wc-backdrop' data-testid='kel-office-backdrop' aria-hidden='true' onMouseDown={() => closeDetail(false)} /> : null}
       <div className='kel-wc-stack'>
-      <div className='kel-wc-row' ref={rowRef} role='list' aria-label='Work in progress'>
+      <div className={`kel-wc-row${phone ? ' kel-wc-row--phone' : ''}`} ref={rowRef} role='list' aria-label='Work in progress'>
         {visible.map((item) => (
           <div role='listitem' key={item.job_id} className='kel-wc-slot'>
             <KelOfficeCard
               item={item}
               team={teamFor(item)}
+              variant={phone ? 'strip' : 'row'}
               selected={openJob === item.job_id}
               onOpen={openDetail}
-              onRemove={remove}
+              // On the phone a finished card is removed from its sheet (a 44pt Remove), not a tiny ×.
+              onRemove={phone ? undefined : remove}
               onNotNow={notNow}
             />
           </div>
@@ -638,7 +666,29 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
           </div>
         ) : null}
       </div>
-      {openItem ? (
+      {openItem && phone
+        ? createPortal(
+            <div className='kel-wc-sheet' data-testid='kel-work-sheet'>
+              <button type='button' className='kel-wc-sheet__scrim' aria-label='Close work details' onClick={() => closeDetail(false)} />
+              <div className='kel-wc-sheet__panel' ref={detailRef}>
+                <KelOfficeDetail
+                  key={openItem.job_id}
+                  variant='sheet'
+                  item={openItem}
+                  projectName={projectName(openItem.project_id)}
+                  pollMs={isRunning(openItem.state) ? pollActiveMs ?? POLL_ACTIVE_MS : pollIdleMs ?? POLL_IDLE_MS}
+                  onClose={closeDetail}
+                  onRemove={remove}
+                  onTalk={(item) => void talk(item)}
+                  onChanged={refresh}
+                  onOpenSettings={openSettings}
+                />
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+      {openItem && !phone ? (
         <div className='kel-wc-detail-slot' ref={detailRef}>
           <KelOfficeDetail
             key={openItem.job_id}

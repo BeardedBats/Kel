@@ -170,6 +170,9 @@ export interface OfficeItemDetail extends Omit<OfficeItem, 'team'> {
   steps?: OfficeStep[] | null;
   review?: OfficeReview | null;
   oracle?: OfficeOracle | null;
+  /** bc873da: Sentinel's security / data-safety review and the Red Team's attack, in the Oracle's shape. */
+  sentinel?: OfficeOracle | null;
+  red_team?: OfficeOracle | null;
   files_changed?: string[] | null;
   verification?: OfficeVerification | null;
   /** D-65, coding work: where the checked change stands in the project folder. */
@@ -245,6 +248,8 @@ export interface OfficeQuestion {
   conversation_id?: string | null;
   job_id?: string | null;
   ref?: { approval_kind?: string | null; approval_id?: string | null; job?: string | null } | null;
+  /** bc873da: which independent pass raised a second-opinion wait (its words are already in `text`). */
+  source?: 'sentinel' | 'oracle' | 'red_team' | string | null;
 }
 
 const asList = (payload: unknown): OfficeList => {
