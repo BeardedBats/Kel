@@ -238,6 +238,12 @@ def run_broker(store,run_id):
         thread=threading.Thread(target=heartbeat,daemon=True);thread.start()
         try:
             provider=row['provider'];options=json.loads(row['options'])
+            # D-67: a staffed step runs on the model and reasoning level its role resolved to (the
+            # binding was written in the claim transaction, so an adopted broker uses the same one).
+            from .staff import binding_for_run
+            binding=binding_for_run(store,run_id)
+            if binding.get('model_arg') and provider in ('internal','research'):
+                options=dict(options,model=binding['model_arg'])
             if provider in ('codex-code','claude-code'):
                 from .coding import CodingAdapter
                 adapter=CodingAdapter(store)
@@ -248,8 +254,10 @@ def run_broker(store,run_id):
                 from .internal import InternalAdapter
                 adapter=InternalAdapter(**options)
             elif provider in ('codex','claude'):
-                from .native import NativeAdapter
-                adapter=NativeAdapter(provider,store.root/'workspaces'/provider,store.root/'native-logs',timeout=180)
+                from .native import DEFAULT_EFFORT,NativeAdapter
+                adapter=NativeAdapter(provider,store.root/'workspaces'/provider,store.root/'native-logs',timeout=180,
+                                      model=binding.get('model_arg'),fallback_model=binding.get('fallback_arg'),
+                                      effort=binding.get('effort_arg') if binding else DEFAULT_EFFORT)
             else:raise PolicyError('Unsupported durable provider')
             kwargs={}
             if provider in ('codex','claude'):

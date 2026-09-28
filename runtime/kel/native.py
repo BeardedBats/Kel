@@ -58,16 +58,32 @@ def child_env(provider, base=None, session=None):
     return env
 
 
+DEFAULT_EFFORT = object()  # "as before": Codex text runs at low effort, Claude uses its own default
+
+
 class NativeAdapter:
-    def __init__(self, provider, workspace, logs, timeout=100):
+    def __init__(self, provider, workspace, logs, timeout=100, model=None, effort=DEFAULT_EFFORT,
+                 fallback_model=None):
+        """`model`/`fallback_model`/`effort` (D-67) are the runtime's own flags: Codex `-m` and
+        `model_reasoning_effort`; Claude Code `--model`, `--fallback-model`, `--effort`. `effort=None`
+        means "the model's own default level" (no override)."""
         self.provider = provider
         self.workspace = Path(workspace).resolve()
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.logs = Path(logs).resolve()
         self.logs.mkdir(parents=True, exist_ok=True)
         self.timeout = min(max(timeout, 1), 180)
+        self.model = model or None
+        self.fallback_model = fallback_model or None
+        self.effort = effort
         self.processes = {}
         self.lock = threading.Lock()
+
+    def reasoning(self):
+        """The reasoning level this adapter asks for ('auto' = the model's own default)."""
+        if self.effort is DEFAULT_EFFORT:
+            return 'low' if self.provider == 'codex' else 'auto'
+        return self.effort or 'auto'
 
     def probe(self):
         try:
@@ -83,8 +99,13 @@ class NativeAdapter:
     def argv(self, session_id=None):
         if self.provider == 'codex':
             args = executable('codex') + ['exec', '--ignore-user-config', '--skip-git-repo-check', '--json',
-                    '-c', 'approval_policy="never"', '-c', 'web_search="disabled"', '-c', 'model_reasoning_effort="low"',
-                    '-c', 'sandbox_mode="read-only"']
+                    '-c', 'approval_policy="never"', '-c', 'web_search="disabled"']
+            effort = 'low' if self.effort is DEFAULT_EFFORT else self.effort
+            if effort:
+                args += ['-c', 'model_reasoning_effort="%s"' % effort]
+            if self.model:
+                args += ['-m', self.model]
+            args += ['-c', 'sandbox_mode="read-only"']
             for feature in ('multi_agent', 'multi_agent_v2', 'shell_tool', 'unified_exec', 'apps', 'plugins',
                             'hooks', 'memories', 'browser_use', 'computer_use', 'image_generation',
                             'workspace_dependencies', 'goals', 'in_app_browser', 'browser_use_external'):
@@ -97,6 +118,12 @@ class NativeAdapter:
         args = executable('claude') + ['-p', '--safe-mode', '--tools', '', '--disable-slash-commands',
                 '--permission-mode', 'dontAsk', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
                 '--output-format', 'json', '--max-budget-usd', '0.50']
+        if self.model:
+            args += ['--model', self.model]
+            if self.fallback_model and self.fallback_model != self.model:
+                args += ['--fallback-model', self.fallback_model]
+        if self.effort is not DEFAULT_EFFORT and self.effort:
+            args += ['--effort', self.effort]
         if session_id:
             args += ['--resume', session_id]
         return args
@@ -141,6 +168,20 @@ class NativeAdapter:
             result = self.parse(output, session_id)
             if process.returncode != 0:
                 result.update(outcome='FAILED', error=f'Native CLI exited {process.returncode}; inspect local log {stderr_path.name}')
+                result.pop('model_used', None)
+                try:
+                    # A model the runtime refused says so on stderr; keep one plain line for D-67's
+                    # "record what was asked, what ran, and why".
+                    tail = stderr_path.read_text(encoding='utf-8', errors='replace').strip().splitlines()
+                    if tail and 'model' in tail[-1].lower():
+                        result['error'] += ' — ' + tail[-1][:200]
+                except OSError:
+                    pass
+            elif result.get('outcome') == 'SUCCESS' and not result.get('model_used') and self.model \
+                    and self.provider == 'codex':
+                result['model_used'] = self.model  # Codex accepted `-m` and finished the turn with it
+            if result.get('outcome') == 'SUCCESS':
+                result.setdefault('reasoning_used', self.reasoning())
             result.update(duration=round(time.monotonic()-started, 3), logs=str(stdout_path), provider=self.provider)
             return result
         except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
@@ -156,10 +197,19 @@ class NativeAdapter:
                 record = json.loads(output)
             except json.JSONDecodeError:
                 return dict(outcome='FAILED', error='Malformed native JSON')
-            return dict(outcome='FAILED' if record.get('is_error') else 'SUCCESS',
-                        text=record.get('result', ''), session_id=record.get('session_id', session_id),
-                        usage=record.get('usage'), cost_usd=record.get('total_cost_usd'),
-                        native_subtype=record.get('subtype'))
+            usage_by_model = record.get('modelUsage') if isinstance(record.get('modelUsage'), dict) else {}
+            used = None
+            if usage_by_model:
+                # The model that did the work: the one with the most output (Claude Code may also
+                # call a small helper model).
+                used = max(usage_by_model, key=lambda name: (usage_by_model[name] or {}).get('outputTokens') or 0)
+            out = dict(outcome='FAILED' if record.get('is_error') else 'SUCCESS',
+                       text=record.get('result', ''), session_id=record.get('session_id', session_id),
+                       usage=record.get('usage'), cost_usd=record.get('total_cost_usd'),
+                       native_subtype=record.get('subtype'))
+            if used:
+                out['model_used'] = used
+            return out
         text, events, errors = [], [], []
         for line in output.splitlines():
             try:

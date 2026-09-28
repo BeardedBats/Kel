@@ -401,6 +401,45 @@ def update_call(store, call_id, *, state=None, ran=None, why=None, summary=None,
         return _apply(conn)
 
 
+def binding_for_run(store, run_id):
+    """What a staffed run was asked to run on (model/fallback/effort flags); {} when unstaffed."""
+    with contextlib.closing(store.connect()) as db:
+        if not _has_table(db, 'staff_calls'):
+            return {}
+        row = db.execute('SELECT asked FROM staff_calls WHERE id=?', (run_id,)).fetchone()
+    if not row:
+        return {}
+    try:
+        asked = json.loads(row['asked'] or '{}')
+    except (TypeError, ValueError):
+        return {}
+    return {key: asked.get(key) for key in ('model_arg', 'fallback_arg', 'effort_arg', 'model',
+                                            'reasoning', 'role')}
+
+
+REJECTION = re.compile(r'(?:model|model_id)\b.{0,80}\b(?:not found|not supported|not available|does not '
+                       r"exist|unknown|invalid|isn't available|is not available|no access|not allowed|"
+                       r'unsupported|not recognized)|\b(?:unknown|invalid|unsupported) model\b|model_not_found',
+                       re.IGNORECASE)
+
+
+def note_rejection(db, call_id, error):
+    """A runtime that refused the asked model: remember it for a day so the next step falls back."""
+    if not error or not REJECTION.search(str(error)) or not _has_table(db, 'staff_model_status'):
+        return False
+    row = db.execute('SELECT asked FROM staff_calls WHERE id=?', (call_id,)).fetchone()
+    try:
+        model = json.loads(row['asked'] or '{}').get('model') if row else None
+    except (TypeError, ValueError):
+        model = None
+    if not model:
+        return False
+    db.execute('INSERT INTO staff_model_status(model,status,reason,at) VALUES(?,?,?,?) '
+               'ON CONFLICT(model) DO UPDATE SET status=excluded.status, reason=excluded.reason, '
+               'at=excluded.at', (model, 'rejected', 'its runtime refused it', time.time()))
+    return True
+
+
 def calls(store, job_id):
     with contextlib.closing(store.connect()) as db:
         if not _has_table(db, 'staff_calls'):

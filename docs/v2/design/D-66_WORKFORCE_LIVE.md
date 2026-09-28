@@ -88,12 +88,13 @@ routing).
 | Utility | DeepSeek Flash | none installed (no DeepSeek adapter) → falls back, recorded | Auto |
 | Architect, Sentinel, Release | Automatic | today's routing | Auto |
 
-**Precedence** (most specific first): a scheduled run's model (D-57) → the model Nick picked for this
-chat (CH-2; an explicit instruction for that chat's work) → the role setting → Automatic routing (the
-default chat model stays a soft preference, as today). Kel's own replies and plans use the chat model
-when one is saved, else the Kel role.
+**Precedence (D-69).** Staff always run on their role model — the D-67 default or Nick's per-role
+setting. A model picked in a chat (and a schedule's model, D-57) is Kel's own: it decides Kel's
+replies, turn decisions and plans, and never steers staff, not even as a routing hint (this supersedes
+CH-2 for staff work). Kel's own replies and plans use the chat model when one is saved, else the Kel
+role. Unstaffed jobs (workforce off) keep today's behaviour.
 
-**Reasoning levels are real flags, verified on the installed CLIs (not guessed):** Claude Code 2.1.215
+**Reasoning levels are real flags, verified on the installed CLIs (not guessed):** Claude Code 2.1.283
 `--effort low|medium|high|xhigh|max` (+ `--model`, `--fallback-model`); Codex 0.142.5 app-server
 `turn/start {model, effort}` and `thread/start {model}` (response reports `model` and
 `reasoningEffort`), `codex exec -m <model> -c model_reasoning_effort="<level>"`; each Codex model's
@@ -102,11 +103,12 @@ supported levels come from its catalog (`~/.codex/models_cache.json`: `gpt-6-ast
 adjustable"). **Auto** = Kel does not override the model's own default level; the only exception is
 the quick reply-or-work decision of a chat turn, which keeps `low` (30-second budget) and records it.
 
-**Independence.** Verifier and Oracle must be a different model family from the step's Builder when
-one is available (`anthropic` ≠ `openai` ≠ `deepseek`). If the preferred Verifier shares the Builder's
-family (e.g. the Builder fell back to Codex), Kel picks the first available model of another family
-and records why; if none exists the review runs with `independence: reduced` recorded (never hidden).
-A Fixed Verifier/Oracle is honoured and its reduced independence recorded.
+**Independence (D-69).** Verifier and Oracle must be a different model family from the step's
+Builder when one is available (`anthropic` ≠ `openai` ≠ `deepseek`). If the preferred model shares the
+Builder's family (e.g. the Builder fell back to Codex) or cannot run here, Kel hands the review to the
+next available model — another family first, then the Builder's own family with `independence:
+reduced` recorded as coverage debt (workforce-os doc 10 §3), never hidden. Only when no model at all
+can run is there no review. A Fixed Verifier/Oracle is honoured and its reduced independence recorded.
 
 **Truth recording.** Every model call made for a staffed job is one `staff_calls` row:
 `asked` (role, mode, model, reasoning), `ran` (runtime, provider/adapter, model, reasoning,
@@ -142,25 +144,39 @@ request, the claims, the checks and the artifact/diff — never the team's narra
 findings), family-diverse from the Builder. Its challenges become `adversarial` findings
 (`oracle:<job>`). **A live blocker stops auto-apply** (`auto_apply.why_wait` → waiting, reason in plain
 words) and marks the work **Needs you** (`/api/work`, the hand-off card, `/api/office`). The Oracle has
-no implementation authority: it cannot change the verdict, the artifact or the project. If it cannot
-run (no model, twice interrupted, unreadable answer) the gap is recorded and a triggered code change
-**waits for Nick** instead of applying (missing coverage is never clean).
+no implementation authority: it cannot change the verdict, the artifact or the project. If GPT-6 Astra
+cannot run, the Oracle goes to the next available model (D-69, as for the Verifier above). Only if no
+model at all can run (or it is interrupted twice, or its answer cannot be read) is the gap recorded and
+a triggered code change **waits for Nick** instead of applying (missing coverage is never clean).
 
 `oracle_reviews(job_id, subject, attempts, status, …)` mirrors `review_runs`: RUNNING rows become
 INTERRUPTED at engine start and are retried at most twice.
 
-## 4. Live state API (D-66)
-Read-only; the renderer polls it. Plain words only — no tiers, lease ids, run ids or event names.
+## 4. Live state API (D-66, D-68)
+The renderer polls it for the row of work cards at the top of the chat (D-68). Plain words only — no
+tiers, lease ids, run ids or event names.
 
-`GET /api/office?project=<id|*>` →
+`GET /api/office[?conversation=<id>|?project=<id|*>]` →
 ```
-{generated, project, items:[{job_id, title, project_id, conversation_id, submission_id,
-  kind:'code'|'writing'|'research'|'recipe', state, status_line, needs_you,
-  progress:{done, total, label}, team_size, started_at, updated_at}]}
+{generated, scope, items:[{job_id, title, project_id, conversation_id, submission_id,
+  kind:'code'|'writing'|'research'|'recipe', state, finished, status_line, needs_you,
+  progress:{done, total, label}, team:[{role, role_label}], team_size, started_at, updated_at,
+  finished_at}]}
 ```
-Active work plus work settled in the last 24 h (at most 20). `state` ∈ `working | in_review |
-needs_you | done | stopped | failed`. `progress` counts accepted steps out of real milestones and names
-the phase in words ("2 of 3 steps done", "Checking the result") — never a percentage.
+**Which items (D-68):** every staffed job that is still open, and every finished one (done / failed /
+stopped) **until Nick removes it** — never trimmed by age. Jobs that were already settled before the
+card row existed (before migration 36 was applied, or created while the workforce was off) are not
+cards. **Order (stable):** needs-you items first, then working / in-review items, then finished items;
+within the open groups newest start first, within finished newest finish first; ties by job id.
+`state` ∈ `working | in_review | needs_you | done | stopped | failed`. `progress` counts accepted steps
+out of real milestones and names the phase in words ("2 of 3 steps done", "Checking the result") —
+never a percentage.
+
+`POST /api/office {action:'dismiss', job}` removes one **finished** card (refused in plain words while
+the work is open — stop it first). Durable (`office_dismissals`), idempotent (a second dismiss returns
+`{dismissed:true, already:true}` and records nothing), and one Activity line ("You removed finished
+work from the top of the chat."). It hides the card only: the job, its conversation, its result and
+its evidence are untouched.
 
 `GET /api/office/item?job=<id>` →
 ```
@@ -174,16 +190,16 @@ the phase in words ("2 of 3 steps done", "Checking the result") — never a perc
  links:{conversation_id, submission_id, message_seq}}
 ```
 Finding rows: `{severity:'blocker'|'critical'|'note', area, summary, where, status:'open'|'resolved'}`.
-The desktop allowlist (`kelRequestGuard.ts`) admits exactly these two GET shapes; `kelApi.ts` gets
-`kelOffice(project)` and `kelOfficeItem(job)` with typed results. No UI is built here (a Figma
-exploration is choosing the design).
+The desktop allowlist (`kelRequestGuard.ts`) admits exactly these GET shapes and the POST route;
+`kelApi.ts` gets `kelOffice(scope)`, `kelOfficeItem(job)` and `kelOfficeDismiss(job)` with typed
+results. No UI is built here (D-68 chose the design; the card row is a renderer task).
 
 ## 5. Migrations and storage
 One additive migration, **36 `v2-workforce-live`** (35 is General's default folder) (`staff.ensure_schema`, idempotent, no table
 altered): `role_models(role PK, mode, model, reasoning, updated)`, `staff_calls(id PK, job_id,
 milestone_id, role, instance, kind, subject, state, asked, ran, why, summary, started, finished)`,
 `staff_model_status(model PK, status, reason, at)`, `oracle_reviews(job_id, subject, attempts,
-status, detail, PK(job_id, subject))`. Existing tables are read, never reshaped: `contracts` carries
+status, detail, PK(job_id, subject))`, `office_dismissals(job_id PK, at, actor)`. Existing tables are read, never reshaped: `contracts` carries
 `staffing`; `team_assignments`/`team_events` carry the authority snapshot and `staffing.decided`;
 `findings`/`evidence_records` carry review and Oracle results. `Store.claim` gains an optional
 `staff=` argument that writes the step's `staff_calls` row **in the claim transaction**.
@@ -217,18 +233,32 @@ status, detail, PK(job_id, subject))`. Existing tables are read, never reshaped:
   acknowledgement, and a hand-off from the accepted scope into `_start_work` — plus Nick's call on
   where the threshold sits.
 
-## Needs Nick (conservative choices taken; each is one setting or constant to change)
-1. **Chat model vs role models.** A model picked in a chat applies to that chat's work (CH-2 kept);
-   otherwise roles decide. Nick may prefer roles to always win for staff.
-2. **"Auto" reasoning** means "the model's own default level" (Codex: medium for Astra/Luna); the chat
-   turn decision stays `low`. No role starts above its default.
-3. **Model ids for Claude Opus 5.5 and Fable 5.1.** The installed Claude Code (2.1.215) lists
-   `claude-fable-5` and `claude-opus-4-8` but not these; Kel asks for `claude-opus-5-5` /
-   `claude-fable-5-1` with the CLI's own `--fallback-model opus|fable`, and records what actually ran.
-4. **Non-code writing at D1+ is staffed as Builder** (charter wording); D-67 describes Builder as
-   coding.
-5. **Oracle thresholds** (10 files / 400 changed lines, flags, D4) and "a triggered code change whose
-   Oracle could not run waits for you".
-6. **Staffed jobs below D3 run one step at a time** (previously independent parts could overlap).
-7. **Kel (Commander) now prefers ChatGPT Luna** for replies and plans when no chat model is saved;
-   messages with images still go to the Anthropic API worker when it is available.
+## workforce-os doc 10 (model & provider routing): covered and not
+Covered: requirement-driven role bindings snapshotted per step (`staff_calls.asked`), the three modes
+(Fixed / Preferred / Automatic, §1.3), family heterogeneity for review with reduced independence
+recorded as coverage debt (§3), never-silent substitution and reroute reasons (§6, §8), the retry
+ladder's provider diversity (kept from V2-09), and a reasoning level per role. **Not built:** dispatch
+tiers (fast / standard / deep / assurance, §1.2) as a separate knob — the per-role reasoning level
+stands in; per-model overlays (§4 — the empty registry from 5.1 is unchanged); the budget governor
+with reserve-before-spawn per mission class (§5 — job attempt budgets still apply); local-only
+mission routing beyond the existing privacy filter; and the calibration harness (§7).
+
+## Needs Nick — answered by D-69 (2026-09-27)
+1. Chat model vs role models → **roles always win for staff**; the chat model is Kel's own. Done.
+2. "Auto" reasoning = the model's own default level (Codex: medium for Astra/Luna); the chat turn
+   decision stays `low`. (No objection raised; kept.)
+3. Claude Code is now 2.1.283 and knows `claude-opus-5-5` and `claude-fable-5-1`; Kel keeps the
+   CLI's `--fallback-model opus|fable` and records what actually ran.
+4. Writing work at D1+ stays staffed as Builder.
+5. Oracle thresholds kept (10 files / 400 changed lines, security/irreversible/release/migration flags,
+   D4); a missing Oracle model now hands the Oracle to the next available model, and a triggered
+   change waits for Nick only when no model at all can run.
+6. Staffed jobs below D3 run one step at a time. (Kept.)
+7. Kel (Commander) prefers ChatGPT Luna for replies and plans when no chat model is saved; messages
+   with images still go to the Anthropic API worker when it is available. (Kept.)
+
+## Still open for Nick
+- A schedule's model (D-57) is treated like a chat's model — Kel's own, not staff's — under D-69's
+  "staff always use their role model". If Nick wants a schedule to pin its staff, that is one rule.
+- Jobs already settled before the card row existed are not shown as cards (so the row does not start
+  full of history). If Nick wants them, they appear as finished cards he can remove.

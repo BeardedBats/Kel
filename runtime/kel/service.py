@@ -131,6 +131,8 @@ class Service:
         if self.model:adapters['internal']=DurableAdapter(self.store,'internal',{'text','image'},options={'model':self.model.model})
         if self.model:adapters['research']=DurableAdapter(self.store,'research',{'text','web_research'},options={'model':self.model.model})
         self.engine=Engine(self.store,adapters,reviewer=self.commander)
+        if self.commander is not None:
+            self.commander.staff=self  # D-67: the Verifier runs on its role's model for staffed work
         # Kel V1.4 diagnostics: record the real startup cost of store + adapters + engine so the
         # diagnostics surface can show a measured timeline instead of a claimed one.
         try:
@@ -309,12 +311,50 @@ class Service:
         self.requests.submit(self._plan,sid,cid,text,packet,kind,greenfield_flag)
         return sid
 
-    def _model_for(self,preference,turn):
+    def staff_adapters(self):
+        """The model runtimes Kel can hand a staff role right now (D-67): installed CLIs and, when
+        its key is present, the Anthropic API worker."""
+        names={name for name in ('codex','claude') if name in self.engine.adapters}
+        if isinstance(self.model,InternalAdapter):
+            names.add('internal')
+        return names
+
+    def staff_model(self,binding,timeout=100,turn=False):
+        """An adapter that runs a resolved role binding with its real flags, or None."""
+        name=(binding or {}).get('adapter')
+        if name in ('codex','claude') and name in self.engine.adapters:
+            from .native import DEFAULT_EFFORT
+            return NativeAdapter(name,self.store.root/'workspaces'/name,self.store.root/'logs',timeout=timeout,
+                                 model=binding.get('model_arg'),fallback_model=binding.get('fallback_arg'),
+                                 effort='low' if turn else binding.get('effort_arg'))
+        if name=='internal' and isinstance(self.model,InternalAdapter):
+            return InternalAdapter(model=binding.get('model_arg') or self.model.model,
+                                   timeout=20 if turn else self.model.timeout)
+        return None
+
+    def _kel_model(self,turn,images=False):
+        """D-67: Kel (the Commander) answers and plans on its role's model when no chat model is
+        saved. A message with images keeps the Anthropic API worker, which can read them."""
+        from . import staff
+        if not staff.enabled() or (images and isinstance(self.model,InternalAdapter)):
+            return None
+        from .role_models import resolve
+        try:
+            binding=resolve(self.store,'kel',adapters=self.staff_adapters(),purpose='text')
+        except Exception:
+            return None
+        return self.staff_model(binding,timeout=30 if turn else 100,turn=turn)
+
+    def _model_for(self,preference,turn,images=False):
         """An adapter for one saved preference ({provider, model}), or today's fallback when None.
 
         None when the preferred provider is not available here (the caller then tries the next
         preference). Turn calls run on short timeouts (internal 20 s, native 30 s)."""
         native_timeout=30 if turn else 100
+        if not preference:
+            kel=self._kel_model(turn,images)
+            if kel is not None:
+                return kel
         if preference:
             provider=preference.get('provider')
             if provider=='internal':
@@ -337,9 +377,10 @@ class Service:
             return None
         return NativeAdapter(available,self.store.root/'workspaces'/available,self.store.root/'logs',timeout=native_timeout)
 
-    def _chat_choice(self,cid,turn=False):
+    def _chat_choice(self,cid,turn=False,images=False):
         """(model, choice) for a conversational reply: the conversation's saved choice, then the
-        default choice (the model pill writes both through /api/model), then Kel's own fallback.
+        default choice (the model pill writes both through /api/model), then Kel's own role model
+        (D-67), then Kel's own fallback.
 
         `choice` records who answers (`answered_by`) and, when the first saved choice could not be
         used, what it fell back from (`fallback_from`, CH-2) — message metadata, shown on demand."""
@@ -355,18 +396,18 @@ class Service:
                 model=self._model_for(preference,turn)
                 if model is not None:
                     return model,self._choice(model,None if preference is chosen else chosen)
-        model=self._model_for(None,turn)
+        model=self._model_for(None,turn,images)
         return model,self._choice(model,chosen)
 
-    def _chat_model(self,cid,turn=False):
-        return self._chat_choice(cid,turn)[0]
+    def _chat_model(self,cid,turn=False,images=False):
+        return self._chat_choice(cid,turn,images)[0]
 
-    def _turn_choice(self,cid='main'):
+    def _turn_choice(self,cid='main',images=False):
         """The model that decides one conversational turn (D-53) and its choice record; (None, None)
         means the keyword gate decides."""
         if self.turn_mode=='none':
             return None,None
-        return self._chat_choice(cid,turn=True)
+        return self._chat_choice(cid,turn=True,images=images)
 
     def _turn_model(self,cid='main'):
         return self._turn_choice(cid)[0]
@@ -387,6 +428,10 @@ class Service:
         if isinstance(model,NativeAdapter):
             provider={'claude':'claude-code','codex':'codex'}.get(model.provider,model.provider)
             answered={'provider':provider,'label':provider_label(provider),'model':None}
+            if model.model:
+                # D-67: Kel's role model (asked for with the runtime's own -m/--model flag).
+                from .role_models import describe_model
+                answered.update(model=model.model,label=describe_model(raw=model.model)[0] or answered['label'])
         elif isinstance(model,InternalAdapter):
             answered={'provider':'internal','label':model_label(model.model) or 'Claude','model':model.model}
         else:
@@ -511,7 +556,8 @@ class Service:
                             or (coding_verb and packet['project']['root'])
                             or (packet.get('kind_source')=='client' and kind not in CONVERSATION_KINDS))
                 running=handoff.running_work(self.store,cid)
-                turn_model,choice=self._turn_choice(cid)
+                has_images=any(f.get('image_path') for f in packet.get('files') or [])
+                turn_model,choice=self._turn_choice(cid,images=has_images)
                 decision=None
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
@@ -536,7 +582,7 @@ class Service:
                 if decision['action']=='reply':
                     self._say(sid,cid,decision['text'],choice)
                 else:
-                    model,choice=self._chat_choice(cid)
+                    model,choice=self._chat_choice(cid,images=has_images)
                     if model is None:raise PolicyError('Connect a model before sending a message')
                     kwargs={}
                     if any(f.get('image_path') for f in packet['files']):
@@ -663,8 +709,12 @@ class Service:
 
     def _document_contract(self,text,packet):
         if self.commander:
-            contract, meta = self.commander.plan(text, context=packet)
-            contract['planner'] = {**self.commander.descriptor(), 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
+            # D-67: Kel plans on its own role model when one is set up here (else the planner it had).
+            kel=self._kel_model(False,bool(any(f.get('image_path') for f in packet.get('files') or [])))
+            contract, meta = self.commander.plan(text, context=packet, model=kel)
+            planner = {'provider': meta.get('provider'), 'model': meta.get('model')} \
+                if kel is not None else self.commander.descriptor()
+            contract['planner'] = {**planner, 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
         else:
             contract = compile_document(text)
             contract['planner'] = {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
@@ -1827,6 +1877,18 @@ class Service:
                     'why':why,'chain':route.get('chain') or ([chosen]+list(route.get('fallbacks') or [])),
                     'demoted':route.get('demoted') or [],'evidence':route.get('evidence') or {},
                     'excluded':route.get('excluded') or {},'answer':answer}
+        if action in ('roles','set_role','reset_role'):
+            # D-67: the model each staff role runs on (Fixed / Preferred / Automatic) and its
+            # reasoning level. Plain labels; the engine owns the catalog and what can run here.
+            from . import role_models
+            if action=='set_role':
+                role_models.set_role(self.store,self._required(data,'role','Pick a role first.'),
+                                     data.get('mode'),data.get('model'),data.get('reasoning') or 'auto')
+            elif action=='reset_role':
+                role_models.reset_role(self.store,self._required(data,'role','Pick a role first.'))
+            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research')
+                                           if name in self.engine.adapters}
+            return role_models.listing(self.store,present)
         if action in ('get','list'):
             # Both actions carry the provider listing: the Kel model control reads the choice
             # and the choices from one payload, and a missing list is what made the settings

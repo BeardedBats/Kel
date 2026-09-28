@@ -383,8 +383,21 @@ class HandoffServiceTests(unittest.TestCase):
         from kel.native import NativeAdapter
         prefs = ModelPrefs(self.service.store)
         self.service.engine.adapters = {'codex': object(), 'claude': object()}
-        # No preference: today's fallback (here, the connected fake).
+        # No preference (D-67): Kel answers on its own role model — ChatGPT Luna through Codex, at
+        # low effort for the quick turn decision and the model's default level for a full reply.
+        model = self.service._turn_model(self.cid)
+        self.assertIsInstance(model, NativeAdapter)
+        self.assertEqual((model.provider, model.model, model.timeout, model.effort),
+                         ('codex', 'gpt-6-luna', 30, 'low'))
+        direct = self.service._chat_model(self.cid)
+        self.assertEqual((direct.provider, direct.model, direct.effort), ('codex', 'gpt-6-luna', None))
+        argv = model.argv()
+        self.assertEqual(argv[argv.index('-m') + 1], 'gpt-6-luna')
+        self.assertIn('model_reasoning_effort="low"', argv)
+        # Without Codex, the Kel role falls back to Kel's usual order (here, the connected fake).
+        self.service.engine.adapters = {'claude': object()}
         self.assertIs(self.service._turn_model(self.cid), self.turn)
+        self.service.engine.adapters = {'codex': object(), 'claude': object()}
         prefs.set_default('claude-code', None)
         model = self.service._turn_model(self.cid)
         self.assertIsInstance(model, NativeAdapter)
