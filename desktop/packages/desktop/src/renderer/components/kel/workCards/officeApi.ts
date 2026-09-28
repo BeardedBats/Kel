@@ -52,6 +52,13 @@ export interface OfficeItem {
   questions?: number | null;
   scoping_id?: string | null;
   message_seq?: number | null;
+  /**
+   * LIVE-10: the checks' outcome on finished work ('verified' | 'failed' | 'uncertain'), so a card can
+   * say "Couldn't fully check" instead of "Failed". Optional until the engine sends it.
+   */
+  verdict?: string | null;
+  /** VIS-6: the work is paused (the engine's PAUSED / PAUSING), so its open step shows "Paused". */
+  paused?: boolean | null;
 }
 
 export interface OfficeList {
@@ -85,6 +92,8 @@ export interface OfficeStaff {
   independence?: 'different' | 'reduced' | string | null;
   started_at?: number | null;
   finished_at?: number | null;
+  /** LIVE-10: Kel's row — no planning model answered because Kel used its standard plan. */
+  standard_plan?: boolean | null;
 }
 
 export interface OfficeStep {
@@ -116,6 +125,8 @@ export interface OfficeOracle {
   model_label?: string | null;
   reasoning?: string | null;
   findings?: OfficeFinding[] | null;
+  /** LIVE-10: what the second opinion concluded, in one plain sentence (null while it runs). */
+  conclusion?: string | null;
 }
 
 export interface OfficeVerification {
@@ -199,6 +210,10 @@ const asList = (payload: unknown): OfficeList => {
 /** Office items for one project, or every project with `'*'`. */
 export const officeList = (project: string): Promise<OfficeList> =>
   kelRequest<unknown>(`/api/office?project=${encodeURIComponent(project || '*')}`).then(asList);
+
+/** One chat's own work cards (the engine's conversation id), whatever project each landed in. */
+export const officeListForChat = (conversation: string): Promise<OfficeList> =>
+  kelRequest<unknown>(`/api/office?conversation=${encodeURIComponent(conversation)}`).then(asList);
 
 /** The detail of one piece of work (team, steps, review, Oracle, files, verification). */
 export const officeItem = (job: string): Promise<OfficeItemDetail> =>

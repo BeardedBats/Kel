@@ -14,7 +14,7 @@ import { kelUndoChange, type KelChangeApplication } from '../kelApi';
 import { officeItem, type OfficeItemDetail } from './officeApi';
 import { openWorkCard, refreshWorkCards } from './workCardEvents';
 import { StateIcon, iconFolder, iconFolder13, iconUndo } from './workCardIcons';
-import { clockTime, detailStateLabel } from './workCardModel';
+import { clockTime, detailStateLabel, isUncertain } from './workCardModel';
 import './KelWorkCardsRow5.css';
 
 const PASS = new Set(['passed', 'pass', 'verified', 'ok', 'success', 'accepted']);
@@ -34,7 +34,7 @@ export const checksLine = (meta: Pick<KelMessageMeta, 'checks'> | null | undefin
 export const resultSentence = (text: string | null | undefined): string | null => {
   let body = String(text ?? '').trim();
   if (!body) return null;
-  body = body.replace(/^Here[’']s[^\n]*?—\s*it passed its checks\.\s*/i, '').trim();
+  body = body.replace(/^Here[’']s[^\n]*?—\s*it passed its checks\.\s*/i, '').replace(/`([^`\n]+)`/g, '$1').trim();
   const first = body.split(/\n\s*\n/)[0]?.replace(/\s+/g, ' ').trim() ?? '';
   if (!first) return null;
   const sentence = first.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? first;
@@ -109,7 +109,7 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
   const applied = (detail.kind ?? '') === 'code' && isApplied(application);
   const folder = application?.root ?? null;
   const state = detail.state;
-  const label = state === 'failed' ? 'Didn’t pass its checks' : detailStateLabel(detail);
+  const label = state === 'failed' && !isUncertain(detail) ? 'Didn’t pass its checks' : detailStateLabel(detail);
   const applyWords = (detail.kind ?? '') === 'code' ? appliedWords(application, detail.finished_at) : null;
   const firstSentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
   const sentence = applyWords ? withoutPlace(firstSentence) : firstSentence;

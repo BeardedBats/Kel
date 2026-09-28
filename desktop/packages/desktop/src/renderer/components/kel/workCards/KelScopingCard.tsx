@@ -7,6 +7,7 @@
  */
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useState } from 'react';
+import { emitter } from '@/renderer/utils/emitter';
 import { resolveEngineConversation } from '../KelApprovalCard';
 import { KelAnswerBox } from './KelAnswerBox';
 import { KelChoiceChips, OTHER_CHIP } from './KelChoiceChips';
@@ -15,6 +16,22 @@ import { REFRESH_WORK_CARDS_EVENT, refreshWorkCards } from './workCardEvents';
 import { iconChat, iconCheck, iconSparkle } from './workCardIcons';
 import { clockTime } from './workCardModel';
 import './KelWorkCardsRow5.css';
+
+/**
+ * D-73 item 10: Design Vetting (the retired Work panel's tab) is reached from here — for work that
+ * needs a real spec first. It puts Kel's vetting start in the composer; Nick sends it (vetting runs in
+ * the chat: numbered questions, "process answers", "finish spec").
+ */
+export const vettingPrompt = (title: string | null | undefined): string =>
+  `start design vetting: ${String(title ?? '').trim() || 'this work'}`;
+
+const focusComposer = (attempts = 20) => {
+  const textarea = document.querySelector<HTMLTextAreaElement>('.sendbox-panel textarea');
+  if (textarea) {
+    textarea.focus();
+    textarea.setSelectionRange?.(textarea.value.length, textarea.value.length);
+  } else if (attempts > 0) window.setTimeout(() => focusComposer(attempts - 1), 100);
+};
 
 /** Figma 5e: "Before I start · 3 quick questions". */
 export const scopingHeading = (count: number): string => `Before I start · ${count} quick question${count === 1 ? '' : 's'}`;
@@ -215,6 +232,19 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
           data-testid='kel-scoping-best-guess'
         >
           Just start with your best guess
+        </button>
+        <button
+          type='button'
+          className='kel-wd-button kel-sc__vetting'
+          disabled={busy}
+          title='Kel asks everything a full spec needs, in batches, and keeps each decision with its reason.'
+          onClick={() => {
+            emitter.emit('sendbox.fill', vettingPrompt(view.title));
+            focusComposer();
+          }}
+          data-testid='kel-scoping-vetting'
+        >
+          Vet the design first
         </button>
         <span className='kel-wc-push' />
         <span className='kel-sc__nothing'>Nothing starts until you choose.</span>

@@ -13,7 +13,7 @@ These were working-tree changes at fork time; they are now plain files in this r
   staging, ACP agent registration, drain-on-quit) plus related preload/renderer changes.
 - Branding: product name "Kel", window title, About copy; donor agent/team/skill surfaces hidden;
   retained settings only.
-- Renderer: Work-context drawer (`KelWorkPanel`), approval badge, history recovery, ACP tool-card
+- Renderer: work cards across the top of the chat (`workCards/`, D-68; the old `KelWorkPanel` drawer is retired), approval badge, history recovery, ACP tool-card
   merge (`pages/conversation/Messages/hooks.ts` - getMessageMergeKey by tool_call_id), keyboard
   access.
 - Builder configs: `kel-builder.json`, `kel-runtime-builder.json` (repo-relative here; outputs to

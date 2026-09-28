@@ -1,7 +1,8 @@
 /**
  * D-68 — the row of work cards directly under the chat title (Figma "Office — D-66 explorations",
- * 4a–4d). One card per piece of work Kel's staff is doing for the active Project (every Project on
- * "All projects"); cards that do not fit go behind a "+N more" control measured from the real width;
+ * 4a–4d). D-73.4: in an open chat the row shows that chat's project's work (and always this chat's own
+ * work, so the in-thread "follow it above" line has its card); in a new chat it follows the active
+ * project (every project on "All projects"). Cards that do not fit go behind a "+N more" control measured from the real width;
  * finished work stays until Nick removes it; a card opens the read-only detail over a dimmed chat.
  * With no work the row renders nothing, so the chat keeps its height.
  */
@@ -10,8 +11,8 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { useNavigate } from 'react-router-dom';
 import { getRouteConversationIdForKelId, resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import { resolveEngineConversation } from '../KelApprovalCard';
-import { useProjects } from '../activeProject';
-import { officeDismiss, officeItem, officeList, type OfficeItem, type OfficeTeamChip } from './officeApi';
+import { useConversationProject, useProjects } from '../activeProject';
+import { officeDismiss, officeItem, officeList, officeListForChat, type OfficeItem, type OfficeItemDetail, type OfficeTeamChip } from './officeApi';
 import { KelOfficeCard } from './KelOfficeCard';
 import { KelOfficeDetail } from './KelOfficeDetail';
 import { StatusDot, dotToneFor, iconChev } from './workCardIcons';
@@ -36,10 +37,28 @@ const hidden = () => typeof document !== 'undefined' && document.visibilityState
 type Teams = Record<string, { updated: number | null | undefined; team: OfficeTeamChip[] }>;
 
 /**
- * Polls the Office list gently: every 4 s while anything runs, 30 s when idle, paused while the
- * window is hidden. A failed read keeps the last good state and says nothing.
+ * One list from the project's cards and this chat's own cards (D-73.4): the project's read decides the
+ * order; this chat's work the project read did not carry (it landed in another project) follows it.
  */
-export const useOfficeItems = (project: string, pollActiveMs = POLL_ACTIVE_MS, pollIdleMs = POLL_IDLE_MS) => {
+export const mergeOfficeLists = (projectItems: OfficeItem[], chatItems: OfficeItem[] | null | undefined): OfficeItem[] => {
+  const seen = new Set(projectItems.map((item) => item.job_id));
+  const extra = (chatItems ?? []).filter((item) => !seen.has(item.job_id));
+  if (!extra.length) return projectItems;
+  // Two engine orders cannot be compared; the row then groups live work before finished work itself.
+  return [...projectItems, ...extra].map(({ order: _order, ...item }) => item);
+};
+
+/**
+ * Polls the Office list gently: every 4 s while anything runs, 30 s when idle, paused while the
+ * window is hidden. A failed read keeps the last good state and says nothing. `project` null means
+ * the scope is not known yet (nothing is read); `conversation` (the engine's id) adds that chat's work.
+ */
+export const useOfficeItems = (
+  project: string | null,
+  pollActiveMs = POLL_ACTIVE_MS,
+  pollIdleMs = POLL_IDLE_MS,
+  conversation: string | null = null
+) => {
   const [items, setItems] = useState<OfficeItem[] | null>(null);
   /** Which read produced `items` (reads are numbered as they start). */
   const [readSeq, setReadSeq] = useState(0);
@@ -56,6 +75,7 @@ export const useOfficeItems = (project: string, pollActiveMs = POLL_ACTIVE_MS, p
     let again = false;
     itemsRef.current = null;
     setItems(null);
+    if (project === null) return;
 
     // Cards need the team's initials; when the list does not carry them, read each running item's
     // detail once per engine update (not on every poll).
@@ -92,12 +112,16 @@ export const useOfficeItems = (project: string, pollActiveMs = POLL_ACTIVE_MS, p
       running = true;
       const mine = ++startedSeq.current;
       try {
-        const list = await officeList(project);
+        const [list, chat] = await Promise.all([
+          officeList(project),
+          conversation ? officeListForChat(conversation).catch((): null => null) : Promise.resolve(null),
+        ]);
         if (stopped) return;
-        itemsRef.current = list.items;
-        setItems(list.items);
+        const merged = mergeOfficeLists(list.items, chat?.items);
+        itemsRef.current = merged;
+        setItems(merged);
         setReadSeq(mine);
-        void readTeams(list.items);
+        void readTeams(merged);
       } catch {
         // Quiet: keep the last good state, no toast.
       } finally {
@@ -132,7 +156,7 @@ export const useOfficeItems = (project: string, pollActiveMs = POLL_ACTIVE_MS, p
       if (timer) clearTimeout(timer);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [project, pollActiveMs, pollIdleMs]);
+  }, [project, conversation, pollActiveMs, pollIdleMs]);
 
   const refresh = useCallback(() => kick.current(), []);
   return { items, teams, refresh, readSeq, startedSeq };
@@ -153,6 +177,40 @@ export const focusComposer = (attempts = 30) => {
     if (left > 0) window.setTimeout(() => tryFocus(left - 1), 100);
   };
   tryFocus(attempts);
+};
+
+/** How long the scoping questions stay highlighted after the Scoping card takes you to them. */
+export const SCOPING_HIGHLIGHT_MS = 2400;
+
+/**
+ * LIVE-7: take Nick to Kel's scoping questions in the thread — scroll them into view, highlight them
+ * and put focus on the first answer. The card may still be arriving (the message's details land a
+ * moment after the text), so this looks again for a short while before settling on the newest message.
+ */
+export const revealScopingQuestions = (id: string, attempts = 20, gapMs = 150): void => {
+  const look = (left: number) => {
+    const card = document.querySelector<HTMLElement>(`[data-scoping-card="${id}"]`);
+    if (card) {
+      card.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+      card.classList.add('is-highlighted');
+      window.setTimeout(() => card.classList.remove('is-highlighted'), SCOPING_HIGHLIGHT_MS);
+      card.querySelector<HTMLElement>('button:not([disabled]), input')?.focus({ preventScroll: true });
+      return;
+    }
+    if (left > 0) {
+      window.setTimeout(() => look(left - 1), gapMs);
+      return;
+    }
+    const items = document.querySelectorAll<HTMLElement>('.message-item');
+    items[items.length - 1]?.scrollIntoView?.({ block: 'end', behavior: 'smooth' });
+  };
+  look(attempts);
+};
+
+/** A card's detail read, shaped as a list item so the row can show work its scope did not list. */
+const asItem = (detail: OfficeItemDetail): OfficeItem => {
+  const { staff, ...rest } = detail;
+  return { ...(rest as unknown as OfficeItem), team: cardTeam(staff) };
 };
 
 const defaultOpenFolder = async (path: string) => {
@@ -176,8 +234,32 @@ type Props = {
 export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth, pollActiveMs, pollIdleMs, openFolder = defaultOpenFolder }) => {
   const navigate = useNavigate();
   const { active, projects } = useProjects();
-  const project = active || '*';
-  const { items, teams, refresh, readSeq, startedSeq } = useOfficeItems(project, pollActiveMs, pollIdleMs);
+  // D-73.4: an open chat shows its own project's work; a chat Kel has not seen yet (its project is
+  // "pending") follows the active project, like Home. Nothing is read until the chat's project is known.
+  const chat = useConversationProject(conversationId);
+  const [engineChat, setEngineChat] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setEngineChat(null);
+    if (!conversationId) return;
+    void resolveEngineConversation(conversationId).then((cid) => {
+      if (alive) setEngineChat(cid || null);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [conversationId]);
+  const followsActive = !conversationId || chat.pending || !chat.project;
+  const project = conversationId && !chat.loaded ? null : followsActive ? active || '*' : chat.project?.id ?? active ?? '*';
+  const { items: listed, teams, refresh, readSeq, startedSeq } = useOfficeItems(
+    project,
+    pollActiveMs,
+    pollIdleMs,
+    conversationId && !chat.pending ? engineChat : null
+  );
+  /** Work another surface asked to open that this row's scope does not list (read from its detail). */
+  const [pinned, setPinned] = useState<OfficeItem[]>([]);
+  const items = useMemo(() => (listed ? mergeOfficeLists(listed, pinned) : listed), [listed, pinned]);
   /**
    * Cards removed here, hidden at once: job → the last read started before the engine confirmed
    * (Infinity while waiting). A read that starts after the confirmation is the truth again.
@@ -236,13 +318,10 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
 
   const openDetail = useCallback((item: OfficeItem, trigger: HTMLElement) => {
     if (item.state === 'scoping') {
-      // D-70 (5e): Kel's questions live in the thread; the top card takes you to them.
+      // D-70 (5e) / LIVE-7: Kel's questions live in the thread; the top card takes you to them
+      // (in their own chat when they were asked elsewhere) and highlights them — never "Talk to Kel".
       setMenuOpen(false);
-      const card = document.querySelector<HTMLElement>(`[data-scoping-card="${item.scoping_id ?? item.job_id}"]`);
-      if (card) {
-        card.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        card.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true });
-      } else void talkRef.current(item);
+      void goToScopingRef.current(item);
       return;
     }
     // A card inside the "+N more" menu goes away with the menu; focus then returns to the control.
@@ -307,8 +386,38 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
     [conversationId, navigate]
   );
 
-  const talkRef = useRef(talk);
-  talkRef.current = talk;
+
+  const goToScoping = useCallback(
+    async (item: OfficeItem) => {
+      const id = item.scoping_id ?? item.job_id;
+      const target = item.conversation_id;
+      const here =
+        !target ||
+        target === conversationId ||
+        target === engineChat ||
+        getRouteConversationIdForKelId(target) === conversationId ||
+        (conversationId ? (await resolveEngineConversation(conversationId).catch(() => conversationId)) === target : false);
+      if (!here) {
+        let route: string | null = null;
+        const open = typeof window !== 'undefined' ? window.kelAPI?.openEngineConversation : undefined;
+        if (open) {
+          try {
+            const donor = await open(target);
+            if (donor) route = `/conversation/${donor}`;
+          } catch {
+            // Fall back to the chat list's own mapping.
+          }
+        }
+        navigate(route ?? resolveConversationRoute(`/conversation/${target}`));
+        revealScopingQuestions(id, 40);
+        return;
+      }
+      revealScopingQuestions(id);
+    },
+    [conversationId, engineChat, navigate]
+  );
+  const goToScopingRef = useRef(goToScoping);
+  goToScopingRef.current = goToScoping;
 
   // D-70: other surfaces open this row's card (never a second copy of the work) or ask for a read.
   useEffect(() => {
@@ -330,12 +439,35 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
 
   useEffect(() => {
     if (!wanted || !items) return;
-    if (!ordered.some((item) => item.job_id === wanted)) return;
+    if (!ordered.some((item) => item.job_id === wanted)) {
+      // The in-thread line or a done card asked for work this row's scope does not list (it belongs to
+      // another project): read it and show its card here rather than doing nothing.
+      if (pinned.some((item) => item.job_id === wanted)) return;
+      let alive = true;
+      officeItem(wanted)
+        .then((detail) => {
+          if (alive && detail && typeof detail.job_id === 'string') setPinned((current) => [...current, asItem(detail)]);
+          else if (alive) setWanted(null);
+        })
+        .catch(() => {
+          if (alive) setWanted(null);
+        });
+      return () => {
+        alive = false;
+      };
+    }
     triggerRef.current = null;
     setMenuOpen(false);
     setOpenJob(wanted);
     setWanted(null);
-  }, [wanted, items, ordered]);
+  }, [wanted, items, ordered, pinned]);
+
+  // A pinned card leaves once its detail closes (or once the row's own read lists it).
+  useEffect(() => {
+    if (!pinned.length || !listed) return;
+    const keep = pinned.filter((item) => (item.job_id === openJob || item.job_id === wanted) && !listed.some((row) => row.job_id === item.job_id));
+    if (keep.length !== pinned.length) setPinned(keep);
+  }, [pinned, listed, openJob, wanted]);
 
   // Escape closes the menu or the detail; a click outside the menu closes it.
   useEffect(() => {

@@ -275,14 +275,17 @@ describe('work card row (D-68)', () => {
     const members = within(dialog).getAllByTestId('kel-office-member');
     expect(members[0].textContent).toContain('Kel, Commander');
     expect(members[1].textContent).toContain('Writing the global hotkey listener');
-    expect(dialog.textContent).toContain('Kel + 3 on it');
+    // Figma 4b: "Kel + 3" (VIS-5: no "on it").
+    expect(dialog.textContent).toContain('Kel + 3');
+    expect(dialog.textContent).not.toContain('on it');
     expect(dialog.textContent).toContain('Step 3 of 5');
     expect(dialog.textContent).toContain('Personal');
     const steps = within(dialog).getAllByTestId('kel-office-step').map((node) => node.querySelector('.kel-wd-step__when')?.textContent);
     expect(steps).toEqual(['9:13 AM', '9:16 AM', 'Now', 'Next', '']);
     expect(within(dialog).getByTestId('kel-office-review').textContent).toContain('1 to fix');
     expect(within(dialog).getByTestId('kel-office-oracle').textContent).toContain('Second opinion before hand-over.');
-    expect(within(dialog).getByTestId('kel-office-verification').textContent).toBe('VerificationIn progress · 2 of 4 passed');
+    expect(within(dialog).getByTestId('kel-office-verification-word').textContent).toBe('In progress');
+    expect(within(dialog).getAllByRole('listitem').map((node) => node.textContent)).toContain('2 of 4 passed');
     expect(dialog.textContent).toContain('src/hotkey.ts');
   });
 
@@ -387,7 +390,7 @@ describe('work card row polling cadence', () => {
         </Routes>
       </MemoryRouter>
     );
-    const reads = () => request.mock.calls.filter(([route]) => String(route).startsWith('/api/office?')).length;
+    const reads = () => request.mock.calls.filter(([route]) => String(route).startsWith('/api/office?project=')).length;
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10);
     });

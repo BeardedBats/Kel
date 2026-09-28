@@ -9,6 +9,7 @@ import React from 'react';
 import type { KelHandoff } from '../kelApi';
 import { StatusDot, iconCheck, iconChevronDown, iconStopMuted, iconWarning } from './workCardIcons';
 import { openWorkCard } from './workCardEvents';
+import { UNCERTAIN_LABEL } from './workCardModel';
 import './KelWorkCardsRow5.css';
 
 type LineState = 'starting' | 'working' | 'in_review' | 'needs_you' | 'done' | 'failed' | 'stopped';
@@ -50,7 +51,8 @@ export const lineWords = (state: LineState, view: Pick<KelHandoff, 'accepted' | 
     case 'done':
       return view.verdict === 'VERIFIED' ? 'Done and checked' : 'Done';
     case 'failed':
-      return 'Didn’t pass its checks';
+      // LIVE-10: checks Kel could not confirm are not checks that failed.
+      return String(view.verdict ?? '').toUpperCase() === 'UNCERTAIN' ? UNCERTAIN_LABEL : 'Didn’t pass its checks';
     case 'stopped':
       return 'Stopped';
     default:

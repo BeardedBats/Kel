@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  cardStateLabel,
   detailStateLabel,
   fitCards,
+  independenceWords,
+  oracleLines,
+  plainResultText,
+  prettyModelId,
+  teamMeta,
+  verificationLines,
   initials,
   modelLine,
   orderItems,
@@ -76,5 +83,66 @@ describe('work card rules (D-68)', () => {
     expect(detailStateLabel({ state: 'done', review: { verdict: 'VERIFIED' } })).toBe('Done and checked');
     expect(detailStateLabel({ state: 'done', verification: { result: 'not_run' } })).toBe('Done');
     expect(detailStateLabel({ state: 'failed' })).toBe('Failed');
+    expect(detailStateLabel({ state: 'failed', verification: { result: 'not_confirmed' } })).toBe('Couldn’t fully check');
+    expect(cardStateLabel({ state: 'failed', verdict: 'uncertain' })).toBe('Couldn’t fully check');
+    expect(cardStateLabel({ state: 'failed', verdict: 'failed' })).toBe('Failed');
+  });
+});
+
+describe('plain words for the audit findings (VIS-3..VIS-6, LIVE-10, LIVE-12)', () => {
+  it('counts the team like Figma: "Kel + 3", "Kel + 3, all done", Kel alone is "Kel"', () => {
+    const kel = { role: 'kel', state: 'done' as const };
+    const builder = { role: 'builder', state: 'done' as const };
+    expect(teamMeta([kel, builder, builder, builder], 'working')).toBe('Kel + 3');
+    expect(teamMeta([kel, builder, builder, builder], 'done')).toBe('Kel + 3, all done');
+    expect(teamMeta([kel, builder], 'stopped')).toBe('Kel + 1');
+    expect(teamMeta([kel], 'stopped')).toBe('Kel');
+    expect(teamMeta([], 'done')).toBeNull();
+  });
+
+  it("names Kel's standard plan instead of an unreported model", () => {
+    expect(modelLine({ id: 'kel', role: 'kel', note: 'Kel used its standard coding plan.' })).toBe('Planned with Kel’s standard plan');
+    expect(modelLine({ id: 'kel', role: 'kel', model_label: 'ChatGPT Luna', model_confirmed: true, note: null })).toBe('ChatGPT Luna');
+  });
+
+  it('turns raw model ids into names', () => {
+    expect(prettyModelId('claude-opus-5-5')).toBe('Claude Opus 5.5');
+    expect(prettyModelId('gpt-6-astra')).toBe('GPT-6 Astra');
+    expect(prettyModelId('deepseek/deepseek-v4.1-flash')).toBe('Deepseek V4.1 Flash');
+  });
+
+  it('lists verification without the verdict line or bullets, with one Built by · Checked by line', () => {
+    expect(
+      verificationLines([
+        'Verified',
+        '• Tests: passed',
+        '• Limitation: `npm test` took too long',
+        '• Executed by: Claude Code (claude-opus-5-5)',
+        '• Reviewed by: Codex (gpt-6-astra)',
+      ])
+    ).toEqual(['Tests passed', 'Limitation: npm test took too long', 'Built by Claude Opus 5.5 · Checked by GPT-6 Astra']);
+    // The team's own labels win over the runtime's raw ids.
+    expect(
+      verificationLines(['Verified', '• Executed by: Claude Code (claude-opus-5-5)'], [
+        { id: 'b', role: 'builder', model_label: 'Claude Opus 5.5', model_confirmed: true },
+        { id: 'v', role: 'verifier', model_label: 'GPT-6 Astra', model_confirmed: true },
+      ])
+    ).toEqual(['Built by Claude Opus 5.5 · Checked by GPT-6 Astra']);
+    expect(verificationLines(null)).toEqual([]);
+  });
+
+  it('says independence and the Oracle’s conclusion plainly', () => {
+    expect(independenceWords('different')).toBe('Checked by a different model family.');
+    expect(independenceWords('reduced')).toBe('Less independent: checked by the same model family.');
+    expect(independenceWords('full')).toBeNull();
+    expect(oracleLines({ state: 'done', why: 'over 10 files', findings: [] })).toEqual({ line: 'No problems found.', why: 'Asked because: over 10 files' });
+    expect(oracleLines({ state: 'done', findings: [{ summary: 'a', status: 'open' }, { summary: 'b', status: 'open' }] }).line).toBe('Found 2 things: A. B.');
+    expect(oracleLines({ state: 'not_needed', why: 'x' })).toEqual({ line: 'Not asked for this work.', why: null });
+  });
+
+  it('drops backticks, the full-path lead and the Undo hint from a result', () => {
+    const text = 'Applied to C:\\x\\Calc: changed calc.py (1 file).\n\nHow it was checked: `pytest -q` passed.\n\nThe earlier files are saved — Undo on the result card puts them back.';
+    expect(plainResultText(text, { state: 'UNDONE' })).toBe('Changed calc.py (1 file).\n\nHow it was checked: pytest -q passed.');
+    expect(plainResultText('Run `a`', null)).toBe('Run a');
   });
 });

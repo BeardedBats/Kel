@@ -48,16 +48,36 @@ export const STATE_LABEL: Record<OfficeState, string> = {
 
 export const stateLabel = (state: OfficeState | string): string => STATE_LABEL[state as OfficeState] ?? 'Working';
 
+/** LIVE-10: work Kel could not fully check is not work that failed its checks. */
+export const UNCERTAIN_LABEL = 'Couldn’t fully check';
+
+const UNCERTAIN_WORDS = new Set(['not_confirmed', 'uncertain', 'unconfirmed', 'not_checked']);
+
+/**
+ * Finished work whose checks could not be confirmed (the engine's UNCERTAIN verdict). The detail says
+ * so through `verification.result` ("not_confirmed") or the review verdict; a list item through its
+ * optional `verdict`.
+ */
+export const isUncertain = (item: Partial<Pick<OfficeItemDetail, 'verification' | 'review'>> & { verdict?: string | null }): boolean =>
+  UNCERTAIN_WORDS.has(word(item.verification?.result)) || word(item.review?.verdict) === 'uncertain' || word(item.verdict) === 'uncertain';
+
+/** The card's state words: "Couldn't fully check" instead of "Failed" when the checks were only unconfirmed. */
+export const cardStateLabel = (item: Pick<OfficeItem, 'state'> & { verdict?: string | null }): string =>
+  item.state === 'failed' && isUncertain(item) ? UNCERTAIN_LABEL : stateLabel(item.state);
+
 /** The detail header's state: only work whose checks passed may say "checked" (D-53). */
-export const detailStateLabel = (item: Pick<OfficeItemDetail, 'state' | 'verification' | 'review'>): string => {
+export const detailStateLabel = (item: Pick<OfficeItemDetail, 'state' | 'verification' | 'review'> & { verdict?: string | null }): string => {
   if (item.state === 'done' && passed(item)) return 'Done and checked';
+  if (item.state === 'failed' && isUncertain(item)) return UNCERTAIN_LABEL;
   return stateLabel(item.state);
 };
 
 const PASS_WORDS = new Set(['passed', 'pass', 'verified', 'ok', 'success']);
 const FAIL_WORDS = new Set(['failed', 'fail', 'did_not_pass']);
 
-const word = (value: string | null | undefined): string => (value ?? '').trim().toLowerCase();
+function word(value: string | null | undefined): string {
+  return (value ?? '').trim().toLowerCase();
+}
 
 /** Did the engine report this work's checks as passed? */
 export const passed = (item: Pick<OfficeItemDetail, 'verification' | 'review'>): boolean =>
@@ -220,7 +240,19 @@ const withVersion = (label: string | null | undefined, version: string | null | 
  * reported, with its reasoning level; "Asked for X · ran Y" when it differs from what Kel asked for;
  * "Asked for X · not confirmed yet" while the runtime has not reported the model.
  */
+export const STANDARD_PLAN_LINE = 'Planned with Kel’s standard plan';
+
+/**
+ * LIVE-10: Kel's own row when no planning model answered because Kel used its standard plan for this
+ * kind of work (the engine says so in the row's note, or with `plan: 'standard'`).
+ */
+export const usedStandardPlan = (member: OfficeStaff & { plan?: string | null }): boolean =>
+  isCommander(member) &&
+  !(member.model_label ?? member.model) &&
+  (member.standard_plan === true || word(member.plan) === 'standard' || /standard\b.*\bplan/i.test(member.note ?? ''));
+
 export const modelLine = (member: OfficeStaff): string => {
+  if (usedStandardPlan(member)) return STANDARD_PLAN_LINE;
   const ran = withVersion(member.model_label ?? member.model, member.version);
   const reasoning = reasoningLabel(member.reasoning);
   const asked = (member.asked?.model_label ?? '').trim();
@@ -235,26 +267,196 @@ export const modelLine = (member: OfficeStaff): string => {
   return join(ran, reasoning);
 };
 
-/** The Oracle's line under its name. */
-export const oracleLine = (oracle: OfficeOracle | null | undefined): string => {
+const sentence = (text: string): string => {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  const capital = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  return /[.!?…]$/.test(capital) ? capital : `${capital}.`;
+};
+
+/**
+ * The Oracle's lines under its name (LIVE-10): what it concluded first — "No problems found." or its
+ * open findings — and why it was asked second. While it has not concluded, why it is being asked.
+ */
+export const oracleLines = (oracle: OfficeOracle | null | undefined): { line: string; why: string | null } => {
   const why = (oracle?.why ?? '').trim();
   switch (oracle?.state) {
     case 'not_needed':
-      return why || 'Not asked for this work.';
+      return { line: 'Not asked for this work.', why: null };
     case 'waiting':
-      return why || 'Second opinion before hand-over.';
+      return { line: 'Second opinion before hand-over.', why: why ? `Asked because: ${why}` : null };
     case 'running':
-      return why || 'Giving a second opinion now.';
+      return { line: 'Giving a second opinion now.', why: why ? `Asked because: ${why}` : null };
     case 'could_not_run':
-      return why ? `Couldn’t run: ${why}` : 'Couldn’t run for this work.';
+      return { line: why ? `Couldn’t run: ${why}` : 'Couldn’t run for this work.', why: null };
     case 'done': {
+      // The engine's own sentence when it sends one; otherwise read from the findings.
+      const told = (oracle.conclusion ?? '').trim();
+      if (told) return { line: sentence(told), why: why ? `Asked because: ${why}` : null };
       const open = (oracle.findings ?? []).filter((finding) => finding.status !== 'resolved');
-      if (why) return why;
-      return open.length ? `${open.length} concern${open.length === 1 ? '' : 's'} raised.` : 'No concerns.';
+      const summaries = open.map((finding) => (finding.summary ?? '').trim()).filter(Boolean);
+      const line = !open.length
+        ? 'No problems found.'
+        : summaries.length
+          ? `${open.length === 1 ? 'Found' : `Found ${open.length} things`}: ${summaries.map((text) => sentence(text)).join(' ')}`
+          : `Found ${open.length} thing${open.length === 1 ? '' : 's'} to look at.`;
+      return { line, why: why ? `Asked because: ${why}` : null };
     }
     default:
-      return why || 'Not asked for this work.';
+      return { line: 'Not asked for this work.', why: null };
   }
+};
+
+/** One line for the Oracle (its conclusion, then why it was asked). */
+export const oracleLine = (oracle: OfficeOracle | null | undefined): string => {
+  const { line, why } = oracleLines(oracle);
+  return why ? `${line} ${sentence(why)}` : line;
+};
+
+/**
+ * LIVE-10: the engine's independence word in plain words. "full"/empty says nothing; "different" names
+ * the other model family; "reduced"/"same" says the check is less independent.
+ */
+export const independenceWords = (value: string | null | undefined, who: 'check' | 'second_opinion' = 'check'): string | null => {
+  const key = word(value);
+  if (!key || key === 'full' || key === 'none') return null;
+  if (key === 'different')
+    return who === 'check' ? 'Checked by a different model family.' : 'Given by a different model family.';
+  if (key === 'reduced' || key === 'same')
+    return who === 'check'
+      ? 'Less independent: checked by the same model family.'
+      : 'Less independent: given by the same model family.';
+  return null;
+};
+
+/* ─── Result and verification text ───────────────────────────────────────────────────────── */
+
+/**
+ * A raw model id in plain words when no label came with it: "claude-opus-5-5" → "Claude Opus 5.5",
+ * "gpt-6-astra" → "GPT-6 Astra".
+ */
+export const prettyModelId = (raw: string | null | undefined): string | null => {
+  const id = String(raw ?? '').trim().split('/').pop() ?? '';
+  if (!id) return null;
+  const parts = id.split(/[-_\s]+/).filter(Boolean);
+  const out: string[] = [];
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+    if (/^gpt$/i.test(part) && /^\d/.test(parts[index + 1] ?? '')) {
+      out.push(`GPT-${parts[index + 1]}`);
+      index += 1;
+    } else if (/^\d+$/.test(part) && out.length && /\d$/.test(out[out.length - 1]) && !/^GPT-/.test(out[out.length - 1])) {
+      out[out.length - 1] = `${out[out.length - 1]}.${part}`;
+    } else if (/^\d/.test(part)) {
+      out.push(part);
+    } else {
+      out.push(part.charAt(0).toUpperCase() + part.slice(1));
+    }
+  }
+  return out.join(' ');
+};
+
+/** "Claude Code (claude-opus-5-5), Codex (gpt-6-astra)" → the model names, in plain words. */
+const workerNames = (text: string): string[] =>
+  text
+    .split(/,\s*(?![^()]*\))/)
+    .map((part) => {
+      const inner = part.match(/\(([^)]+)\)/)?.[1];
+      return (inner ? prettyModelId(inner) : part.trim()) ?? '';
+    })
+    .filter(Boolean);
+
+const unique = (values: Array<string | null | undefined>): string[] =>
+  values.filter((value): value is string => Boolean(value && value.trim())).filter((value, index, all) => all.indexOf(value) === index);
+
+const VERDICT_LINE = /^(verified|passed|failed|uncertain|not confirmed|could not be confirmed)\.?$/i;
+
+/**
+ * VIS-4 / LIVE-10: the engine's verification summary as clean list lines — no verdict line (the
+ * header already says it), no "• " bullets, and "Executed by / Reviewed by" as one plain
+ * "Built by <model> · Checked by <model>" line (model names from the team when it reported them).
+ */
+export const verificationLines = (
+  summary: string[] | null | undefined,
+  staff: OfficeStaff[] | null | undefined = [],
+  checkedBy?: string | null
+): string[] => {
+  const lines: string[] = [];
+  let built: string[] = [];
+  let checked: string[] = [];
+  (summary ?? []).forEach((raw, index) => {
+    const text = String(raw ?? '')
+      .replace(/^\s*(?:[•·*-]|•)\s*/, '')
+      .replace(/`([^`\n]+)`/g, '$1')
+      .trim();
+    if (!text) return;
+    if (index === 0 && VERDICT_LINE.test(text)) return;
+    const executed = text.match(/^executed by:\s*(.+)$/i);
+    if (executed) {
+      built = workerNames(executed[1]);
+      return;
+    }
+    const reviewed = text.match(/^reviewed by:\s*(.+)$/i);
+    if (reviewed) {
+      checked = workerNames(reviewed[1]);
+      return;
+    }
+    const tests = text.match(/^tests:\s*(.+)$/i);
+    const line = tests ? `Tests ${tests[1]}` : text;
+    lines.push((line.charAt(0).toUpperCase() + line.slice(1)).replace(/\.$/, ''));
+  });
+  const team = staff ?? [];
+  const labelOf = (member: OfficeStaff) => (member.model_confirmed === false ? null : member.model_label ?? prettyModelId(member.model));
+  const teamBuilt = unique(team.filter((member) => word(member.role) === 'builder').map(labelOf));
+  const teamChecked = unique(team.filter((member) => word(member.role) === 'verifier').map(labelOf));
+  if (built.length || checked.length) {
+    const builders = teamBuilt.length ? teamBuilt : built;
+    const checkers = teamChecked.length ? teamChecked : checked.length ? checked : unique([checkedBy]);
+    const parts = [
+      builders.length ? `Built by ${builders.join(', ')}` : null,
+      checkers.length ? `Checked by ${checkers.join(', ')}` : null,
+    ].filter(Boolean);
+    if (parts.length) lines.push(parts.join(' · '));
+  }
+  return lines;
+};
+
+const APPLIED_LEAD = /^(?:Your new project is ready\.\s*)?Applied to [^\n]+?:\s+(?=(?:changed|added|removed|no files)\b)/i;
+const UNDO_HINT = /\s*The earlier files are saved\s*[—-]\s*Undo on the result card puts them back\.?/gi;
+
+/**
+ * The finished result as plain text for the card (LIVE-10 / LIVE-12): no literal backticks around
+ * commands; when the card already says where the change went (or that it was undone), no second
+ * "Applied to <full path>:" lead and no Undo hint.
+ */
+export const plainResultText = (text: string | null | undefined, application?: { state?: string | null } | null): string => {
+  let body = String(text ?? '').replace(/`([^`\n]+)`/g, '$1');
+  if (application) {
+    body = body
+      .split(/\n/)
+      .map((line) => {
+        const match = line.match(APPLIED_LEAD);
+        if (!match) return line;
+        const rest = line.slice(match[0].length).trim();
+        return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : '';
+      })
+      .join('\n')
+      .replace(UNDO_HINT, '');
+  }
+  return body.replace(/\n{3,}/g, '\n\n').trim();
+};
+
+/**
+ * The Team section's count (Figma 4b "Kel + 3", 4d "Kel + 3, all done"). Kel alone is "Kel"; "all
+ * done" only for work that finished as done with every member done (never on stopped or failed work).
+ */
+export const teamMeta = (staff: Array<Pick<OfficeStaff, 'role' | 'state'>>, itemState: OfficeState | string): string | null => {
+  if (!staff.length) return null;
+  const helpers = staff.filter((member) => !isCommander(member)).length;
+  const hasKel = staff.some(isCommander);
+  const base = hasKel ? (helpers ? `Kel + ${helpers}` : 'Kel') : `${helpers}`;
+  const allDone = itemState === 'done' && staff.every((member) => word(member.state) === 'done');
+  return allDone && helpers ? `${base}, all done` : base;
 };
 
 /** "9:40 AM" in en-US (D-61). */
