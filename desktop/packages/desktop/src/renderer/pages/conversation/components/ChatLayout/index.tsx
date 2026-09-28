@@ -1,5 +1,6 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import ShellConversationModeLabel from '@renderer/components/kel/ShellConversationModeLabel';
+import KelWorkCardRow from '@renderer/components/kel/workCards/KelWorkCardRow';
 import { AgentLogoIcon } from '@/renderer/components/agent/AgentBadge';
 import type { PresetAssistantInfo } from '@/renderer/hooks/agent/usePresetAssistantInfo';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
@@ -254,7 +255,7 @@ const ChatLayout: React.FC<{
       <div ref={containerRef} className='flex flex-1 relative w-full overflow-hidden'>
         {/* Unified layout: single DOM structure prevents children unmount/remount on preview toggle */}
         <div
-          className='flex flex-col min-w-0'
+          className='flex flex-col min-w-0 relative'
           style={{
             flexGrow: 1,
             flexShrink: 1,
@@ -262,6 +263,8 @@ const ChatLayout: React.FC<{
           }}
         >
           <div className='shrink-0 kel-shell-chat-header-wrap'>{headerBlock}</div>
+          {/* D-68: the work cards sit directly under the chat title; their detail dims this column. */}
+          {isDesktop && <KelWorkCardRow conversationId={conversation_id} />}
           <div className='flex flex-1 min-h-0 relative'>
             {/* Chat area - always mounted, never unmounted on preview toggle */}
             <div
