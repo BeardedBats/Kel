@@ -144,8 +144,8 @@ async function main() {
   ENGINE_PID = desc.pid;
 
   await page.waitForLoadState('domcontentloaded').catch(() => {});
-  // UI ready gate: the Kel work-context trigger renders once the chat shell is live.
-  await page.locator('text=Work & context').first().waitFor({ timeout: 60000 }).catch(() => {});
+  // UI ready gate: the chat shell is live (the Work & context trigger this used to wait for is retired).
+  await page.locator('.kel-v2-shell').first().waitFor({ timeout: 60000 }).catch(() => {});
   await page.waitForTimeout(2500);
   // A freshly seeded capture root has no onboarding flag, so the shell offers first-run setup. Dismiss
   // it through the product's own affordance ("Skip setup") so captures show the app itself.
@@ -246,6 +246,8 @@ async function main() {
   await setSize(primaryW, primaryH);
   await shot('01-boot-chat');
 
+  // Retired: the Work & context drawer is no longer in the app (it left the sidebar on 2026-09-21; the D-68 work cards at the top of a chat and Activity replace it). The drawer passes below
+  // find nothing to open and are skipped; Projects (Knowledge, Map, Recipes) is captured by route.
   const drawerOpened = await clickIf('text=Work & context', 1600);
   if (drawerOpened) {
     await shot('02-work-drawer');
@@ -286,8 +288,9 @@ async function main() {
   }
   if (settingsOpened) {
     await shot('09-settings-open');
-    const settingsPages = ['appearance', 'system', 'pet', 'webui', 'archived', 'about',
-      'model', 'agent', 'skills', 'tools'];
+    // D-56 retired the pet page; D-70 moved Permissions, Providers and Diagnostics into Settings.
+    const settingsPages = ['appearance', 'system', 'webui', 'archived', 'about',
+      'model', 'staff', 'skills', 'tools', 'permissions', 'providers', 'diagnostics'];
     for (const pageName of settingsPages) {
       await page.evaluate((p) => { location.hash = '#/settings/' + p; }, pageName).catch(() => {});
       await page.waitForTimeout(1600);
@@ -310,37 +313,12 @@ async function main() {
     }
   }
 
-  // --- pet windows (--pets): enable the desktop pet through its own settings switch, then capture
-  //     every window whose URL is a pet document. Zero pets are recorded explicitly, so the gap is
-  //     visible in the manifest instead of being silently absent.
+  // --- pet windows (--pets): retired with the Desktop Pet (D-56). The flag is still accepted so old
+  //     command lines keep working, and the manifest says why nothing was captured.
   if (hasFlag('pets')) {
     manifest.pets = [];
-    await page.evaluate(() => { location.hash = '/settings/pet'; }).catch(() => {});
-    await page.waitForTimeout(2200);
-    const toggle = page.locator('.arco-switch').first();
-    if (await toggle.count()) {
-      await toggle.click({ timeout: 10000 }).catch(() => {});
-      await page.waitForTimeout(2600);
-    }
-    const mainUrl = page.url();
-    for (const win of app.windows()) {
-      const url = win.url();
-      // Identify pet windows by exclusion (never the main window) plus a pet-ish URL or title, rather
-      // than by an exact filename — the pet documents load with their own URL shape.
-      if (url === mainUrl) continue;
-      const title = await win.title().catch(() => '');
-      if (!/pet/i.test(url) && !/pet/i.test(title)) continue;
-      const label = (url.split('/').pop() || 'pet').replace(/[^a-z0-9.]/gi, '-');
-      const file = path.join(outDir, `${tag}-pet-${label}.png`);
-      await win.screenshot({ path: file }).catch(() => {});
-      const size = await win
-        .evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
-        .catch(() => null);
-      manifest.pets.push({ url, file: path.basename(file), size });
-    }
-    manifest.petWindowCount = manifest.pets.length;
-    await page.evaluate(() => { location.hash = '/guid'; }).catch(() => {});
-    await page.waitForTimeout(1500);
+    manifest.petWindowCount = 0;
+    manifest.petsRetired = 'D-56: Kel has no Desktop Pet; /settings/pet redirects to Appearance.';
   }
 
   // --- resize passes: core views at the remaining widths ------------------

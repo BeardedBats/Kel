@@ -16,7 +16,7 @@ const appDir = path.resolve(process.argv[2] || '.');
 const dataDir = path.resolve(process.argv[3] || '');
 const outDir = path.resolve(process.argv[4] || '.');
 const rawHash = process.argv[5] || '/guid';
-// Git-Bash rewrites a bare "/work" argument into a Windows path; recover the route.
+// Git-Bash rewrites a bare "/activity" argument into a Windows path; recover the route.
 const hash =
   rawHash.includes('\\') || rawHash.includes(':')
     ? '/' + rawHash.split(/[\\/]/).filter(Boolean).pop()

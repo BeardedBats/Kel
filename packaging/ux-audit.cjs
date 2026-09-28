@@ -936,8 +936,9 @@ async function scenarioSweepA() {
     await page.waitForTimeout(9000);
     await dismissOnboarding(page);
     for (const route of [
-      '/guid', '/work', '/projects/knowledge', '/projects/map', '/providers', '/autonomy',
-      '/settings/model', '/settings/agent', '/settings/skills', '/settings/tools', '/settings/appearance',
+      // D-70: the Work page is retired (Activity lists the jobs); Providers and Permissions live in Settings.
+      '/guid', '/activity', '/scheduled', '/projects/knowledge', '/projects/map', '/settings/providers', '/settings/permissions',
+      '/settings/model', '/settings/staff', '/settings/skills', '/settings/tools', '/settings/appearance',
       '/settings/webui', '/settings/system', '/settings/archived', '/settings/about', '/transcription',
     ]) {
       results.scrollMatrix.push({ route, ...(await routeProbe(route)) });
@@ -1235,11 +1236,12 @@ async function scenarioSweepB() {
       const el = document.querySelector('[data-testid="sendbox-input"]') || document.querySelector('textarea');
       return el ? el.value.slice(0, 80) : null;
     });
-    await page.evaluate(() => { location.hash = '/work'; });
+    // D-70: the Work page is retired; Activity is where a job left "running" by a crash would show.
+    await page.evaluate(() => { location.hash = '/activity'; });
     await page.waitForTimeout(2400);
-    results.workPageTail = (await bodyText()).slice(-400);
-    results.phantomWorkSeen = /running|in progress|working|queued/i.test(results.workPageTail);
-    await shot('sweep-b-04-work-after-crash');
+    results.activityPageTail = (await bodyText()).slice(-400);
+    results.phantomWorkSeen = /running|in progress|working|queued/i.test(results.activityPageTail);
+    await shot('sweep-b-04-activity-after-crash');
 
     await page.evaluate(() => { location.hash = '/settings/about'; });
     await page.waitForTimeout(2400);
@@ -1931,16 +1933,18 @@ async function scenarioFirstRun() {
 
 const TOUR_ROUTES = [
   ['guid', '/guid'],
-  ['work', '/work'],
+  // D-70: the Work page is retired; Activity and Scheduled tasks (D-57) take its place in the tour.
+  ['activity', '/activity'],
+  ['scheduled', '/scheduled'],
   ['team-office', '/team/office'],
   ['team-roster', '/team/roster'],
   ['team-studio', '/team/studio'],
   ['projects-knowledge', '/projects/knowledge'],
   ['projects-map', '/projects/map'],
   ['projects-recipes', '/projects/recipes'],
-  ['providers', '/providers'],
-  ['autonomy', '/autonomy'],
-  ['diagnostics', '/diagnostics'],
+  ['providers', '/settings/providers'],
+  ['autonomy', '/settings/permissions'],
+  ['diagnostics', '/settings/diagnostics'],
 ];
 
 async function scenarioTour({ clickNav = true } = {}) {
@@ -2006,10 +2010,13 @@ const SETTINGS_ROUTES = [
   '/settings/archived',
   '/settings/system',
   '/settings/webui',
-  '/settings/pet',
+  // D-56 retired the Desktop Pet page (its route redirects to Appearance); D-70 moved these into Settings.
   '/settings/about',
   '/settings/model',
-  '/settings/agent',
+  '/settings/staff',
+  '/settings/permissions',
+  '/settings/providers',
+  '/settings/diagnostics',
   '/settings/skills',
   '/settings/tools',
   '/settings',
@@ -2134,7 +2141,7 @@ async function scenarioPalette() {
 }
 
 async function scenarioKeyboard() {
-  const results = { schema: 1, scenario: 'keyboard', stops: [], workStops: [], errors: [] };
+  const results = { schema: 1, scenario: 'keyboard', stops: [], activityStops: [], errors: [] };
   const { app, page, kelwork, consoleErrors } = await launchApp();
   try {
     await page.waitForTimeout(9000);
@@ -2162,15 +2169,15 @@ async function scenarioKeyboard() {
       hash: location.hash,
     }));
     await page.evaluate(() => {
-      location.hash = '/work';
+      location.hash = '/activity'; // D-70: the Work page is retired
     });
     await page.waitForTimeout(2200);
     for (let i = 0; i < 16; i += 1) {
       await page.keyboard.press('Tab');
       await page.waitForTimeout(120);
-      results.workStops.push(await probeFocusRing(page));
+      results.activityStops.push(await probeFocusRing(page));
     }
-    await shot(page, 'keyboard-02-work-tabs');
+    await shot(page, 'keyboard-02-activity-tabs');
     results.consoleErrors = consoleErrors.slice(0, 12);
   } catch (error) {
     results.errors.push(String(error).slice(0, 400));
@@ -2187,9 +2194,9 @@ async function scenarioReadability() {
     await page.waitForTimeout(9000);
     for (const [name, route] of [
       ['guid', '/guid'],
-      ['work', '/work'],
+      ['activity', '/activity'],
       ['projects-knowledge', '/projects/knowledge'],
-      ['providers', '/providers'],
+      ['providers', '/settings/providers'],
       ['settings-appearance', '/settings/appearance'],
     ]) {
       await page.evaluate((r) => {
@@ -2432,7 +2439,8 @@ async function scenarioVetting() {
     results.specSaved = await waitPanel((dump) => /Design specification|coverage/i.test(dump) ? true : null, 30000, 'spec-preview');
     await shot(page, 'vetting-05-spec-saved');
 
-    // The panel mirrors the same state.
+    // The panel mirrors the same state. Retired: the Work & context drawer is no longer in the app (it left the sidebar on 2026-09-21; the D-68 work cards at the top of a chat and Activity replace it),
+    // so this pass finds no trigger and records nothing (panelTab stays undefined).
     const trigger = page.locator('text=Work & context').first();
     if (await trigger.count()) {
       await trigger.click();
@@ -2500,6 +2508,8 @@ async function scenarioVettingLive() {
     await send('19: B', 'answer-19');
     await send('finish spec now', 'finish');
 
+    // Retired: the Work & context drawer (and its Vetting tab) is no longer in the app; this pass
+    // finds no trigger and records nothing.
     const trigger = page.locator('text=Work & context').first();
     if (await trigger.count()) {
       await trigger.click();
