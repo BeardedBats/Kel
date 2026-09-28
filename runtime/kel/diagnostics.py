@@ -147,6 +147,35 @@ def _migrations(db):
                 'SELECT version, name FROM schema_migrations ORDER BY version').fetchall()]
 
 
+
+def _first_reply(db, window=20):
+    """FN-14: how long Kel's model took to answer your recent messages - the first model call on
+    each message (its turn decision, else its direct reply), from the usage Kel records (D-72)."""
+    try:
+        rows = db.execute('SELECT data FROM provider_usage ORDER BY seq DESC LIMIT 400').fetchall()
+    except Exception:
+        return None
+    turns, replies = [], []
+    for row in rows:
+        try:
+            data = json.loads(row['data'])
+        except (TypeError, ValueError):
+            continue
+        wall = data.get('wall_ms')
+        if not isinstance(wall, (int, float)) or wall <= 0:
+            continue
+        if data.get('kind') == 'turn':
+            turns.append(float(wall))
+        elif data.get('kind') == 'reply':
+            replies.append(float(wall))
+    samples = (turns or replies)[:window]
+    if not samples:
+        return None
+    ordered = sorted(samples)
+    middle = len(ordered) // 2
+    median = ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) / 2
+    return {'latest_ms': samples[0], 'median_ms': median, 'samples': len(samples), 'basis': 'measured'}
+
 class Diagnostics:
     def __init__(self, store, engine_version=''):
         self.store = store
@@ -266,6 +295,7 @@ class Diagnostics:
             measurements = [dict(row) for row in db.execute(
                 'SELECT at, name, value, unit, basis FROM performance_measurements '
                 'ORDER BY at DESC LIMIT ?', (limit,)).fetchall()]
+            first_reply = _first_reply(db)
         startup = {}
         for span in spans:
             startup[span['phase']] = min(startup.get(span['phase'], span['duration_ms']),
@@ -274,6 +304,7 @@ class Diagnostics:
             'startup_spans': spans,
             'slowest_phase_ms': startup,
             'measurements': measurements,
+            'first_reply': first_reply,
             'basis': 'measured from recorded spans; phases not recorded are simply unknown',
         }
 

@@ -105,13 +105,20 @@ describe('Projects and Settings navigation (D-70)', () => {
       fireEvent.click(within(screen.getByRole('navigation', { name })).getByRole('button', { name: label }));
       const where = screen.getByTestId('where').textContent ?? '';
       expect(where, label).toMatch(served);
-      // Pages that stay in this frame mark their own entry (Transcriptions opens Ramble itself).
+      // Pages that stay in this frame mark their own entry (the Ramble entry opens Ramble itself).
       if (where !== '/transcription') {
         const current = document.querySelector('.kel-in-chat-frame__nav [aria-current="page"]');
         expect(current?.textContent?.trim(), label).toBe(label);
       }
       view.unmount();
     }
+  });
+
+  it('FN-14: the Settings entry that leaves for Ramble is called Ramble', () => {
+    frameAt('/settings/appearance');
+    const items = labels(screen.getByRole('navigation', { name: 'Settings pages' }));
+    expect(items).toContain('Ramble');
+    expect(items).not.toContain('Transcriptions');
   });
 
   it('the moved pages show the Settings frame, and Recipes is not a Projects page', () => {

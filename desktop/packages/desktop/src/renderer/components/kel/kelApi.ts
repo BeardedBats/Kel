@@ -1449,6 +1449,8 @@ export const kelDiagnostics = {
       startup_spans: Array<{ at: number; phase: string; duration_ms: number; engine_version: string }>;
       slowest_phase_ms: Record<string, number>;
       measurements: Array<{ at: number; name: string; value: number; unit: string; basis: string }>;
+      /** FN-14: how long Kel's model took to answer recent messages (null until one is measured). */
+      first_reply?: { latest_ms: number; median_ms: number; samples: number; basis: string } | null;
       basis: string;
     }>('/api/diagnostics', { action: 'performance' }),
   retention: () =>

@@ -46,7 +46,18 @@ const bytes = (value: number | undefined): string => {
 };
 
 /** Controls the engine cannot perform yet say so in visible words, not only in a tooltip. */
-const NOT_AVAILABLE = 'Not available in this version yet.';
+/** FN-14: "2.4 s" from milliseconds. */
+const seconds = (ms: number): string => `${(ms / 1000).toFixed(1)} s`;
+
+/** FN-14: the first-reply row in words — measured replies only, never a placeholder dash. */
+export const firstReplyWords = (
+  measured: { latest_ms: number; median_ms: number; samples: number } | null | undefined
+): string =>
+  !measured
+    ? 'Not measured yet — send Kel a message'
+    : measured.samples > 1
+      ? `${seconds(measured.latest_ms)} last time · ${seconds(measured.median_ms)} typical over ${measured.samples} replies`
+      : `${seconds(measured.latest_ms)} last time`;
 
 const Diagnostics: React.FC = () => {
   const isMobile = Boolean(useLayoutContext()?.isMobile);
@@ -56,6 +67,7 @@ const Diagnostics: React.FC = () => {
   const [snapshot, setSnapshot] = useState<KelDiagnosticsSnapshot | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [firstReply, setFirstReply] = useState<{ latest_ms: number; median_ms: number; samples: number } | null>(null);
   const [basis, setBasis] = useState('');
   const [retention, setRetention] = useState<Record<string, number>>({});
   const [note, setNote] = useState('');
@@ -75,6 +87,7 @@ const Diagnostics: React.FC = () => {
       setSnapshot(state);
       setSpans(performance.startup_spans ?? []);
       setMeasurements(performance.measurements ?? []);
+      setFirstReply(performance.first_reply ?? null);
       setBasis(performance.basis ?? '');
       setRetention(retentionInfo.retention_days ?? {});
       setError(null);
@@ -146,12 +159,8 @@ const Diagnostics: React.FC = () => {
           </KelCard>
           <KelCard title='Measured performance'>
             <div className='kel-shell-diagnostic-row'><span>Startup</span><span className='kel-meta'>{spans.length ? `${(spans[0].duration_ms / 1000).toFixed(1)} s` : '—'}</span></div>
-            <div className='kel-shell-diagnostic-row'><span>First model reply</span><span className='kel-meta'>{(() => { const m = measurements.find(item => /first.*reply/i.test(item.name)); return m ? `${m.value} ${m.unit}` : '—'; })()}</span></div>
+            <div className='kel-shell-diagnostic-row'><span>First model reply</span><span className='kel-meta' data-testid='diagnostics-first-reply'>{firstReplyWords(firstReply)}</span></div>
             {!spans.length && <p className='kel-meta'>No startup span recorded yet for this session.</p>}
-          </KelCard>
-          <KelCard title='Maintenance'>
-            <div className='kel-shell-preference-row'><div><div>Clear caches</div><p className='kel-meta'>Removes preview and thumbnail caches. Chats are untouched.</p><p className='kel-meta kel-work-why-disabled' id='kel-diag-clear-why'>{NOT_AVAILABLE}</p></div><button className='kel-btn kel-btn--danger' type='button' disabled aria-describedby='kel-diag-clear-why'>Clear</button></div>
-            <div className='kel-shell-preference-row'><div><div>Restart Kel's engine</div><p className='kel-meta'>Restarts Kel's engine without closing the app.</p><p className='kel-meta kel-work-why-disabled' id='kel-diag-restart-why'>{NOT_AVAILABLE}</p></div><button className='kel-btn kel-btn--primary' type='button' disabled aria-describedby='kel-diag-restart-why'>Restart</button></div>
           </KelCard>
         </>}
         <Modal className={isMobile ? undefined : 'kel-diagnostics-export-modal'} variant={isMobile ? undefined : 'standard'}
