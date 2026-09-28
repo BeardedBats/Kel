@@ -120,6 +120,15 @@ contextBridge.exposeInMainWorld('kelAPI', {
       ipcRenderer.off('kel:engine-state', handler);
     };
   },
+  // LIVE-7: a chat's Kel history gained details (a scoping card, a result) while it is open; the
+  // chat re-reads `history(conversationId)` so the card shows at once.
+  onHistoryUpdated: (callback: (update: { conversationId: string }) => void) => {
+    const handler = (_event: unknown, update: { conversationId: string }) => callback(update);
+    ipcRenderer.on('kel:history-updated', handler);
+    return () => {
+      ipcRenderer.off('kel:history-updated', handler);
+    };
+  },
   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
   // D-57: a scheduled run's engine conversation as an app chat (made on first use), and a nudge
