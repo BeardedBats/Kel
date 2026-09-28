@@ -18,6 +18,28 @@ States Nick asked for that have no Figma frame. Each reuses the nearest componen
 | Scheduled task: timing preview | `273:1586` (no preview line) | One muted line under Time/Model with the engine's sentence and next run ("Every weekday at 9:00 AM. Next: …"); the engine's reason in the error colour when it cannot use the timing. | `CreateTaskDialog.tsx`, `kel-shell.css` |
 | Scheduled task: needs attention, footer, delete choice | List `189:2628`, detail `272:739` | A paused-with-problem task shows the failed chip "Needs attention" and a problem banner above Details; the list ends with "Scheduled tasks run while Kel is open on this computer."; the delete confirm offers "Keep the chats its runs opened". The detail's "Select runs" batch delete is dropped: runs are engine records, not deletable chats. | `ScheduledTasksPage/*`, `kel-shell.css` |
 
+## Work cards across the top of the chat (D-68) — 2026-09-27
+
+Source: page "Office — D-66 explorations", row 4 — 4a `474:332`, 4b `476:388`, 4c `477:543`, 4d `476:806`.
+Checked off-screen at 1440×900 against those frames with fixture Office data (the engine's `/api/office` had
+not landed); geometry matches (row at x 388 / y 90, 198px cards 8 apart, 88px overflow, 920px detail 8px
+under the row, 340px menu right-aligned 6px under it). Differences that remain, each deliberate:
+
+| State / element | Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Typeface | Instrument Sans (stand-in) | The app's SF Pro body face at the same size and weight; SF Pro is wider, so a long step label can wrap where Figma fits on one line. | `KelWorkCards.css` |
+| "X of Y" and the bar | Sample numbers ("3 of 5" while step 3 runs; fills that do not equal the count) | Accepted steps of the engine's real milestones, and the bar is exactly that fraction (D-66: never a percentage or an invented number). The detail's "Step N of M" is the step in progress. | `workCardModel.ts` |
+| Failed label | "Didn't pass its checks" (menu sample) | "Failed" on the card; the detail says why in the engine's words. The Office list does not say whether a failure was a failed check. | `workCardModel.ts` |
+| Stopped | not drawn | Grey: the Figma stop icon in muted `#8FA9D6`, grey bar and ring (`#6F86AD`), label "Stopped". | `icon-stop-muted.svg`, `KelWorkCards.css` |
+| Card hover, menu entry hover | not drawn (the first menu entry's tint is read as hover) | Card: the 0.22 blue tint between default and selected; menu entry: the 0.16 tint from 4c on hover/focus. | `KelWorkCards.css` |
+| "Needs you" detail | not drawn | The engine's why/next in the Result box, headed "Needs you" with the amber dot. | `KelOfficeDetail.tsx` |
+| Review header count ("2 of 4 passed"), file stats ("+86") | sample data | Omitted: the Office contract has no check count or line stats. Verification shows the engine's result and summary. | `KelOfficeDetail.tsx` |
+| Model honesty | always one model | "Asked for X · ran Y" when the runtime ran another model; "Asked for X · not confirmed yet" until the runtime reports it (D-66). Long lines wrap. | `workCardModel.ts` |
+| Result line for an applied change | "Applied to Documents › Receipts › 2026 at 9:40 AM. You can undo it." | The shared D-65 sentence ("Applied automatically to <folder> (N files). The earlier files are saved.") so the card, Work and this detail say the same thing. | `changeApplication.ts` |
+| Stop confirmation | not drawn | The in-chat work card's confirm ("Stop this work? Anything already checked is kept." · Keep going · Stop it) in the header, with a red-outlined Stop it. | `KelOfficeDetail.tsx` |
+| Focus | not drawn | Opening the detail focuses the dialog (no button looks pre-selected); Tab stays inside; Escape returns focus to the card. | `KelOfficeDetail.tsx` |
+| Narrow windows / phone | desktop 1440 only | The row fits as many cards as the measured width allows; below 1100px the detail's columns wrap. The row is desktop-only (no phone frame). | `KelWorkCardRow.tsx`, `KelWorkCards.css` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.
