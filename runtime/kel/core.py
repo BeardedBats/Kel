@@ -799,6 +799,10 @@ class Store:
         active = db.execute("SELECT * FROM runs WHERE job_id=? AND state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')", (job_id,)).fetchall()
         if action=='pause' and job['state'] in ('CANCELLING','CANCELLED','PAUSING','PAUSED'):
             return [r['id'] for r in active]
+        if action=='pause' and job['state']=='CLOSED' and not active:
+            # Settled work has nothing to pause. The engine closing right after a job settles (its
+            # finished run not yet reaped from `active`) must not rewrite CLOSED as PAUSED.
+            return []
         if action=='cancel' and job['state'] in ('CANCELLING','CANCELLED'):
             return [r['id'] for r in active]
         if action == 'resume':

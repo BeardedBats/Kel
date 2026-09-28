@@ -4,9 +4,11 @@ Exhaustion stops the job before its next step and waits for Nick (never auto-ret
 a cheaper model); a review of finished work still runs; Nick raising the budget lets it continue.
 No provider is called — the adapters are fixtures.
 """
+import concurrent.futures
 import contextlib
 import os
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -120,6 +122,28 @@ class GovernorTests(Base):
         self.assertEqual(fixture.calls, 1)
         from kel.activity import sentence_for
         self.assertIn('raised the budget', sentence_for('budget.raised', {'detail': {'to': 'deep'}}))
+
+    def test_closing_the_engine_right_after_a_job_settles_keeps_it_closed(self):
+        # Regression: close() paused every job with an entry in `active`, including one whose run
+        # had finished and been assessed CLOSED in the same tick, turning finished work PAUSED.
+        job = self.staffed(writing())
+        fixture = FixtureAdapter(output='## Shopping\n- apples\n- bread')
+        engine = Engine(self.store, {'fixture': fixture})
+        try:
+            deadline = time.time() + 20
+            while time.time() < deadline and self.store.get(job)['state'] != 'CLOSED':
+                engine.tick()
+                time.sleep(.02)
+            self.assertEqual(self.store.get(job)['state'], 'CLOSED')
+            # Deterministically recreate the race: the finished run is still listed as active.
+            done = concurrent.futures.Future()
+            done.set_result(None)
+            engine.active['finished-run'] = (done, threading.Event(), {'job_id': job})
+        finally:
+            engine.close()
+        self.assertEqual(self.store.get(job)['state'], 'CLOSED')
+        self.assertEqual(self.store.control(job, 'pause'), [])
+        self.assertEqual(self.store.get(job)['state'], 'CLOSED', 'pausing settled work changes nothing')
 
     def test_a_review_of_finished_work_still_runs_when_the_budget_is_spent(self):
         contract = writing()
