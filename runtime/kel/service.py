@@ -668,8 +668,39 @@ class Service:
             self.wake.set()
         return None
 
+    def _classify(self,sid,text,packet,kind,greenfield_flag,decision):
+        """Routing 2 §5.5: what kind of work this is and how much it deserves. The turn model's reading
+        is primary; the deterministic floors are a safety net that may force coding (a code change in a
+        project Kel can test, an explicit coding request, a new app) or research (an explicit research
+        request) but never turn the model's coding or research into writing. Without a model reading the
+        floors classify on their own. Recorded in the hand-off packet (and its saved copy)."""
+        from .staff import MECHANICAL,USER_FACING
+        lower=str(text or '').lower().strip()
+        root=(packet.get('project') or {}).get('root')
+        code_floor=kind=='coding' or bool(greenfield_flag) or (root and (lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)))
+        research_floor=kind=='research' or lower.startswith(RESEARCH_PREFIXES)
+        model_class=(decision or {}).get('task_class')
+        out={'task_class':model_class,'tier':(decision or {}).get('tier'),'source':'model' if model_class else 'floors'}
+        forced=('coding' if code_floor else 'research' if research_floor else None)
+        if forced and model_class not in ('coding','research') and model_class!=forced:
+            out.update(task_class=forced,forced_by='floor')
+        if not out['task_class']:
+            if needs_research(text):out['task_class']='research'
+            elif MECHANICAL.search(lower) and len(lower.split())<=40:out['task_class']='utility'
+            elif USER_FACING.search(lower):out['task_class']='design'
+            else:out['task_class']='writing'
+        packet['classification']={k:v for k,v in out.items() if v}
+        try:
+            with self.store.transaction() as db:
+                db.execute('UPDATE submission_packets SET packet=? WHERE id=?',(encode(packet),sid))
+        except Exception:
+            pass  # the in-memory packet carries it into this start; the saved copy is additive
+        return packet['classification']
+
     def _handoff(self,sid,cid,text,packet,kind,greenfield_flag,decision,choice=None):
         """D-53: acknowledge now (one transaction), start the work on the planning pool, return."""
+        if not decision.get('scheduled'):
+            self._classify(sid,text,packet,kind,greenfield_flag,decision)
         title=title_for(text,decision.get('title'))
         ack=decision['acknowledgement'] if decision.get('scheduled') else \
             guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
@@ -781,7 +812,9 @@ class Service:
         """The work contract for one request (a file action, coding, research, or a planned document)."""
         lower=text.lower().strip()
         coding_verb=lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)
-        coding=kind=='coding' or (packet['project']['root'] and coding_verb)
+        classified=(packet.get('classification') or {}).get('task_class')
+        # Routing 2 §5.5: the classification (the turn model's, floors as the safety net) is primary.
+        coding=kind=='coding' or (packet['project']['root'] and coding_verb) or classified=='coding'
         target=file_action(text)
         if target and kind=='coding' and packet.get('kind_source')=='client':
             target=None  # an explicit coding request keeps its own project routing
@@ -840,13 +873,15 @@ class Service:
                 project_id=packet['project']['id'];tests=json.loads(row['command'])
             contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
-        elif kind=='research' or needs_research(text):
+        elif kind=='research' or classified=='research' or (not classified and needs_research(text)):
             from .research import compile_research
             contract=compile_research(text,self.commander,packet)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
         else:
             contract=self._document_contract(text,packet)
         contract['context']=packet
+        if packet.get('classification'):
+            contract['classification']=dict(packet['classification'])  # staffing reads the class and tier
         if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
         contract['submission_id']=sid
         return contract
