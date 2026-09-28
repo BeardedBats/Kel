@@ -1,6 +1,7 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
-import { KelMessageDetails, KelMessageNote } from './KelMessageDetails';
+import { KelMessageNote } from './KelMessageDetails';
+import { KelMessageCard } from '@renderer/components/kel/workCards/KelMessageCard';
 import { isKelNoteMeta } from '@/common/chat/kelMessageMeta';
 import moreIcon from '@renderer/assets/figma/chat/more.svg';
 /**
@@ -407,7 +408,8 @@ const MessageText: React.FC<{
           )}
         </div>
         {/* CP-14: who answered and what the checks found, only when the person asks. */}
-        {kelMeta && !engineFailure && <KelMessageDetails meta={kelMeta} />}
+        {/* D-70: a scoping card, or a result's done card when its work has a top card. */}
+        {kelMeta && !engineFailure && <KelMessageCard meta={kelMeta} conversationId={message.conversation_id} />}
         {isPendingDelivery && (
           <div className='text-12px text-t-secondary mt-4px select-none' data-testid='message-status-badge'>
             {t('messages.delivery.pending', { defaultValue: 'Unread' })}

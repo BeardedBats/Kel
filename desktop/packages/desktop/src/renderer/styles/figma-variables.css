@@ -50,6 +50,9 @@
   --kel-figma-color-status-unread: rgba(127, 160, 255, 1);
   --kel-figma-color-status-read: rgba(51, 66, 106, 1);
   --kel-figma-color-status-success: rgba(126, 224, 168, 1);
+  /* D-70 (Office row 5): ice/300 — the "Scoping" state (Kel is asking before it starts). */
+  --kel-figma-color-ice-300: rgba(207, 231, 255, 1);
+  --kel-figma-color-status-scoping: var(--kel-figma-color-ice-300);
   --kel-figma-color-danger-top: rgba(166, 68, 63, 1);
   --kel-figma-color-danger-bottom: rgba(139, 49, 45, 1);
   --kel-figma-color-danger-text: rgba(255, 241, 240, 1);

@@ -22,11 +22,14 @@ import {
   cardTeam,
   fitCards,
   isFinished,
+  isLive,
   isRunning,
   orderItems,
   overflowWidth,
 } from './workCardModel';
+import { OPEN_WORK_CARD_EVENT, REFRESH_WORK_CARDS_EVENT, takePendingWorkCard } from './workCardEvents';
 import './KelWorkCards.css';
+import './KelWorkCardsRow5.css';
 
 const hidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden';
 
@@ -79,7 +82,7 @@ export const useOfficeItems = (project: string, pollActiveMs = POLL_ACTIVE_MS, p
       if (stopped) return;
       if (timer) clearTimeout(timer);
       if (hidden()) return;
-      const live = (itemsRef.current ?? []).some((item) => isRunning(item.state));
+      const live = (itemsRef.current ?? []).some((item) => isLive(item.state));
       timer = setTimeout(() => void tick(), live ? pollActiveMs : pollIdleMs);
     };
 
@@ -181,6 +184,8 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
    */
   const [dismissed, setDismissed] = useState<Map<string, number>>(() => new Map());
   const [openJob, setOpenJob] = useState<string | null>(null);
+  /** D-70: a card another surface asked to open (the in-thread line, a done card, Needs you). */
+  const [wanted, setWanted] = useState<string | null>(() => takePendingWorkCard());
   const [menuOpen, setMenuOpen] = useState(false);
   const [measured, setMeasured] = useState(0);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -230,6 +235,16 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
   }, []);
 
   const openDetail = useCallback((item: OfficeItem, trigger: HTMLElement) => {
+    if (item.state === 'scoping') {
+      // D-70 (5e): Kel's questions live in the thread; the top card takes you to them.
+      setMenuOpen(false);
+      const card = document.querySelector<HTMLElement>(`[data-scoping-card="${item.scoping_id ?? item.job_id}"]`);
+      if (card) {
+        card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        card.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true });
+      } else void talkRef.current(item);
+      return;
+    }
     // A card inside the "+N more" menu goes away with the menu; focus then returns to the control.
     triggerRef.current = menuRef.current?.contains(trigger) ? chipRef.current ?? trigger : trigger;
     setMenuOpen(false);
@@ -291,6 +306,36 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
     },
     [conversationId, navigate]
   );
+
+  const talkRef = useRef(talk);
+  talkRef.current = talk;
+
+  // D-70: other surfaces open this row's card (never a second copy of the work) or ask for a read.
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const job = (event as CustomEvent<{ job?: string }>).detail?.job;
+      if (!job) return;
+      takePendingWorkCard();
+      setWanted(job);
+      refresh();
+    };
+    const onRefresh = () => refresh();
+    window.addEventListener(OPEN_WORK_CARD_EVENT, onOpen);
+    window.addEventListener(REFRESH_WORK_CARDS_EVENT, onRefresh);
+    return () => {
+      window.removeEventListener(OPEN_WORK_CARD_EVENT, onOpen);
+      window.removeEventListener(REFRESH_WORK_CARDS_EVENT, onRefresh);
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!wanted || !items) return;
+    if (!ordered.some((item) => item.job_id === wanted)) return;
+    triggerRef.current = null;
+    setMenuOpen(false);
+    setOpenJob(wanted);
+    setWanted(null);
+  }, [wanted, items, ordered]);
 
   // Escape closes the menu or the detail; a click outside the menu closes it.
   useEffect(() => {
@@ -430,6 +475,8 @@ const stateWords = (item: OfficeItem) => {
       return 'in review';
     case 'needs_you':
       return 'needs you';
+    case 'scoping':
+      return 'scoping, Kel has questions first';
     default:
       return item.state;
   }

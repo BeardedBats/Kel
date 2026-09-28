@@ -262,3 +262,24 @@ describe('collectAttention — scheduled task problems (D-57)', () => {
     expect(`${item.title} ${item.detail} ${item.action?.label}`).not.toMatch(/cron|slot|origin|submission|schedule_id|next_due/i);
   });
 });
+
+describe('collectAttention — D-70: the work cards come first', () => {
+  it('never offers finished work as something to pick up again', () => {
+    const items = collectAttention({
+      jobs: [job({ id: 'd1', state: 'CLOSED', verdict: 'VERIFIED' }), job({ id: 'c1', state: 'CANCELLED' })],
+      continuation: [
+        { job_id: 'd1', title: 'Tidy the notes' } as never,
+        { job_id: 'c1', title: 'Tidy the notes' } as never,
+      ],
+    });
+    expect(items.filter((item) => item.kind === 'continuation')).toEqual([]);
+    expect(items.some((item) => /Done and checked/.test(item.detail))).toBe(false);
+  });
+
+  it('points work that has a card at that card', () => {
+    const [item] = collectAttention({
+      jobs: [job({ id: 'w1', state: 'AWAITING_USER', contract: { request: 'Laptop research', staffing: { schema: 1 } } as never })],
+    });
+    expect(item.action).toEqual({ label: 'Answer on its card', to: '/conversation/conv-a', fallback: '/activity?job=w1', card: 'w1' });
+  });
+});

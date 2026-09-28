@@ -2,8 +2,10 @@
  * D6 — "While you were away": a DERIVED-ONLY resumption brief (the Home "Needs you" card).
  *
  * Reopening Kel should say, in plain language, what durable state already knows: what needs you,
- * what is paused, what finished (and whether it was checked), what is still running, and any
- * recorded restore outcome. This module owns no workflow truth and invents nothing:
+ * what is paused, and any recorded restore outcome. D-70: the card is headed "Needs you", so
+ * finished and still-running work is not listed here (the work cards at the top of each chat carry
+ * it), and work that has a card is answered on that card. This module owns no workflow truth and
+ * invents nothing:
  *   - job lines use the one shared state→words table (workLanguage.ts), so a job reads the same
  *     here as on Activity and its in-chat card — and each job appears on exactly one line;
  *   - permission and setup needs reuse the attention aggregator (needsAttention.ts);
@@ -16,7 +18,9 @@
  */
 import type { KelBoundaryRequest, KelContinuationCandidate, KelSchedule, KelWorkJob } from './kelApi';
 import {
+  cardAction,
   collectAttention,
+  hasWorkCard,
   jobChatAction,
   requestTitle,
   type AttentionAction,
@@ -106,7 +110,8 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
       tone: 'attention',
       title: titleOf(job, candidates),
       detail: reason ? `${view.label} — ${sentence(reason)}. ${view.sentence}` : `${view.label} — ${view.sentence}`,
-      action: jobChatAction(job),
+      // D-70: work with a card is answered on that card; the line opens it.
+      action: hasWorkCard(job) ? cardAction(job) : jobChatAction(job),
     };
   });
   const otherNeeds: BriefLine[] = collectAttention({
@@ -150,33 +155,8 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
     });
   }
 
-  // 4) What finished, in the same words its card uses ("Done and checked" only for VERIFIED).
-  for (const job of jobs.filter((entry) => entry.state === 'CLOSED').slice(0, BRIEF_SECTION_CAP)) {
-    const view = workWords(job);
-    lines.push({
-      id: `brief-finished-${job.id}`,
-      kind: 'finished',
-      tone: view.tone === 'verified' ? 'success' : 'attention',
-      title: titleOf(job, candidates),
-      detail: `${view.label} — ${view.sentence}`,
-      action: jobChatAction(job),
-    });
-  }
-
-  // 5) What is still going on its own (running, queued, or waiting for a model).
-  const going = jobs.filter((job) => workWords(job).section === 'now' && job.state !== 'CANCELLING' && job.state !== 'CANCEL_REQUESTED');
-  for (const job of going.slice(0, BRIEF_SECTION_CAP)) {
-    const view = workWords(job);
-    const reason = job.state === 'WAITING_RESOURCE' ? job.route_block : undefined;
-    lines.push({
-      id: `brief-active-${job.id}`,
-      kind: 'active',
-      tone: 'active',
-      title: titleOf(job, candidates),
-      detail: reason ? `${view.label} — ${sentence(reason)}. ${view.sentence}` : `${view.label} — ${view.sentence}`,
-      action: jobChatAction(job),
-    });
-  }
+  // 4) and 5) are gone (D-70): this card is headed "Needs you", so it never lists finished ("Done and
+  // checked") or still-running work — that lives on the work cards at the top of each chat.
 
   // 6) A successful restore is only worth a line soon after it happened. The engine records epoch
   // seconds (backup module); milliseconds are accepted too so the freshness check cannot misread
@@ -203,8 +183,6 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   const parts: string[] = [];
   if (needsYou) parts.push(`${needsYou} need${needsYou === 1 ? 's' : ''} you`);
   if (countOf('stopped')) parts.push(`${countOf('stopped')} paused`);
-  if (countOf('finished')) parts.push(`${countOf('finished')} finished`);
-  if (countOf('active')) parts.push(`${countOf('active')} still going`);
 
   return {
     quiet: lines.length === 0,

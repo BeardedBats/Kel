@@ -11,6 +11,8 @@ import { kelControl, kelHandoff, kelUndoChange, type KelChangeApplication } from
 import { applicationLine, isApplied } from '../changeApplication';
 import type { OfficeFinding, OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
 import { officeItem } from './officeApi';
+import { KelAnsweredLine, KelNeedsAnswer, type AnsweredNote } from './KelNeedsAnswer';
+import { refreshWorkCards } from './workCardEvents';
 import {
   StateIcon,
   StatusDot,
@@ -110,6 +112,8 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  /** D-70 (5b): the answer Nick just sent from this panel, and the question it answered. */
+  const [answered, setAnswered] = useState<(AnsweredNote & { question: string }) | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const job = item.job_id;
 
@@ -130,6 +134,7 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
     setDetail(null);
     setConfirming(false);
     setNotice('');
+    setAnswered(null);
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
@@ -374,6 +379,28 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
           {notice}
         </p>
       ) : null}
+      {/* D-70 (5a/5b): Kel's question, or the answer just sent, sits above the bar. */}
+      {answered && (!view.question || view.question.text === answered.question) ? (
+        <KelAnsweredLine note={answered} />
+      ) : view.state === 'needs_you' && view.question ? (
+        <KelNeedsAnswer
+          question={view.question}
+          onAnswered={(note) => {
+            setAnswered({ ...note, question: view.question?.text ?? '' });
+            onChanged();
+            refreshWorkCards();
+            void read();
+          }}
+        />
+      ) : !finished && view.state === 'needs_you' && attentionText ? (
+        <section className='kel-wd-result kel-wd-result--needs' aria-label='What Kel needs' data-testid='kel-office-needs'>
+          <div className='kel-wd-result__head'>
+            <StatusDot tone='needs' />
+            <strong>Needs you</strong>
+          </div>
+          <p>{attentionText}</p>
+        </section>
+      ) : null}
       <div className='kel-wc-progress kel-wd-progress' aria-hidden='true'>
         <span className='kel-wc-progress__fill' style={{ width: `${(progressFraction(view) * 100).toFixed(2)}%` }} />
       </div>
@@ -386,15 +413,6 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
           </div>
           {resultText ? <p>{resultText}</p> : null}
           {attention && attentionText ? <p className='kel-wd-result__why'>{attentionText}</p> : null}
-        </section>
-      ) : null}
-      {!finished && view.state === 'needs_you' && attentionText ? (
-        <section className='kel-wd-result kel-wd-result--needs' aria-label='What Kel needs' data-testid='kel-office-needs'>
-          <div className='kel-wd-result__head'>
-            <StatusDot tone='needs' />
-            <strong>Needs you</strong>
-          </div>
-          <p>{attentionText}</p>
         </section>
       ) : null}
       {detail === null && unreadable ? <p className='kel-wd-loading'>Kel couldn’t read the details just now. It will try again.</p> : null}

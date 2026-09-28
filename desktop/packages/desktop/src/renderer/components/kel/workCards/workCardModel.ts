@@ -37,6 +37,7 @@ export const isFinished = (state: OfficeState | string | undefined | null): bool
 
 /** The short label a card shows beside its state icon. Colour is never the only signal. */
 export const STATE_LABEL: Record<OfficeState, string> = {
+  scoping: 'Scoping',
   working: 'Working',
   in_review: 'In review',
   needs_you: 'Needs you',
@@ -64,6 +65,16 @@ export const passed = (item: Pick<OfficeItemDetail, 'verification' | 'review'>):
 
 export const failedChecks = (item: Pick<OfficeItemDetail, 'verification' | 'review'>): boolean =>
   FAIL_WORDS.has(word(item.verification?.result)) || word(item.review?.verdict) === 'failed';
+
+/** D-70: a scoping card counts Kel's questions instead of steps ("3 questions"). */
+export const questionCount = (item: Pick<OfficeItem, 'questions'>): string | null => {
+  const count = item.questions;
+  if (!count || !(count > 0)) return null;
+  return `${count} question${count === 1 ? '' : 's'}`;
+};
+
+/** Open work shows the row as live (poll fast): running, needs-you, or still being scoped. */
+export const isLive = (state: OfficeState | string | undefined | null): boolean => isRunning(state) || state === 'scoping';
 
 /** "X of Y" only when the engine counts real steps; nothing is invented when it does not. */
 export const stepCount = (item: Pick<OfficeItem, 'progress'>): string | null => {

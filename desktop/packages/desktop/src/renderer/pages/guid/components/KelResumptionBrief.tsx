@@ -12,6 +12,7 @@ import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelSchedules, kelStat
 import { buildResumptionBrief, type ResumptionBrief } from '@renderer/components/kel/resumptionBrief';
 import { resolveAttentionRoute } from '@renderer/components/kel/needsAttention';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
+import { openWorkCard } from '@renderer/components/kel/workCards/workCardEvents';
 
 const KelResumptionBrief: React.FC = () => {
   const navigate = useNavigate();
@@ -74,7 +75,11 @@ const KelResumptionBrief: React.FC = () => {
         </>;
         return line.action ? (
           <button type='button' className='kel-shell-attention-line' data-tone={tone} key={line.id}
-            title={line.action.label} onClick={() => navigate(resolveAttentionRoute(line.action!, resolveConversationRoute))}>{content}</button>
+            title={line.action.label} onClick={() => {
+              // D-70: work with a card is answered on it — the chat opens with that card's panel open.
+              if (line.action!.card) openWorkCard(line.action!.card);
+              navigate(resolveAttentionRoute(line.action!, resolveConversationRoute));
+            }}>{content}</button>
         ) : <div className='kel-shell-attention-line' data-tone={tone} key={line.id}>{content}</div>;
       })}
     </section>

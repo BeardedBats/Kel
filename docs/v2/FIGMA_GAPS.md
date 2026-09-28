@@ -54,6 +54,33 @@ D-70 says items 3 and 5 "follow existing patterns" (no new Figma frames). What w
 | Activity rows with Pause / Resume / Save as a recipe | Activity `189:1342` (rows with one secondary action) | The retired Work page's Pause, Resume and "Save as a recipe" (with its confirm step) sit on the job's own Activity row as a quiet or secondary button; notes and the recipe draft render under that row in a neutral outlined box. The route sentence ("Running on …") shows under running rows as a muted line. | `activity/index.tsx`, `kel-work.css` |
 | Work frame `189:907` | D-70 item 5 | Retired: `/work` (any query or sub-path) redirects to the chat home. Do not restore it from Figma. | `Router.tsx` |
 
+## Answer on the card, one live view, scoping (D-70 items 1, 2 and 4) — 2026-09-27
+
+Source: page "Office — D-66 explorations", row 5 — 5a `480:603`, 5b `480:1096`, 5c `481:743`, 5d
+`481:1098`, 5e `482:870`, 5f `482:1282` (approved by Nick 2026-09-27). Fills, borders, radii, gaps and
+type sizes are the Figma values; assets were exported from the file (new: chat, sparkle, the 12px chip
+check, the result chevron and the 13px folder; the rest were already in `assets/figma/work-cards`).
+The scoping colour ice/300 `#CFE7FF` is now a token (`--kel-figma-color-ice-300`,
+`--kel-figma-color-status-scoping`). Differences that remain, each deliberate:
+
+| State / element | Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Typeface | Instrument Sans (stand-in) | The app's SF Pro body face at the same size and weight. | `KelWorkCardsRow5.css` |
+| Chips and the answer box | drawn per frame | Two reusable components: `KelChoiceChips` (quick picks, picked = blue fill with the 12px check, dashed "Something else…") and `KelAnswerBox` (36px box + primary Send; Enter sends). The same two serve 5a and 5e. | `KelChoiceChips.tsx`, `KelAnswerBox.tsx` |
+| 5a quick picks | three sample budgets | The picks the engine exposes for that wait: Allow / Don't allow for an approval, Apply anyway / Leave it for a checked change Kel held back (or an Oracle blocker), Continue for paused work. A clarification without engine-known options shows the answer box only (the engine has no option list for a free question). A pick sends at once; there is no separate confirm. | `needs_answer.py`, `KelNeedsAnswer.tsx` |
+| 5a detail line | not drawn | When the engine has a reason (the Oracle's finding, why Kel held a change back) it sits under the question in 13px secondary text. | `KelNeedsAnswer.tsx` |
+| 5b follow-up words | "Kel is continuing" | Truthful per answer: "Kel is continuing", or "Kel won't take that step" (Don't allow), or "Kel left it as it is" (Leave it). The line stays until the panel closes or Kel asks something new; the header takes the new state from the next read. | `needsAnswer.ts` |
+| 5c line state words | "Working · 2 of 5" | The top card's own state (`office_state` on `/api/handoff`) and the engine's accepted-of-total count; "In review · N of M", "Needs you", "Stopped — see it above", "Didn't pass its checks — result below". Before the job exists: "Getting started". | `KelWorkLine.tsx` |
+| 5d result sentence | a product summary ("A tray app that…") | The first sentence of Kel's published result after its lead-in (the engine has no separate one-line summary). For coding work that is often the D-65 sentence about what was applied. | `KelDoneCard.tsx` |
+| 5d checks line | "4 of 4 checks passed" | Counted from the checks recorded with the result message; omitted when none were recorded. | `KelDoneCard.tsx` |
+| 5d applied line | "Applied to Projects › mic-mute at 10:31 AM · you can undo it" | The folder path the engine records and the finish time; D-65 wording for undone / waiting states. | `KelDoneCard.tsx`, `changeApplication.ts` |
+| 5d Details | link-style button | Opens the same top card's panel (never a second copy). The chevron on the 5d line scrolls to the done card. | `workCardEvents.ts` |
+| 5e questions and "I'll build" | Kel's tailored questions and summary | From Kel's turn model when it gives them (bounded: 1–3 questions, 2–4 short answers); otherwise Kel's own two or three questions for that kind of work. The summary is the model's, else "I'll build/write/find out: <title>". | `scoping.py` |
+| 5f collapsed line | "Scoped · <answers> · Started 10:04 AM" | Same; a best-guess start says "Scoped · best guess". | `KelScopingCard.tsx` |
+| 5f second acknowledgement | "Starting now. An Architect is planning the pages while a Designer works from the van logo." | "Starting now with your answers. I'll post the result here once it's been checked." (the team is decided after Start, so Kel cannot name it yet) or, for best guess, the assumptions it used. | `scoping.py` |
+| Scoping top card click | not drawn | Scrolls to the scoping card in the thread (or opens its chat); no detail panel, since nothing has started. | `KelWorkCardRow.tsx` |
+| Needs you (home) | "Needs you" card lists only what needs you | Finished ("Done and checked") and still-running work no longer appear there; a job that has a card is answered on it ("Answer on its card" opens the chat with that card's panel open). | `resumptionBrief.ts`, `needsAttention.ts` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.

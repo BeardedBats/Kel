@@ -15,6 +15,7 @@ import { kelControl, kelHandoff, kelRetry, kelUndoChange, type KelHandoff, type 
 import { applicationLine, isApplied } from './changeApplication';
 import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
+import { KelWorkLine } from './workCards/KelWorkLine';
 import './KelWorkCard.css';
 
 export const KEL_WORK_CARD_POLL_MS = 3000;
@@ -161,6 +162,12 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
     });
 
   const phase = view?.phase ?? 'starting';
+  // D-70 item 2: staffed work has its top card; in the thread it is one line pointing at it. Work
+  // from before the cards (no `staffed`) and a hand-off that could not start keep this card.
+  const staffedView = view as (KelHandoff & { staffed?: boolean; office_state?: string | null }) | null;
+  if (staffedView && phase !== 'failed_to_start' && (staffedView.staffed || (!staffedView.job_id && phase === 'starting'))) {
+    return <KelWorkLine view={staffedView} />;
+  }
   const running = phase === 'starting' || phase === 'running';
   const headline = view ? workHeadline(view) : unavailable ? 'Checking on this work…' : 'Getting started…';
   const detail =

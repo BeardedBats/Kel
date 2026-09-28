@@ -13,6 +13,7 @@ import iconCheck from '@renderer/assets/figma/work-cards/icon-check.svg';
 import iconCheck14 from '@renderer/assets/figma/work-cards/icon-check14.svg';
 import iconWarning from '@renderer/assets/figma/work-cards/icon-warning.svg';
 import iconStopMuted from '@renderer/assets/figma/work-cards/icon-stop-muted.svg';
+import iconChatSrc from '@renderer/assets/figma/work-cards/icon-chat.svg';
 import type { OfficeState } from './officeApi';
 
 export { default as iconClose } from '@renderer/assets/figma/work-cards/icon-close.svg';
@@ -24,7 +25,13 @@ export { default as iconRemove } from '@renderer/assets/figma/work-cards/icon-re
 export { default as iconUndo } from '@renderer/assets/figma/work-cards/icon-undo.svg';
 export { default as iconFolder } from '@renderer/assets/figma/work-cards/icon-folder.svg';
 export { default as stepPending } from '@renderer/assets/figma/work-cards/step-pending.svg';
-export { iconCheck14, iconWarning, dotNext, dotDone, dotReview, dotFailed };
+// D-70 (Figma row 5): scoping, quick picks, the in-thread line and the done card.
+export { default as iconChat } from '@renderer/assets/figma/work-cards/icon-chat.svg';
+export { default as iconCheck12Light } from '@renderer/assets/figma/work-cards/icon-check12-light.svg';
+export { default as iconSparkle } from '@renderer/assets/figma/work-cards/icon-sparkle.svg';
+export { default as iconChevronDown } from '@renderer/assets/figma/work-cards/icon-chevron-down.svg';
+export { default as iconFolder13 } from '@renderer/assets/figma/work-cards/icon-folder13.svg';
+export { iconCheck, iconCheck14, iconWarning, iconStopMuted, dotNext, dotDone, dotReview, dotFailed };
 
 export type DotTone = 'working' | 'review' | 'needs' | 'done' | 'failed' | 'next';
 
@@ -63,6 +70,12 @@ export const dotToneFor = (state: OfficeState | string): DotTone => {
 
 /** The lead icon before a state label: a dot while running, a check, warning or stop when finished. */
 export const StateIcon: React.FC<{ state: OfficeState | string; size?: 'card' | 'detail' }> = ({ state, size = 'card' }) => {
+  if (state === 'scoping')
+    return (
+      <span className='kel-wc-icon kel-wc-icon--check-card' aria-hidden='true'>
+        <img src={iconChatSrc} alt='' />
+      </span>
+    );
   if (state === 'done')
     return (
       <span className={`kel-wc-icon kel-wc-icon--check-${size}`} aria-hidden='true'>
