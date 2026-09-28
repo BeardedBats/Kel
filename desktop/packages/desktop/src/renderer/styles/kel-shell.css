@@ -4553,3 +4553,7 @@ html[data-theme='dark'] .kel-shell-dialog-modal .arco-modal-footer .arco-btn-sec
 html[data-theme='dark'] .kel-shell-dialog-modal :is(.arco-input, .arco-input-inner-wrapper) { border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1) !important; color: #edf2fa; }
 html[data-theme='light'] body .arco-modal.kel-shell-dialog-modal { border: 1px solid rgba(20,45,80,.12); background: #fff !important; box-shadow: 0 24px 32px rgba(20,45,80,.18); }
 html[data-theme='light'] .kel-shell-dialog-modal .arco-modal-footer .arco-btn-secondary { color: #2356b3; }
+
+/* VIS-19: Ramble's main pane lists the saved recordings when none is open. */
+.kel-shell-ramble-library { display: flex; flex-direction: column; gap: 6px; max-width: 680px; }
+.kel-shell-ramble-library-list { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
