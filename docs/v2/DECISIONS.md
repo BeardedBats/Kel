@@ -820,3 +820,17 @@ independent review's rubric still asks for intact tests); an intended behaviour 
 existing test pins cannot pass — Nick updates that test himself first (no allowance mechanism yet);
 older isolated (non-native-host) runtimes keep the byte-for-byte rule. *Forbids:* accepting a change
 because its own edited tests pass; test setup that only exists in the change deciding the verdict.
+
+## D-72 — Routing defaults (recommended values, adopted under Nick's "execute everything" instruction)
+
+**Adopted 2026-09-28.** Nick asked Claude to execute all remaining work without stopping; these six
+open routing choices (docs/v2/design/ROUTING_2.md "Needs Nick") take Claude's recommended values.
+They are recommendations, not Nick's explicit picks — each is one setting to change.
+1. "Auto" reasoning follows the dispatch tier: fast → low, standard → the model's default,
+   deep and assurance → high.
+2. Budget classes keep their starting values (standard: 3M tokens, 90 min, $10 API-equivalent) and are
+   re-tuned from recorded cost data once enough runs exist.
+3. Model strength ranks start from the list-price estimate; outcome evidence adjusts them.
+4. OpenRouter carries only DeepSeek Flash for now.
+5. Codex and Claude Code subscription calls count as $0 marginal cost when ranking (quota still counts).
+6. Kel's own turn, reply and plan calls are recorded in usage.
