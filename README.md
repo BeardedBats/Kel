@@ -51,11 +51,13 @@ Inside the repository:
 
     cd desktop && bunx tsc --noEmit        # typecheck
     cd desktop && bun run test             # vitest: node + jsdom projects (about 120 files / 900 tests)
-    cd runtime && python -m pytest tests -q   # the engine (about 1,650 tests, ~10 minutes)
+    cd runtime && python -m pytest tests -q   # the engine (about 1,650 tests, 10+ minutes)
 
-Tests are hermetic: temporary data roots, fake providers, a local stand-in for web services. On a busy
-machine the first test of a heavy desktop file can time out; rerun that file alone before treating it as
-a failure.
+Tests are hermetic: temporary data roots, fake providers, a local stand-in for web services. The engine
+suite points `KEL_PROJECTS_ROOT` at a temporary folder and turns `KEL_GENERAL_ROOT` off
+(`runtime/tests/conftest.py`), so no test creates folders in the real `Documents\Kel Projects`. On a
+busy machine the first test of a heavy desktop file can time out; rerun that file alone before treating
+it as a failure.
 
 End-to-end and packaged checks are separate and need a running app:
 
@@ -67,8 +69,11 @@ End-to-end and packaged checks are separate and need a running app:
 
 Never run checks against the real `App` or `Data` while Nick may be using Kel: copy `Data` to a scratch
 folder and start `App\Kel.exe` with `KEL_DATA_DIR`, `AIONUI_DATA_DIR` and `KEL_HOST_DATA_DIR` pointing
-at the copy, `AIONUI_MULTI_INSTANCE=1` and `KEL_BACKGROUND_WINDOW=1` (the window renders off-screen and
-raises no notifications).
+at the copy, `KEL_PROJECTS_ROOT` pointing at a scratch folder so new projects are not created in the real
+`Documents\Kel Projects` (General's default folder follows it; `KEL_GENERAL_ROOT` sets General's folder
+separately, or `none` turns it off),
+`AIONUI_MULTI_INSTANCE=1` and `KEL_BACKGROUND_WINDOW=1` (the window renders off-screen and raises no
+notifications). Delete the copy afterwards: it holds credentials.
 
 ## Build
 
@@ -100,7 +105,8 @@ The current install, its checks and its rollback are described in `docs/v2/MARAT
 
 Start with `docs/v2/MARATHON_STATE.md` ("Current state" at the top), then:
 
-- `docs/v2/DECISIONS.md` — every product decision for V2 (the V2-xx phase notes, then D-29..D-72), newest last.
+- `docs/v2/DECISIONS.md` — every product decision for V2 (the V2-xx phase notes, then D-29 onward),
+  newest last.
 - `docs/v2/RESUME.md` — how to pick the work up again.
 - `docs/v2/FEATURE_LEDGER.md`, `IMPLEMENTATION_STATUS.md` — what is built, with evidence.
 - `docs/v2/KNOWN_LIMITATIONS.md` — what is not true yet, stated plainly.
