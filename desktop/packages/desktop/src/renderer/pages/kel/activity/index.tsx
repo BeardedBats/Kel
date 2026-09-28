@@ -1,4 +1,5 @@
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
+import { officeList, type OfficeItem } from '@renderer/components/kel/workCards/officeApi';
 /**
  * Kel D14 — Activity: an optional, high-level view of what Kel is doing, built entirely from state
  * other surfaces already expose. Permission grants, internal counters, worker identifiers, routing
@@ -60,6 +61,15 @@ type RecipeDraft = {
   preview: { steps: string[]; kind: string; milestones: number };
 };
 
+/** FN-13: a work card that is waiting on Nick — scoping questions or a needs-you card. */
+export const needsNick = (item: OfficeItem): boolean =>
+  Boolean(item && !item.finished && (item.needs_you || item.state === 'scoping' || item.state === 'needs_you'));
+
+const askSentence = (item: OfficeItem): string =>
+  item.state === 'scoping'
+    ? `Kel has ${item.questions && item.questions > 1 ? `${item.questions} questions` : 'a question'} before it starts.`
+    : item.status_line || 'Kel needs your answer to go on.';
+
 function Row({
   job,
   all,
@@ -103,6 +113,9 @@ const KelActivityPage: React.FC = () => {
   const [jobs, setJobs] = useState<KelWorkJob[] | null>(null);
   const [routes, setRoutes] = useState<Record<string, KelJobRoute>>({});
   const [providerLabels, setProviderLabels] = useState<Record<string, string>>({});
+  // FN-13: what the work cards say needs Nick (scoping questions, a needs-you card) — "All clear"
+  // only when nothing does.
+  const [asks, setAsks] = useState<OfficeItem[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -117,13 +130,17 @@ const KelActivityPage: React.FC = () => {
   const load = useCallback(async () => {
     if (!loaded) return;
     try {
-      const [state, providers] = await Promise.all([
+      const [state, providers, office] = await Promise.all([
         kelState(KEL_ALL_CONVERSATIONS, active),
         // D19: the route sentence names providers the way a person knows them.
         Promise.resolve()
           .then(() => kelProviders.list())
           .catch((): null => null),
+        Promise.resolve()
+          .then(() => officeList(active || '*'))
+          .catch((): null => null),
       ]);
+      setAsks((office?.items ?? []).filter(needsNick));
       setJobs(state.jobs ?? []);
       setRoutes(state.routes ?? {});
       setProviderLabels(
@@ -235,6 +252,19 @@ const KelActivityPage: React.FC = () => {
   const finished = finishedAll.filter((job, index) => index < FINISHED_CAP || job.id === focusId);
 
   const openChat = (job: KelWorkJob) => navigate(resolveAttentionRoute(jobChatAction(job), resolveConversationRoute));
+  // FN-13: a card that needs Nick and is not already a waiting job row (scoping has no job yet).
+  const waitingIds = new Set(waiting.map((job) => job.id));
+  const openAsks = asks.filter((item) => !waitingIds.has(item.job_id));
+  const openAsk = (item: OfficeItem) => {
+    const open = (window as unknown as { kelAPI?: { openEngineConversation?: (cid: string) => Promise<string | null> } }).kelAPI?.openEngineConversation;
+    if (!item.conversation_id || !open) {
+      navigate('/guid');
+      return;
+    }
+    void open(item.conversation_id)
+      .then((donor) => navigate(donor ? `/conversation/${donor}` : '/guid'))
+      .catch(() => navigate('/guid'));
+  };
   const title = (job: KelWorkJob) => workLabelFor(job.id, all);
 
   /** A job's note and recipe draft, under its row (never a second row for the same job). */
@@ -311,7 +341,19 @@ const KelActivityPage: React.FC = () => {
       </KelCard>
 
       <KelCard title='Waiting on you'>
-        {waiting.length === 0 ? (
+        {openAsks.map((item) => (
+          <div key={item.scoping_id || item.job_id} className='kel-attention__row kel-shell-activity__item'
+            data-section='waiting' data-testid='activity-ask'>
+            <div className='kel-attention__text'>
+              <strong>{item.title}</strong>
+              <span className='kel-meta' data-testid='activity-state'>{askSentence(item)}</span>
+            </div>
+            <KelButton variant='secondary' onClick={() => openAsk(item)} ariaLabel={`Open the chat for ${item.title}`}>
+              Open the chat
+            </KelButton>
+          </div>
+        ))}
+        {waiting.length === 0 && openAsks.length === 0 ? (
           <p className='kel-meta kel-shell-activity-clear'>All clear.</p>
         ) : (
           waiting.map((job) => (
