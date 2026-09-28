@@ -584,6 +584,32 @@ CONTINUE_RECIPE_ID = 'continue-work'
 MAX_INPUT_CHARS = 10000
 
 
+def words_upto(text, limit):
+    """FN-12: text on one line, cut at a word boundary (never mid-word), with an ellipsis if cut."""
+    flat = ' '.join(str(text or '').split())
+    if len(flat) <= limit:
+        return flat
+    cut = flat[:limit - 1]
+    space = cut.rfind(' ')
+    return (cut[:space] if space > limit // 3 else cut).rstrip(' ,;:-') + '…'
+
+
+def step_title(objective, fallback='Step'):
+    """FN-12: a step's name from what it does - its first sentence, whole words."""
+    first = re.split(r'(?<=[.!?])\s|\n', str(objective or '').strip(), maxsplit=1)[0].strip().rstrip('.')
+    return words_upto(first, 80) or fallback
+
+
+def new_step(index, title, objective):
+    """A plain work step (the shape `propose_from_job` and the Recipes page write)."""
+    objective = ' '.join(str(objective or title or '').split())[:600]
+    return {'id': 'step-%d' % (index + 1), 'title': words_upto(title, 80) or step_title(objective),
+            'action': 'work', 'objective': objective,
+            'depends_on': ['step-%d' % index] if index else [],
+            'checks': [{'kind': 'min_chars', 'value': 40}],
+            'retries': {'max_attempts': 2, 'on_fail': 'escalate'}}
+
+
 def recipe_digest(recipe):
     """Canonical digest of a validated recipe (drives immutability and pinning)."""
     return digest(recipe)
@@ -762,6 +788,95 @@ class RecipeLibrary:
         return {'recipe': draft, 'copied_from': recipe_id,
                 'note': 'A draft: save it with confirm to keep it in this project.'}
 
+    def _free_id(self, base):
+        with contextlib.closing(self.store.connect()) as db:
+            taken = {row['recipe_id'] for row in db.execute('SELECT DISTINCT recipe_id FROM recipes')}
+        base = (re.sub(r'[^a-z0-9]+', '-', base.lower()).strip('-') or 'recipe')[:56].rstrip('-')
+        if len(base) < 3:
+            base = ('recipe-' + base).rstrip('-')
+        candidate, index = base, 2
+        while candidate in taken:
+            candidate = '%s-%d' % (base, index)
+            index += 1
+        return candidate
+
+    @staticmethod
+    def _steps_from(steps):
+        if not isinstance(steps, list) or not 1 <= len(steps) <= MAX_STEPS:
+            raise PolicyError('A recipe has 1 to %d steps.' % MAX_STEPS)
+        out = []
+        for index, step in enumerate(steps):
+            step = step if isinstance(step, dict) else {'objective': str(step or '')}
+            objective = ' '.join(str(step.get('objective') or step.get('title') or '').split())
+            if not objective:
+                raise PolicyError('Say what step %d does.' % (index + 1))
+            out.append(new_step(index, step.get('title') or step_title(objective), objective))
+        return out
+
+    def create(self, project_id, name, description='', steps=None, category=None):
+        """FN-12: a new recipe written on the Recipes page (saved at once - Nick wrote it)."""
+        name = ' '.join(str(name or '').split())
+        if not name:
+            raise PolicyError('Give the recipe a name.')
+        steps = self._steps_from(steps)
+        recipe = {'schema_version': 1, 'recipe_id': self._free_id(name), 'recipe_version': '1.0.0',
+                  'name': name[:80],
+                  'description': ' '.join(str(description or '').split())[:500] or 'A recipe you wrote.',
+                  'source': 'project', 'kind': 'document', 'inputs': [],
+                  'steps': steps, 'permissions': ['project:read'], 'verification': ['manual_review'],
+                  'terminal_states': ['VERIFIED', 'FAILED', 'UNCERTAIN'],
+                  'budget': min(100, max(1, len(steps) * 4)),
+                  'retry_policy': {'max_attempts_per_milestone': 4, 'provider_switch_after': 2}}
+        if category:
+            recipe['category'] = ' '.join(str(category).split())[:40]
+        saved = self.save(recipe, scope='project', project_id=project_id, confirm=True)
+        return dict(saved, recipe=recipe)
+
+    def update(self, recipe_id, project_id, *, name=None, description=None, steps=None):
+        """FN-12: rename or edit a recipe - a new version in this project (history is kept; a
+        built-in stays as shipped and this project's copy shadows it)."""
+        if not project_id:
+            raise PolicyError('Pick a project to change this recipe in.')
+        info = self.get(recipe_id, project_id=project_id)
+        recipe = dict(info['recipe'])
+        if name is not None:
+            name = ' '.join(str(name).split())
+            if not name:
+                raise PolicyError('Give the recipe a name.')
+            recipe['name'] = name[:80]
+        if description is not None:
+            recipe['description'] = ' '.join(str(description).split())[:500] or recipe.get('description') or ''
+        if steps is not None:
+            old = {step['id']: step for step in recipe['steps']}
+            same_steps = (isinstance(steps, list) and len(steps) == len(recipe['steps'])
+                          and all(isinstance(step, dict) and step.get('id') in old for step in steps))
+            if same_steps:
+                # The same steps, re-worded: keep their shape (checks, kinds, links), change the words.
+                edited = []
+                for step in steps:
+                    base = dict(old[step['id']])
+                    objective = ' '.join(str(step.get('objective') or base['objective']).split())[:600]
+                    base['objective'] = objective
+                    base['title'] = words_upto(step.get('title') or step_title(objective), 80)
+                    edited.append(base)
+                recipe['steps'] = edited
+            else:
+                if recipe['kind'] == 'mixed':
+                    raise PolicyError('This recipe mixes kinds of work; change its steps one by one.')
+                recipe['steps'] = self._steps_from(steps)
+        if recipe == info['recipe']:
+            return {'saved': False, 'recipe': recipe, 'reason': 'nothing changed'}
+        if info['scope'] == 'builtin':
+            recipe['source'] = 'project'
+        with contextlib.closing(self.store.connect()) as db:
+            versions = [row['recipe_version'] for row in db.execute(
+                'SELECT recipe_version FROM recipes WHERE recipe_id=? AND (scope=? OR project_id=?)',
+                (recipe_id, 'builtin', project_id))]
+        major, minor, patch = max((self._version_key(v) for v in versions), default=(1, 0, 0))
+        recipe['recipe_version'] = '%d.%d.%d' % (major, minor, patch + 1)
+        saved = self.save(recipe, scope='project', project_id=project_id, confirm=True)
+        return dict(saved, recipe=recipe)
+
     def history(self, project_id, recipe_id, limit=10):
         """This recipe's runs — read from the jobs the engine already keeps."""
         out = []
@@ -885,19 +1000,23 @@ class RecipeLibrary:
                       if check.get('kind') in CHECK_KINDS]
             if not checks:
                 checks = [{'kind': 'min_chars', 'value': 40}]
-            steps.append({'id': slug_for[spec['id']], 'title': str(spec['id'])[:80],
+            steps.append({'id': slug_for[spec['id']],
+                          'title': step_title(spec.get('objective'), str(spec['id'])[:80]),
                           'action': 'work',
                           'objective': str(spec.get('objective', spec['id']))[:600],
                           'depends_on': [slug_for.get(dep, dep) for dep in spec.get('depends_on', [])],
                           'checks': checks,
                           'retries': {'max_attempts': 2, 'on_fail': 'escalate'}})
-        name = ('Saved run: ' + str(contract.get('request', 'work'))[:60]).strip()[:80]
+        # FN-12: the work's own short name (its card title), else its request - whole words only.
+        handoff_title = ((contract.get('handoff') or {}).get('title') or '').strip()
+        request_line = (str(contract.get('request') or '').strip().splitlines() or [''])[0]
+        name = words_upto(handoff_title or request_line, 80) or 'Saved work'
         recipe = {
             'schema_version': 1,
             'recipe_id': 'job-' + job_id.replace('-', '')[:12],
             'recipe_version': '1.0.0',
             'name': name or 'Saved run',
-            'description': ('Draft rebuilt from job %s — review before saving.' % job_id)[:500],
+            'description': 'Saved from work Kel finished and checked.',
             'source': 'from_job:' + job_id,
             'kind': kind,
             'inputs': [],
@@ -928,8 +1047,7 @@ def _render(template, values):
 
 
 def _request_text(recipe, values):
-    line = 'Run recipe %s v%s (%s).' % (recipe['name'], recipe['recipe_version'],
-                                        recipe['recipe_id'])
+    line = 'Run the recipe “%s”.' % recipe['name']  # FN-12: no version or internal id
     parts = []
     for item in recipe['inputs']:
         value = values.get(item['name'])
@@ -992,7 +1110,7 @@ def compile_recipe(recipe, inputs=None, project_id='default', *, root=None, test
     contract = {'request': _request_text(recipe, values), 'kind': recipe['kind'],
                 'budget': recipe['budget'], 'project_id': project_id,
                 'recipe': {'id': recipe['recipe_id'], 'version': recipe['recipe_version'],
-                           'digest': recipe_digest(recipe)},
+                           'digest': recipe_digest(recipe), 'name': recipe['name']},
                 'non_goals': ['unrequested source checkout changes',
                               'unrequested external publication'],
                 'milestones': milestones}

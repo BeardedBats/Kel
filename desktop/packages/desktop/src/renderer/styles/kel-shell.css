@@ -3001,6 +3001,12 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-run > p { margin: 0 0 12px; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-fields { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+/* FN-12: writing and re-wording a recipe — the run form's field style, one textarea per step. */
+.kel-v2-shell #project-recipes .kel-recipe-editor-steps { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 8px; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+.kel-v2-shell #project-recipes .kel-recipe-editor-steps li { display: flex; gap: 8px; align-items: flex-start; }
+.kel-v2-shell #project-recipes .kel-recipe-editor-steps textarea { flex: 1; box-sizing: border-box; min-height: 52px; resize: vertical; padding: 8px 12px; border: 1px solid rgba(127,160,255,.4); border-radius: 8px; background: rgba(47,107,224,.14); color: #edf2fa; font: 400 13px/18px 'SF Pro Text',sans-serif; }
+[data-theme='light'] .kel-v2-shell #project-recipes .kel-recipe-editor-steps { color: var(--text-secondary); }
+[data-theme='light'] .kel-v2-shell #project-recipes .kel-recipe-editor-steps textarea { background: var(--color-fill-1, #f4f6fa); color: var(--text-primary); border-color: var(--color-border-2, #d0d7e2); }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-fields label { display: grid; gap: 6px; min-width: 180px; flex: 1; color: #c4d4e8; font: 400 13px/18px 'SF Pro Text',sans-serif; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-fields input:not([type='checkbox']),
 .kel-v2-shell #project-recipes .kel-recipe-desktop-fields select {

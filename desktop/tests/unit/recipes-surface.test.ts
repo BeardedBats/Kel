@@ -43,7 +43,7 @@ describe('Recipes tab (D10)', () => {
   it('can run a recipe and points at where the run lives', () => {
     expect(projectsPage).toContain('kelRecipeRun(draft.recipeId, values, scope)');
     expect(projectsPage).toContain('Run request sent — follow it in Activity.');
-    expect(projectsPage).toContain('Preview (dry run)');
+    expect(projectsPage).toContain('>Preview</button>');
   });
 });
 

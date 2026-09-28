@@ -22,6 +22,23 @@ export const ROUTE_REASON_TEXT: Record<string, string> = {
   'quality floor not established': 'it has no track record yet',
 };
 
+/**
+ * FN-12: a route names runtimes by their adapter ids ("claude", "codex"), which the Providers list
+ * (keyed "claude-code", "internal") does not cover; these are the names a person knows.
+ */
+const RUNTIME_NAMES: Record<string, string> = {
+  claude: 'Claude',
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  internal: 'Anthropic API',
+  deepseek: 'DeepSeek',
+  openrouter: 'OpenRouter',
+};
+const humanize = (id: string): string => {
+  const words = id.replace(/[-_]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : id;
+};
+
 /** D12: one plain sentence about why a run landed on this provider, honest about unknowns.
  *  D19: engine provider ids never reach the sentence — `labels` maps an id to the name a person
  *  knows, and the fallback humanizes the id rather than showing it raw. */
@@ -32,7 +49,7 @@ export const routeSentence = (
   if (!route) return null;
   const name = (id: string | null | undefined): string => {
     if (!id) return 'an unnamed provider';
-    return labels[id] ?? id.replace(/-/g, ' ');
+    return labels[id] ?? RUNTIME_NAMES[id] ?? humanize(id);
   };
   const policy = route.route.policy === 'eligible-cost-v1' ? 'the cheapest eligible option' : null;
   const unknown = route.route.unknown_cost ? 'its cost is not known yet' : null;

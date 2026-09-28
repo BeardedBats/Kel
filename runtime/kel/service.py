@@ -1570,6 +1570,12 @@ class Service:
             return {'submission':sid,'conversation':cid}
         if action=='propose_from_job':
             return library.propose_from_job(data.get('job_id',''))
+        if action=='create':  # FN-12: written on the Recipes page
+            return library.create(project_id,data.get('name'),data.get('description') or '',data.get('steps'),
+                                  data.get('category'))
+        if action=='update':  # FN-12: rename or edit (a new version in this project)
+            return library.update(data.get('recipe_id',''),project_id,name=data.get('name'),
+                                  description=data.get('description'),steps=data.get('steps'))
         if action=='save':
             recipe=data.get('recipe')
             if not isinstance(recipe,dict):

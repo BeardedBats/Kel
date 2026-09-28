@@ -48,7 +48,7 @@ describe('provider names on the work surfaces (D19)', () => {
   it('falls back to a readable name, not a raw id, when the inventory did not load', () => {
     const bare: KelJobRoute = { provider: 'claude-code', route: { selected: 'claude-code' } };
     const sentence = routeSentence(bare);
-    expect(sentence).toBe('Running on claude code.');
+    expect(sentence).toBe('Running on Claude Code.'); // FN-12: the name a person knows
     expect(sentence).not.toContain('claude-code');
   });
 
