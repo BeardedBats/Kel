@@ -169,7 +169,8 @@ class DetailTests(Base):
         self.assertIsNone(builder['asked'])
         verifier = view['staff'][2]
         self.assertEqual((verifier['model_label'], verifier['independence']), ('GPT-6 Astra', 'different'))
-        self.assertEqual(verifier['reasoning'], 'Auto')
+        # Routing 2: review is assurance-tier, so a Verifier left on Auto reasons at High.
+        self.assertEqual(verifier['reasoning'], 'High')
         self.assertEqual(view['state'], 'done')
         self.assertEqual(view['status_line'], 'Done and checked — applied to your project.')
         self.assertEqual(view['files_changed'], ['app.txt'])

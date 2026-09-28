@@ -88,6 +88,13 @@ class CodexStreamTests(unittest.TestCase):
 
 
 class RefusalTests(Base):
+    def setUp(self):
+        super().setUp()
+        # The refusals below were recorded by the old Codex the live check ran; keep it "installed".
+        saved = role_models._current_runtime_version
+        role_models._current_runtime_version = lambda model_id: 'Codex CLI 0.142.5'
+        self.addCleanup(lambda: setattr(role_models, '_current_runtime_version', saved))
+
     def test_refusals_are_classified_in_plain_words(self):
         self.assertEqual(role_models.classify_refusal(LUNA_REFUSAL, 'gpt-6-luna'),
                          ('account', "your ChatGPT account doesn't offer it in Codex"))
@@ -129,10 +136,19 @@ class RefusalTests(Base):
         finally:
             role_models._current_runtime_version = saved
 
-    def test_an_account_refusal_lasts_a_day(self):
-        role_models.note_refusal(self.store, 'gpt-6-luna', LUNA_REFUSAL)
-        self.assertIsNotNone(role_models.rejected(self.store, 'gpt-6-luna'))
-        self.assertIsNone(role_models.rejected(self.store, 'gpt-6-luna', now=time.time() + 25 * 3600))
+    def test_an_account_refusal_lasts_a_day_or_until_the_cli_changes(self):
+        saved = role_models._current_runtime_version
+        try:
+            role_models._current_runtime_version = lambda model_id: 'Codex CLI 0.142.5'
+            role_models.note_refusal(self.store, 'gpt-6-luna', LUNA_REFUSAL, 'Codex CLI 0.142.5')
+            self.assertIsNotNone(role_models.rejected(self.store, 'gpt-6-luna'))
+            self.assertIsNone(role_models.rejected(self.store, 'gpt-6-luna', now=time.time() + 25 * 3600))
+            # The live check's Luna refusal was an old-CLI symptom: Codex 0.157.1 runs Luna on the same
+            # account, so a new CLI version gets a fresh try at once.
+            role_models._current_runtime_version = lambda model_id: 'Codex CLI 0.157.1'
+            self.assertIsNone(role_models.rejected(self.store, 'gpt-6-luna'))
+        finally:
+            role_models._current_runtime_version = saved
 
     def test_a_staff_step_refusal_is_recorded_with_its_plain_summary(self):
         with self.store.transaction() as db:

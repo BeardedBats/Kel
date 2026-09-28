@@ -269,9 +269,17 @@ def plan_job(store, contract, request=None, *, tier_max=None):
         reasons.append('no independent parts to run in parallel; the steps run one at a time')
     user_facing = bool(features['user_facing'])
     steps = {}
+    from .task_routing import class_for_role, tier_for_step
+    hint = (contract.get('classification') or {}).get('tier')
     for milestone in contract.get('milestones') or []:
         role = _role_for_step(kind, milestone, tier, user_facing, text, final if parallel else None)
-        steps[milestone['id']] = {'role': role, 'label': ROLE_LABELS[role]}
+        # Routing 2 §5.1: the step's task class and dispatch tier, frozen with the decision.
+        step_kind = 'research' if 'web_research' in (milestone.get('required_capabilities') or []) else kind
+        task_class = class_for_role(role, step_kind)
+        dispatch, dispatch_why = tier_for_step(task_class, {'features': features, 'flags': flags,
+                                                            'tier': tier}, hint)
+        steps[milestone['id']] = {'role': role, 'label': ROLE_LABELS[role], 'task_class': task_class,
+                                  'dispatch': dispatch, 'dispatch_why': dispatch_why}
     pod = TIER_RANK[tier] >= 2
     lenses = list(REVIEW_LENSES[kind]) if pod else []
     for flag in flags:
@@ -307,6 +315,22 @@ def step_role(job, milestone_id):
     if not record:
         return None
     return ((record.get('steps') or {}).get(milestone_id) or {}).get('role')
+
+
+def step_routing(job, milestone_id):
+    """(task class, dispatch tier) of a staffed step (Routing 2 §5.1); derived for decisions made
+    before steps carried them; (None, None) for unstaffed work (routing as before)."""
+    record = staffing_of(job)
+    if not record:
+        return None, None
+    step = (record.get('steps') or {}).get(milestone_id) or {}
+    if step.get('task_class') and step.get('dispatch'):
+        return step['task_class'], step['dispatch']
+    if not step.get('role'):
+        return None, None
+    from .task_routing import class_for_role, tier_for_step
+    task_class = class_for_role(step['role'], record.get('kind'))
+    return task_class, tier_for_step(task_class, record)[0]
 
 
 def record_decision(store, job_id, record):

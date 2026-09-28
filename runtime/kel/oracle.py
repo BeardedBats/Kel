@@ -220,7 +220,8 @@ def _pick(store, job, milestone_id, subject, staff, exclude, skip):
     if staff is not None:
         try:
             binding = resolve(store, 'oracle', adapters=staff.staff_adapters(), purpose='text',
-                              avoid_family=builder_family, exclude=exclude)
+                              avoid_family=builder_family, exclude=exclude, task_class='review',
+                              tier='assurance')
             model = staff.staff_model(binding, timeout=180)
         except Exception:
             binding, model = None, None

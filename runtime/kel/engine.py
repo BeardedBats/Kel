@@ -383,9 +383,12 @@ class Engine:
     def _role_binding(self, job, spec, role, candidates, set_aside=None):
         """D-67: what this step's role asks for, resolved against the adapters that can run it."""
         from .role_models import MODELS, ROLE_LABELS, resolve
+        from .staff import step_routing
+        task_class, tier = step_routing(job, spec['id'])
         try:
             binding = resolve(self.store, role, adapters={c.name for c in candidates},
-                              purpose=self._purpose(job, spec), set_aside=set_aside)
+                              purpose=self._purpose(job, spec), set_aside=set_aside,
+                              task_class=task_class, tier=tier)
         except Exception:
             return None  # an unreadable role setting never blocks work; routing decides
         if binding['waiting']:
@@ -405,7 +408,7 @@ class Engine:
             spec = next((s for s in job['contract']['milestones'] if s['id'] == mid), {})
             try:
                 if resolve(self.store, role, adapters=set(self.adapters),
-                           purpose=self._purpose(job, spec))['waiting']:
+                           purpose=self._purpose(job, spec))['waiting']:  # Fixed: no ranking involved
                     return False
             except Exception:
                 return True
