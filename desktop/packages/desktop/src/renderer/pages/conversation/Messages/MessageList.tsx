@@ -45,6 +45,7 @@ import MessageToolGroupSummary from './components/MessageToolGroupSummary';
 import MessageCronTrigger from './components/MessageCronTrigger';
 import MessageSkillSuggest from './components/MessageSkillSuggest';
 import MessageText from './components/MessageText';
+import { useKelRewriteHandler } from './components/kelRewrite';
 import MessageThinking from './components/MessageThinking';
 import KelApprovalCard from '@renderer/components/kel/KelApprovalCard';
 import KelWorkCard from '@renderer/components/kel/KelWorkCard';
@@ -367,6 +368,8 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
   // moving down, so we defer its copy/timestamp row until the turn finishes to
   // avoid the row flashing in and the layout reflowing mid-stream.
   const { isProcessing } = useConversationRuntimeView(conversationContext?.conversation_id ?? '');
+  // D-75.2: edit a sent message / answer the last reply again, for this chat.
+  useKelRewriteHandler(conversationContext?.conversation_id, list);
   const { t } = useTranslation();
   const location = useLocation();
   const locationState = (location.state || {}) as ConversationLocationState;

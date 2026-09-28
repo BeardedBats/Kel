@@ -8,6 +8,7 @@ import { ipcBridge } from '@/common';
 import type { MessageCursorPage } from '@/common/adapter/ipcBridge';
 import type { TMessage } from '@/common/chat/chatLib';
 import { loadKelHistoryPage, readKelHistory } from './kelHistory';
+import { withoutHiddenRows } from './kelHiddenRows';
 
 export type MessageContentMode = 'compact' | 'full';
 
@@ -27,12 +28,14 @@ export async function loadConversationMessagePage(
   options: LoadConversationMessagePageOptions = {}
 ): Promise<MessageCursorPage<TMessage>> {
   const legacy = await readKelHistory(conversationId);
-  if (legacy.length) {
-    return loadKelHistoryPage(legacy, options, (nativeOptions) =>
-      loadNativeConversationMessagePage(conversationId, nativeOptions)
-    );
-  }
-  return loadNativeConversationMessagePage(conversationId, options);
+  const page = legacy.length
+    ? await loadKelHistoryPage(legacy, options, (nativeOptions) =>
+        loadNativeConversationMessagePage(conversationId, nativeOptions)
+      )
+    : await loadNativeConversationMessagePage(conversationId, options);
+  // D-75.2: rows that showed messages an edit or a regenerate rewound stay hidden.
+  const items = await withoutHiddenRows(conversationId, page.items);
+  return items === page.items ? page : { ...page, items };
 }
 
 function loadNativeConversationMessagePage(

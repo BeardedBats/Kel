@@ -19,6 +19,8 @@ class Context:
             CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY,project_id TEXT,action_digest TEXT,expires REAL,revoked INTEGER DEFAULT 0,UNIQUE(project_id,action_digest));
             CREATE TABLE IF NOT EXISTS handoffs(run_id TEXT PRIMARY KEY,sha256 TEXT,data TEXT,created REAL);
             ''')
+            from .rewind import ensure
+            ensure(db)  # D-75.2: rewound messages leave the history every handoff reads
             db.execute('INSERT OR IGNORE INTO projects VALUES(?,?,?,?,?)',('default','General',None,'',time.time()))
             db.execute('INSERT OR IGNORE INTO conversations VALUES(?,?,?,?)',('main','default','New conversation',time.time()))
 
@@ -74,7 +76,8 @@ class Context:
         with contextlib.closing(self.store.connect()) as db:
             row=db.execute('SELECT p.*,c.title FROM conversations c JOIN projects p ON p.id=c.project_id WHERE c.id=?',(conversation_id,)).fetchone()
             if not row:raise PolicyError('Conversation missing')
-            history=[dict(r) for r in db.execute('SELECT role,text FROM messages WHERE conversation_id=? ORDER BY seq DESC LIMIT 16',(conversation_id,))][::-1]
+            from .rewind import VISIBLE
+            history=[dict(r) for r in db.execute('SELECT role,text FROM messages WHERE conversation_id=? AND '+VISIBLE+' ORDER BY seq DESC LIMIT 16',(conversation_id,))][::-1]
             files=[]
             for aid in attachment_ids:
                 a=db.execute('SELECT * FROM attachments WHERE id=? AND conversation_id=?',(aid,conversation_id)).fetchone()

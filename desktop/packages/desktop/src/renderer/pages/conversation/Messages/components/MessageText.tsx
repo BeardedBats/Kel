@@ -20,11 +20,12 @@ import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
 import { Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
-import { Copy } from '@icon-park/react';
+import { Copy, Edit, Refresh } from '@icon-park/react';
 import classNames from 'classnames';
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
+import { emitter } from '@/renderer/utils/emitter';
 import CollapsibleContent from '@renderer/components/chat/CollapsibleContent';
 import FilePreview from '@renderer/components/media/FilePreview';
 import HorizontalFileList from '@renderer/components/media/HorizontalFileList';
@@ -72,7 +73,9 @@ export const ReplyActions: React.FC<{
   onCopy: () => void;
   directCopy?: React.ReactNode;
   onFork?: () => void;
-}> = ({ onCopy, directCopy, onFork }) => {
+  /** D-75.2: answer the last reply again. */
+  onRegenerate?: () => void;
+}> = ({ onCopy, directCopy, onFork, onRegenerate }) => {
   const { t } = useTranslation();
   // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to ⋯, closes on page change).
   const [open, setOpen] = React.useState(false);
@@ -86,8 +89,15 @@ export const ReplyActions: React.FC<{
   });
   return <>
     {directCopy}
+    {onRegenerate && <Tooltip content='Answer again'>
+      <button type='button' aria-label='Answer again' className='kel-shell-message-action' style={{ lineHeight: 0 }}
+        onClick={onRegenerate} data-testid='message-regenerate-button'>
+        <Refresh theme='outline' size='16' fill={iconColors.secondary} />
+      </button>
+    </Tooltip>}
     <Dropdown trigger='click' position='bl' popupVisible={open} onVisibleChange={setOpen} droplist={<Menu data-kel-reply-menu={menuId} aria-label='Reply actions'>
       <Menu.Item key='copy' onClick={() => { setOpen(false); onCopy(); }}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
+      {onRegenerate && <Menu.Item key='regenerate' onClick={() => { setOpen(false); onRegenerate(); }}>Answer again</Menu.Item>}
       {onFork && <Menu.Item key='fork' onClick={() => { setOpen(false); onFork(); }}>{t('messages.fork.action')}</Menu.Item>}
     </Menu>}>
       <button ref={triggerRef} type='button' aria-label='More reply actions' aria-haspopup='menu' aria-expanded={open} className='kel-shell-message-action'>
@@ -215,6 +225,10 @@ const MessageText: React.FC<{
     [conversationContext?.workspace, files]
   );
 
+  // D-75.2: Nick can edit a message he sent; Kel answers again from there.
+  const [editing, setEditing] = React.useState(false);
+  const [draft, setDraft] = React.useState('');
+
   // 过滤空内容，避免渲染空DOM
   if (!message.content.content || (typeof message.content.content === 'string' && !message.content.content.trim())) {
     return null;
@@ -279,9 +293,38 @@ const MessageText: React.FC<{
     </Tooltip>
   ) : null;
 
+  // D-75.2: edit and "Answer again" belong to Kel's own chat (not team, scheduled or read-only views).
+  const canRewrite = conversationContext?.type === 'acp' && !conversationContext?.hideSendBox && !isTeammateMessage
+    && !message.content.cronMeta && !deliverySource && !engineFailure && Boolean(conversationContext?.conversation_id);
+  const regenerate = canRewrite && isLastMessage && !isUserMessage ? () => {
+    emitter.emit('kel.message.rewrite', { kind: 'regenerate', conversationId: conversationContext!.conversation_id, messageId: message.id });
+  } : undefined;
+  const startEdit = () => {
+    setDraft(renderedText);
+    setEditing(true);
+  };
+  const submitEdit = () => {
+    const next = draft.trim();
+    setEditing(false);
+    if (!next || next === renderedText.trim()) return;
+    emitter.emit('kel.message.rewrite', {
+      kind: 'edit', conversationId: conversationContext!.conversation_id, messageId: message.id,
+      text: renderedText, newText: next, files,
+    });
+  };
+  const editButton = canRewrite && isUserMessage && !isPendingDelivery ? (
+    <Tooltip content='Edit'>
+      <button type='button' aria-label='Edit message' className='kel-shell-message-action' style={{ lineHeight: 0 }}
+        onClick={startEdit} data-testid='message-edit-button'>
+        <Edit theme='outline' size='16' fill={iconColors.secondary} />
+      </button>
+    </Tooltip>
+  ) : null;
+
   const kelReplyActions = (
     <ReplyActions key={message.id} onCopy={handleCopy}
       directCopy={layout?.isMobile ? copyButton : null}
+      onRegenerate={regenerate}
       onFork={showForkButton ? () => void forkConversation(message.msg_id ?? message.id) : undefined} />
   );
 
@@ -295,7 +338,7 @@ const MessageText: React.FC<{
       })}
       data-reply-message-id={message.id}
     >
-      {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{forkButton}</>}
+      {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{editButton}{forkButton}</>}
     </div>
   );
 
@@ -398,6 +441,29 @@ const MessageText: React.FC<{
           {/* JSON 内容使用折叠组件 Use CollapsibleContent for JSON content */}
           {engineFailure ? (
             <KelEngineFailureCard reason={engineFailure} messageId={message.id} conversationId={message.conversation_id} />
+          ) : editing ? (
+            <div className='kel-message-edit flex flex-col gap-6px' data-testid='message-edit-form'>
+              <textarea
+                aria-label='Edit your message'
+                className='kel-message-edit-input'
+                value={draft}
+                autoFocus
+                rows={Math.min(8, Math.max(2, draft.split('\n').length))}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') setEditing(false);
+                  if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    submitEdit();
+                  }
+                }}
+              />
+              <div className='flex justify-end gap-6px'>
+                <button type='button' className='kel-message-edit-cancel' onClick={() => setEditing(false)}>Cancel</button>
+                <button type='button' className='kel-message-edit-send' onClick={submitEdit}
+                  disabled={!draft.trim() || draft.trim() === renderedText.trim()}>Send</button>
+              </div>
+            </div>
           ) : shouldRenderPlainText ? (
             <div className='whitespace-pre-wrap [overflow-wrap:anywhere]' data-testid='message-text-content'>
               {renderedText}

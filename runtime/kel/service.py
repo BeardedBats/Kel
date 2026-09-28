@@ -646,6 +646,12 @@ class Service:
                     handled=False
                 if handled:
                     return None
+                # D-75.2 / D-55: the message after an edit of one that started work changes that work.
+                from .rewind import take_amendment
+                amended=take_amendment(self.store,cid)
+                if amended:
+                    return self._amend(sid,cid,text,packet,kind,greenfield_flag,
+                                       {'action':'amend_background_work','work_id':amended,'amended_request':text,'title':None})
             if packet.get('schedule') and (packet.get('recipe_invocation') or {}).get('recipe_id')!='continue-work':
                 # D-57: a scheduled run is work by definition; its acknowledgement is a plain template.
                 from .schedules import ACK
@@ -1560,7 +1566,8 @@ class Service:
             hidden=hidden_ids(db)  # D-57: chats of a deleted schedule the person chose to remove
             conversations=[dict(r) for r in db.execute('SELECT * FROM conversations ORDER BY created DESC')
                            if r['id'] not in hidden]
-            messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY seq',(cid,))]
+            from .rewind import VISIBLE
+            messages=[dict(r) for r in db.execute('SELECT * FROM messages WHERE conversation_id=? AND '+VISIBLE+' ORDER BY seq',(cid,))]  # D-75.2
             for message in messages:
                 # CH-2/CP-14: per-message details (who answered, what the checks found), on demand.
                 try:
@@ -1850,6 +1857,9 @@ class Service:
         if path=='/api/project':
             if data.get('action'):return self.projects.apply(data)
             return self.projects.legacy_save(self.context,data)  # compat: create-or-overwrite
+        if path=='/api/rewind':
+            from .rewind import action as rewind_action
+            return rewind_action(self,data)  # D-75.2: edit a sent message, regenerate the last reply
         if path=='/api/attach':return {'id':self.context.attach(data['conversation'],data['name'],base64.b64decode(data['content'],validate=True),data.get('mime','text/plain'))}
         if path=='/api/control':
             self.engine.control(self._required(data,'job','Pick a request first.'),
