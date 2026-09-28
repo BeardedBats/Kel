@@ -211,7 +211,7 @@ ORACLE_FLAGS = ('security_boundary', 'irreversible', 'release', 'data_migration'
 TIER_RANK = {'D0': 0, 'D1': 1, 'D2': 2, 'D3': 3, 'D4': 4}
 
 
-def _role_for_step(kind, milestone, tier, user_facing, text, final_id):
+def _role_for_step(kind, milestone, tier, user_facing, text, final_id, hint=None):
     if kind == 'code':
         return 'builder'
     if final_id and milestone.get('id') == final_id:
@@ -220,6 +220,14 @@ def _role_for_step(kind, milestone, tier, user_facing, text, final_id):
         return 'discovery'
     if tier == 'D0':
         return 'kel'
+    # Routing 2 §5.5: the turn model's class, when it gave one, decides design / utility / writing;
+    # the word lists below are the fallback reading.
+    if hint == 'design':
+        return 'designer'
+    if hint == 'utility' and TIER_RANK[tier] <= 1:
+        return 'utility'
+    if hint == 'writing':
+        return 'builder'
     if user_facing:
         return 'designer'
     if MECHANICAL.search(text) and TIER_RANK[tier] <= 1:
@@ -272,7 +280,8 @@ def plan_job(store, contract, request=None, *, tier_max=None):
     from .task_routing import class_for_role, tier_for_step
     hint = (contract.get('classification') or {}).get('tier')
     for milestone in contract.get('milestones') or []:
-        role = _role_for_step(kind, milestone, tier, user_facing, text, final if parallel else None)
+        role = _role_for_step(kind, milestone, tier, user_facing, text, final if parallel else None,
+                              (contract.get('classification') or {}).get('task_class'))
         # Routing 2 §5.1: the step's task class and dispatch tier, frozen with the decision.
         step_kind = 'research' if 'web_research' in (milestone.get('required_capabilities') or []) else kind
         task_class = class_for_role(role, step_kind)

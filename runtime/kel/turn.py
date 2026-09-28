@@ -43,6 +43,12 @@ complete request with the change applied in "amended_request".
 {"action":"amend_background_work","work_id":"<work_id from running_work>",
  "amended_request":"<the whole request with the change applied>","title":"<3-8 word name>"}
 
+With "start_background_work" also say what kind of work it is and how much it deserves:
+"task_class" is one of "research" (finding current or outside information), "coding" (changing or
+building code), "design" (screens, layouts, visual or UX work), "writing" (documents, posts, plans),
+"utility" (short mechanical work: format, convert, rename, tidy, extract); "tier" is "fast" (small and
+simple), "standard" (ordinary work), or "deep" (large, subtle or high-stakes work).
+
 The acknowledgement is warm and brief: one to three short sentences, no headings or lists. Say
 plainly that you're starting on it now in the background, and that you'll post the result here
 once it has been checked. Then offer, as a question, to keep talking about one related next step
@@ -255,6 +261,26 @@ def _parse(raw):
     return None
 
 
+# Routing 2 §5.5: the turn model's reading of the work is the primary classification; anything else
+# it says is ignored (the service's floors may still force coding or research, never downgrade them).
+WORK_CLASSES = ('research', 'coding', 'design', 'writing', 'utility')
+WORK_TIERS = ('fast', 'standard', 'deep')
+
+
+def classification(value):
+    """{'task_class', 'tier'} from a start_background_work answer (only known values), else {}."""
+    if not isinstance(value, dict):
+        return {}
+    out = {}
+    task_class = str(value.get('task_class') or '').strip().lower()
+    tier = str(value.get('tier') or '').strip().lower()
+    if task_class in WORK_CLASSES:
+        out['task_class'] = task_class
+    if tier in WORK_TIERS:
+        out['tier'] = tier
+    return out
+
+
 def _work(text, title=None, ack=None, topic=None):
     return {'action': 'start_background_work', 'title': title_for(text, title),
             'acknowledgement': guard_ack(ack, topic), 'related_topic': _clean_topic(topic)}
@@ -315,10 +341,12 @@ def decide(model, packet, text, running_work, forced=False, images=None, cancel=
             return amended
         # Nothing it could change is still running: the amended request is new work.
         request = _amended_request(value.get('amended_request'), None, text)
-        return dict(_work(request, value.get('title')), request=request)
+        return dict(_work(request, value.get('title')), request=request, **classification(value))
     if action == 'start_background_work' or (forced and value is not None):
         value = value or {}
-        return _work(text, value.get('title'), value.get('acknowledgement'), value.get('related_topic'))
+        work = _work(text, value.get('title'), value.get('acknowledgement'), value.get('related_topic'))
+        work.update(classification(value))
+        return work
     if forced:
         return _work(text)
     if action == 'reply' and isinstance(value.get('text'), str) and value['text'].strip():
