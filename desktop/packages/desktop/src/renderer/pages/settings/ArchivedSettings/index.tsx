@@ -149,7 +149,7 @@ const ArchivedSettings: React.FC = () => {
       const names: Record<string, string | null> = {};
       await Promise.all(
         dirChats.map(async ({ token, chat }) => {
-          const answer = await kelProjects.of({ donor: chat }).catch(() => null);
+          const answer = await kelProjects.of({ donor: chat }).catch((): null => null);
           names[token] = projectNameFrom(answer, kelProjectList ?? []);
         })
       );
