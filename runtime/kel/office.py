@@ -120,7 +120,7 @@ def state_of(store, job, brief=None):
                 elif application.get('waiting_reason'):
                     return 'needs_you', 'Checked, but Kel did not apply it on its own: %s.' % \
                         application['waiting_reason'], True, application['waiting_reason'], \
-                        'Use Apply checked changes when you are ready.'
+                        'Choose Apply anyway when you are ready.'
             return 'done', line, False, brief.get('why'), brief.get('next')
         return 'failed', brief.get('why') or "It finished, but it didn't pass its checks.", False, \
             brief.get('why'), brief.get('next')

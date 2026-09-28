@@ -75,7 +75,8 @@ class FailureSurfacing(unittest.TestCase):
         self.assert_explained(text)
         self.assertIn('Kel needs your permission', text)
         self.assertIn('publish to fixture', text)
-        self.assertIn('Work context', text)
+        self.assertIn('work card at the top of the chat', text)
+        self.assertNotIn('Work context', text)
         self.assertEqual(current['state'], 'AWAITING_USER')
         # The ACP layer owns this state; explain_failure must not double-report it.
         self.assertIsNone(explain_failure(current))

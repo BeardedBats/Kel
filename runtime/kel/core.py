@@ -1176,7 +1176,8 @@ def explain_failure(job):
                 'The model working on this stopped before it finished.',
                 milestone_errors[0],
                 'Kel preserved your project copy and paused automatic retries so a partial change would not be replayed.',
-                'Open Work context to review the preserved work, then retry or re-request the task.')
+                'Open its work card at the top of the chat to review the preserved work, then retry or '
+                're-request the task.')
         if str(job.get('route_block') or '').startswith('Budget reached: '):
             return _explain(
                 'This work reached its budget.',
@@ -1283,7 +1284,7 @@ def explain_approval(summary):
         'Kel needs your permission to continue: ' + (summary or 'a requested action') + '.',
         'This step is gated behind your explicit consent, so Kel paused the job instead of running it automatically.',
         'Kel paused the job at this gate and is holding the gated step; it has not run yet.',
-        'Decide on the request card in this chat \u2014 or open \u201cWork context\u201d in the sidebar. '
+        'Decide on the request card in this chat \u2014 or on its work card at the top of the chat. '
         'The job stays paused until you decide.')
 
 

@@ -235,7 +235,9 @@ class ProtectedPlaceTests(AutoApplyBase):
                          'it would change your credentials folder')
         text, _ = self.s.publish(self.j)
         self.assertIn('Kel did not apply it on its own: it would change your credentials folder', text)
-        self.assertIn('Apply checked changes', text)
+        # It names the control the person actually has: Apply anyway on the work card (D-70).
+        self.assertIn('Choose Apply anyway on its work card at the top of this chat', text)
+        self.assertNotIn('Work context', text)
         self.assertEqual(self.events('changes.auto_applied'), [])
 
     def test_a_refused_apply_waits_instead_of_retrying(self):

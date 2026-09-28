@@ -311,7 +311,7 @@ class Continuation:
             why, nxt, needs = 'Paused at your request.', 'Say "continue" to resume it.', True
         elif state == 'AWAITING_USER':
             why = 'Waiting for your decision on a gated step.'
-            nxt = 'Decide on the request card in this conversation — or in Work context.'
+            nxt = 'Decide on the request card in this conversation — or on its work card at the top of the chat.'
             needs = True
         elif any(m.get('state') == 'RUNNING' for m in milestones.values()):
             why, nxt, needs = 'Kel is working on it now.', 'Nothing needed right now.', False
