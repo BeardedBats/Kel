@@ -65,7 +65,7 @@ const settingsGroups: Group[] = [
   ] },
   { label: 'Data', items: [
     { label: 'Archived', path: '/settings/archived', icon: 'archived' },
-    { label: 'Transcriptions', path: '/transcription', icon: transcriptionIcon, sourceIcon: true },
+    { label: 'Ramble', path: '/transcription', icon: transcriptionIcon, sourceIcon: true },
   ] },
   { label: 'Other', items: [{ label: 'About', path: '/settings/about', icon: 'about' }] },
 ];

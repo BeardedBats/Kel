@@ -102,14 +102,14 @@ describe('Providers preflight', () => {
 });
 
 describe('Diagnostics', () => {
-  it('explains disabled controls in visible text and saves one report without showing a full path', async () => {
+  it('offers no dead controls, says how fast Kel first replied, and saves one report without showing a full path', async () => {
     const request = install((route, body) => {
       if (route !== '/api/diagnostics') return {};
       switch (body?.action) {
         case 'snapshot':
           return { engine_version: '2.0', counts: { jobs: 1, runs: 1 }, database: { integrity: 'ok' }, jobs: {}, runs: { by_state: {}, expired_unfenced: 0 }, providers: {}, processes: [] };
         case 'performance':
-          return { startup_spans: [], measurements: [], basis: '' };
+          return { startup_spans: [], measurements: [], basis: '', first_reply: { latest_ms: 2400, median_ms: 3100, samples: 5, basis: 'measured' } };
         case 'retention':
           return { retention_days: {} };
         case 'export':
@@ -121,9 +121,11 @@ describe('Diagnostics', () => {
       }
     });
     render(<MemoryRouter><Diagnostics /></MemoryRouter>);
-    const clear = await screen.findByRole('button', { name: 'Clear' });
-    expect((clear as HTMLButtonElement).disabled).toBe(true);
-    expect(document.getElementById(clear.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Not available in this version yet.');
+    // FN-14: the Clear / Restart controls that could never run are gone; the first reply is measured.
+    expect((await screen.findByTestId('diagnostics-first-reply')).textContent).toBe('2.4 s last time · 3.1 s typical over 5 replies');
+    expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Restart' })).toBeNull();
+    expect(document.body.textContent).not.toContain('Not available in this version yet.');
     fireEvent.click(screen.getByRole('button', { name: 'Export and issue report' }));
     await screen.findByText('Included');
     expect(document.body.textContent).not.toContain('before anything leaves this computer');
@@ -135,5 +137,13 @@ describe('Diagnostics', () => {
     expect(request.mock.calls.filter(([, body]) => body?.action === 'report')).toHaveLength(1);
     const saved = await screen.findByText(/Saved issue-report-20260927-101500\.md/);
     expect(saved.textContent).not.toContain('C:\\');
+  });
+});
+
+describe('FN-14 first reply words', () => {
+  it('says when nothing is measured yet instead of a dash', async () => {
+    const { firstReplyWords } = await import('@renderer/pages/kel/diagnostics');
+    expect(firstReplyWords(null)).toBe('Not measured yet — send Kel a message');
+    expect(firstReplyWords({ latest_ms: 1200, median_ms: 1200, samples: 1 })).toBe('1.2 s last time');
   });
 });

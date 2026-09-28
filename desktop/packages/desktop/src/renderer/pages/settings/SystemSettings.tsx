@@ -8,7 +8,6 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import SystemModalContent from '@/renderer/components/settings/SettingsModal/contents/SystemModalContent';
 import { KelDataCard } from '@/renderer/components/kel/KelDataCard';
-import { KelAuthorityCard } from '@/renderer/components/kel/KelAuthorityCard';
 import { KelKeepAwakeCard } from '@/renderer/components/kel/KelKeepAwakeCard';
 import AboutModalContent from '@/renderer/components/settings/SettingsModal/contents/AboutModalContent';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
@@ -23,7 +22,7 @@ const SystemSettings: React.FC = () => {
         <AboutModalContent />
       ) : (
         <>
-          <KelAuthorityCard />
+          {/* FN-14: Full access has one home, Settings → Permissions. */}
           <KelDataCard />
           <SystemModalContent />
         </>
