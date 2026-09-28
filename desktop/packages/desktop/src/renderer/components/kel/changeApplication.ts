@@ -24,10 +24,29 @@ export const canApplyChange = (job: JobLike): boolean =>
 export const canUndoChange = (job: JobLike): boolean =>
   job.contract?.kind === 'coding' && isApplied(job.application);
 
+/** The last folder in a path ("C:\Users\Nick\R6Proj" → "R6Proj"). */
+export const folderName = (path: string | null | undefined): string | null => {
+  const parts = String(path ?? '')
+    .split(/[\\/]+/)
+    .filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : null;
+};
+
+/**
+ * Where a change went, once: "Calc demo (folder R6Proj)", or just the folder when the project is
+ * named after it. Never the full path — that stays behind "Open folder".
+ */
+export const placeWords = (application: KelChangeApplication | null | undefined): string => {
+  const folder = application?.folder || folderName(application?.root);
+  const name = application?.project_name?.trim() || null;
+  if (name && folder && name.toLowerCase() !== folder.toLowerCase()) return `${name} (folder ${folder})`;
+  return name || folder || 'your project';
+};
+
 /** One line for the card: what happened to the change, or null when there is nothing to say. */
 export const applicationLine = (application: KelChangeApplication | null | undefined): string | null => {
   if (!application) return null;
-  const where = application.root ? ` to ${application.root}` : ' to your project';
+  const where = ` to ${placeWords(application)}`;
   if (application.state === 'APPLIED')
     return `${application.auto ? 'Applied automatically' : 'Applied'}${where}${filesText(application.files)}. The earlier files are saved.`;
   if (application.state === 'UNDOING') return 'Putting the earlier files back…';

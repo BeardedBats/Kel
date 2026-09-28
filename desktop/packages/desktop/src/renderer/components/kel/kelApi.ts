@@ -1515,6 +1515,9 @@ export interface KelChangeApplication {
   root: string | null;
   files: number | null;
   waiting_reason: string | null;
+  /** The project's saved name and its folder's name (the full path stays in `root`, for Open folder). */
+  project_name?: string | null;
+  folder?: string | null;
 }
 
 /** Write a checked change into the project (the "Apply checked changes" button). */
