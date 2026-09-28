@@ -131,11 +131,18 @@ def _measured(store, adapters_by_model):
             row['cost_basis'] = state.get('cost_basis') or 'recent runs on this runtime'
         if row.get('median_ms') is None and isinstance(state.get('latency'), (int, float)):
             row['median_ms'] = int(state['latency'] * 1000)
-        # Two currencies (Forge's lesson): a subscription runtime with observed paid capacity costs
-        # nothing extra per run; its dollar figure stays visible as API-equivalent effort.
-        subscription = state.get('cost') == 0 and str(state.get('cost_basis') or '').startswith('subscription')
+        # Two currencies (Forge's lesson; D-72 item 5): a Codex or Claude Code call runs on Nick's
+        # subscription, so it costs nothing extra per run when ranking; its dollar figure stays
+        # visible as API-equivalent effort. The plan's quota still counts: an observed quota that is
+        # used up makes the model unrunnable in the ranking (as the engine's router excludes it).
+        from .role_models import is_subscription
+        subscription = is_subscription(adapter) or (
+            state.get('cost') == 0 and str(state.get('cost_basis') or '').startswith('subscription'))
         row['marginal_cost'] = 0.0 if subscription else row.get('avg_cost')
         row['subscription'] = bool(subscription)
+        quota = state.get('quota')
+        if isinstance(quota, (int, float)) and not isinstance(quota, bool):
+            row['quota_left'] = quota
         out[model_id] = row
     return out
 
@@ -185,6 +192,11 @@ def ranking(store, task_class, *, adapters, tier=None, purpose=None, set_aside=N
     for model_id, entry in entries.items():
         entry['measured'] = measured.get(model_id) or {}
         entry['evidence'] = evidence.get(model_id) or {}
+        left = entry['measured'].get('quota_left')
+        if entry['runnable'] and isinstance(left, (int, float)) and left <= 0:
+            # D-72 item 5: $0 marginal cost never means unlimited — a used-up plan quota counts.
+            entry.update(runnable=False, adapter=None,
+                         not_here="can't run here right now: your plan's usage limit is reached")
         effective = entry['fit']
         verdict = entry['evidence'].get('verdict')
         if verdict == 'promote':
@@ -229,8 +241,8 @@ def _why(entry, current, tier, role):
     parts.append('%s fit for %s work' % ('a close' if entry['effective_fit'] == 0 else 'a looser', tier))
     cost = entry['measured'].get('avg_cost')
     if entry['measured'].get('subscription'):
-        parts.append('covered by your subscription' + (' (about $%.3f a run API-equivalent)' % cost
-                                                        if cost is not None else ''))
+        parts.append('included in your plan' + (' (about $%.3f a run API-equivalent)' % cost
+                                                 if cost is not None else ''))
     elif cost is not None:
         parts.append('about $%.3f a run' % cost)
     latency = entry['measured'].get('median_ms')

@@ -244,6 +244,16 @@ The renderer needs: a read-only "How Kel picks models" table per task class unde
 `/api/office/item`). No guard change is needed (`/api/model` and `/api/office` POST are allowlisted).
 
 ## 6. Needs Nick (the conservative option is built until he decides)
+
+**Settled by D-72 (2026-09-28, recommended values; each is one setting to change), pinned by
+`runtime/tests/test_d72_defaults.py`:** 1 tier → reasoning as built; 2 budget ceilings as in §5.4;
+3 strength ranks derived from the list price (`role_models.strength_from_price`: output price under
+$5 → 1, under $15 → 2, else 3; unpriced → 2), outcome evidence moves models in the ranking; 5 only
+DeepSeek Flash on OpenRouter (the worker refuses other model ids); 6 Codex and Claude Code calls
+rank at $0 marginal cost (`role_models.SUBSCRIPTION_ADAPTERS`) and a used-up plan quota makes the
+model unrunnable in the ranking; 7 Kel's own turn, reply and plan calls are recorded in usage
+(kinds `turn` / `reply` / `plan`, with the conversation and submission). The list below is kept as
+the record of what was asked.
 1. **Tier → reasoning for "Auto".** Built: fast → Low, standard → model default (unchanged), deep /
    assurance → High. Reviews therefore run at High by default. Alternative: keep every Auto at the
    model default.
@@ -289,7 +299,8 @@ version on the staff row.
 
 Still open: per-model overlays (§4, registry stays empty), local-only mission routing beyond the
 privacy filter, quota-pace projection and subscription burn weighting (Forge), a live calibration
-campaign, Kel's own turn/reply/plan calls in the usage record, and the renderer surfaces above.
+campaign, and the renderer surfaces above. (Kel's own turn/reply/plan calls are now in the usage
+record — D-72; a research plan made by `compile_research` is not yet.)
 Known limits: an outcome is recorded only for a reviewed verdict or a failed step, so work whose
 contract has no review check never adds a success to the evidence; the coding path needs the
 project folder to be a git repository (a plain folder fails to start with git's own message).

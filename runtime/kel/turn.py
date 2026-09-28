@@ -9,6 +9,7 @@ the service's deterministic floors stay authoritative over which messages must b
 import inspect
 import json
 import re
+import time
 
 from .commander import json_object
 
@@ -308,13 +309,15 @@ def _amend(value, running_work, text):
             'amended_request': request, 'title': title_for(request, value.get('title') or target.get('title'))}
 
 
-def decide(model, packet, text, running_work, forced=False, images=None, cancel=None):
+def decide(model, packet, text, running_work, forced=False, images=None, cancel=None, on_result=None):
     """Ask the turn model how to handle `text`.
 
     Returns {"action":"reply","text"}, {"action":"start_background_work","title",
     "acknowledgement","related_topic"} or {"action":"amend_background_work","work_id",
     "amended_request","title"}; None when the model could not be reached (the caller then uses its
     deterministic keyword gate). In forced mode the answer is always work (new or an amendment).
+    `on_result(result, wall_ms)` sees the model's raw result (D-72 item 6: Kel's own turn calls are
+    recorded in usage); it never changes the decision.
     """
     if model is None:
         return None
@@ -334,10 +337,16 @@ def decide(model, packet, text, running_work, forced=False, images=None, cancel=
         kwargs['images'] = images
     if cancel is not None and 'cancel' in params:
         kwargs['cancel'] = cancel
+    started = time.monotonic()
     try:
         result = model.execute(prompt, **kwargs)
     except Exception:
         result = {'outcome': 'FAILED'}
+    if on_result is not None:
+        try:
+            on_result(result if isinstance(result, dict) else {}, int((time.monotonic() - started) * 1000))
+        except Exception:
+            pass  # usage is additive; it never changes the turn
     if not isinstance(result, dict) or result.get('outcome') != 'SUCCESS':
         return _work(text) if forced else None
     raw = result.get('text') or ''

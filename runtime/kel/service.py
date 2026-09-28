@@ -355,6 +355,22 @@ class Service:
             return adapter
         return None
 
+    def _kel_usage(self,kind,sid,cid,model,result,wall,task_class=None):
+        """D-72 item 6: one of Kel's own calls (a turn decision, a direct reply or a plan) in the usage
+        record, with the conversation and submission it belongs to. Additive; never blocks a reply."""
+        try:
+            from .usage import record
+            binding=getattr(model,'kel_binding',None) or {}
+            asked=(binding.get('asked') or {}).get('model')
+            record(self.store,'%s:%s:%s'%(kind,sid or '-',secrets.token_hex(6)),kind=kind,
+                   adapter=getattr(model,'provider',None),model=getattr(model,'model',None),
+                   task_class=task_class or ('planning' if kind=='plan' else 'quick_answer'),
+                   result=result if isinstance(result,dict) else {},wall=wall,
+                   extra={'conversation_id':cid,'submission_id':sid,'role':'kel','asked_model':asked,
+                          'why':binding.get('why')})
+        except Exception:
+            pass
+
     def _kel_model(self,turn,images=False):
         """D-67: Kel (the Commander) answers and plans on its role's model when no chat model is
         saved. A message with images keeps the Anthropic API worker, which can read them."""
@@ -369,7 +385,13 @@ class Service:
                             task_class='quick_answer' if turn else 'planning')
         except Exception:
             return None
-        return self.staff_model(binding,timeout=30 if turn else 100,turn=turn)
+        adapter=self.staff_model(binding,timeout=30 if turn else 100,turn=turn)
+        if adapter is not None:
+            try:
+                adapter.kel_binding=binding  # what Kel's role asked for, for the usage record
+            except Exception:
+                pass
+        return adapter
 
     def _model_for(self,preference,turn,images=False):
         """An adapter for one saved preference ({provider, model}), or today's fallback when None.
@@ -631,7 +653,8 @@ class Service:
                 decision=None
                 if turn_model is not None:
                     images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
-                    decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
+                    decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel,
+                                         on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall))
                     if decision is None and not cancel.is_set():
                         # The live check: Kel's model was refused and the turn fell to the keyword
                         # gate. The refusal is now remembered, so a second look picks the next model.
@@ -639,7 +662,8 @@ class Service:
                         if retry_model is not None and self._model_key(retry_model)!=self._model_key(turn_model):
                             turn_model,choice=retry_model,retry_choice
                             images=self._images(packet) if isinstance(turn_model,InternalAdapter) else None
-                            decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
+                            decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel,
+                                                 on_result=lambda result,wall,m=turn_model:self._kel_usage('turn',sid,cid,m,result,wall))
                 if cancel.is_set():
                     return None  # stopped while deciding: nothing is said and nothing starts
                 model_decided=decision is not None
@@ -674,9 +698,11 @@ class Service:
                     if _accepts(model,'cancel'):
                         kwargs['cancel']=cancel
                     answer_packet=dict(packet,running_work=running)
+                    started=time.monotonic()
                     result=model.execute('Answer as Kel, one helpful assistant. Keep the reply plain and concise. '
                         'Do not imply you performed external actions. You may answer questions about the saved context. '
                         "running_work is the true state of this conversation's work; never call unfinished or unverified work done.\n"+encode(answer_packet),**kwargs)
+                    self._kel_usage('reply',sid,cid,model,result,int((time.monotonic()-started)*1000))
                     if cancel.is_set():
                         return None  # the person stopped this reply; what came back is dropped
                     if result.get('outcome')!='SUCCESS':raise PolicyError(result.get('error','The model did not respond'))
@@ -821,11 +847,13 @@ class Service:
                 best=(str(root),row['id'],json.loads(row['command']))
         return best
 
-    def _document_contract(self,text,packet):
+    def _document_contract(self,text,packet,sid=None,cid=None):
         if self.commander:
             # D-67: Kel plans on its own role model when one is set up here (else the planner it had).
             kel=self._kel_model(False,bool(any(f.get('image_path') for f in packet.get('files') or [])))
-            contract, meta = self.commander.plan(text, context=packet, model=kel)
+            contract, meta = self.commander.plan(
+                text, context=packet, model=kel,
+                on_result=lambda model,result,wall:self._kel_usage('plan',sid,cid,model,result,wall,'planning'))
             planner = {'provider': meta.get('provider'), 'model': meta.get('model')} \
                 if kel is not None else self.commander.descriptor()
             contract['planner'] = {**planner, 'compiler': contract.get('compiler')} if meta.get('mode')=='model_proposal' else {'provider': None, 'model': None, 'compiler': contract.get('compiler')}
@@ -853,7 +881,7 @@ class Service:
                 contract=compile_coding(text,root,tests,project_id,greenfield=False)
                 contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
             else:
-                contract=self._document_contract(text,packet)
+                contract=self._document_contract(text,packet,sid,cid)
                 contract['file_request']=target
         elif coding:
             root=packet['project']['root']
@@ -904,7 +932,7 @@ class Service:
             contract=compile_research(text,self.commander,packet)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
         else:
-            contract=self._document_contract(text,packet)
+            contract=self._document_contract(text,packet,sid,cid)
         contract['context']=packet
         if packet.get('classification'):
             contract['classification']=dict(packet['classification'])  # staffing reads the class and tier
