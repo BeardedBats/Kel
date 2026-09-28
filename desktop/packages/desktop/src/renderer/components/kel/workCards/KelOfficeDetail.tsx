@@ -12,6 +12,7 @@ import { applicationLine, isApplied } from '../changeApplication';
 import type { OfficeFinding, OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
 import { officeItem } from './officeApi';
 import { KelAnsweredLine, KelNeedsAnswer, type AnsweredNote } from './KelNeedsAnswer';
+import { KelBudgetStop } from './KelBudgetStop';
 import { refreshWorkCards } from './workCardEvents';
 import { usageHeaderLine } from '../usage/usageWords';
 import {
@@ -115,6 +116,8 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
   const [notice, setNotice] = useState('');
   /** D-70 (5b): the answer Nick just sent from this panel, and the question it answered. */
   const [answered, setAnswered] = useState<(AnsweredNote & { question: string }) | null>(null);
+  /** Routing 2 §5.4: what raising the budget did, in plain words (kept until the panel closes). */
+  const [budgetNote, setBudgetNote] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const job = item.job_id;
 
@@ -136,6 +139,7 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
     setConfirming(false);
     setNotice('');
     setAnswered(null);
+    setBudgetNote(null);
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
@@ -388,7 +392,23 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
         </p>
       ) : null}
       {/* D-70 (5a/5b): Kel's question, or the answer just sent, sits above the bar. */}
-      {answered && (!view.question || view.question.text === answered.question) ? (
+      {budgetNote ? (
+        <section className='kel-wd-result' aria-label='Budget raised' data-testid='kel-budget-raised'>
+          <p>{budgetNote}</p>
+        </section>
+      ) : view.budget?.stopped && !finished ? (
+        // Routing 2 §5.4: stopped on its budget — the numbers, and "Raise budget" (Nick's own act).
+        <KelBudgetStop
+          job={job}
+          budget={view.budget}
+          onRaised={(words) => {
+            setBudgetNote(words);
+            onChanged();
+            refreshWorkCards();
+            void read();
+          }}
+        />
+      ) : answered && (!view.question || view.question.text === answered.question) ? (
         <KelAnsweredLine note={answered} />
       ) : view.state === 'needs_you' && view.question ? (
         <KelNeedsAnswer

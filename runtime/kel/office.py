@@ -451,6 +451,10 @@ def detail(store, job_id):
         budget = budget_view(store, job)
         budget['stopped'] = str(job.get('route_block') or '').startswith(BUDGET_WAIT)
         budget['can_raise'] = budget['stopped'] and budget['class'] != 'high-assurance'
+        from .budget import CEILINGS, ORDER
+        index = ORDER.index(budget['class']) if budget['class'] in ORDER else -1
+        budget['next'] = ORDER[index + 1] if 0 <= index < len(ORDER) - 1 else None
+        budget['next_ceilings'] = CEILINGS.get(budget['next']) if budget['next'] else None
     except Exception:
         budget = None  # the budget view is additive; the detail never fails on it
     out['budget'] = budget
