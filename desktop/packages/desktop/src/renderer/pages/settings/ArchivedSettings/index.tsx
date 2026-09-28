@@ -19,8 +19,42 @@ import useSWR from 'swr';
 
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
 import { resolveConversationLeadingMark } from '@/renderer/pages/conversation/utils/conversationAssistantIdentity';
+import { kelProjects, type KelProject } from '@renderer/components/kel/kelApi';
 
 const ARCHIVED_SWR_KEY = 'sidebar-archived';
+
+const UUID_LIKE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const normalizePath = (value: string) => value.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase();
+
+/**
+ * VIS-25: the title of an archived folder group. A chat's own working folder is named with an id,
+ * which means nothing to a person, so the group takes the Kel project the folder (or, failing that,
+ * the chat) belongs to, and "No project" when there is none. Never an id.
+ */
+export const archivedGroupName = (
+  scope: { type: 'dir'; path: string; name: string } | { type: 'project'; name: string },
+  projects: Pick<KelProject, 'id' | 'name' | 'root'>[],
+  chatProject: string | null | undefined,
+  noProject: string
+): string => {
+  if (scope.type === 'dir') {
+    const byRoot = projects.find((project) => project.root && normalizePath(project.root) === normalizePath(scope.path));
+    if (byRoot) return byRoot.name;
+  }
+  if (chatProject) return chatProject;
+  return UUID_LIKE.test(scope.name) || !scope.name ? noProject : scope.name;
+};
+
+/** The name of the Kel project a chat belongs to, from the engine's answer to `of`. */
+const projectNameFrom = (
+  answer: Awaited<ReturnType<typeof kelProjects.of>> | null,
+  projects: Pick<KelProject, 'id' | 'name'>[]
+): string | null => {
+  const project = answer?.project;
+  if (!project) return null;
+  if (typeof project === 'string') return projects.find((entry) => entry.id === project)?.name ?? null;
+  return project.name || projects.find((entry) => entry.id === project.id)?.name || null;
+};
 
 /**
  * Per-group window sizes for the archived page. The first screen shows a small
@@ -90,6 +124,37 @@ const ArchivedSettings: React.FC = () => {
 
   const { data, isLoading, mutate } = useSWR(ARCHIVED_SWR_KEY, () =>
     ipcBridge.sidebar.get.invoke({ archived: true, limit: FIRST_SCREEN_LIMIT })
+  );
+
+  // VIS-25: the Kel project behind each folder group, so a group is titled by name, never by id.
+  const { data: kelProjectList } = useSWR('kel.archived.projects', () =>
+    kelProjects.list({ include_archived: true }).then((listed) => listed.projects).catch((): KelProject[] => [])
+  );
+  const dirChats = React.useMemo(
+    () =>
+      (data?.groups ?? [])
+        .filter((group) => group.scope.type === 'dir')
+        .map((group) => {
+          const first = group.items.find((item) => item.type === 'conversation') as
+            | Extract<SidebarItem, { type: 'conversation' }>
+            | undefined;
+          return { token: scopeToToken(group.scope), chat: first?.conversation.id };
+        })
+        .filter((entry): entry is { token: string; chat: string } => !!entry.chat),
+    [data]
+  );
+  const { data: chatProjects } = useSWR(
+    kelProjectList && dirChats.length > 0 ? ['kel.archived.chat-projects', ...dirChats.map((entry) => entry.chat)] : null,
+    async () => {
+      const names: Record<string, string | null> = {};
+      await Promise.all(
+        dirChats.map(async ({ token, chat }) => {
+          const answer = await kelProjects.of({ donor: chat }).catch(() => null);
+          names[token] = projectNameFrom(answer, kelProjectList ?? []);
+        })
+      );
+      return names;
+    }
   );
 
   // Refetch the first screen and drop appended windows in one step. Used after
@@ -192,7 +257,8 @@ const ArchivedSettings: React.FC = () => {
       if (scope.type === 'project' || scope.type === 'dir') {
         const key = scope.type === 'project' ? scope.project_id : scope.key;
         const projectId = scope.type === 'project' ? scope.project_id : undefined;
-        archivedBlocks.push({ key, name: scope.name, rows, projectId, scopeToken: token, hasMore, cursor });
+        const name = archivedGroupName(scope, kelProjectList ?? [], chatProjects?.[token], t('settings.archived.noProject'));
+        archivedBlocks.push({ key, name, rows, projectId, scopeToken: token, hasMore, cursor });
       } else {
         // Ordinary archived chats are still grouped as a project-like block, named "No project".
         noProjectRows.push(...rows);
@@ -210,7 +276,7 @@ const ArchivedSettings: React.FC = () => {
       });
     }
     return { archivedBlocks, total: seen.size };
-  }, [data, extraPages, logos, t]);
+  }, [data, extraPages, logos, t, kelProjectList, chatProjects]);
 
   const allRows = React.useMemo(() => archivedBlocks.flatMap((block) => block.rows), [archivedBlocks]);
 
