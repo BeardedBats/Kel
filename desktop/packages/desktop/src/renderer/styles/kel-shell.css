@@ -2966,7 +2966,7 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
 .kel-v2-shell #project-recipes .kel-recipe-desktop-row { display: flex; align-items: center; gap: 12px; min-height: 50px; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-star { display: grid; place-items: center; flex: none; width: 24px; height: 30px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-star img { width: 14px; height: 14px; }
-.kel-v2-shell #project-recipes .kel-recipe-desktop-row span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #edf2fa; font: 500 14px/20px var(--kel-shell-heading); }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-row span { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--kel-figma-color-text-primary); font: 500 14px/20px var(--kel-shell-heading); }
 /* VIS-18: Preview is a link (Figma 284:8148 Button / link: 14px semibold, link blue). */
 .kel-v2-shell #project-recipes .kel-recipe-desktop-link { flex: none; border: 0; background: transparent; color: var(--kel-figma-color-text-accent); font: 600 14px/20px var(--kel-shell-heading); cursor: pointer; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-row .kel-btn,
