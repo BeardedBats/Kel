@@ -87,7 +87,7 @@ class LibrarySurfaceTests(Base):
         self.library.save(recipe(category='Housekeeping'), project_id=self.project, confirm=True)
         counts = {item['name']: item['count'] for item in self.library.categories(self.project)}
         self.assertEqual(counts.get('Housekeeping'), 1)
-        self.assertGreaterEqual(counts.get('Uncategorised', 0), 1)
+        self.assertGreaterEqual(counts.get('Uncategorized', 0), 1)
 
     def test_duplicate_drafts_a_copy_and_saving_keeps_it_in_one_project(self):
         self.library.save(recipe(category='Housekeeping'), project_id=self.project, confirm=True)

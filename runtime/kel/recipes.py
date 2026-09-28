@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS recipe_marks(
   PRIMARY KEY(project_id, recipe_id));
 """
 
+# VIS-18: the library's name for recipes without a category (en-US, D-61).
+UNCATEGORIZED = 'Uncategorized'
 TOP_FIELDS = {'schema_version', 'recipe_id', 'recipe_version', 'name', 'description', 'category',
               'source',
               'kind', 'inputs', 'steps', 'permissions', 'verification', 'terminal_states',
@@ -718,7 +720,7 @@ class RecipeLibrary:
     def categories(self, project_id):
         counts = {}
         for item in self.entries(project_id=project_id):
-            name = item.get('category') or 'Uncategorised'
+            name = item.get('category') or UNCATEGORIZED
             counts[name] = counts.get(name, 0) + 1
         return [{'name': name, 'count': counts[name]} for name in sorted(counts)]
 
