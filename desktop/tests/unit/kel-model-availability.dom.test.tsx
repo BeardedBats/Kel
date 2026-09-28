@@ -87,7 +87,7 @@ describe('narrow-window model menu', () => {
       await screen.findAllByText('Not supported for chat yet');
       const disabled = Array.from(document.querySelectorAll('.arco-dropdown-menu-item.arco-dropdown-menu-disabled'));
       const texts = disabled.map((node) => node.textContent ?? '');
-      // Once under "This chat" and once under "Default for new chats".
+      // Once under "This chat" and once under "Kel's model".
       expect(texts.filter((text) => text.includes('DeepSeek Chat') && text.includes('Not supported for chat yet'))).toHaveLength(2);
       expect(texts.filter((text) => text.includes('Claude Sonnet') && text.includes('Needs setup'))).toHaveLength(2);
       expect(texts.some((text) => text.includes('Available'))).toBe(false);

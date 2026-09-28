@@ -155,7 +155,7 @@ describe('composer model picker', () => {
     };
     inRouter(<KelModelPill conversationId='c1' />);
     const trigger = await screen.findByRole('button', { name: /Kel's model: Automatic/ });
-    // The picker opens on its scope tabs; the first stop is "This chat", the next "Default for new chats".
-    await expectKeyboardMenu(trigger, 'Model picker', 'This chat', 'Default for new chats');
+    // The picker opens on its scope tabs; the first stop is "This chat", the next "Kel's model" (D-73.3).
+    await expectKeyboardMenu(trigger, 'Model picker', 'This chat', "Kel's model");
   });
 });

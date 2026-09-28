@@ -1,5 +1,10 @@
 /**
- * Kel model choice — one plain control for the default model and the per-conversation override.
+ * Kel model choice — one plain control for Kel's model and the per-conversation override.
+ *
+ * D-73.3: "Kel's model" is ONE value — the Kel row of Staff & models (`/api/model` roles). Settings →
+ * Model shows and edits that same value, and the composer's picker is a per-chat override of it. The
+ * older default-model setting is only read (it still wins in the engine while it exists) and is cleared
+ * the next time Kel's model is chosen anywhere.
  *
  * The choice is a soft preference for Kel's routing (Auto keeps the original order, a chosen
  * provider is tried first, every fallback stays intact). Provider machinery, ids and endpoints
@@ -14,6 +19,15 @@ import { kelRequest } from './kelApi';
 import { KelDesktopModelMenu } from './KelDesktopModelMenu';
 import plugIcon from '@renderer/assets/figma/model/plug.svg';
 import { findByAttribute, useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
+import {
+  KELS_MODEL_CHANGED_EVENT,
+  KELS_MODEL_ROLE,
+  kelStaffRoles,
+  kelStaffSetRole,
+  type StaffListing,
+  type StaffModelOption,
+  type StaffRoleRow,
+} from './staffModels/staffModelsApi';
 
 export type Choice = { provider: string | null; model: string | null };
 /** `note` says, in plain words, why an option cannot answer in chat (CH-2), e.g. "Not supported for chat yet". */
@@ -50,6 +64,66 @@ export const choiceLabel = (state: ModelState | null, choice: Choice | null): st
   const option = provider?.options.find((entry) => entry.id === choice.model);
   if (!provider) return 'Automatic';
   return option ? `${option.label}` : provider.label;
+};
+
+/** Kel's model as one plain name: the Kel row's model, or "Automatic" when Kel picks. */
+export const kelsModelLabel = (row: Pick<StaffRoleRow, 'mode' | 'model' | 'model_label'> | null | undefined): string | null => {
+  if (!row) return null;
+  if (row.mode === 'AUTOMATIC' || !row.model) return 'Automatic';
+  return row.model_label || row.model;
+};
+
+export type KelsModel = {
+  /** The Kel row of Staff & models; null while unread, or when the engine has no roles (older engine). */
+  row: StaffRoleRow | null;
+  /** The models Kel's row can use, with whether each can run here. */
+  models: StaffModelOption[];
+  label: string | null;
+  loaded: boolean;
+  /** Choose Kel's model (null = Automatic). Writes the Kel row; every surface reads it again. */
+  choose: (model: string | null) => Promise<void>;
+  refresh: () => Promise<void>;
+};
+
+/** D-73.3: the one "Kel's model", read from the Kel row of Staff & models. */
+export const useKelsModel = (): KelsModel => {
+  const [listing, setListing] = useState<StaffListing | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const refresh = useCallback(async () => {
+    try {
+      setListing(await kelStaffRoles());
+    } catch {
+      setListing(null);
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+  useEffect(() => {
+    void refresh();
+    const again = (): void => void refresh();
+    window.addEventListener(KELS_MODEL_CHANGED_EVENT, again);
+    return () => window.removeEventListener(KELS_MODEL_CHANGED_EVENT, again);
+  }, [refresh]);
+  const row = listing?.roles.find((entry) => entry.role === KELS_MODEL_ROLE) ?? null;
+  const choose = useCallback(
+    async (model: string | null) => {
+      const reasoning = row?.reasoning || 'auto';
+      const next = await kelStaffSetRole(
+        KELS_MODEL_ROLE,
+        model ? { mode: row?.mode === 'FIXED' ? 'FIXED' : 'PREFERRED', model, reasoning } : { mode: 'AUTOMATIC', reasoning }
+      );
+      setListing(next);
+    },
+    [row?.mode, row?.reasoning]
+  );
+  return { row, models: row ? listing?.models ?? [] : [], label: kelsModelLabel(row), loaded, choose, refresh };
+};
+
+/** Why one of Kel's models cannot be chosen, in plain words; null when it can run here. */
+export const kelsModelNote = (option: StaffModelOption): string | null => {
+  if (option.available !== false) return null;
+  const note = (option.note || '').trim();
+  return !note || SETUP_NOTES.has(note.toLowerCase()) ? 'Needs setup' : note;
 };
 
 export const useKelModelState = (conversationId?: string) => {
@@ -142,14 +216,26 @@ export const useKelModelState = (conversationId?: string) => {
     [cid, conversationId, refresh]
   );
 
+  // D-73.3: Kel's model (one value). A chat's own pick overrides it; the older default setting, while it
+  // still exists, is what the engine uses — so it is named rather than hidden.
+  const kels = useKelsModel();
+  // A change of Kel's model elsewhere may have cleared the older default: read the choice again.
+  useEffect(() => {
+    const again = (): void => void refresh();
+    window.addEventListener(KELS_MODEL_CHANGED_EVENT, again);
+    return () => window.removeEventListener(KELS_MODEL_CHANGED_EVENT, again);
+  }, [refresh]);
   const effectiveLabel = useMemo(() => {
     if (!state) return null;
-    const effective = state.conversation ?? state.default;
-    const scope = state.conversation ? 'this chat' : 'default';
-    return { label: choiceLabel(state, effective), scope };
-  }, [state]);
+    if (state.conversation?.provider) return { label: choiceLabel(state, state.conversation), scope: 'this chat' };
+    if (state.default?.provider || !kels.label) return { label: choiceLabel(state, state.default), scope: 'default' };
+    return { label: kels.label, scope: 'default' };
+  }, [state, kels.label]);
 
-  return { state, cid, effectiveLabel, refresh, setDefault, setConversation };
+  /** What "Use Kel's model" means right now, by name. */
+  const kelsLabel = state?.default?.provider ? choiceLabel(state, state.default) : kels.label ?? choiceLabel(state, null);
+
+  return { state, cid, effectiveLabel, kels, kelsLabel, refresh, setDefault, setConversation };
 };
 
 const availabilityLabel = (note: string | null) => (
@@ -158,7 +244,7 @@ const availabilityLabel = (note: string | null) => (
 
 export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversationId }) => {
   const navigate = useNavigate();
-  const { state, effectiveLabel, setDefault, setConversation } = useKelModelState(conversationId);
+  const { state, effectiveLabel, kels, kelsLabel, setDefault, setConversation } = useKelModelState(conversationId);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
   const [popupVisible, setPopupVisible] = useState(false);
   // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to the picker, closes on
@@ -283,6 +369,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
 
   return (
     <Dropdown droplist={desktop ? <KelDesktopModelMenu state={state} hasConversation={!!conversationId}
+      kels={kels.row ? { label: kelsLabel ?? 'Automatic', row: kels.row, models: kels.models, choose: kels.choose } : undefined}
       onChoose={(choice, scope) => scope === 'conversation' ? setConversation(choice) : setDefault(choice)}
       onClose={() => setPopupVisible(false)}
       onAdd={() => { setPopupVisible(false); navigate('/settings/model?add=1'); }}
@@ -308,14 +395,97 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   );
 };
 
-export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }> = ({ compact = false, title = 'Default model' }) => {
+/**
+ * D-73.3: Settings → Model's card for Kel's model — the same value as the Kel row in Staff & models
+ * (reasoning and Fixed/Preferred live there). An engine without roles keeps the older default list.
+ */
+export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }> = ({ compact = false, title }) => {
   const navigate = useNavigate();
-  const { state, setDefault } = useKelModelState();
+  const { state, kels, setDefault } = useKelModelState();
+  const [busy, setBusy] = useState(false);
   // Defensive: a payload without the provider listing must not take the page down with it.
   const providers = state?.providers ?? [];
 
+  if (kels.row) {
+    const row = kels.row;
+    const automatic = row.mode === 'AUTOMATIC' || !row.model;
+    const choose = async (model: string | null) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        await kels.choose(model);
+        Message.success(model ? 'Saved. Kel will use this model.' : 'Saved. Kel picks what is available.');
+      } catch (error) {
+        Message.error(String((error as Error)?.message || '').trim() || 'Kel could not change its model just now.');
+      } finally {
+        setBusy(false);
+      }
+    };
+    const older = state?.default?.provider ? choiceLabel(state, state.default) : null;
+    return (
+      <KelCard title={title ?? "Kel's model"} data-testid='kel-default-model-card'>
+        {!compact && (
+          <p className='text-14px text-t-secondary m-0 mb-10px'>
+            Kel talks with you, plans and hands work to the staff on this model. A chat can still pick its own
+            model from the composer; the staff use their own models.
+          </p>
+        )}
+        {older ? (
+          <p className='text-14px m-0 mb-10px' data-testid='kel-model-older-default'>
+            {`Right now ${older} answers your chats — an older setting. Choose Kel's model below to make it the one setting.`}
+          </p>
+        ) : null}
+        <div className='flex flex-col gap-4px kel-shell-default-model-rows' data-testid='kel-kels-model-rows'>
+          <button
+            type='button'
+            data-testid='kel-default-auto'
+            aria-pressed={automatic && !older}
+            disabled={busy}
+            onClick={() => void choose(null)}
+            className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
+            style={{ background: automatic && !older ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
+          >
+            <span className='kel-shell-default-model-lead' aria-hidden='true'>✦</span>
+            <span className='kel-shell-default-model-name'>Automatic<span>Kel picks what is available</span></span>
+            <span className='kel-shell-default-model-status'>{automatic && !older ? 'Current' : ''}</span>
+            <span className='kel-shell-default-model-action' />
+          </button>
+          {kels.models.map((option) => {
+            const current = !automatic && !older && row.model === option.id;
+            const note = kelsModelNote(option);
+            return (
+              <button
+                key={option.id}
+                type='button'
+                disabled={busy}
+                data-testid={'kel-kels-model-' + option.id}
+                aria-pressed={current}
+                onClick={() => (note ? navigate('/settings/providers') : void choose(option.id))}
+                className='flex items-center text-left px-10px py-8px rounded-8px cursor-pointer kel-shell-default-model-row'
+                style={{
+                  background: current ? 'var(--kel-surface-2)' : 'transparent',
+                  border: `1px solid ${current ? 'var(--kel-border-strong)' : 'var(--kel-border)'}`,
+                }}
+              >
+                <span className='kel-shell-default-model-lead' aria-hidden='true'><img src={plugIcon} alt='' width={14} height={14} /></span>
+                <span className='kel-shell-default-model-name'>{option.label}<span>{option.version || option.runtime || ''}</span></span>
+                <span className={`kel-shell-default-model-status${note ? ' kel-shell-default-model-status--wait' : ''}`}>
+                  {current && !note ? 'Current' : note ?? 'Available'}
+                </span>
+                <span className='kel-shell-default-model-action'>{current ? '' : note ? 'Set up' : 'Use'}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button type='button' className='kel-btn kel-btn--quiet mt-8px' onClick={() => navigate('/settings/staff')} data-testid='kel-model-staff-link'>
+          Reasoning level and the staff’s models: Staff &amp; models
+        </button>
+      </KelCard>
+    );
+  }
+
   return (
-    <KelCard title={title} data-testid='kel-default-model-card'>
+    <KelCard title={title ?? 'Default model'} data-testid='kel-default-model-card'>
       {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
         Kel uses this model for normal conversations. The list shows the models available to Kel right
         now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's

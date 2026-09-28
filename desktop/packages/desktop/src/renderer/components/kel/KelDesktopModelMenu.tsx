@@ -3,10 +3,19 @@ import { Message } from '@arco-design/web-react';
 import check from '@renderer/assets/figma/chat-pickers/model-check.svg';
 import plus from '@renderer/assets/figma/chat-pickers/model-plus.svg';
 import settings from '@renderer/assets/figma/chat-pickers/model-settings.svg';
-import { choiceLabel, unavailableNote, KEL_MODEL_SCOPE_NOTE, type Choice, type ModelState } from './KelModelControl';
+import { choiceLabel, kelsModelNote, unavailableNote, KEL_MODEL_SCOPE_NOTE, type Choice, type ModelState } from './KelModelControl';
+import type { StaffModelOption, StaffRoleRow } from './staffModels/staffModelsApi';
 import './kel-model-availability.css';
 
 type Scope = 'conversation' | 'default';
+
+/** D-73.3: Kel's model (the Kel row of Staff & models) — what the "Kel's model" tab shows and edits. */
+export type KelsModelChoice = {
+  label: string;
+  row: StaffRoleRow;
+  models: StaffModelOption[];
+  choose: (model: string | null) => Promise<void>;
+};
 
 export const KelDesktopModelMenu: React.FC<{
   state: ModelState;
@@ -19,7 +28,9 @@ export const KelDesktopModelMenu: React.FC<{
   onStaff?: () => void;
   /** Lets the opener find this menu for keyboard handling (VIS-10). */
   menuId?: string;
-}> = ({ state, hasConversation, onChoose, onClose, onAdd, onSettings, onStaff, menuId }) => {
+  /** D-73.3: Kel's model; when given, the second tab edits it (the chat tab stays a per-chat override). */
+  kels?: KelsModelChoice;
+}> = ({ state, hasConversation, onChoose, onClose, onAdd, onSettings, onStaff, menuId, kels }) => {
   const [scope, setScope] = useState<Scope>(hasConversation ? 'conversation' : 'default');
   const [pending, setPending] = useState(false);
   const selected = scope === 'conversation' ? state.conversation : state.default;
@@ -30,15 +41,37 @@ export const KelDesktopModelMenu: React.FC<{
     catch (error) { Message.error((error as Error).message || 'Kel could not change the model just now.'); }
     finally { setPending(false); }
   };
+  const chooseKels = async (model: string | null) => {
+    if (pending || !kels) return;
+    setPending(true);
+    try { await kels.choose(model); onClose(); }
+    catch (error) { Message.error((error as Error).message || 'Kel could not change its model just now.'); }
+    finally { setPending(false); }
+  };
+  const kelsAutomatic = kels ? kels.row.mode === 'AUTOMATIC' || !kels.row.model : false;
+  const olderDefault = Boolean(state.default?.provider);
   return <div className='kel-desktop-model-menu kel-desktop-picker' data-testid='kel-desktop-model-menu' data-kel-model-menu={menuId} role='dialog' aria-label='Model picker' onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } }}>
     <p className='kel-desktop-model-menu__caption' data-testid='kel-model-menu-caption'>{KEL_MODEL_SCOPE_NOTE}</p>
     <div className='kel-desktop-model-menu__scope' role='tablist' aria-label='Model scope'>
       <button type='button' role='tab' aria-selected={scope === 'conversation'} disabled={!hasConversation || pending} onClick={() => setScope('conversation')}>This chat</button>
-      <button type='button' role='tab' aria-selected={scope === 'default'} disabled={pending} onClick={() => setScope('default')}>Default for new chats</button>
+      <button type='button' role='tab' aria-selected={scope === 'default'} disabled={pending} onClick={() => setScope('default')}>Kel's model</button>
     </div>
+    {scope === 'default' && kels ? <>
+      <button type='button' className='kel-desktop-picker__row' aria-pressed={kelsAutomatic && !olderDefault} disabled={pending} onClick={() => void chooseKels(null)}>
+        <span>Automatic</span><small>Kel picks</small>
+        {kelsAutomatic && !olderDefault && <img src={check} alt='' />}
+      </button>
+      {kels.models.map(option => {
+        const active = !kelsAutomatic && !olderDefault && kels.row.model === option.id;
+        const note = kelsModelNote(option);
+        return <button type='button' key={`kel:${option.id}`} className='kel-desktop-picker__row' aria-pressed={active} disabled={pending || !!note} onClick={() => void chooseKels(option.id)}>
+          <span>{option.label}</span>{note ? <small>{note}</small> : active && <img src={check} alt='' />}
+        </button>;
+      })}
+    </> : <>
     <button type='button' className='kel-desktop-picker__row' aria-pressed={!selected?.provider} disabled={pending} onClick={() => void choose(null)}>
       {scope === 'conversation'
-        ? <span>{`Use default (${choiceLabel(state, state.default)})`}</span>
+        ? <span>{`Use Kel's model (${kels?.label ?? choiceLabel(state, state.default)})`}</span>
         : <><span>Automatic</span><small>Kel picks</small></>}
       {!selected?.provider && <img src={check} alt='' />}
     </button>
@@ -51,6 +84,7 @@ export const KelDesktopModelMenu: React.FC<{
         <span>{option.label}</span>{note ? <small>{note}</small> : active && <img src={check} alt='' />}
       </button>;
     }))}
+    </>}
     <div className='kel-desktop-picker__divider' />
     <button type='button' className='kel-desktop-picker__row' onClick={onAdd}><img src={plus} alt='' /><span>Add model</span></button>
     <button type='button' className='kel-desktop-picker__row' onClick={onSettings}><img src={settings} alt='' /><span>Open model settings</span></button>

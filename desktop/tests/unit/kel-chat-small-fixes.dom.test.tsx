@@ -129,7 +129,7 @@ describe('Model menu (CH-13)', () => {
     const onChoose = vi.fn(async () => {});
     render(<KelDesktopModelMenu state={state} hasConversation onChoose={onChoose} onClose={vi.fn()} onAdd={vi.fn()} onSettings={vi.fn()} />);
     expect(screen.queryByText(/Uses default/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Use default (Model One)' }));
+    fireEvent.click(screen.getByRole('button', { name: "Use Kel's model (Model One)" }));
     await waitFor(() => expect(onChoose).toHaveBeenCalledWith(null, 'conversation'));
   });
 });

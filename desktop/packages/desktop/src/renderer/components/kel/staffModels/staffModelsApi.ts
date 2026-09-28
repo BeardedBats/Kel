@@ -83,8 +83,27 @@ const normalise = (payload: unknown): StaffListing => {
 export const kelStaffRoles = async (): Promise<StaffListing> =>
   normalise(await kelRequest<unknown>('/api/model', { action: 'roles' }));
 
-export const kelStaffSetRole = async (role: string, choice: StaffRoleChoice): Promise<StaffListing> =>
-  normalise(
+/**
+ * D-73.3 — one "Kel's model". The Kel row here IS Kel's model: Settings → Model, the Kel row in Staff &
+ * models and the composer's "Kel's model" tab all read and write it. The older default-model setting
+ * (`/api/model set_default`, which the engine still ranks first) is cleared whenever Kel's model is
+ * written, so it cannot quietly override the one value; a chat's own pick stays a per-chat override.
+ */
+export const KELS_MODEL_ROLE = 'kel';
+export const KELS_MODEL_CHANGED_EVENT = 'kel:kels-model-changed';
+
+const settleKelsModel = async (role: string): Promise<void> => {
+  if (role !== KELS_MODEL_ROLE) return;
+  try {
+    await kelRequest<unknown>('/api/model', { action: 'set_default', choice: null });
+  } catch {
+    // The Kel row saved; an engine without the older setting has nothing to clear.
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(KELS_MODEL_CHANGED_EVENT));
+};
+
+export const kelStaffSetRole = async (role: string, choice: StaffRoleChoice): Promise<StaffListing> => {
+  const listing = normalise(
     await kelRequest<unknown>('/api/model', {
       action: 'set_role',
       role,
@@ -93,9 +112,15 @@ export const kelStaffSetRole = async (role: string, choice: StaffRoleChoice): Pr
       reasoning: choice.reasoning || 'auto',
     })
   );
+  await settleKelsModel(role);
+  return listing;
+};
 
-export const kelStaffResetRole = async (role: string): Promise<StaffListing> =>
-  normalise(await kelRequest<unknown>('/api/model', { action: 'reset_role', role }));
+export const kelStaffResetRole = async (role: string): Promise<StaffListing> => {
+  const listing = normalise(await kelRequest<unknown>('/api/model', { action: 'reset_role', role }));
+  await settleKelsModel(role);
+  return listing;
+};
 
 /** Settings order (D-70): the order work flows through the team, Kel first, small jobs last. */
 export const STAFF_ORDER = [
