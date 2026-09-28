@@ -309,7 +309,109 @@ def _amend(value, running_work, text):
             'amended_request': request, 'title': title_for(request, value.get('title') or target.get('title'))}
 
 
-def decide(model, packet, text, running_work, forced=False, images=None, cancel=None, on_result=None):
+_ACTION_KEY = re.compile(r'"action"\s*:\s*"([a-z_]*)"')
+_TEXT_KEY = re.compile(r'"text"\s*:\s*"')
+_ESCAPES = {'"': '"', '\\': '\\', '/': '/', 'b': '\b', 'f': '\f', 'n': '\n', 'r': '\r', 't': '\t'}
+
+
+def _json_string_prefix(raw, start):
+    """The decoded part of a JSON string that starts at `start` (just after its opening quote),
+    as far as it has arrived: stops before an incomplete escape and at the closing quote."""
+    out, index = [], start
+    while index < len(raw):
+        char = raw[index]
+        if char == '"':
+            break
+        if char != '\\':
+            out.append(char)
+            index += 1
+            continue
+        if index + 1 >= len(raw):
+            break
+        code = raw[index + 1]
+        if code == 'u':
+            digits = raw[index + 2:index + 6]
+            if len(digits) < 4:
+                break
+            try:
+                out.append(chr(int(digits, 16)))
+            except ValueError:
+                break
+            index += 6
+            continue
+        out.append(_ESCAPES.get(code, code))
+        index += 2
+    return ''.join(out)
+
+
+def reply_so_far(raw, prose=False):
+    """D-75.1: the part of a reply that can be shown while the model is still writing, or None.
+
+    A turn answer is one JSON object; its text is shown only once it says `"action":"reply"` (so an
+    acknowledgement or a hand-off is never streamed as if it were a reply). A plain-prose answer (the
+    direct reply model, or a turn model that answered in prose) streams as it is, until anything
+    that looks like JSON appears. `prose=True` means the answer is always prose.
+    """
+    if not isinstance(raw, str):
+        return None
+    body = raw.lstrip()
+    if prose:
+        return body.strip()
+    if body.startswith('```'):
+        body = body[3:].lstrip()
+        if body[:4].lower() == 'json':
+            body = body[4:].lstrip()
+    if not body:
+        return None
+    if body.startswith('{'):
+        action = _ACTION_KEY.search(body)
+        if not action or action.group(1) != 'reply':
+            return None
+        key = _TEXT_KEY.search(body)
+        if not key:
+            return None
+        return _json_string_prefix(body, key.end()).strip()
+    if raw.lstrip().startswith('`') or '{' in body:
+        return None  # a fenced or embedded object may still turn out to be work: wait for the end
+    return body.strip()
+
+
+class ReplyStream:
+    """Feeds the words of a reply to `emit` as a model writes them (D-75.1).
+
+    Called with the model's whole answer so far. It stops for good at the first sign the answer is
+    not a plain reply it may show — a claim that work was changed (D-55: the finished reply is
+    replaced with `NO_CHANGE`), or JSON inside prose — so what was shown is only ever a prefix of a
+    reply the person may see. Errors in `emit` never reach the model call.
+    """
+
+    def __init__(self, emit, prose=False):
+        self.emit, self.prose = emit, prose
+        self.shown = ''
+        self.stopped = False
+
+    def __call__(self, raw):
+        if self.stopped:
+            return
+        text = reply_so_far(raw, self.prose)
+        if text is None:
+            if self.shown:
+                self.stopped = True  # it stopped looking like a reply after words were shown
+            return
+        if CHANGE_CLAIM.search(text) or (self.prose and '{"action"' in text):
+            self.stopped = True
+            return
+        if len(text) <= len(self.shown) or not text.startswith(self.shown):
+            return
+        self.shown = text
+        try:
+            self.emit(text)
+        except Exception:
+            self.stopped = True
+
+
+def decide(model, packet, text, running_work, forced=False, images=None, cancel=None, on_result=None,
+           on_text=None):
     """Ask the turn model how to handle `text`.
 
     Returns {"action":"reply","text"}, {"action":"start_background_work","title",
@@ -317,7 +419,8 @@ def decide(model, packet, text, running_work, forced=False, images=None, cancel=
     "amended_request","title"}; None when the model could not be reached (the caller then uses its
     deterministic keyword gate). In forced mode the answer is always work (new or an amendment).
     `on_result(result, wall_ms)` sees the model's raw result (D-72 item 6: Kel's own turn calls are
-    recorded in usage); it never changes the decision.
+    recorded in usage); it never changes the decision. `on_text(words)` (D-75.1) receives a direct
+    reply's words while the model writes them, when the adapter can stream (never in forced mode).
     """
     if model is None:
         return None
@@ -337,6 +440,8 @@ def decide(model, packet, text, running_work, forced=False, images=None, cancel=
         kwargs['images'] = images
     if cancel is not None and 'cancel' in params:
         kwargs['cancel'] = cancel
+    if on_text is not None and not forced and 'on_text' in params:
+        kwargs['on_text'] = ReplyStream(on_text)
     started = time.monotonic()
     try:
         result = model.execute(prompt, **kwargs)

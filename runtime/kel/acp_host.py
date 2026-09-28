@@ -39,6 +39,9 @@ PLAIN_STATES = {
 }
 
 
+# D-75.1: how often an open reply's words are read while the model writes them.
+DRAFT_INTERVAL = 0.15
+
 # CH-3: what the chat shows when the person stops a reply (the engine posts the same note).
 STOPPED_NOTE = 'You stopped this reply.'
 
@@ -442,6 +445,41 @@ class ACPHost:
             raise ValueError('Add a text request with the attachment')
         return text, attachments
 
+    def _stream_words(self, session, sid, stream):
+        """D-75.1: for one poll interval, show a reply's new words as the model writes them.
+
+        An engine without the draft route (or any failure reading it) leaves the reply to arrive
+        whole, as before."""
+        deadline = time.monotonic() + self.poll_interval
+        while not self.closed.is_set():
+            if stream['ok']:
+                try:
+                    words = (self.client.call('/api/draft?id=' + quote(sid)) or {}).get('text') or ''
+                except Exception:
+                    stream['ok'], words = False, ''
+                shown = stream['shown']
+                if isinstance(words, str) and len(words) > len(shown) and words.startswith(shown):
+                    self.text(session, words[len(shown):])
+                    stream['shown'] = words
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            self.closed.wait(min(DRAFT_INTERVAL, remaining) if stream['ok'] else remaining)
+
+    def _say_message(self, session, message, stream):
+        """One new assistant message; a reply whose words were already shown gets only the rest."""
+        text, shown = message['text'], stream['shown']
+        if not shown or message.get('job_id'):
+            self.text(session, ('\n\n' if shown else '') + text + '\n\n')
+            return
+        stream['shown'] = ''
+        if text.startswith(shown):
+            self.text(session, text[len(shown):] + '\n\n')
+        else:
+            # The finished reply is not what was being written (a guard replaced it, or another
+            # model answered after a refusal): the words shown stay, and the real reply follows.
+            self.text(session, '\n\n' + text + '\n\n')
+
     def prompt(self, params):
         session = params['sessionId']
         cid, baseline, exists = self.session(session)
@@ -502,6 +540,7 @@ class ACPHost:
             sid = 'acp-' + uuid.uuid4().hex
             self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments})
             seen = {m['seq'] for m in baseline['messages']}
+            stream = {'ok': True, 'shown': ''}  # D-75.1: the reply's words already shown
             last_status = None
             cancelled_job = None
             stop_sent = False
@@ -512,7 +551,7 @@ class ACPHost:
                     if message['seq'] not in seen:
                         seen.add(message['seq'])
                         if message['role'] == 'assistant':
-                            self.text(session, message['text'] + '\n\n')
+                            self._say_message(session, message, stream)
                 if not submission:
                     raise RuntimeError('Kel lost the submitted request record')
                 ack_seq = submission.get('ack_seq')
@@ -543,7 +582,7 @@ class ACPHost:
                         return {'stopReason': 'cancelled'}  # an older engine: end the turn as before
                     if stopped.get('cancelled'):
                         seen.add(stopped.get('message_seq'))
-                        self.text(session, STOPPED_NOTE + '\n\n')
+                        self.text(session, ('\n\n' if stream['shown'] else '') + STOPPED_NOTE + '\n\n')
                         return {'stopReason': 'cancelled'}
                     # Already answered or handed off: the next poll shows that answer or the card.
                     continue
@@ -602,7 +641,10 @@ class ACPHost:
                 elif submission['state'] in ('DISPATCHED', 'SETTLED'):
                     self._resurface(session, cid)
                     return {'stopReason': 'end_turn'}
-                self.closed.wait(self.poll_interval)
+                if submission['state'] == 'PLANNING' and not ack_seq and not submission.get('job_id'):
+                    self._stream_words(session, sid, stream)
+                else:
+                    self.closed.wait(self.poll_interval)
             return {'stopReason': 'end_turn'}
         finally:
             with self.lock:
