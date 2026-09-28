@@ -34,6 +34,11 @@ from .core import PolicyError, uid
 # Live stream sessions are process-wide: the service builds a fresh Transcription per
 # action, so the registry must not live on the instance.
 _STREAMS = {}
+# D-75.3: the Muse key from the desktop's credential custody (Settings → Providers). Supplied by the
+# desktop's main process at start-up and whenever it changes; held in this process's memory only.
+# The desktop also hands it over at spawn (MUSE_CUSTODY_KEY, like the other providers' keys); it is
+# taken out of the environment here so no child process inherits it.
+_CUSTODY = {'key': os.environ.pop('MUSE_CUSTODY_KEY', '').strip()}
 
 # The copied Transcriptions app stores its Meta key as a generic Windows credential (its Rust
 # `keyring` crate writes "<account>.<service>"). Kel reuses that exact entry — the key that is
@@ -639,7 +644,7 @@ class Transcription:
 
     def api_key(self):
         key = os.environ.get('META_API_KEY') or os.environ.get('MUSE_API_KEY') or ''
-        return key.strip() or self._setting('meta_api_key') or shared_muse_key()
+        return (key.strip() or _CUSTODY['key'] or self._setting('meta_api_key') or shared_muse_key())
 
     def practice_mode(self):
         """Practice text is only used when a person or a test asks for it by name."""
@@ -651,9 +656,24 @@ class Transcription:
         """Where the key came from, for honest status copy (never the key itself)."""
         if (os.environ.get('META_API_KEY') or os.environ.get('MUSE_API_KEY') or '').strip():
             return 'environment'
-        if (self._setting('meta_api_key') or '').strip():
+        if _CUSTODY['key'] or (self._setting('meta_api_key') or '').strip():
             return 'kel'
         return 'transcriptions-app' if shared_muse_key() else ''
+
+    def supply(self, key=None, clear=False, drop_legacy=False):
+        """D-75.3: the key held in the desktop's custody (memory only). `drop_legacy` removes the older
+        plaintext copy Ramble used to save, once custody holds it."""
+        if clear:
+            _CUSTODY['key'] = ''
+        elif isinstance(key, str) and key.strip():
+            _CUSTODY['key'] = key.strip()
+        if drop_legacy or clear:
+            self._set_setting('meta_api_key', '')
+        return {'has_key': bool(self.api_key()), 'source': self.key_source()}
+
+    def legacy_key(self):
+        """D-75.3: the key Ramble saved before custody (for the one-time move into it), or ''."""
+        return {'key': (self._setting('meta_api_key') or '').strip()}
 
     def set_key(self, key):
         key = (key or '').strip()
@@ -692,7 +712,7 @@ class Transcription:
         except Exception:
             live = False
         source = self.key_source()
-        return {'mode': 'muse', 'has_key': True, 'live_capable': live, 'label': 'Muse',
+        return {'mode': 'muse', 'has_key': True, 'live_capable': live, 'label': 'Muse', 'source': source,
                 'detail': ('Muse transcribes your audio.' if source != 'transcriptions-app'
                            else 'Muse transcribes your audio, using the key the Transcriptions app '
                                 'already stored on this computer.')}

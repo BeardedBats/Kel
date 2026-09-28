@@ -28,6 +28,7 @@ import {
 } from '@renderer/components/kel/kelApi';
 import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
 import '@renderer/styles/kel-work.css';
+import MuseKeyCard, { MUSE_PROVIDER } from './MuseKeyCard';
 
 /**
  * VIS-24: the models a provider runs, by their plain names. A built-in CLI's only model has the
@@ -298,6 +299,16 @@ const Providers: React.FC = () => {
             </details>
             );
           })}
+        {/* D-75.3: Ramble's Muse key, in the same custody as the other keys. */}
+        {!error && providers !== null && (
+          <MuseKeyCard
+            secureAvailable={Boolean(secure?.available)}
+            stored={Boolean(secure?.providers?.[MUSE_PROVIDER]?.length)}
+            onChanged={() => {
+              void window.kelAPI?.credentials?.status().then((status) => status && setSecure(status)).catch((): undefined => undefined);
+            }}
+          />
+        )}
 
         </KelCard>
 

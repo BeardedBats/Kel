@@ -20,6 +20,12 @@ const ROUTE =
  */
 const SHELL_ONLY_SCHEDULE_ACTIONS = new Set(['import']);
 
+/**
+ * D-75.3: the Muse (Ramble) key is managed in Settings → Providers through the main process's custody;
+ * no page saves, clears, supplies or reads it through the engine directly.
+ */
+const SHELL_ONLY_TRANSCRIPTION_ACTIONS = new Set(['set_key', 'clear_key', 'supply', 'legacy_key']);
+
 /** Connection actions that move, supply or claim credential values — main process only. */
 const SHELL_ONLY_CONNECTION_ACTIONS = new Set(['supply', 'oauth-initiate', 'oauth-claim', 'oauth-revoke', 'test', 'run', 'call']);
 
@@ -40,6 +46,12 @@ export const rendererKelRequestRefusal = (route: unknown, body?: unknown): strin
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
     if (typeof action === 'string' && SHELL_ONLY_CONNECTION_ACTIONS.has(action)) {
       return 'Credentials are handled by Kel, not by this page';
+    }
+  }
+  if (route === '/api/transcription') {
+    const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
+    if (typeof action === 'string' && SHELL_ONLY_TRANSCRIPTION_ACTIONS.has(action)) {
+      return 'The Muse key is managed in Settings → Providers';
     }
   }
   if (route === '/api/office' && body !== undefined) {

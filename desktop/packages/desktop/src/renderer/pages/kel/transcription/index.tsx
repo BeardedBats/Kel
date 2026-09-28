@@ -123,8 +123,6 @@ const TranscriptionPage: React.FC = () => {
   const [recState, setRecState] = useState<'idle' | 'recording' | 'working'>('idle');
   const [seconds, setSeconds] = useState(0);
   const [liveText, setLiveText] = useState('');
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [keyDraft, setKeyDraft] = useState('');
   const [review, setReview] = useState<{ open: boolean; mode: 'answers' | 'freethink'; text: string; editing: boolean; busy: boolean; payload?: ReviewPayload }>(
     { open: false, mode: 'answers', text: '', editing: false, busy: false }
   );
@@ -587,31 +585,8 @@ const saveName = useCallback(async () => {
     [refresh]
   );
 
-  const saveKey = useCallback(async () => {
-    const key = keyDraft.trim();
-    if (!key) return;
-    try {
-      await transcription({ action: 'set_key', key });
-      setKeyDraft('');
-      setSettingsOpen(false);
-      if (layout?.isMobile) Message.success('Muse is connected. New recordings and uploads use it.');
-      else { const readiness = await transcription<ProviderStatus>({ action: 'status' }); setStatus(readiness); Message.success(readiness.live_capable ? 'Key saved. Transcription is ready to test.' : `Key saved. ${readiness.detail}`); }
-      await refresh();
-    } catch (error) {
-      Message.error(failMessage(error));
-    }
-  }, [keyDraft, refresh, layout?.isMobile]);
-
-  const clearKey = useCallback(async () => {
-    try {
-      await transcription({ action: 'clear_key' });
-      setSettingsOpen(false);
-      Message.success(layout?.isMobile ? 'Back to practice mode.' : 'Kel’s saved key was removed.');
-      await refresh();
-    } catch (error) {
-      Message.error(failMessage(error));
-    }
-  }, [refresh, layout?.isMobile]);
+  // D-75.3: one key flow — the Muse key is managed in Settings → Providers with the other keys.
+  const openKeySettings = useCallback(() => navigate('/settings/providers?provider=muse'), [navigate]);
 
   const loadPreview = useCallback(async (text: string, mode: 'answers' | 'freethink') => {
     try {
@@ -864,7 +839,7 @@ const statusCopy =
           <header className={styles.pageHeader}>
             <h1 className='kel-h1'>Ramble</h1>
             <div className={styles.actionRow}>
-              {<Button onClick={() => setSettingsOpen(true)} data-testid='transcription-settings'>API Key</Button>}
+              {<Button onClick={openKeySettings} data-testid='transcription-settings'>API Key</Button>}
               {recState === 'idle' && (
                 <>
                   <Button className='kel-transcription-upload' icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => fileInputRef.current?.click()} data-testid='upload-button'>
@@ -1023,7 +998,7 @@ const statusCopy =
                     <div>
                       <button type='button' onClick={() => { setRenaming(true); setNameDraft(selected.name); }}>Rename</button>
                       <button type='button' onClick={() => fileInputRef.current?.click()}>Upload Audio</button>
-                      <button type='button' onClick={() => setSettingsOpen(true)}>API Key</button>
+                      <button type='button' onClick={openKeySettings}>API Key</button>
                       <button type='button' disabled={selected.source_type !== 'recording'} onClick={() => void beginRecording(selected.id)}>Record More</button>
                       <button type='button' disabled={library.transcripts.length < 2} onClick={() => { setCombineSource(''); setCombineOpen(true); }}>Combine</button>
                       <button type='button' onClick={() => void openReview('freethink')} data-testid='open-vetting-review'>Vetting answers</button>
@@ -1039,62 +1014,6 @@ const statusCopy =
 
       {dragging && <div className={styles.dropOverlay}>Drop audio or video to transcribe</div>}
 
-      {/* The user's explicit decision: the standalone app's key sheet, in Kel's words — a plain
-          "Meta API key" modal with no helper paragraph under the button. */}
-      {!layout?.isMobile ? <AionModal visible={settingsOpen} className='kel-ramble-key-modal' variant='standard'
-        header={{ title: 'Meta API key', subtitle: 'Ramble uses it to transcribe. It stays on this computer.', showClose: false }}
-        footer={null} closable={false} onCancel={() => { setSettingsOpen(false); setKeyDraft(''); }} focusLock autoFocus style={{ width: 480 }}>
-        <div className='kel-ramble-key-body'>
-          <Input.Password id='meta-api-key' value={keyDraft} onChange={setKeyDraft} placeholder='Paste your Meta Model API key' aria-label='Meta API key' data-testid='key-input' />
-          {status?.has_key && <p>A key is available. A new one replaces Kel’s saved key.</p>}
-          <div className='kel-ramble-dialog-actions'>
-            {status?.has_key && <button type='button' className='kel-btn kel-ramble-key-disconnect' onClick={() => void clearKey()} data-testid='key-clear'>Disconnect the key</button>}
-            <span className='kel-grow' />
-            <KelButton variant='quiet' onClick={() => { setSettingsOpen(false); setKeyDraft(''); }}>Cancel</KelButton>
-            <button type='button' className='kel-btn kel-btn--primary' disabled={!keyDraft.trim()} onClick={() => void saveKey()} data-testid='key-save'>Save and Verify</button>
-          </div>
-        </div>
-      </AionModal> : <>
-      <Modal
-        title='Meta API key'
-        visible={settingsOpen}
-        footer={null}
-        onCancel={() => setSettingsOpen(false)}
-        style={{ maxWidth: 480 }}
-      >
-        <p className={styles.keySheetBody}>
-          {status?.has_key
-            ? 'Replace the key used for Muse transcription.'
-            : 'Add a Model API key to begin transcribing.'}
-        </p>
-        {status && !status.has_key && (
-          <div className={styles.keySheetForm}>
-            <label className={styles.keySheetLabel} htmlFor='meta-api-key'>
-              API key
-            </label>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Input.Password
-                id='meta-api-key'
-                value={keyDraft}
-                onChange={setKeyDraft}
-                placeholder='Paste your Meta Model API key'
-                data-testid='key-input'
-              />
-              <Button type='primary' onClick={() => void saveKey()} disabled={!keyDraft.trim()} data-testid='key-save'>
-                Save and Verify
-              </Button>
-            </div>
-          </div>
-        )}
-        {status?.has_key && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <Button onClick={() => void clearKey()} data-testid='key-clear'>
-              Disconnect the key
-            </Button>
-          </div>
-        )}
-      </Modal>
-      </>}
       {layout?.isMobile && review.open && createPortal(
         <div className='kel-ramble-vetting-layer'>
           <button type='button' className='kel-ramble-vetting-scrim' aria-label='Close vetting answers' onClick={() => setReview({ open: false, mode: 'answers', text: '', editing: false, busy: false })} />
