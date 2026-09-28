@@ -9,7 +9,7 @@
 import { ipcBridge } from '@/common';
 import type { KelMessageMeta } from '@/common/chat/kelMessageMeta';
 import React, { useCallback, useEffect, useState } from 'react';
-import { applicationLine, isApplied } from '../changeApplication';
+import { applicationLine, isApplied, placeWords } from '../changeApplication';
 import { kelUndoChange, type KelChangeApplication } from '../kelApi';
 import { officeItem, type OfficeItemDetail } from './officeApi';
 import { openWorkCard, refreshWorkCards } from './workCardEvents';
@@ -41,14 +41,29 @@ export const resultSentence = (text: string | null | undefined): string | null =
   return sentence.length > 220 ? `${sentence.slice(0, 219).trimEnd()}…` : sentence;
 };
 
-/** "Applied to <folder> at 10:31 AM · you can undo it", or the D-65 words for other states. */
+/**
+ * "Applied to Calc demo (folder R6Proj) at 10:31 AM · you can undo it", or the D-65 words for other
+ * states. The project's name and folder appear once; the full path stays behind "Open folder".
+ */
 export const appliedWords = (application: KelChangeApplication | null | undefined, at: number | null | undefined): string | null => {
   if (!application) return null;
   if (isApplied(application) && application.state === 'APPLIED') {
     const when = clockTime(at);
-    return `Applied to ${application.root ?? 'your project'}${when ? ` at ${when}` : ''} · you can undo it`;
+    return `Applied to ${placeWords(application)}${when ? ` at ${when}` : ''} · you can undo it`;
   }
   return applicationLine(application);
+};
+
+/**
+ * The result sentence without the D-65 "Applied to <place>:" lead when the applied line already says
+ * where (old results named the full path there): "Changed calc.py; added test_calc.py (2 files)."
+ */
+export const withoutPlace = (sentence: string | null): string | null => {
+  if (!sentence) return sentence;
+  const match = sentence.match(/^(?:Your new project is ready\.\s*)?Applied to .+?:\s+(?=(?:changed|added|removed|no files)\b)/i);
+  if (!match) return sentence;
+  const rest = sentence.slice(match[0].length).trim();
+  return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : null;
 };
 
 const defaultOpenFolder = async (path: string) => {
@@ -95,8 +110,9 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
   const folder = application?.root ?? null;
   const state = detail.state;
   const label = state === 'failed' ? 'Didn’t pass its checks' : detailStateLabel(detail);
-  const sentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
   const applyWords = (detail.kind ?? '') === 'code' ? appliedWords(application, detail.finished_at) : null;
+  const firstSentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
+  const sentence = applyWords ? withoutPlace(firstSentence) : firstSentence;
   const checks = checksLine(meta);
 
   const guarded = async (action: () => Promise<unknown>) => {
@@ -133,7 +149,7 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
       </div>
       {sentence ? <p className='kel-dc__result'>{sentence}</p> : null}
       {applyWords ? (
-        <div className='kel-dc__applied' data-testid='kel-done-card-applied'>
+        <div className='kel-dc__applied' data-testid='kel-done-card-applied' title={applied && folder ? folder : undefined}>
           <img src={iconFolder13} alt='' />
           <span>{applyWords}</span>
         </div>

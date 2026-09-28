@@ -106,7 +106,9 @@ class FullAccessTests(AutoApplyBase):
         settle(self.s, self.j)
         text, fresh = self.s.publish(self.j)
         self.assertTrue(fresh)
-        self.assertIn('Applied to ' + str(self.root), text)
+        # The folder's name, once — never the full path (it stays behind "Open folder").
+        self.assertIn('Applied to source: ', text)
+        self.assertNotIn(str(self.root), text)
         self.assertIn('changed app.txt', text)
         self.assertIn('added new.txt', text)
         self.assertIn('removed remove.txt', text)
@@ -115,6 +117,22 @@ class FullAccessTests(AutoApplyBase):
         self.assertIn('a separate review approved the change', text)
         self.assertIn('Undo', text)
         self.assertNotIn('Apply checked changes', text)
+
+    def test_a_named_project_says_its_name_and_folder_once(self):
+        from kel.auto_apply import describe, place
+        with self.s.transaction() as db:
+            db.execute('CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,name TEXT NOT NULL,root TEXT,'
+                       'context TEXT,updated REAL)')
+            db.execute('INSERT INTO projects(id,name,root,updated) VALUES(?,?,?,?)',
+                       ('calc', 'Calc demo', str(self.root), time.time()))
+        self.assertEqual(place(self.s, str(self.root))['words'], 'Calc demo (folder source)')
+        settle(self.s, self.j)
+        text, _fresh = self.s.publish(self.j)
+        self.assertIn('Applied to Calc demo (folder source): changed app.txt', text)
+        self.assertEqual(text.count('source'), 1)
+        entry = describe(self.s, [self.j])[self.j]
+        self.assertEqual((entry['project_name'], entry['folder']), ('Calc demo', 'source'))
+        self.assertEqual(entry['root'], str(self.root), 'the full path stays for Open folder')
 
     def test_engine_applies_before_it_publishes(self):
         from kel.engine import Engine

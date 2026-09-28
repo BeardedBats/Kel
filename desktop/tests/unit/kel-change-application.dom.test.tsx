@@ -74,7 +74,7 @@ describe('an automatically applied change on the work card (D-65)', () => {
     renderCard();
     const line = await screen.findByTestId('kel-work-application');
     expect(line.textContent).toBe(
-      'Applied automatically to C:\\Users\\Nick\\Projects\\garden (3 files). The earlier files are saved.'
+      'Applied automatically to garden (3 files). The earlier files are saved.'
     );
     expect(screen.getByText('Done and checked')).toBeTruthy();
     fireEvent.click(screen.getByTestId('kel-work-undo'));
@@ -138,7 +138,7 @@ describe('Apply or Undo in Work (D-65)', () => {
 
   it('names a change you applied yourself without calling it automatic', () => {
     expect(applicationLine({ ...applied, auto: false, files: 1 })).toBe(
-      'Applied to C:\\Users\\Nick\\Projects\\garden (1 file). The earlier files are saved.'
+      'Applied to garden (1 file). The earlier files are saved.'
     );
   });
 });

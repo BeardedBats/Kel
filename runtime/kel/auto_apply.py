@@ -226,6 +226,44 @@ def _select(store, sql, *args):
     return dict(row) if row else None
 
 
+_SLASHES = '\\/'
+
+
+def _folder_name(root):
+    text = str(root or '').rstrip(_SLASHES)
+    return Path(text).name or text
+
+
+def place(store, root, project_id=None):
+    """Where a change went, in words Nick knows: the project's name and its folder, once.
+
+    {'project_name', 'folder', 'words'} — 'words' is "Calc demo (folder R6Proj)", or just the folder
+    when the project is named after it (or has no saved name). Never the full path: that stays
+    behind "Open folder"."""
+    folder = _folder_name(root)
+    name = None
+    try:
+        with contextlib.closing(store.connect()) as db:
+            # Only a project whose own folder is this one names it (the job's project may be General
+            # while the change went to another folder).
+            wanted = str(Path(str(root))).rstrip(_SLASHES).lower() if root else None
+            row = None
+            candidates = db.execute("SELECT id, name, root FROM projects WHERE root IS NOT NULL AND root<>''").fetchall()
+            for candidate in sorted(candidates, key=lambda c: c['id'] != project_id):
+                if wanted and str(Path(candidate['root'])).rstrip(_SLASHES).lower() == wanted:
+                    row = candidate
+                    break
+            name = (row['name'] if row else None) or None
+    except Exception:
+        name = None
+    name = str(name).strip() if name else None
+    if not name or not folder or name.lower() == folder.lower():
+        words = name or folder or 'your project'
+    else:
+        words = '%s (folder %s)' % (name, folder)
+    return {'project_name': name, 'folder': folder or None, 'words': words}
+
+
 def result_text(store, job):
     """The coding result message when D-65 applied the change (or held it in Full access).
 
@@ -238,6 +276,7 @@ def result_text(store, job):
     if not saved:
         return None
     root = str(job['contract'].get('root'))
+    where = place(store, root, job['contract'].get('project_id'))['words']
     tests = ' '.join(str(part) for part in job['contract'].get('test_command') or [])
     how = ('How it was checked: ' + ('`' + tests + '`' if tests else 'the project tests') +
            ' passed in a separate copy of the project, and a separate review approved the change.')
@@ -259,11 +298,11 @@ def result_text(store, job):
             parts.append('removed ' + _names(removed))
         what = '; '.join(parts) or 'no files'
         lead = ('Your new project is ready. ' if job['contract'].get('greenfield') else '')
-        return (lead + 'Applied to ' + root + ': ' + what + ' (' + _count(len(changes), 'file') + ').\n\n'
+        return (lead + 'Applied to ' + where + ': ' + what + ' (' + _count(len(changes), 'file') + ').\n\n'
                 + how + '\n\nThe earlier files are saved — Undo on the result card puts them back.')
     if saved['decision'] == WAITING and saved.get('reason') and saved['reason'] != ASK_REASON:
         return ('The change passed its tests and a separate review. Kel did not apply it on its own: '
-                + saved['reason'] + '. Use Apply checked changes in Work context to write it into ' + root
+                + saved['reason'] + '. Use Apply checked changes in Work context to write it into ' + where
                 + ' — Kel checks your project for conflicts and saves a backup first.')
     return None
 
@@ -292,6 +331,8 @@ def describe(store, job_ids):
                  'auto': bool(dec and dec['decision'] in (APPLIED, APPLYING)),
                  'decision': dec['decision'] if dec else None,
                  'root': row['root'] if row else None, 'files': None, 'waiting_reason': None}
+        if row and row['root']:
+            entry.update({k: v for k, v in place(store, row['root']).items() if k in ('project_name', 'folder')})
         if row:
             try:
                 entry['files'] = len(json.loads(row['plan']).get('changes') or {})
