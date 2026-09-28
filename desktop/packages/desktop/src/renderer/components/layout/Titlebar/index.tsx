@@ -133,9 +133,8 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   // Keep the workspace entry in the titlebar on every platform.
   const showWorkspaceButton = workspaceAvailable;
 
-  const workspaceTooltip = workspaceCollapsed
-    ? t('common.expandMore', { defaultValue: 'Expand workspace' })
-    : t('common.collapse', { defaultValue: 'Collapse workspace' });
+  // VIS-8: say what the button does ("Expand More" named neither the panel nor the action).
+  const workspaceTooltip = workspaceCollapsed ? 'Show the files panel' : 'Hide the files panel';
   const backToChatTooltip = t('common.back', { defaultValue: 'Back to Chat' });
   const _feedbackTooltip = t('conversation.welcome.quickActionFeedback', { defaultValue: 'Report Issue' });
   const isSettingsRoute = location.pathname.startsWith('/settings');
@@ -146,9 +145,7 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
   // 统一在标题栏左侧展示主侧栏开关 / Always expose sidebar toggle on titlebar left side
   const showSiderToggle = Boolean(layout?.setSiderCollapsed) && !(layout?.isMobile && isSettingsRoute);
   const showBackToChatButton = Boolean(layout?.isMobile && isSettingsRoute);
-  const siderTooltip = layout?.siderCollapsed
-    ? t('common.expandMore', { defaultValue: 'Expand sidebar' })
-    : t('common.collapse', { defaultValue: 'Collapse sidebar' });
+  const siderTooltip = layout?.siderCollapsed ? 'Show the sidebar' : 'Hide the sidebar';
   // 前进/后退仅在桌面端显示（移动端空间有限，保留原有的返回到聊天按钮）
   // Show back/forward on desktop only; mobile keeps the existing back-to-chat button.
   const showHistoryNav = Boolean(navigationHistory) && !layout?.isMobile;
