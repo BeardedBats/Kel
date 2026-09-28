@@ -61,8 +61,10 @@ class ClaudeStreamJsonTests(unittest.TestCase):
             adapter = NativeAdapter('claude', Path(tmp) / 'ws', Path(tmp) / 'logs')
             self.assertIn('stream-json', adapter.argv(stream=True))
             self.assertIn('--include-partial-messages', adapter.argv(stream=True))
-            self.assertIn('json', adapter.argv())
-            self.assertNotIn('stream-json', adapter.argv())
+            # Every Claude call uses stream-json (the only format with rate_limit_event, kel.quota);
+            # only a streamed reply asks for the partial words.
+            self.assertIn('stream-json', adapter.argv())
+            self.assertNotIn('--include-partial-messages', adapter.argv())
             path = Path(tmp) / 'out.stdout'
             delta = lambda text: json.dumps({'type': 'stream_event', 'event': {
                 'type': 'content_block_delta', 'index': 0, 'delta': {'type': 'text_delta', 'text': text}}})

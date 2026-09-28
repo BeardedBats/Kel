@@ -94,7 +94,9 @@ def recover_readonly_result(store,run,row):
         output=path.read_text(encoding='utf-8',errors='replace')
         try:
             if base=='claude':
-                record=json.loads(output);terminal=record.get('type')=='result' and record.get('subtype')=='success'
+                # Claude calls write stream-json (one record per line; kel.quota): the last line is the result.
+                lines=[line for line in output.splitlines() if line.strip()]
+                record=json.loads(lines[-1]) if lines else {};terminal=record.get('type')=='result' and record.get('subtype')=='success'
             else:
                 records=[json.loads(line) for line in output.splitlines() if line.strip()]
                 terminal=bool(records) and records[-1].get('type')=='turn.completed'

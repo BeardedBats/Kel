@@ -161,8 +161,10 @@ class Providers:
             state = self._row(db, provider)
         failures = int(state.get('failures') or 0)
         circuit_until = float(state.get('circuit_until') or 0)
-        quota = state.get('quota')
         now = time.time()
+        from .quota import left as quota_left, runtime_of
+        # A subscription plan's limit resets on its own (kel.quota); other quotas are read as stored.
+        quota = quota_left(state, now) if runtime_of(provider) else state.get('quota')
         if item['class'] == 'native-cli' and not installed:
             status = 'not_installed'
         elif not authenticated:

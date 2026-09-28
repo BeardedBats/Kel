@@ -146,6 +146,9 @@ class Candidate:
     cost: float | None = None
     latency: float | None = None
     privacy: str = 'cloud'
+    # kel.quota: the plan behind this runtime is nearly used up (<= 10% left, or on pace to run out
+    # before its reset). Ranked after the others; never excluded for it, never moved past a choice.
+    quota_low: bool = False
 
 
 def select(candidates, required=None, explicit=None, quality_floor=None, local_only=False, prefer=None,
@@ -178,18 +181,21 @@ def select(candidates, required=None, explicit=None, quality_floor=None, local_o
                if c.name not in protected and (evidence or {}).get(c.name, {}).get('demote')]
     if demoted:
         eligible.sort(key=lambda c: (1 if c.name in demoted else 0))
+    low = [c.name for c in eligible if c.quota_low and c.name not in protected]
+    if low and len(low) < len(eligible):
+        eligible.sort(key=lambda c: (1 if c.name in low else 0))  # stable: keeps the order above
     chosen = eligible[0]
     return {'selected': chosen.name, 'fallbacks': [c.name for c in eligible[1:]],
             'excluded': excluded, 'policy': 'eligible-cost-v2',
             'preferred': prefer or None, 'explicit': explicit or None,
-            'demoted': demoted, 'chain': [c.name for c in eligible],
+            'demoted': demoted, 'quota_low': low, 'chain': [c.name for c in eligible],
             'evidence': {c.name: (evidence or {})[c.name] for c in eligible
                          if (evidence or {}).get(c.name)},
-            'why': _why(chosen, explicit, prefer, demoted),
+            'why': _why(chosen, explicit, prefer, demoted, low),
             'unknown_cost': chosen.cost is None, 'unknown_quota': chosen.quota is None}
 
 
-def _why(chosen, explicit, prefer, demoted):
+def _why(chosen, explicit, prefer, demoted, low=()):
     """One plain fragment for "Why this model?": the first fact that actually decided it."""
     if explicit and chosen.name == explicit:
         return 'your chosen model'
@@ -197,7 +203,82 @@ def _why(chosen, explicit, prefer, demoted):
         return 'your preferred model'
     if demoted:
         return 'recent results moved a failing model down'
+    if low and chosen.name not in low:
+        return "another plan's usage limit is nearly used up, so Kel used this one first"
     return 'lowest cost among the models that are healthy and capable here'
+
+
+# ---- local-only work ------------------------------------------------------------------------------
+# A job whose contract says `local_only: true` may run only on a model that runs on this computer.
+# Every model Kel can run today (Codex, Claude Code, the Anthropic / DeepSeek / OpenRouter APIs) runs
+# in the cloud, so such work waits with a plain reason. Local runtimes are *detected* for that reason
+# and for Settings (Ollama's and LM Studio's own local endpoints), but Kel has no adapter for them yet.
+LOCAL_RUNTIMES = (('Ollama', 'http://127.0.0.1:11434/api/tags', 'models', 'name'),
+                  ('LM Studio', 'http://127.0.0.1:1234/v1/models', 'data', 'id'))
+_LOCAL_CACHE = {}
+LOCAL_CACHE_SECONDS = 60.0
+
+
+def is_local_only(contract):
+    contract = contract or {}
+    return bool(contract.get('local_only')) or 'local_only' in (contract.get('requirements') or ())
+
+
+def local_models(fetch=None, now=None):
+    """What local model runtimes answer on this computer: {'found': [{runtime, models}], 'usable': [],
+    'note'}. `usable` stays empty: Kel cannot run a local model yet. Probes are local-only and cached."""
+    stamp = time.time() if now is None else now
+    if fetch is None and _LOCAL_CACHE.get('at') and stamp - _LOCAL_CACHE['at'] < LOCAL_CACHE_SECONDS:
+        return dict(_LOCAL_CACHE['value'])
+    found = []
+    for runtime, url, key, field_name in LOCAL_RUNTIMES:
+        try:
+            data = (fetch or _fetch_local)(url)
+        except Exception:
+            data = None
+        if not isinstance(data, dict):
+            continue
+        names = [str(item.get(field_name)) for item in data.get(key) or () if isinstance(item, dict)
+                 and item.get(field_name)]
+        found.append({'runtime': runtime, 'models': names})
+    if not found:
+        note = 'No local models on this computer: every model Kel can use runs in the cloud.'
+    else:
+        note = ('%s is running here (%s), but Kel cannot run local models yet: every model Kel can use '
+                'runs in the cloud.' % (' and '.join(item['runtime'] for item in found),
+                                        '; '.join('%d model%s' % (len(item['models']),
+                                                                  '' if len(item['models']) == 1 else 's')
+                                                  for item in found)))
+    value = {'found': found, 'usable': [], 'note': note}
+    if fetch is None:
+        _LOCAL_CACHE.update(at=stamp, value=value)
+    return dict(value)
+
+
+def _fetch_local(url):
+    import json
+    import urllib.request
+    # Loopback only (never a proxy): these are the runtimes' own local endpoints.
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(url, timeout=0.4) as response:
+        return json.loads(response.read(1_000_000).decode('utf-8', 'replace'))
+
+
+def local_only_block(cloud_names, local=None):
+    """Plain words for local-only work that nothing here can run."""
+    from .core import _ROUTE_NAMES
+    names = []
+    for name in cloud_names or ():
+        label = _ROUTE_NAMES.get(name, name)
+        if label not in names:
+            names.append(label)
+    local = local if local is not None else local_models()
+    text = 'This work is marked local-only, so Kel may not send it to a model in the cloud'
+    if names:
+        text += ' (%s %s there)' % (' and '.join(names) if len(names) < 3 else
+                                    ', '.join(names[:-1]) + ' and ' + names[-1],
+                                    'runs' if len(names) == 1 else 'run')
+    return text + '. ' + local['note']
 
 
 def classify(text):

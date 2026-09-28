@@ -333,13 +333,23 @@ class Engine:
                             block_job(self.store, job['id'], mid, failure)
                             continue
                     health=self.store.provider_states()
+                    from .quota import candidate_fields as _quota_fields  # plan limits, reset-aware
                     candidates = [Candidate(name=n, capabilities=getattr(a,'capabilities',{'text'}),privacy='local' if n == 'fixture' else 'cloud',
-                                  circuit_until=health.get(n,{}).get('circuit_until',0),quota=health.get(n,{}).get('quota'),
+                                  circuit_until=health.get(n,{}).get('circuit_until',0),**_quota_fields(health.get(n,{}),n),
                                   cost=health.get(n,{}).get('cost'),latency=health.get(n,{}).get('latency'),quality=health.get(n,{}).get('quality')) for n,a in self.adapters.items()
                                   if (n not in ('codex-code','claude-code') or job['contract'].get('kind')=='coding') and
                                   (n not in WEB_PROVIDERS or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])))]
                     required={'repository_edit'} if job['contract'].get('kind')=='coding' else set(spec.get('required_capabilities',job['contract'].get('required_capabilities',['text'])))
                     candidates=[c for c in candidates if required.issubset(c.capabilities)]
+                    from .router import is_local_only, local_only_block
+                    local_only=is_local_only(job['contract'])
+                    if local_only:
+                        # Local-only work never reaches a cloud model; with none local, it waits plainly.
+                        cloud=[c.name for c in candidates if c.privacy!='local']
+                        candidates=[c for c in candidates if c.privacy=='local']
+                        if not candidates:
+                            self.store.wait_for_route(job['id'],NO_ROUTE_WAIT+local_only_block(cloud))
+                            continue
                     set_aside={}
                     if m['attempts']>=2 and not (spec.get('provider') or job['contract'].get('provider')) and len(candidates)>1:
                         candidates=[c for c in candidates if c.name!=m['provider']]
@@ -372,7 +382,7 @@ class Engine:
                     from .routing_evidence import summary as _routing_evidence_summary
                     evidence=_routing_evidence_summary(self.store,[c.name for c in candidates])
                     try:
-                        route = select(candidates, required=required, explicit=explicit,quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence)
+                        route = select(candidates, required=required, explicit=explicit,quality_floor=job['contract'].get('quality_floor'),prefer=prefer,evidence=evidence,local_only=local_only)
                     except PolicyError as exc:
                         block=str(exc)
                         if route_wait_kind(block)=='no_route':
@@ -437,7 +447,8 @@ class Engine:
             reasons = reasons if isinstance(reasons, (list, tuple)) else [reasons]
             if any(r in TRANSIENT_ROUTE_REASONS for r in reasons):
                 state = health.get(name, {})
-                if state.get('circuit_until', 0) <= time.time() and state.get('quota') != 0:
+                from .quota import candidate_fields as _quota_fields  # a plan's limit resets on its own
+                if state.get('circuit_until', 0) <= time.time() and _quota_fields(state, name)['quota'] != 0:
                     return True
         return False
 

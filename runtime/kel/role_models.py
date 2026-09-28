@@ -456,6 +456,24 @@ def adapter_for(model_id, purpose, adapters, set_aside=None):
     return name, None
 
 
+# The adapters whose calls apply a per-model overlay (kel.native, kel.api_models), and the runtime
+# kel.overlays keys it by. The coding bridge and the Anthropic API worker do not apply overlays yet,
+# so nothing is recorded for them.
+OVERLAY_RUNTIME = {'codex': 'codex', 'codex-web': 'codex', 'claude': 'claude', 'claude-web': 'claude',
+                   'deepseek': 'deepseek', 'openrouter': 'openrouter'}
+
+
+def plan_used_up(store, adapter, now=None):
+    """The plain reason when the subscription plan behind this adapter is used up now (kel.quota),
+    else None. A plan's limit resets on its own; unknown is never "used up"."""
+    try:
+        from .quota import adapter_standing
+        view = adapter_standing(store.provider_states(), adapter, now)
+    except Exception:
+        return None
+    return (view.get('reason') or "your plan's usage limit is reached") if view.get('level') == 'exhausted' else None
+
+
 def model_arg(model_id, adapter):
     info = MODELS.get(model_id) or {}
     if adapter in ('internal', 'research'):
@@ -552,6 +570,10 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
         if adapter is None:
             skipped.append('%s %s' % (label, why_not))
             continue
+        used_up = plan_used_up(store, adapter, now)
+        if used_up:
+            skipped.append("%s can't run right now: %s" % (label, used_up))
+            continue
         info = MODELS[model_id]
         asked['resolved'] = model_id
         effort = effort_arg(model_id, current['reasoning'])
@@ -562,6 +584,16 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
         out.update(adapter=adapter, model=model_id, model_arg=model_arg(model_id, adapter),
                    fallback_arg=info.get('cli_fallback') if adapter in ('claude', 'claude-code') else None,
                    effort_arg=effort, family=info['family'])
+        try:
+            # workforce-os doc 10 §4: the per-model overlay (key and version) that applies to this
+            # binding is recorded with the routing decision. None registered means nothing recorded.
+            from .overlays import lookup, record_of
+            overlay = record_of(lookup(OVERLAY_RUNTIME[adapter], model_id)) if adapter in OVERLAY_RUNTIME else None
+        except Exception:
+            overlay = None
+        if overlay:
+            asked['overlay'] = overlay
+            out['overlay'] = overlay
         if current['mode'] == 'AUTOMATIC':
             out['why'] = 'Automatic: ' + (ranked_why.get(model_id) or 'the top of Kel\'s ranking')
             if skipped:
@@ -692,6 +724,9 @@ def _role_option(store, model_id, purpose, adapters):
     adapter, why_not = adapter_for(model_id, purpose, adapters)
     if adapter is None:
         return False, '%s %s' % (info['label'], why_not)
+    used_up = plan_used_up(store, adapter)
+    if used_up:
+        return False, "%s can't run right now: %s" % (info['label'], used_up)
     return True, None
 
 
@@ -746,5 +781,15 @@ def listing(store, adapters):
                        (None if adapter else '%s %s' % (info['label'], why_not)),
                        'reasoning_options': list(reasoning_options(model_id)),
                        'runtime_version': _current_runtime_version(model_id)})
-    return {'roles': rows, 'models': models, 'modes': [
+    try:
+        from .quota import plans
+        plan_view = plans(store)  # how much of each subscription plan is used, and how fast
+    except Exception:
+        plan_view = []
+    try:
+        from .router import local_models
+        local = local_models()  # which local models exist here (none can run in Kel yet)
+    except Exception:
+        local = None
+    return {'roles': rows, 'models': models, 'plans': plan_view, 'local_models': local, 'modes': [
         {'id': mode, 'label': MODE_LABELS[mode]} for mode in MODES]}

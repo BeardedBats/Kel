@@ -160,6 +160,8 @@ class OpenAICompatAdapter:
                     'error': '%s runs only DeepSeek Flash in Kel for now' % ENDPOINTS[self.provider]['label']}
         if cancel and cancel.is_set():
             return {'outcome': 'CANCELLED'}
+        from .overlays import apply as apply_overlay
+        prompt, overlay = apply_overlay(prompt, self.provider, self.model)  # none registered today
         body = {'model': self.model, 'max_tokens': self.max_tokens, 'stream': False,
                 'messages': [{'role': 'system', 'content': system or LEAF_SYSTEM.replace(
                     ' Return your artifact with submit_result.', ' Return only the requested result.')},
@@ -186,6 +188,8 @@ class OpenAICompatAdapter:
         except Exception as exc:
             result = {'outcome': 'FAILED', 'error': redact(type(exc).__name__ + ': ' + str(exc))}
         result.update(provider=self.provider, wall_ms=int((time.monotonic() - started) * 1000))
+        if overlay:
+            result['overlay'] = overlay
         if result['outcome'] == 'FAILED' and self.on_refusal is not None:
             try:
                 self.on_refusal(result.get('error'), None)

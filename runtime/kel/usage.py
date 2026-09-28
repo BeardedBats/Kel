@@ -140,6 +140,11 @@ class TurnTokens:
                 self.base = {k: max(0, (_int(info['total'].get(k)) or 0) - (_int(last.get(k)) or 0))
                              for k in self.KEYS}
             self.total = info['total']
+        if method == 'account/rateLimits/updated':
+            from .quota import from_codex
+            limits = from_codex(params.get('rateLimits'), 'Codex account/rateLimits/updated')
+            if limits:
+                self.extra['rate_limits'] = limits  # the plan's limits (kel.quota)
         if method == 'turn/completed' and isinstance(params.get('usage'), dict):
             self.claude = params['usage']
             if isinstance(params.get('cost_usd'), (int, float)):
@@ -193,6 +198,12 @@ def record(store, call_id, *, job_id=None, milestone_id=None, kind='work', adapt
         if conn.execute("SELECT 1 FROM provider_usage WHERE json_extract(data,'$.call_id')=?",
                         (str(call_id),)).fetchone():
             return data
+        try:
+            # The plan limits the runtime reported with this call (kel.quota); additive.
+            from .quota import observe_result
+            observe_result(store, adapter, result, db=conn)
+        except Exception:
+            pass
         conn.execute('INSERT INTO provider_usage(provider, at, data) VALUES(?,?,?)',
                      (str(adapter or 'unknown'), float(at if at is not None else time.time()), encode(data)))
         return data

@@ -297,9 +297,33 @@ carries `runtime_version`. What the renderer would need: a read-only "How Kel pi
 per task class under Staff & models; a "Raise budget" button on a budget-stopped card; the runtime
 version on the staff row.
 
-Still open: per-model overlays (§4, registry stays empty), local-only mission routing beyond the
-privacy filter, quota-pace projection and subscription burn weighting (Forge), a live calibration
-campaign, and the renderer surfaces above. (Kel's own turn/reply/plan calls are now in the usage
+Routing extras (2026-09-28, phase 3):
+- **Codex replies stream.** `codex exec --json` has no partial events (checked live on 0.157.1: only
+  `thread.started`, `turn.started`, `item.completed`, `turn.completed`); the app-server does
+  (`item/agentMessage/delta` in the installed binary's generated schema). A streamed Codex reply now
+  runs through the app-server with exec's limits (read-only, never asks, no tools, the user config's
+  `notify` and MCP servers overridden) and feeds the same D-75.1 path; checked live with one short
+  call (58 word updates). If the app-server cannot start, exec answers whole as before.
+- **Per-model overlays** (`kel/overlays.py`): registry keyed by (runtime, model | family | '*'),
+  versioned, appended after the prompt as a subordinate note, recorded on the call and in the staff
+  call's `asked.overlay`. **Empty**: nothing in Kel's logs or tests shows a model quirk a patch
+  fixes. The coding bridge does not apply overlays yet (nothing is recorded for it).
+- **Subscription quota** (`kel/quota.py`): Claude Code's `rate_limit_event` (stream-json only — every
+  Claude call now uses stream-json), Codex's `account/rateLimits/read|updated` and the rollout file
+  of an exec session. Windows, pace samples and a reset-aware percent left on the provider state;
+  exhausted → the plan's models can't run ("your Claude plan's 5-hour limit is used up until 15:40"),
+  low (≤ 10% left, or on pace to run out before the reset with ≤ 25% left) → ranked one band lower
+  and after same-fit peers, never past a Fixed/Preferred choice. `/api/model` `roles` and `ranking`
+  carry `plans`. Kel's Claude host (coding) does not forward Claude's rate-limit events yet.
+- **Local-only work**: a contract with `local_only: true` (or the `local_only` requirement) never
+  reaches a cloud model; with none local it waits (`No model can do this:`) with plain words. This PC
+  has no local models (no Ollama, no LM Studio); Kel has no local adapter, so detected runtimes are
+  only reported (`/api/model` `local_models`).
+- **KEL_PROTECTED_PATHS**: the desktop main process sets it for the engine (installed App folder and
+  the credential folders).
+
+Still open: a local model adapter, a live calibration campaign, and the renderer surfaces above
+(including the plans and local models under Staff & models). (Kel's own turn/reply/plan calls are now in the usage
 record — D-72; a research plan made by `compile_research` is not yet.)
 Known limits: an outcome is recorded only for a reviewed verdict or a failed step, so work whose
 contract has no review check never adds a success to the evidence; the coding path needs the

@@ -202,6 +202,8 @@ class NativeAdapter:
         # Called with (error, runtime version) when a run on an explicit model fails, so a refused
         # model is remembered at its first refusal from any call site (turn, plan, review, Oracle).
         self.on_refusal = None
+        # Tests hand in a fake app-server connection for streamed Codex answers.
+        self.connection_factory = None
         self.processes = {}
         self.lock = threading.Lock()
 
@@ -242,13 +244,15 @@ class NativeAdapter:
                 args += ['-s', 'read-only', '-']
             return args
         tools = ['--tools', 'WebSearch,WebFetch', '--allowedTools', 'WebSearch,WebFetch'] if self.web else ['--tools', '']
+        # stream-json (one JSON record per line, the last is the same result record `json` gives) is
+        # the only output format that carries Claude Code's `rate_limit_event` — how much of Nick's
+        # plan is used (kel.quota). It needs --verbose in print mode.
         args = executable('claude') + ['-p', '--safe-mode'] + tools + ['--disable-slash-commands',
                 '--permission-mode', 'dontAsk', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
-                '--output-format', 'json', '--max-budget-usd', '0.50']
+                '--output-format', 'stream-json', '--verbose', '--max-budget-usd', '0.50']
         if stream:
-            # D-75.1: the reply's words as they are written (the last line is the same result record).
-            args[args.index('--output-format') + 1] = 'stream-json'
-            args += ['--verbose', '--include-partial-messages']
+            # D-75.1: the reply's words as they are written.
+            args += ['--include-partial-messages']
         if self.model:
             args += ['--model', self.model]
             if self.fallback_model and self.fallback_model != self.model:
@@ -260,8 +264,26 @@ class NativeAdapter:
         return args
 
     def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None):
-        """`on_text(answer so far)` (D-75.1): Claude Code streams its words; Codex exec reports a
-        message only once it is complete, so its answer arrives whole."""
+        """Run one prompt. A per-model overlay (kel.overlays; none are registered today) is appended
+        as a subordinate note and recorded on the result."""
+        from .overlays import apply as apply_overlay
+        prompt, overlay = apply_overlay(prompt, self.provider, self.model)
+        result = self._execute(prompt, run_id, session_id, cancel, process_observer, on_text)
+        if overlay and isinstance(result, dict):
+            result['overlay'] = overlay
+        return result
+
+    def _execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None):
+        """`on_text(answer so far)` (D-75.1): Claude Code streams its words through stream-json.
+        `codex exec --json` reports a message only once it is complete (checked live on 0.157.1:
+        thread.started, turn.started, item.completed, turn.completed — no partial events), so a
+        streamed Codex answer runs through Codex's app-server instead, whose
+        `item/agentMessage/delta` notifications carry the words as they are written; if the
+        app-server cannot start, the answer arrives whole from exec as before."""
+        if on_text is not None and self.provider == 'codex' and process_observer is None:
+            streamed = self._codex_stream(prompt, run_id or uid(), session_id, cancel, on_text)
+            if streamed is not None:
+                return streamed
         run_id = run_id or uid()
         stream = on_text is not None and self.provider == 'claude'
         streamed = {'offset': 0, 'text': '', 'rest': b''}
@@ -331,6 +353,14 @@ class NativeAdapter:
                 result.setdefault('reasoning_used', self.reasoning())
             result.update(duration=round(time.monotonic()-started, 3), logs=str(stdout_path), provider=self.provider)
             result.setdefault('runtime_version', runtime_version(self.provider))
+            if self.provider == 'codex' and result.get('session_id') and 'rate_limits' not in result:
+                try:
+                    from .quota import codex_rollout_limits
+                    limits = codex_rollout_limits(result['session_id'])
+                    if limits:
+                        result['rate_limits'] = limits  # exec's own session log (kel.quota)
+                except Exception:
+                    pass
             if result.get('outcome') == 'FAILED' and self.on_refusal is not None and self.model:
                 try:
                     self.on_refusal(result.get('error'), result.get('runtime_version'))
@@ -343,6 +373,175 @@ class NativeAdapter:
             with self.lock:
                 self.processes.pop(run_id, None)
             cleanup_session(session)
+
+    def appserver_argv(self):
+        """Codex's app-server with the same limits as `argv()`'s exec run: read-only sandbox, never
+        asks for approval, no web search unless research, no shell or other tools. The app-server
+        has no --ignore-user-config, so the user-config settings that would change the run (model,
+        reasoning, sandbox, approvals, the turn-complete `notify` program, MCP servers) are
+        overridden here and the feature switches match exec's."""
+        effort = 'low' if self.effort is DEFAULT_EFFORT else self.effort
+        args = executable('codex') + ['app-server', '--stdio', '-c', 'approval_policy="never"',
+                '-c', 'sandbox_mode="read-only"', '-c', 'web_search="%s"' % ('live' if self.web else 'disabled'),
+                '-c', 'notify=[]', '-c', 'mcp_servers={}', '-c', 'analytics.enabled=false']
+        if effort:
+            args += ['-c', 'model_reasoning_effort="%s"' % effort]
+        for feature in ('multi_agent', 'multi_agent_v2', 'shell_tool', 'unified_exec', 'apps', 'plugins',
+                        'hooks', 'memories', 'browser_use', 'computer_use', 'image_generation',
+                        'workspace_dependencies', 'goals', 'in_app_browser', 'browser_use_external'):
+            args += ['--disable', feature]
+        return args
+
+    def _codex_stream(self, prompt, run_id, session_id, cancel, on_text, connection_factory=None):
+        """One Codex answer through the app-server, its words passed to `on_text` as they arrive
+        (`item/agentMessage/delta`, protocol v2 of the installed 0.157.1). Returns the same result
+        shape as `parse()`, or None when the app-server could not start (the caller then uses exec).
+        Also keeps the turn's tokens (`thread/tokenUsage/updated`) and the plan's limits
+        (`account/rateLimits/updated`)."""
+        import queue as _queue
+        started = time.monotonic()
+        factory = connection_factory or self.connection_factory
+        try:
+            if factory is not None:
+                connection = factory(self)
+            else:
+                from .appserver import CodexConnection
+                connection = CodexConnection(self.workspace, self.logs, process_argv=self.appserver_argv())
+        except Exception:
+            return None
+        texts, order, errors = {}, [], []
+        usage, limits, status, thread_id, interrupted = None, None, None, session_id, None
+        shown = {'text': ''}
+
+        def emit():
+            joined = '\n'.join(texts[key] for key in order if texts.get(key))
+            if joined and joined != shown['text']:
+                shown['text'] = joined
+                try:
+                    on_text(joined)
+                except Exception:
+                    pass  # showing words early is additive; the run's result is unchanged
+
+        try:
+            thread = {'cwd': str(self.workspace), 'sandbox': 'read-only', 'approvalPolicy': 'never'}
+            if self.model:
+                thread['model'] = self.model
+            try:
+                response = connection.call('thread/resume', dict(thread, threadId=session_id)) if session_id \
+                    else connection.call('thread/start', thread)
+            except RuntimeError as exc:
+                return self._stream_failed(str(exc), session_id, started)
+            thread_id = ((response or {}).get('thread') or {}).get('id') or session_id
+            turn = {'threadId': thread_id, 'input': [{'type': 'text', 'text': prompt}]}
+            effort = 'low' if self.effort is DEFAULT_EFFORT else self.effort
+            if effort:
+                turn['effort'] = effort
+            try:
+                response = connection.call('turn/start', turn)
+            except RuntimeError as exc:
+                return self._stream_failed(str(exc), thread_id, started)
+            turn_id = ((response or {}).get('turn') or {}).get('id')
+            while True:
+                if interrupted is None and ((cancel and cancel.is_set()) or time.monotonic() - started >= self.timeout):
+                    interrupted = ('CANCELLED' if cancel and cancel.is_set() else 'TIMED_OUT', time.monotonic())
+                    try:
+                        connection.call('turn/interrupt', {'threadId': thread_id, 'turnId': turn_id}, timeout=10)
+                    except Exception:
+                        pass
+                if interrupted and time.monotonic() - interrupted[1] > 20:
+                    break
+                try:
+                    event = connection.events.get(timeout=.1)
+                except _queue.Empty:
+                    continue
+                method = event.get('method', '')
+                params = event.get('params') or {}
+                if 'id' in event:
+                    # A read-only, never-ask run has nothing to approve; anything asked is declined.
+                    connection.send({'id': event['id'], 'error': {'code': -32601,
+                                                                  'message': 'Unsupported Kel interaction'}})
+                    continue
+                if params.get('threadId', thread_id) != thread_id:
+                    continue
+                if method == 'item/agentMessage/delta' and isinstance(params.get('delta'), str):
+                    key = params.get('itemId') or '-'
+                    if key not in texts:
+                        order.append(key)
+                        texts[key] = ''
+                    texts[key] += params['delta']
+                    emit()
+                elif method == 'item/completed' and (params.get('item') or {}).get('type') == 'agentMessage':
+                    item = params['item']
+                    key = item.get('id') or '-'
+                    if key not in texts:
+                        order.append(key)
+                    texts[key] = item.get('text') or texts.get(key, '')
+                    emit()
+                elif method == 'thread/tokenUsage/updated':
+                    info = params.get('tokenUsage') if isinstance(params.get('tokenUsage'), dict) else {}
+                    if isinstance(info.get('last'), dict):
+                        usage = dict(info['last'])  # this turn's share (inputTokens includes cached)
+                elif method == 'account/rateLimits/updated':
+                    from .quota import from_codex
+                    limits = from_codex(params.get('rateLimits'), 'Codex account/rateLimits/updated') or limits
+                elif method == 'error':
+                    nested = params.get('error')
+                    message = nested.get('message') if isinstance(nested, dict) else nested
+                    if not params.get('willRetry'):
+                        errors.append(str(message or 'Native turn failed'))
+                elif method == 'turn/completed':
+                    done = params.get('turn') or {}
+                    status = done.get('status')
+                    failure = done.get('error')
+                    if isinstance(failure, dict):
+                        failure = failure.get('message')
+                    if failure:
+                        errors.append(str(failure))
+                    break
+                elif method == 'kel/connectionClosed':
+                    errors.append('Codex app-server closed')
+                    status = 'failed'
+                    break
+        finally:
+            try:
+                connection.close()
+            except Exception:
+                pass
+        text = '\n'.join(texts[key] for key in order if texts.get(key))
+        if interrupted:
+            out = dict(outcome='CANCELLED' if interrupted[0] == 'CANCELLED' else 'FAILED', error=interrupted[0],
+                       session_id=thread_id, duration=round(time.monotonic() - started, 3))
+        else:
+            ok = bool(status == 'completed' and text and not errors)
+            out = dict(outcome='SUCCESS' if ok else 'FAILED', text=text, session_id=thread_id,
+                       native_status=status, duration=round(time.monotonic() - started, 3), streamed=True,
+                       error=None if ok else ('; '.join(dict.fromkeys(errors)) or 'Native turn failed'))
+            if ok:
+                if self.model:
+                    out['model_used'] = self.model
+                out['reasoning_used'] = self.reasoning()
+        if usage is not None:
+            out['usage'] = usage
+        if limits:
+            out['rate_limits'] = limits
+        out['provider'] = self.provider
+        out.setdefault('runtime_version', runtime_version(self.provider))
+        if out.get('outcome') == 'FAILED' and self.on_refusal is not None and self.model:
+            try:
+                self.on_refusal(out.get('error'), out.get('runtime_version'))
+            except Exception:
+                pass
+        return out
+
+    def _stream_failed(self, error, session_id, started):
+        out = dict(outcome='FAILED', error=str(error)[:500], session_id=session_id, provider=self.provider,
+                   duration=round(time.monotonic() - started, 3), runtime_version=runtime_version(self.provider))
+        if self.on_refusal is not None and self.model:
+            try:
+                self.on_refusal(out['error'], out['runtime_version'])
+            except Exception:
+                pass
+        return out
 
     @staticmethod
     def _stream_words(stdout_path, streamed, on_text):
@@ -392,6 +591,18 @@ class NativeAdapter:
                         break
                 if record is None:
                     return dict(outcome='FAILED', error='Malformed native JSON')
+            limits = None
+            if '"rate_limit_event"' in output:
+                from .quota import from_claude
+                for line in output.splitlines():
+                    if '"rate_limit_event"' not in line:
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(event, dict) and event.get('type') == 'rate_limit_event':
+                        limits = from_claude(event.get('rate_limit_info')) or limits
             usage_by_model = record.get('modelUsage') if isinstance(record.get('modelUsage'), dict) else {}
             used = None
             searches = sum(int((entry or {}).get('webSearchRequests') or 0) for entry in usage_by_model.values()
@@ -415,6 +626,8 @@ class NativeAdapter:
                 out['model_used'] = used
             if self.web:
                 out['searches'] = searches
+            if limits:
+                out['rate_limits'] = limits
             return out
         text, events, errors = [], [], []
         usage = None

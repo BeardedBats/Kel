@@ -110,7 +110,7 @@ def reasoning_for(tier, model_id):
 
 # ---- the ranking ------------------------------------------------------------------------------
 
-def _measured(store, adapters_by_model):
+def _measured(store, adapters_by_model, now=None):
     """{model: {'cost', 'latency_ms', 'runs', 'basis'}} from measured usage (Routing 2 §5.2), else the
     runtime's own recent averages; unknown stays unknown."""
     out = {}
@@ -140,9 +140,16 @@ def _measured(store, adapters_by_model):
             state.get('cost') == 0 and str(state.get('cost_basis') or '').startswith('subscription'))
         row['marginal_cost'] = 0.0 if subscription else row.get('avg_cost')
         row['subscription'] = bool(subscription)
-        quota = state.get('quota')
-        if isinstance(quota, (int, float)) and not isinstance(quota, bool):
-            row['quota_left'] = quota
+        from .quota import adapter_standing, runtime_of
+        plan = adapter_standing(health, adapter, now) if adapter else {'level': 'unknown', 'left': None}
+        if adapter and runtime_of(adapter) is None and                 isinstance(state.get('quota'), (int, float)) and not isinstance(state.get('quota'), bool):
+            plan = {'level': 'exhausted' if state['quota'] <= 0 else 'unknown', 'left': state['quota'],
+                    'reason': None}
+        if plan.get('left') is not None:
+            row['quota_left'] = plan['left']
+        if plan['level'] in ('low', 'exhausted'):
+            row['quota_level'] = plan['level']
+            row['quota_reason'] = plan.get('reason')
         out[model_id] = row
     return out
 
@@ -156,7 +163,7 @@ def _evidence(store, task_class, models, now=None):
 
 
 def ranking(store, task_class, *, adapters, tier=None, purpose=None, set_aside=None, now=None,
-            protect=True):
+            protect=True, local_only=False):
     """The ranked models for one task class here, best first, each with a plain reason.
 
     Entries: {model, label, rank, runnable, adapter, protected, strength, fit, why, evidence,
@@ -178,26 +185,36 @@ def ranking(store, task_class, *, adapters, tier=None, purpose=None, set_aside=N
         adapter, why_not = adapter_for(model_id, purpose, adapters, set_aside)
         refused = rejected(store, model_id, now=now)
         runnable = adapter is not None and not refused
+        if local_only and runnable:
+            # Every catalog model runs in the cloud (router.local_models: Kel runs no local model yet).
+            refused, runnable = 'it runs in the cloud, and this work is local-only', False
         entries[model_id] = {
             'model': model_id, 'label': MODELS[model_id]['label'], 'runnable': runnable,
             'adapter': adapter if runnable else None, 'protected': model_id in head,
             'strength': STRENGTH.get(model_id, 2),
             'fit': abs(STRENGTH.get(model_id, 2) - TIER_TARGET[tier]),
-            'not_here': ("can't run here: " + refused) if refused else (None if adapter else why_not)}
+            'not_here': (("can't be used: " if local_only else "can't run here: ") + refused) if refused
+            else (None if adapter else why_not)}
     measured = _measured(store, {m: e['adapter'] or adapter_for(m, purpose, adapters)[0] or ''
-                                 for m, e in entries.items()})
+                                 for m, e in entries.items()}, now=now)
     evidence = _evidence(store, task_class, list(entries), now=now)
     top_strength = max((e['strength'] for e in entries.values() if e['runnable'] and not e['protected']),
                        default=None)
     for model_id, entry in entries.items():
         entry['measured'] = measured.get(model_id) or {}
         entry['evidence'] = evidence.get(model_id) or {}
-        left = entry['measured'].get('quota_left')
-        if entry['runnable'] and isinstance(left, (int, float)) and left <= 0:
+        level = entry['measured'].get('quota_level')
+        if entry['runnable'] and level == 'exhausted':
             # D-72 item 5: $0 marginal cost never means unlimited — a used-up plan quota counts.
             entry.update(runnable=False, adapter=None,
-                         not_here="can't run here right now: your plan's usage limit is reached")
+                         not_here="can't run here right now: " + (entry['measured'].get('quota_reason') or
+                                                                 "your plan's usage limit is reached"))
         effective = entry['fit']
+        if entry['runnable'] and level == 'low' and not entry['protected']:
+            # kel.quota: a nearly used-up plan steps one band down (never past Nick's own choice,
+            # never removed); the others take the work first.
+            effective += 1
+            entry['quota_low'] = True
         verdict = entry['evidence'].get('verdict')
         if verdict == 'promote':
             # One band up — but an assurance binding never moves to a weaker model (doc 10 §8).
@@ -216,7 +233,8 @@ def ranking(store, task_class, *, adapters, tier=None, purpose=None, set_aside=N
         latency = entry['measured'].get('median_ms')
         return (cost is None, cost or 0, latency is None, latency or 0)
 
-    rest.sort(key=lambda e: (0 if e['runnable'] else 1, e['effective_fit'], cost_key(e), e['label']))
+    rest.sort(key=lambda e: (0 if e['runnable'] else 1, e['effective_fit'], bool(e.get('quota_low')),
+                             cost_key(e), e['label']))
     ordered = head_entries + rest
     for index, entry in enumerate(ordered, 1):
         entry['rank'] = index
@@ -238,6 +256,8 @@ def _why(entry, current, tier, role):
         parts.append('moved up: ' + (sentence or 'recent results are strong'))
     elif entry.get('demoted'):
         parts.append('moved down: ' + (sentence or 'recent results are weak'))
+    if entry.get('quota_low'):
+        parts.append('moved down: ' + (entry['measured'].get('quota_reason') or "its plan's usage limit is nearly used up"))
     parts.append('%s fit for %s work' % ('a close' if entry['effective_fit'] == 0 else 'a looser', tier))
     cost = entry['measured'].get('avg_cost')
     if entry['measured'].get('subscription'):
@@ -294,7 +314,17 @@ def overview(store, adapters):
                         'role_label': ROLE_LABELS[role], 'mode': current['mode'],
                         'mode_label': MODE_LABELS[current['mode']], 'tier': tier,
                         'tier_label': TIER_LABELS[tier], 'models': models})
-    return {'classes': classes, 'calibration_note': 'Calibration results are advisory: they are shown, never used '
+    try:
+        from .quota import plans
+        plan_view = plans(store)
+    except Exception:
+        plan_view = []
+    try:
+        from .router import local_models
+        local = local_models()
+    except Exception:
+        local = None
+    return {'classes': classes, 'plans': plan_view, 'local_models': local, 'calibration_note': 'Calibration results are advisory: they are shown, never used '
                                                     'to reorder models (real reviewed outcomes are).',
             'tiers': [{'id': t, 'label': TIER_LABELS[t], 'reasoning': TIER_REASONING[t] or 'model default'}
                       for t in TIERS]}
