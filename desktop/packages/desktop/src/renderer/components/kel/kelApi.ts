@@ -1596,3 +1596,126 @@ export const kelHandoff = (conversation: string, submission: string) =>
   call<KelHandoff>(
     `/api/handoff?conversation=${encodeURIComponent(conversation)}&submission=${encodeURIComponent(submission)}`
   );
+
+// ---------------------------------------------------------------------------------------------
+// D-66 / D-68 — the live work view (the row of work cards at the top of the chat). Read-only
+// engine state apart from removing a finished card. Contract: docs/v2/design/D-66_WORKFORCE_LIVE.md §4.
+// A model is only named once its runtime reported it (`model_confirmed`); what was asked for and
+// why it differs are separate fields, so the page never shows a model that did not run.
+// ---------------------------------------------------------------------------------------------
+
+export type KelOfficeState = 'working' | 'in_review' | 'needs_you' | 'done' | 'stopped' | 'failed';
+export type KelOfficeKind = 'code' | 'writing' | 'research' | 'recipe';
+export type KelOfficeStaffState = 'working' | 'done' | 'failed' | 'stopped' | 'waiting';
+
+export interface KelOfficeProgress {
+  done: number;
+  total: number;
+  /** The phase in words ("2 of 3 steps done", "Checking the result") — never a percentage. */
+  label: string;
+}
+
+export interface KelOfficeTeamChip {
+  role: string;
+  role_label: string;
+  state: KelOfficeStaffState;
+}
+
+export interface KelOfficeItem {
+  job_id: string;
+  title: string;
+  project_id: string | null;
+  conversation_id: string | null;
+  submission_id: string | null;
+  kind: KelOfficeKind;
+  state: KelOfficeState;
+  /** True for done / failed / stopped: the card stays until Nick removes it (D-68). */
+  finished: boolean;
+  /** Kel's one-line plain status. */
+  status_line: string | null;
+  needs_you: boolean;
+  progress: KelOfficeProgress;
+  team: KelOfficeTeamChip[];
+  team_size: number;
+  started_at: number | null;
+  updated_at: number | null;
+  finished_at: number | null;
+  /** The engine's stable order: needs-you, then working / in review, then finished (newest first). */
+  order: number;
+}
+
+export interface KelOfficeList {
+  generated: number;
+  scope: { conversation: string | null; project: string | null };
+  items: KelOfficeItem[];
+}
+
+export interface KelOfficeStaff {
+  id: string;
+  role: string;
+  role_label: string;
+  instance: number | null;
+  doing: string;
+  state: KelOfficeStaffState;
+  /** Set only when the runtime reported it (`model_confirmed`). */
+  model: string | null;
+  model_label: string | null;
+  version: string | null;
+  model_confirmed: boolean;
+  provider: string | null;
+  runtime: string | null;
+  runtime_version: string | null;
+  reasoning: string | null;
+  /** What the role asked for, when it is not (yet) what ran. */
+  asked: { model_label: string | null; reasoning: string | null } | null;
+  /** Why it differs, in plain words (a fallback, a less independent review). */
+  note: string | null;
+  independence: 'different' | 'reduced' | null;
+  step: string | null;
+  started_at: number | null;
+  finished_at: number | null;
+}
+
+export interface KelOfficeFinding {
+  severity: 'blocker' | 'critical' | 'note';
+  area: string;
+  summary: string;
+  where: string | null;
+  status: 'open' | 'resolved';
+}
+
+export interface KelOfficeDetail extends KelOfficeItem {
+  why: string | null;
+  next: string | null;
+  staff: KelOfficeStaff[];
+  steps: { id: string; label: string; state: string; at: number | null; attempts: number | null }[];
+  review: { verdict: string | null; checked_by: string | null; independence: string | null; findings: KelOfficeFinding[] };
+  oracle: {
+    state: 'not_needed' | 'waiting' | 'running' | 'done' | 'could_not_run';
+    why: string | null;
+    independence: string | null;
+    model_label: string | null;
+    reasoning: string | null;
+    findings: KelOfficeFinding[];
+  };
+  files_changed: string[] | null;
+  application: KelChangeApplication | null;
+  verification: { result: 'passed' | 'failed' | 'not_confirmed' | null; summary: string[] };
+  /** The published result, shortened, once there is one. */
+  result: string | null;
+  links: { conversation_id: string | null; submission_id: string | null; message_seq: number | null };
+}
+
+/** The work cards for one chat, one project, or everything (`'*'`). */
+export const kelOffice = (scope: { conversation: string } | { project: string } | '*' = '*') => {
+  if (scope === '*') return call<KelOfficeList>('/api/office?project=*');
+  if ('conversation' in scope) return call<KelOfficeList>(`/api/office?conversation=${encodeURIComponent(scope.conversation)}`);
+  return call<KelOfficeList>(`/api/office?project=${encodeURIComponent(scope.project || '*')}`);
+};
+
+/** One piece of work in full: team, steps, review and second opinion, files, verification. */
+export const kelOfficeItem = (job: string) => call<KelOfficeDetail>(`/api/office/item?job=${encodeURIComponent(job)}`);
+
+/** Remove a finished card (D-68). Idempotent; the work, its chat and its evidence are kept. */
+export const kelOfficeDismiss = (job: string) =>
+  call<{ dismissed: boolean; already: boolean; job_id: string }>('/api/office', { action: 'dismiss', id: job });

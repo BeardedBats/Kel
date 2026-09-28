@@ -216,7 +216,7 @@ def _review(store, job, milestone_id, subject, staff):
         try:
             binding = resolve(store, 'oracle', adapters=staff.staff_adapters(), purpose='text',
                               avoid_family=builder_family)
-            model = staff.staff_model(binding, timeout=150)
+            model = staff.staff_model(binding, timeout=180)
         except Exception:
             binding, model = None, None
     call_id = 'orc_' + uid()

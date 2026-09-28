@@ -12,7 +12,7 @@
  */
 
 const ROUTE =
-  /^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*)(?:&project=(?:[a-zA-Z0-9_-]+|\*))?)?|work\?(?:conversation=[a-zA-Z0-9-]+|project=(?:[a-zA-Z0-9_-]+|\*))|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|project|conversation|conversation-title|send|memory|map|recipes|schedules|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/;
+  /^\/api\/(state(?:\?conversation=(?:[a-zA-Z0-9-]+|\*)(?:&project=(?:[a-zA-Z0-9_-]+|\*))?)?|work\?(?:conversation=[a-zA-Z0-9-]+|project=(?:[a-zA-Z0-9_-]+|\*))|handoff\?conversation=[a-zA-Z0-9-]+&submission=[a-zA-Z0-9-]+|office(?:\?(?:project=(?:[a-zA-Z0-9_-]+|\*)|conversation=[a-zA-Z0-9-]+))?|office\/item\?job=[a-zA-Z0-9-]+|project|conversation|conversation-title|send|memory|map|recipes|schedules|brief|team|vetting|transcription|dogfood(?:\?action=get&id=FIX-[0-9]{4}|\?status=(?:OPEN|BATCHED|FIXED|DISMISSED))?|model|capabilities|connections|data-path|backup|search|providers|autonomy|diagnostics|control|approval|approvals(?:\?conversation=[a-zA-Z0-9-]+)?|retry|apply|lineage\?job=[a-zA-Z0-9-]+(?:&milestone=[a-zA-Z0-9_-]+)?|artifact\?job=[a-zA-Z0-9-]+&milestone=[a-zA-Z0-9_-]+|artifact\?lineage=[a-zA-Z0-9-]+)$/;
 
 /**
  * D-57: `import` brings the old scheduler's tasks into the engine once, from the main process only —
@@ -41,6 +41,12 @@ export const rendererKelRequestRefusal = (route: unknown, body?: unknown): strin
     if (typeof action === 'string' && SHELL_ONLY_CONNECTION_ACTIONS.has(action)) {
       return 'Credentials are handled by Kel, not by this page';
     }
+  }
+  if (route === '/api/office' && body !== undefined) {
+    // D-66/D-68: the live work view is read-only apart from removing a finished card (a bodyless
+    // call is the read itself).
+    const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
+    if (action !== 'dismiss') return 'The work view can only remove a finished card';
   }
   if (route === '/api/schedules') {
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;

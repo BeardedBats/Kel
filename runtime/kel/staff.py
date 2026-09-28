@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS role_models(
   updated REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS staff_model_status(
   model TEXT PRIMARY KEY, status TEXT NOT NULL, reason TEXT, at REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS office_dismissals(
+  job_id TEXT PRIMARY KEY, at REAL NOT NULL, actor TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS oracle_reviews(
   job_id TEXT NOT NULL, subject TEXT NOT NULL, attempts INTEGER NOT NULL, status TEXT NOT NULL,
   detail TEXT, updated REAL NOT NULL, PRIMARY KEY(job_id, subject));
@@ -75,7 +77,7 @@ def ensure_schema(store):
                           (MIGRATION_VERSION,)).fetchone():
             db.execute('INSERT OR IGNORE INTO schema_migrations(version,name,applied,note) '
                        'VALUES(?,?,?,?)', (MIGRATION_VERSION, MIGRATION_NAME, time.time(),
-                                           'staff calls, role models, Oracle reviews (D-66/D-67)'))
+                                           'staff calls, role models, Oracle reviews, removed work cards (D-66..D-68)'))
     return True
 
 
