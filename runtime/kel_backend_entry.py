@@ -5,13 +5,9 @@ from kel import service
 from kel.runner import run_broker
 from kel.core import Store
 import argparse
-p=argparse.ArgumentParser();p.add_argument('--data',required=True);p.add_argument('--acp',action='store_true');p.add_argument('--run');p.add_argument('--rpc-run');p.add_argument('--migrate-idle',type=int);p.add_argument('--port',type=int,default=0);p.add_argument('--apply-restore',action='store_true')
+p=argparse.ArgumentParser();p.add_argument('--data',required=True);p.add_argument('--acp',action='store_true');p.add_argument('--run');p.add_argument('--rpc-run');p.add_argument('--migrate-idle',type=int);p.add_argument('--port',type=int,default=0)
 a=p.parse_args()
-if a.apply_restore:
-    # FN-02: the desktop applies a staged restore here, before anything opens the data.
-    from kel.backup import main as apply_main
-    raise SystemExit(apply_main(['--apply-restore','--data',a.data]))
-elif a.acp:
+if a.acp:
     from kel.acp_host import main
     sys.argv=[sys.argv[0],'--data',a.data]
     main()

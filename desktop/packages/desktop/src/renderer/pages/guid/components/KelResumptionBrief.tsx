@@ -14,13 +14,6 @@ import { resolveAttentionRoute } from '@renderer/components/kel/needsAttention';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import { openWorkCard } from '@renderer/components/kel/workCards/workCardEvents';
 
-/** FN-02: the restore outcome is a one-time notice; once shown it is marked seen (Settings keeps it). */
-const markRestoreNoticeSeen = (): void => {
-  const bridge = (window as unknown as { kelAPI?: { request: (route: string, payload?: unknown) => Promise<unknown> } })
-    .kelAPI;
-  void bridge?.request('/api/backup', { action: 'outcome-seen' }).catch((): undefined => undefined);
-};
-
 const KelResumptionBrief: React.FC = () => {
   const navigate = useNavigate();
   const [brief, setBrief] = useState<ResumptionBrief | null>(null);
@@ -38,21 +31,21 @@ const KelResumptionBrief: React.FC = () => {
           kelSchedules.list().catch((): null => null),
         ]);
         if (cancelled) return;
-        const built = buildResumptionBrief({
-          jobs: state.jobs ?? [],
-          continuation: state.continuation ?? [],
-          boundaryRequests: boundary.requests ?? [],
-          providers: (providers?.providers ?? []).map((entry) => ({
-            id: entry.provider,
-            label: entry.label,
-            status: entry.status,
-            note: entry.note,
-          })),
-          schedules: schedules ?? [],
-          restore: state.restore ?? null,
-        });
-        setBrief(built);
-        if (built.lines.some((line) => line.kind === 'restore')) markRestoreNoticeSeen();
+        setBrief(
+          buildResumptionBrief({
+            jobs: state.jobs ?? [],
+            continuation: state.continuation ?? [],
+            boundaryRequests: boundary.requests ?? [],
+            providers: (providers?.providers ?? []).map((entry) => ({
+              id: entry.provider,
+              label: entry.label,
+              status: entry.status,
+              note: entry.note,
+            })),
+            schedules: schedules ?? [],
+            restore: state.restore ?? null,
+          })
+        );
       } catch {
         // The shell reports engine failures on their own surfaces; this card stays silent.
         if (!cancelled) setBrief(null);

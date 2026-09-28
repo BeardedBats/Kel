@@ -552,6 +552,8 @@ class CodingAdapter:
                         db.execute('INSERT INTO native_progress(run_id,method,data,at) VALUES(?,?,?,?)',
                             (run_id,method,data,time.time()))
                     if method=='kel/session':db.execute('UPDATE runs SET native_session=? WHERE id=?',(params['threadId'],run_id))
+        from . import runtime_guard
+        watch=None  # FN-01: the protected places, watched around the runtime's own turn
         try:
             if phase and phase['phase']!='TURN_DISPATCHED':
                 result=json.loads(phase['result'])
@@ -559,6 +561,7 @@ class CodingAdapter:
                 if not phase:
                     with self.store.transaction() as db:
                         db.execute('INSERT INTO coding_phases VALUES(?,?,?,?)',(run_id,'TURN_DISPATCHED','{}',time.time()))
+                watch=runtime_guard.Watch(self.store.root,workspace,run_id)
                 result=connection.run('Source request: '+contract['request']+'\nWork in this isolated repository. '
                     'Implement the requested change. Preserve existing tests: Kel also runs the original versions of the existing '
                     'test files and test settings against your code, so add new tests freely but do not change what existing tests expect. '
@@ -572,6 +575,8 @@ class CodingAdapter:
                     on_approval=lambda m,p:self.approval(run,m,p,cancel),**run_options)
             result.update(observed)
             tokens.apply(result)
+            breach=runtime_guard.settle(self.store,job['id'],run_id,watch,self.store.root/'native-logs'/run_id,result)
+            if breach:return breach
             if result['outcome']!='SUCCESS':return result
             if not phase or phase['phase']=='TURN_DISPATCHED':
                 result['_checkpoint_manifest']=file_manifest(workspace)
@@ -586,10 +591,14 @@ class CodingAdapter:
                 with self.store.transaction() as db:
                     changed=db.execute("UPDATE coding_phases SET phase='TESTS_DISPATCHED',result=?,at=? WHERE run_id=? AND phase='TURN_COMPLETED'",(encode(result),time.time(),run_id)).rowcount
                     if changed!=1:raise PolicyError('Tests already dispatched; refusing duplicate execution')
+            watch=runtime_guard.Watch(self.store.root,workspace,run_id)  # the project's own test code too
             tests=connection.call('command/exec',run_params(contract['test_command'],workspace),timeout=100)
             after=file_manifest(workspace)
             existing=self._original_tests(connection,run_id,contract,workspace,base,baseline,after,tests,
                                           resumed=bool(phase and phase['phase']=='TESTS_DISPATCHED'))
+            breach=runtime_guard.settle(self.store,job['id'],run_id,watch,self.store.root/'native-logs'/run_id,result,
+                                  actor="The project's tests")
+            if breach:return breach
             preserved=existing['preserved']
             after=file_manifest(workspace)  # the second run works on a copy; the workspace must not move
             stable=before==after

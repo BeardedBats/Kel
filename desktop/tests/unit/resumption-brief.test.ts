@@ -56,7 +56,7 @@ describe('buildResumptionBrief', () => {
     expect(result.lines[0].kind).toBe('restore');
     expect(result.lines[0].title).toMatch(/restore did not finish/i);
     expect(result.lines[0].detail).toContain('incomplete');
-    expect(result.lines[0].action?.to).toBe('/settings/system'); // FN-02: Data and backup
+    expect(result.lines[0].action?.to).toBe('/settings');
   });
 
   it('never lists finished work under "Needs you" — done, checked or not (D-70)', () => {
