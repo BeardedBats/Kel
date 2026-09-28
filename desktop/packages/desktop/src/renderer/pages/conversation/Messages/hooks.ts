@@ -24,6 +24,7 @@ import {
   loadLatestConversationMessages,
 } from '@/renderer/utils/chat/messagePagination';
 import { KEL_POLL_ACTIVE_MS, KEL_POLL_IDLE_MS, nextPollDelay } from '@/common/chat/kelWork';
+import { onKelHistoryUpdated } from '@renderer/components/kel/kelApi';
 
 const [useMessageList, MessageListProvider, useUpdateMessageList] = createContext([] as TMessage[]);
 const [useMessageListLoading, MessageListLoadingProvider, useUpdateMessageListLoading] = createContext(false);
@@ -1017,6 +1018,18 @@ export const useMessageLstCache = (key: string) => {
       stopped = true;
       if (timer) clearTimeout(timer);
     };
+  }, [key, loadMessages]);
+
+  // LIVE-7: the main process says when this chat's Kel history gained a message with details (a
+  // scoping card, a result); re-read it at once instead of waiting for the next poll.
+  useEffect(() => {
+    if (!key) return;
+    return onKelHistoryUpdated((conversationId) => {
+      if (conversationId !== key) return;
+      void loadMessages().catch((error) => {
+        console.error('[Kel] Failed to re-read the chat after a history update', error);
+      });
+    });
   }, [key, loadMessages]);
 
   useEffect(() => {
