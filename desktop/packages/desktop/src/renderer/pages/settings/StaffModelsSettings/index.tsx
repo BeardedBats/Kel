@@ -15,11 +15,14 @@ import {
   MODE_HINTS,
   MODE_LABELS,
   STAFF_DESCRIPTIONS,
+  kelScopingThreshold,
+  kelSetScopingThreshold,
   kelStaffResetRole,
   kelStaffRoles,
   kelStaffSetRole,
   orderRoles,
   reasoningLabel,
+  type ScopingThresholdView,
   type StaffListing,
   type StaffMode,
   type StaffModelOption,
@@ -206,6 +209,89 @@ function StaffRow({
   );
 }
 
+/**
+ * When Kel asks its "before I start" questions (D-70 item 4): the engine's one scoping setting, in
+ * plain words. The default is "Always for bigger work" (a Builder + Verifier pod or larger).
+ */
+export function ScopingThresholdCard() {
+  const [view, setView] = useState<ScopingThresholdView | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    kelScopingThreshold()
+      .then((next) => {
+        if (alive) setView(next);
+      })
+      .catch((reason: unknown) => {
+        if (alive) setError(`Kel couldn't read this setting. ${failureSentence(reason, 'Try again in a moment.')}`);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const change = async (value: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      setView(await kelSetScopingThreshold(value));
+    } catch (reason) {
+      setError(`Kel couldn't save that, so nothing changed. ${failureSentence(reason, 'Try again in a moment.')}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const current = view?.options.find((option) => option.id === view.threshold) ?? null;
+  return (
+    <KelCard title='Questions before big work'>
+      <div className='kel-staff-row kel-staff-row--setting' data-testid='scoping-threshold'>
+        <div className='kel-staff-row__main'>
+          <div className='kel-staff-row__name'>
+            <strong>When Kel asks first</strong>
+            <span>
+              Before bigger work Kel can ask two or three quick questions, and nothing starts until you answer or say
+              start.
+            </span>
+          </div>
+          <div className='kel-staff-row__controls'>
+            <label className='kel-staff-row__field kel-staff-row__field--model'>
+              <span>Ask first</span>
+              <select
+                className='kel-select'
+                aria-label='When Kel asks questions before it starts'
+                value={view?.threshold ?? ''}
+                disabled={!view || busy}
+                onChange={(event) => void change(event.target.value)}
+                data-testid='scoping-threshold-select'
+              >
+                {!view ? <option value=''>Reading…</option> : null}
+                {(view?.options ?? []).map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className='kel-staff-row__foot'>
+          <span className='kel-staff-row__detail' data-testid='scoping-threshold-hint'>
+            {current?.hint ?? ''}
+          </span>
+        </div>
+        {error && (
+          <p className='kel-staff-row__error' role='alert'>
+            {error}
+          </p>
+        )}
+      </div>
+    </KelCard>
+  );
+}
+
 const StaffModelsSettings: React.FC = () => {
   const [listing, setListing] = useState<StaffListing | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -282,6 +368,7 @@ const StaffModelsSettings: React.FC = () => {
             )}
           </KelCard>
         )}
+        {listing && !loadError ? <ScopingThresholdCard /> : null}
       </div>
     </SettingsPageWrapper>
   );
