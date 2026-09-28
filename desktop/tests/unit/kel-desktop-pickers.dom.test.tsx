@@ -31,7 +31,7 @@ describe('Desktop model picker scopes', () => {
     const onAdd = vi.fn(), onSettings = vi.fn(), onClose = vi.fn();
     render(<KelDesktopModelMenu state={state} hasConversation={false} onChoose={vi.fn()} onClose={onClose} onAdd={onAdd} onSettings={onSettings} />);
     expect((screen.getByRole('tab', { name: 'This chat' }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Add Model' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add model' }));
     fireEvent.click(screen.getByRole('button', { name: 'Open model settings' }));
     fireEvent.keyDown(screen.getByTestId('kel-desktop-model-menu'), { key: 'Escape' });
     expect(onAdd).toHaveBeenCalledTimes(1);

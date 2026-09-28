@@ -35,10 +35,11 @@ afterEach(() => {
 });
 
 describe('unavailableNote', () => {
-  it('prefers the option note, then the provider note, then "Needs setup"', () => {
+  it('says every fixable reason as "Needs setup" (JR-42) and keeps the others', () => {
     expect(unavailableNote({ id: 'x', label: 'X', available: true })).toBeNull();
-    expect(unavailableNote({ id: 'x', label: 'X', available: false, note: 'Sign-in needed' })).toBe('Sign-in needed');
-    expect(unavailableNote({ id: 'x', label: 'X', available: false }, { note: 'API key needed' })).toBe('API key needed');
+    expect(unavailableNote({ id: 'x', label: 'X', available: false, note: 'Sign-in needed' })).toBe('Needs setup');
+    expect(unavailableNote({ id: 'x', label: 'X', available: false, note: 'Out of quota for now' })).toBe('Out of quota for now');
+    expect(unavailableNote({ id: 'x', label: 'X', available: false }, { note: 'API key needed' })).toBe('Needs setup');
     expect(unavailableNote({ id: 'x', label: 'X', available: false })).toBe('Needs setup');
   });
 });
@@ -52,7 +53,7 @@ describe('desktop model menu', () => {
     expect(deepseek.textContent).toContain('Not supported for chat yet');
     const sonnet = screen.getByRole('button', { name: /Claude Sonnet/ }) as HTMLButtonElement;
     expect(sonnet.disabled).toBe(true);
-    expect(sonnet.textContent).toContain('API key needed');
+    expect(sonnet.textContent).toContain('Needs setup');
     fireEvent.click(deepseek);
     expect(onChoose).not.toHaveBeenCalled();
     const claude = screen.getByRole('button', { name: 'Claude' }) as HTMLButtonElement;
@@ -71,7 +72,7 @@ describe('phone model sheet', () => {
     expect(deepseek.textContent).toContain('Not supported for chat yet');
     fireEvent.click(deepseek);
     expect(request.mock.calls.some(([, body]) => (body as { action?: string })?.action === 'set_conversation')).toBe(false);
-    expect((screen.getByText('Claude Sonnet').closest('button') as HTMLButtonElement).textContent).toContain('API key needed');
+    expect((screen.getByText('Claude Sonnet').closest('button') as HTMLButtonElement).textContent).toContain('Needs setup');
   });
 });
 
@@ -88,7 +89,7 @@ describe('narrow-window model menu', () => {
       const texts = disabled.map((node) => node.textContent ?? '');
       // Once under "This chat" and once under "Default for new chats".
       expect(texts.filter((text) => text.includes('DeepSeek Chat') && text.includes('Not supported for chat yet'))).toHaveLength(2);
-      expect(texts.filter((text) => text.includes('Claude Sonnet') && text.includes('API key needed'))).toHaveLength(2);
+      expect(texts.filter((text) => text.includes('Claude Sonnet') && text.includes('Needs setup'))).toHaveLength(2);
       expect(texts.some((text) => text.includes('Available'))).toBe(false);
     } finally {
       Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
@@ -114,7 +115,7 @@ describe('default model settings card', () => {
     expect(deepseek.textContent).toContain('Not supported for chat yet');
     expect(deepseek.textContent).not.toContain('Set up');
     const sonnet = screen.getByTestId('kel-default-internal-claude-sonnet-4-6') as HTMLButtonElement;
-    expect(sonnet.textContent).toContain('API key needed');
+    expect(sonnet.textContent).toContain('Needs setup');
     expect(sonnet.textContent).toContain('Set up');
     fireEvent.click(sonnet);
     await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/settings/providers'));

@@ -50,7 +50,7 @@ export const KelDesktopModelMenu: React.FC<{
       </button>;
     }))}
     <div className='kel-desktop-picker__divider' />
-    <button type='button' className='kel-desktop-picker__row' onClick={onAdd}><img src={plus} alt='' /><span>Add Model</span></button>
+    <button type='button' className='kel-desktop-picker__row' onClick={onAdd}><img src={plus} alt='' /><span>Add model</span></button>
     <button type='button' className='kel-desktop-picker__row' onClick={onSettings}><img src={settings} alt='' /><span>Open model settings</span></button>
     {onStaff && <button type='button' className='kel-desktop-picker__row' onClick={onStaff}><img src={settings} alt='' /><span>Staff & models</span></button>}
   </div>;
