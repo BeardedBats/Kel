@@ -346,7 +346,10 @@ def view(store, scoping_id, conversation=None):
             'project_id': row['project_id'], 'questions': out_questions, 'summary': row['summary'],
             'why': row['why'], 'created': row['created'], 'started_at': row.get('started_at'),
             'started_submission': row.get('started_submission'),
-            'answer_line': _answer_line(questions, answers) if row['state'] != OPEN else None}
+            'answer_line': _answer_line(questions, answers) if row['state'] != OPEN else None,
+            # Answers recorded while the card is open — typed in the chat or picked — so the card
+            # shows them (D-70 item 4: typed answers go through the same ingestion).
+            'recorded': typed_view(store, row) if row['state'] == OPEN else {}}
 
 
 def _answer_line(questions, answers):
@@ -475,6 +478,120 @@ def start(service, scoping_id, answers=None, best_guess=False, conversation=None
                             greenfield)
     service.wake.set()
     return dict(view(store, scoping_id), submission_id=new_sid)
+
+
+# ---- answers typed in the chat ---------------------------------------------------------------------
+
+# "start", "go", "go ahead", "ok, start", "let's go" — typed in the chat while a card is open.
+START_WORDS = re.compile(r"^\s*(?:(?:ok(?:ay)?|yes|great|thanks)[,!.\s]+)?(?:start(?: it| now| the work)?|go(?: ahead)?|"
+                         r"let'?s go|begin|do it)\s*[.!]*\s*$", re.IGNORECASE)
+PAIR = re.compile(r'(?<![\w])(?:Q)?([1-9])\s*[:.)\-]?\s*([A-D])(?![\w])', re.IGNORECASE)
+NUMBERED = re.compile(r'(?m)^\s*(?:Q)?([1-9])\s*[:.)\-]\s*(.+?)\s*$')
+
+
+def open_for(store, conversation):
+    """The newest open scoping card in a conversation, or None."""
+    with contextlib.closing(store.connect()) as db:
+        if not _table(db, 'scopings'):
+            return None
+        row = db.execute('SELECT * FROM scopings WHERE conversation_id=? AND state=? ORDER BY created DESC LIMIT 1',
+                         (str(conversation), OPEN)).fetchone()
+    return dict(row) if row else None
+
+
+def _label_code(question, words):
+    wanted = ' '.join(str(words or '').lower().split()).strip(' .!')
+    for option in question['options']:
+        if option['label'].lower() == wanted or option['code'].lower() == wanted:
+            return option['code']
+    return None
+
+
+def normalize_typed(text, questions):
+    """What Nick typed, in the numbered form the vetting ingestion reads ("1: A\\n2: typed words").
+
+    Understands "1A 2C", "1: Just me", "2. two pages", and — when there is one part per question and
+    at least one matches its question's options — plain answers in order ("just me, one page").
+    Anything else is passed through unchanged for the ingestion to judge."""
+    text = str(text or '').strip()
+    by_number = {str(index): question for index, question in enumerate(questions, 1)}
+    pairs = PAIR.findall(text)
+    if pairs and not PAIR.sub('', text).strip(' ,;&and\n\t'):
+        return '\n'.join('%s: %s' % (number, code.upper()) for number, code in pairs)
+    numbered = NUMBERED.findall(text)
+    if numbered and all(number in by_number for number, _ in numbered):
+        lines = []
+        for number, words in numbered:
+            code = _label_code(by_number[number], words)
+            # Words that are not an option are kept as typed ("Something else…"), never read as a letter.
+            lines.append('%s: %s' % (number, code or ('none of these: ' + words)))
+        return '\n'.join(lines)
+    if not re.search(r'\d', text):
+        parts = [part.strip() for part in re.split(r'[,;\n]+', text) if part.strip()]
+        if len(parts) == len(questions) and all(len(part.split()) <= 8 for part in parts):
+            codes = [_label_code(question, part) for question, part in zip(questions, parts)]
+            if any(codes):
+                return '\n'.join('%d: %s' % (index, code or ('none of these: ' + part))
+                                 for index, (code, part) in enumerate(zip(codes, parts), 1))
+    return text
+
+
+def _ingestion_questions(row):
+    return [{'id': q['id'], 'prompt': q['prompt'], 'options': q['options'], 'open': True, 'visual': False}
+            for q in json.loads(row['questions'])]
+
+
+def typed_answers(service, sid, cid, text):
+    """A chat message while a scoping card is open (D-70 item 4, typed instead of clicked).
+
+    "start" / "go" starts the work with the answers recorded so far; answers are understood by the
+    same `VettingAnswerIngestion` path as the card's own and recorded on the card; nothing new starts.
+    Returns True when the message was handled here (anything else goes on to Kel as usual)."""
+    row = open_for(service.store, cid)
+    if not row:
+        return False
+    if START_WORDS.match(text or ''):
+        out = start(service, row['id'], answers={}, conversation=cid)
+        with service.store.transaction() as db:
+            db.execute("UPDATE submissions SET state='SETTLED',job_id=NULL WHERE id=? AND state='PLANNING'", (sid,))
+        return bool(out)
+    from .vetting import VettingAnswerIngestion
+    from .vetting_session import Vetting
+    questions = _ingestion_questions(row)
+    normalized = normalize_typed(text, questions)
+    if not VettingAnswerIngestion(questions, {}).parse(normalized, 'chat')['updates']:
+        return False  # not answers to these questions: Kel handles the message as usual
+    Vetting(service.store, conversation=cid).ingest(row['session_id'], normalized, source='chat')
+    recorded = typed_view(service.store, row)
+    got = ['%s %s' % (q['prompt'], recorded[q['id']]['label']) for q in json.loads(row['questions'])
+           if recorded.get(q['id'])]
+    missing = [q['prompt'] for q in json.loads(row['questions']) if not recorded.get(q['id'])]
+    say = 'Got it: ' + '; '.join(got) + '.'
+    if missing:
+        say += ' Still open: ' + ' '.join(missing) + " I'll use my best guess for anything you leave."
+    say += ' Say "start" when you\'re ready, or press Start on the card.'
+    service._say(sid, cid, say)  # the vetting session keeps its own record of the ingestion
+    return True
+
+
+def typed_view(store, row):
+    """{question id: {option, text, label}} recorded so far for an open card (typed or picked)."""
+    from .vetting import ensure_schema as ensure_vetting
+    ensure_vetting(store)
+    questions = json.loads(row['questions'])
+    with contextlib.closing(store.connect()) as db:
+        recorded = {r['question_id']: {'selected': json.loads(r['selected'] or '[]'), 'custom': r['custom'] or ''}
+                    for r in db.execute('SELECT question_id, selected, custom FROM vetting_answers WHERE session_id=?',
+                                        (row['session_id'],))}
+    out = {}
+    for question in questions:
+        answer = recorded.get(question['id'])
+        words = _chosen(question, answer) if answer else None
+        if not words:
+            continue
+        code = next((c for c in (answer.get('selected') or []) if any(o['code'] == c for o in question['options'])), None)
+        out[question['id']] = {'option': code, 'text': None if code else words, 'label': words}
+    return out
 
 
 def action(service, data):

@@ -10,8 +10,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { resolveEngineConversation } from '../KelApprovalCard';
 import { KelAnswerBox } from './KelAnswerBox';
 import { KelChoiceChips, OTHER_CHIP } from './KelChoiceChips';
-import { scopingBestGuess, scopingStart, scopingView, type ScopingAnswer, type ScopingView } from './officeApi';
-import { refreshWorkCards } from './workCardEvents';
+import { scopingBestGuess, scopingStart, scopingView, type ScopingAnswer, type ScopingRecorded, type ScopingView } from './officeApi';
+import { REFRESH_WORK_CARDS_EVENT, refreshWorkCards } from './workCardEvents';
 import { iconChat, iconCheck, iconSparkle } from './workCardIcons';
 import { clockTime } from './workCardModel';
 import './KelWorkCardsRow5.css';
@@ -20,6 +20,22 @@ import './KelWorkCardsRow5.css';
 export const scopingHeading = (count: number): string => `Before I start · ${count} quick question${count === 1 ? '' : 's'}`;
 
 type Picks = Record<string, { option?: string; other?: boolean; text?: string }>;
+
+/** While the card is open it reads the engine again this often, so answers typed in the chat show. */
+export const SCOPING_POLL_MS = 3000;
+
+/**
+ * The picks the card shows: what Nick picked here, else what Kel understood from his message in the
+ * chat (the engine's `recorded` answers, via the same ingestion as the card's own).
+ */
+export const picksWithRecorded = (picks: Picks, recorded: Record<string, ScopingRecorded> | null | undefined): Picks => {
+  const out: Picks = {};
+  for (const [id, answer] of Object.entries(recorded ?? {})) {
+    if (answer?.option) out[id] = { option: answer.option };
+    else if (answer?.text) out[id] = { other: true, text: answer.text };
+  }
+  return { ...out, ...picks };
+};
 
 /** The answers Start sends: a picked option, or what was typed under "Something else…". */
 export const answersFor = (picks: Picks): Record<string, ScopingAnswer> => {
@@ -62,7 +78,9 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
 
   const read = useCallback(async () => {
     try {
-      setView(await scopingView(scopingId, engineCid || null));
+      const next = await scopingView(scopingId, engineCid || null);
+      // Started work never reopens: a read that left before Start answered is older than Start.
+      setView((current) => (current && current.state !== 'open' && next?.state === 'open' ? current : next));
     } catch {
       setView(null);
     }
@@ -72,6 +90,22 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
     if (engineCid === null) return;
     void read();
   }, [engineCid, read]);
+
+  // D-70 item 4: answers typed in the chat (and "start" / "go") reach the engine, not this card —
+  // so while it is open it reads again, and at once when the work cards are asked to refresh.
+  const open = view?.state === 'open';
+  useEffect(() => {
+    if (engineCid === null || !open) return;
+    const timer = setInterval(() => void read(), SCOPING_POLL_MS);
+    const now = (): void => {
+      void read();
+    };
+    window.addEventListener(REFRESH_WORK_CARDS_EVENT, now);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener(REFRESH_WORK_CARDS_EVENT, now);
+    };
+  }, [engineCid, open, read]);
 
   if (!view) return null;
 
@@ -103,10 +137,13 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
     }
   };
 
+  const shown = picksWithRecorded(picks, view.recorded);
+  const typedCount = Object.keys(view.recorded ?? {}).length;
+
   const pick = (question: string, id: string) =>
     setPicks((current) => ({
       ...current,
-      [question]: id === OTHER_CHIP ? { other: true, text: current[question]?.text ?? '' } : { option: id },
+      [question]: id === OTHER_CHIP ? { other: true, text: shown[question]?.text ?? current[question]?.text ?? '' } : { option: id },
     }));
 
   return (
@@ -120,8 +157,13 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
           Scoping
         </span>
       </div>
+      {typedCount ? (
+        <p className='kel-sc__typed' data-testid='kel-scoping-typed'>
+          {`Filled in from your message (${typedCount} of ${view.questions.length}). Change any, then Start — or say “start” in the chat.`}
+        </p>
+      ) : null}
       {view.questions.map((question) => {
-        const current = picks[question.id];
+        const current = shown[question.id];
         const selected = current?.other ? OTHER_CHIP : current?.option ?? null;
         return (
           <div className='kel-sc__question' key={question.id} data-testid='kel-scoping-question'>
@@ -160,7 +202,7 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
           type='button'
           className='kel-wd-button kel-wd-button--primary'
           disabled={busy}
-          onClick={() => void run(() => scopingStart(view.id, answersFor(picks), engineCid || null))}
+          onClick={() => void run(() => scopingStart(view.id, answersFor(shown), engineCid || null))}
           data-testid='kel-scoping-start'
         >
           Start
