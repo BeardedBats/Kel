@@ -12,6 +12,7 @@ import time
 
 from .core import PolicyError, encode, uid
 from .memory import _backup, _is_fresh_database, _table
+from .model_prefs import model_label
 
 MIGRATION_VERSION = 7
 MIGRATION_NAME = 'v14-providers'
@@ -28,7 +29,7 @@ CREATE INDEX IF NOT EXISTS provider_usage_provider ON provider_usage(provider, a
 
 # class: 'native-cli' | 'api' ; auth_mode: 'subscription' | 'api_key'
 DEFINITIONS = (
-    {'id': 'claude-code', 'label': 'Claude (Claude Code)', 'class': 'native-cli',
+    {'id': 'claude-code', 'label': 'Claude (built-in)', 'class': 'native-cli',
      'auth_mode': 'subscription', 'executable': 'claude', 'adapters': ('claude', 'claude-code'),
      'models': ({'id': 'claude-native', 'capabilities': ('text', 'tools', 'edit', 'shell')},)},
     {'id': 'codex', 'label': 'Codex', 'class': 'native-cli',
@@ -194,7 +195,8 @@ class Providers:
             'quota': quota, 'quota_unit': state.get('quota_unit'),
             'quota_reset': state.get('quota_reset'), 'quota_source': state.get('quota_source'),
             'planType': state.get('planType'),
-            'models': [dict(m) for m in item['models']],
+            # VIS-24: each model carries its plain name so no surface has to show a raw id.
+            'models': [dict(m, label=model_label(m['id'])) for m in item['models']],
         }
 
     def all_status(self):
@@ -228,6 +230,7 @@ class Providers:
         model = models(provider_id, capability)[0]['id']
         return {
             'chosen': {'provider': provider_id, 'model': model, 'label': status['label'],
+                       'model_label': model_label(model),
                        'status': status['status'], 'auth_mode': status['auth_mode']},
             'chain': chain, 'reasons': reasons,
             'reason': ('Preferred provider selected (%s)' % provider_id) if provider_id == prefer else

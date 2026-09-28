@@ -1076,7 +1076,7 @@ export interface KelProviderStatus {
   quota_reset?: number | null;
   quota_source?: string | null;
   planType?: string | null;
-  models: Array<{ id: string; capabilities: string[] }>;
+  models: Array<{ id: string; capabilities: string[]; label?: string }>;
 }
 
 export interface KelCredentialMetadata {
@@ -1120,7 +1120,7 @@ export const kelProviders = {
   list: () => call<{ providers: KelProviderStatus[] }>('/api/providers', { action: 'list' }),
   readiness: (capability = 'text', prefer = '') =>
     call<{
-      chosen: { provider: string; model: string; label: string; status: string; auth_mode: string } | null;
+      chosen: { provider: string; model: string; label: string; model_label?: string; status: string; auth_mode: string } | null;
       chain: string[];
       reasons: string[];
       reason: string;
