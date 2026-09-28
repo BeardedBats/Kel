@@ -224,6 +224,8 @@
 .kel-sc__state > img { display: block; width: 13px; height: 13px; }
 .kel-sc__question { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .kel-sc__prompt { color: #edf2fa; font: 600 14px/18px var(--kel-wc-font); overflow-wrap: anywhere; }
+/* Answers typed in the chat, understood by Kel, are pre-picked below this line (no Figma frame). */
+.kel-sc__typed { margin: 0; color: #9fc3ff; font: 500 13px/18px var(--kel-wc-font); }
 .kel-sc__divider { height: 1px; background: rgba(191, 216, 255, 0.12); }
 .kel-sc__summary { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .kel-sc__summary > img { display: block; flex: none; width: 14px; height: 14px; }

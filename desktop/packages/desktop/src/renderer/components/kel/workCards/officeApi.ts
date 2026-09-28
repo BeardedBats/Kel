@@ -225,6 +225,16 @@ export interface ScopingView {
   answer_line?: string | null;
   submission_id?: string;
   already?: boolean;
+  /** Answers recorded while the card is open — typed in the chat, understood by Kel — by question id. */
+  recorded?: Record<string, ScopingRecorded> | null;
+}
+
+export interface ScopingRecorded {
+  /** The option's code when the answer is one of the quick picks. */
+  option?: string | null;
+  /** What was typed when it is not one of them ("Something else…"). */
+  text?: string | null;
+  label?: string | null;
 }
 
 export const scopingView = (id: string, conversation?: string | null) =>

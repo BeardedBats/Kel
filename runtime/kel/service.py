@@ -549,6 +549,8 @@ class Service:
             used=submission_usage(self.store,sid)
         except Exception:
             used=None
+        if used and used.get('tokens') is None and used.get('cost') is None and not used.get('model_label'):
+            used=None  # nothing was measured (a runtime that reports no usage): no chips, never zeros
         return dict(meta or {},usage=used) if used else meta
 
     def _with_choice(self,db,cid,text,choice):
@@ -636,6 +638,17 @@ class Service:
             explicit_job=(packet.get('continuation') or {}).get('job_id')
             continue_verb=lower.startswith(('continue','resume','pick up','carry on','keep going'))
             jid=None
+            if not packet.get('schedule') and not packet.get('recipe_invocation') and not explicit_job \
+                    and kind not in ('recipe','continue','status'):
+                # D-70 item 4: while a scoping card is open, answers typed here (and "start" / "go")
+                # go to that card through the same vetting ingestion; nothing new starts.
+                from . import scoping
+                try:
+                    handled=scoping.typed_answers(self,sid,cid,text)
+                except PolicyError:
+                    handled=False
+                if handled:
+                    return None
             if packet.get('schedule') and (packet.get('recipe_invocation') or {}).get('recipe_id')!='continue-work':
                 # D-57: a scheduled run is work by definition; its acknowledgement is a plain template.
                 from .schedules import ACK
