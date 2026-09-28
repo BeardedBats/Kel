@@ -352,7 +352,8 @@ class AssignWorkerTests(Base):
         self.assertEqual(workforce['role_authority_max'], 'leased-write')
         self.assertEqual(workforce['grants']['allowed'],
                          sorted(['read', 'write', 'run_tests', 'install', 'git']))
-        self.assertFalse(workforce['flags']['workforce.enabled'])
+        # D-66: the workforce is on by default (KEL_WORKFORCE=0 is the off-switch).
+        self.assertTrue(workforce['flags']['workforce.enabled'])
 
     def test_snapshot_survives_a_later_role_edit(self):
         result = assign_worker(self.store, self.job_id, 'm1', 'builder', mode='AUTO',
@@ -422,11 +423,13 @@ class OverlayTests(unittest.TestCase):
 
 
 class FlagsTests(unittest.TestCase):
-    def test_workforce_flags_default_off_and_env_opt_in(self):
-        self.assertFalse(flags_snapshot(env={})['workforce.enabled'])
+    def test_workforce_flags_default_on_and_env_off_switch(self):
+        # D-66: on by default; the env off-switch is kept for tests and emergencies.
+        self.assertTrue(flags_snapshot(env={})['workforce.enabled'])
         self.assertTrue(flags_snapshot(env={'KEL_WORKFORCE': '1'})['workforce.enabled'])
         self.assertTrue(flags_snapshot(env={'KEL_WORKFORCE': 'true'})['workforce.enabled'])
-        self.assertFalse(flags_snapshot(env={'KEL_WORKFORCE': '0'})['workforce.enabled'])
+        for off in ('0', 'false', 'off', 'no', 'OFF'):
+            self.assertFalse(flags_snapshot(env={'KEL_WORKFORCE': off})['workforce.enabled'])
 
 
 class CeilingTests(Base):

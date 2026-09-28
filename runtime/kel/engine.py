@@ -45,6 +45,7 @@ class Engine:
         self.reviews={}
         self.owner=uid()
         self._roles_seeded=False
+        self._archetypes_seeded=False
         try:
             self.store.controller_lease(self.owner, kernel_lock_acquired=True)
             self._lease_renewed=time.monotonic()
@@ -53,6 +54,13 @@ class Engine:
                 db.execute("UPDATE review_runs SET status='INTERRUPTED' WHERE status='RUNNING'")
             from .runner import init, monitor
             init(store)
+            # D-66: staffed calls a killed engine left mid-review become 'stopped' (reviews and the
+            # Oracle are re-run through their own recovery tables; work follows its run).
+            from . import staff
+            staff.ensure_schema(store)
+            staff.settle_interrupted(store)
+            with self.store.transaction() as db:
+                db.execute("UPDATE oracle_reviews SET status='INTERRUPTED' WHERE status='RUNNING'")
             with contextlib.closing(store.connect()) as db:
                 adopted=db.execute("SELECT r.*,b.result AS broker_result FROM runs r JOIN brokers b ON b.run_id=r.id WHERE r.state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')").fetchall()
             for row in adopted:
@@ -243,6 +251,12 @@ class Engine:
                     spec = next(s for s in job['contract']['milestones'] if s['id'] == mid)
                     if any(job['milestones'][d]['state'] != 'ACCEPTED' for d in spec.get('depends_on', [])):
                         continue
+                    # D-66: below D3 a staffed job runs one step at a time (never parallelise work
+                    # the staffing decision did not find independent).
+                    from .staff import may_start, step_role
+                    if not may_start(job, mid):
+                        continue
+                    role = step_role(job, mid)
                     if job['contract'].get('kind') == 'coding':
                         # V1.5: authorization is part of the execution path. A coding job cannot
                         # claim a worker without a valid execution lease for its project root.
@@ -298,9 +312,15 @@ class Engine:
                         self.store.controller_lease(self.owner)
                         adapter=self.adapters[route['selected']]
                         model=(runtime_model((pref or {}).get('model')) if route['selected'] in aliases else None) or getattr(adapter,'options',{}).get('model')
-                        run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model)
+                        staff_record=None
+                        if role:
+                            staff_record={'role':role,'asked':{'role':role,'mode':'automatic'},
+                                          'ran':{'adapter':route['selected'],'model':model,'model_confirmed':False},
+                                          'why':route.get('why')}
+                        run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model,staff=staff_record)
                     except PolicyError:
                         continue
+                    job['milestones'][mid]['state'] = 'RUNNING'  # later steps of this pass see it
                     try:
                         self._attach_role(job, mid, run)
                     except PolicyError:
@@ -325,17 +345,33 @@ class Engine:
         with contextlib.closing(self.store.connect()) as db:
             if not db.execute("SELECT 1 FROM sqlite_master WHERE name='team_assignments'").fetchone():
                 return
-            existing = db.execute('SELECT 1 FROM team_assignments WHERE job_id=? AND milestone_id=?',
+            existing = db.execute("SELECT 1 FROM team_assignments WHERE job_id=? AND milestone_id=? "
+                                  "AND template_id NOT IN ('verifier','oracle','sentinel')",
                                   (job['id'], mid)).fetchone()
         if existing:
             return
-        template = {'coding': 'implementation-engineer',
-                    'research': 'research-specialist'}.get(job['contract'].get('kind'),
-                                                           'documentation-specialist')
+        from .staff import executor_template, staffing_of, step_role
+        role = step_role(job, mid)
+        extra = None
+        if role:
+            # D-66: a staffed step runs under its role's archetype (roles only narrow; the lease
+            # and guardrails still apply), and the snapshot says which staffing decision it serves.
+            template = executor_template(job, mid)
+            from .team import SEED_ROLES
+            if template not in {seed[0] for seed in SEED_ROLES} and not self._archetypes_seeded:
+                from .assignment import ensure_archetypes
+                ensure_archetypes(self.store)
+                self._archetypes_seeded = True
+            extra = {'workforce': {'role': role, 'tier': (staffing_of(job) or {}).get('tier'),
+                                   'first_run': run['id']}}
+        else:
+            template = {'coding': 'implementation-engineer',
+                        'research': 'research-specialist'}.get(job['contract'].get('kind'),
+                                                               'documentation-specialist')
         team.create_assignment(job['id'], mid, template,
                                project_id=job['contract'].get('project_id', 'default'),
                                run_id=run['id'], provider=run.get('provider'),
-                               model=run.get('model'))
+                               model=run.get('model'), extra=extra)
 
     def control(self, job_id, action):
         runs = self.store.control(job_id, action)

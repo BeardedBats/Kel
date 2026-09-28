@@ -243,16 +243,21 @@ def _flag_floor(flags):
 
 def _mission_tiers(store):
     """mission_id -> decided tier, joined through staffing.decided / contract.issued (as doc 11 §3)."""
-    with contextlib.closing(store.connect()) as db:
+    def _rows(db, sql):
         try:
-            task_to_mission = {row['task_id']: row['mission_id']
-                               for row in db.execute('SELECT mission_id, task_id FROM task_contracts')}
-            events = [dict(row) for row in db.execute('SELECT * FROM team_events ORDER BY seq')]
-            findings = [dict(row) for row in db.execute('SELECT mission_id, severity, status FROM findings')]
+            return [dict(row) for row in db.execute(sql)]
         except Exception as exc:
             if 'no such table' in str(exc).lower():
-                return {}, {}
+                return []  # a store without that ledger simply has no history there
             raise
+
+    with contextlib.closing(store.connect()) as db:
+        task_to_mission = {row['task_id']: row['mission_id']
+                           for row in _rows(db, 'SELECT mission_id, task_id FROM task_contracts')}
+        events = _rows(db, 'SELECT * FROM team_events ORDER BY seq')
+        findings = _rows(db, 'SELECT mission_id, severity, status FROM findings')
+    if not events:
+        return {}, {}
     issued, assigned = {}, {}
     for row in events:
         if row['kind'] == 'staffing.decided' and row['assignment_id'] and row['detail']:
@@ -294,6 +299,31 @@ def _mission_tiers(store):
             slot = blockers[mission_id] = True
     settled_missions = {task_to_mission[task_id] for task_id in settled
                         if task_id in task_to_mission}
+    # D-66: everyday work records one job-scoped decision (no assignment; the job is the mission)
+    # and is settled when its job closed. Same tier-level comparison, same blocker source.
+    job_scoped = {}
+    for row in events:
+        if row['kind'] == 'staffing.decided' and not row['assignment_id'] and row.get('job_id') \
+                and row['detail']:
+            try:
+                detail = json.loads(row['detail'])
+            except (TypeError, ValueError):
+                detail = {}
+            if detail.get('scope') == 'job' and detail.get('tier'):
+                job_scoped.setdefault(row['job_id'], detail['tier'])
+    if job_scoped:
+        with contextlib.closing(store.connect()) as db:
+            ids = list(job_scoped)
+            for start in range(0, len(ids), 400):
+                part = ids[start:start + 400]
+                for row in db.execute("SELECT id, json_extract(data,'$.state') AS state FROM jobs "
+                                      'WHERE id IN (%s)' % ','.join('?' * len(part)), part):
+                    if row['state'] == 'CLOSED':
+                        settled_missions.add(row['id'])
+        for mission, tier in job_scoped.items():
+            tiers.setdefault(mission, tier)
+            if mission not in blockers:
+                blockers[mission] = False
     return ({mission: tier for mission, tier in tiers.items() if mission in settled_missions},
             {mission: blockers.get(mission, False) for mission in tiers})
 
