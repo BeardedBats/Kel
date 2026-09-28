@@ -879,3 +879,16 @@ start of launch — before storage, aioncore, the engine and the window — thro
 parts already swapped; every attempt clears the pending marker and records one plain-words outcome
 (JR-8), so a restore is never re-applied. One "Kel data before restore <date>" folder is kept per applied
 restore (newest two kept). Keys and sign-ins stay on this PC across a restore.
+
+## D-77 — Motion language approved; stage 2 (the library) built
+
+**Approved by Nick 2026-09-28** ("Approve, build stage 2"), with the prototype's answers to MOTION.md §12:
+1. **Overshoot** stays as prototyped (0.15–1.1%); the presets are not made fully critically damped.
+2. **Hand-off** flight waits ~400 ms after the line appears.
+3. **"Now" loader** stays static (no single turn when a step starts).
+4. **Kibble tabs** — not answered; still open.
+5. **Reduced motion** follows the OS setting only; no app-level switch in Settings → Appearance.
+
+Stage 2 is the renderer library `renderer/motion/` (MOTION.md §11). The 15 moments in §10 are wired to
+it one by one afterwards; until then the app looks as before, except the three hover transitions that
+used the retired `--kel-ease`/`--kel-dur-*` tokens, which now ride the `micro`/`snappy` springs.

@@ -1,6 +1,8 @@
 # Kel motion language
 
-**Status:** proposal for Nick's approval (stage 1). Nothing in the app uses it yet.
+**Status:** approved by Nick 2026-09-28 (D-77). Stage 2 — the library in `renderer/motion/` — is built
+(§11). The §10 moments are not wired to it yet; only the three hover transitions that used the old tokens
+ride the springs.
 **Prototype:** `C:\Users\Nick\Desktop\Kel\Tools\motion\kel-motion-prototype.html` (outside Git; rebuilt by
 `Tools\motion\src\build.py`). Every moment below is a live, clickable demo there. The page has a
 reduced-motion switch and a ×4 slow-motion switch. Key-frame contact sheets are in `Tools\motion\keyframes\`.
@@ -353,9 +355,9 @@ fade in (100 ms linear) and fade and height out (300 ms).
 
 ---
 
-## 11. Stage 2 (after approval): what gets built
+## 11. Stage 2: the library (built 2026-09-28)
 
-A small renderer library, `renderer/motion/`:
+A small renderer library, `renderer/motion/` (exported from `motion/index.ts`):
 - `spring.ts`: the closed-form solver, presets, retargeting with velocity, and `settle()`.
 - `easing.ts`: generates the `linear()` strings and durations. It also writes the `--kel-spring-*`
   custom properties once at startup.
@@ -369,12 +371,38 @@ A small renderer library, `renderer/motion/`:
 The prototype's `kel-motion.js` is the reference implementation of the solver, the surface, FLIP, the
 edge indicator and the reduced-motion path.
 
+**As built.**
+- `spring.ts` — `solveSpring` (under-, critically and over-damped), `Spring` (`set` with optional delay,
+  `jump`, `stop`, `shift`, `settle()`), `SPRINGS`. Each preset carries the table's settle time
+  (`settleMs`: 229/450/617/642 ms), which the CSS forms use; `springSettleTime` (position and
+  velocity/ω within 0.2%) agrees with the table to within 3 ms.
+- `frameLoop.ts` — the one requestAnimationFrame loop; tests swap in a manual clock.
+- `easing.ts` — `springToCss` (reproduces the §1 `snappy` string exactly), `installSpringProperties`
+  (called in `main.tsx` before render), `TWEEN` (the §2 timings), `staggerDelay` (200 ms cap).
+- `choreography.ts` — `enter`, `exit`, `rollLabel` on the Web Animations API.
+- `reducedMotion.ts` — `prefersReducedMotion`, `useReducedMotion` (OS setting only, per D-77).
+- `flip.ts` — `useFlip(listRef, key)`: children with `data-flip-id`; re-reads layout every commit but
+  animates only when `key` changes; an in-flight FLIP survives re-renders; resize snaps.
+- `EdgeIndicator.tsx` — clip-path on one element; leading edge on `micro`, trailing on `snappy` 33 ms
+  later; blinks under reduced motion. (The progress-fill lead segment of §6 is not in it yet.)
+- `morph.ts` — `createMorph` / `morph`: the §3 surface with `exitHost` (A's size) and `enterHost` (B's
+  size); B hidden until the 0.3 px hand-over; A stays hidden afterwards until `restoreSource()`.
+- `useSharedMorph.tsx` — renders React content into those hosts through portals and starts the morph
+  once they have committed.
+- Checks: `tests/unit/motion-spring.test.ts`, `tests/unit/motion-dom.dom.test.tsx`; a Chromium run
+  confirmed the `linear()` strings are valid CSS and a morph hands over and cleans up.
+- Known: the 0.3 px hand-over makes a long stretch on `gentle` (a 440 px height change) hand over at
+  ~890 ms, past the ~650 ms budget, although it looks at rest well before. B is not clickable until
+  then. Revisit when the card → panel moment is wired.
+
 ## 12. Questions for Nick
+
+*Answered 2026-09-28 (D-77): 1 as prototyped, 2 ~400 ms, 3 static, 5 OS setting only. 4 is still open.*
 
 1. **Overshoot:** 0.15–1.1% (as prototyped). Is that "tiny" enough, or should the presets be fully
    critically damped?
 2. **Hand-off timing:** the flight waits ~400 ms after the line appears. Is that long enough to read
    "Handed to the team", or should it wait longer?
 3. **"Now" loader:** it stays static per the no-loop rule. Is a single turn when a step starts wanted?
-4. **Kibble tabs** stand in for "checklist filters". Was a different control meant?
+4. **Kibble tabs** stand in for "checklist filters". Was a different control meant? *(Still open.)*
 5. **App-level reduced-motion switch** in Settings → Appearance, in addition to the OS setting?
