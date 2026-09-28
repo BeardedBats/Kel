@@ -307,7 +307,7 @@ describe('work card row (D-68)', () => {
     await within(dialog).findByTestId('kel-office-undo');
     expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Done and checked');
     expect(within(dialog).getByTestId('kel-office-result').textContent).toContain('Sorted 64 receipts');
-    expect(within(dialog).getByTestId('kel-office-result').textContent).toContain('Applied automatically to C:\\Users\\Nick\\Documents\\Receipts\\2026 (65 files)');
+    expect(within(dialog).getByTestId('kel-office-result').textContent).toContain('Applied automatically to 2026 (65 files)');
     expect(within(dialog).queryByTestId('kel-office-stop')).toBeNull();
     expect(dialog.textContent).toContain('Kel + 3, all done');
     expect(dialog.textContent).toContain('Took 22 min');
