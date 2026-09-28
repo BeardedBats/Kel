@@ -768,9 +768,13 @@ const handleAppReady = async (): Promise<void> => {
   // too so installing this handler preserves Electron's default-grant behaviour
   // and regresses no capability the app already relies on. Runs once, before any
   // window is created.
-  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
-    callback(true);
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    // Off-screen test runs must never put notifications on Nick's screen.
+    callback(!(backgroundWindow && permission === 'notifications'));
   });
+  if (backgroundWindow) {
+    session.defaultSession.setPermissionCheckHandler((_webContents, permission) => permission !== 'notifications');
+  }
 
   try {
     kelBoot('before initializeProcess');

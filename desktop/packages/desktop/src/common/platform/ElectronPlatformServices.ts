@@ -62,6 +62,7 @@ export class ElectronPlatformServices implements IPlatformServices {
 
   notification = {
     send: ({ title, body }: { title: string; body: string; icon?: string }): void => {
+      if (process.env.KEL_BACKGROUND_WINDOW === '1') return; // off-screen test runs never notify
       new Notification({ title, body }).show();
     },
   };
