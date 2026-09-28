@@ -407,7 +407,7 @@ describe('5e — scoping before big work', () => {
     };
     render(<KelScopingCard scopingId='scope-1' conversationId='app-morning' />);
     const card = await screen.findByTestId('kel-scoping-card');
-    expect(within(card).getByRole('heading').textContent).toBe('Before I start · three quick questions');
+    expect(within(card).getByRole('heading').textContent).toBe('Before I start · 3 quick questions');
     expect(within(card).getByText('Scoping')).toBeTruthy();
     expect(within(card).getAllByTestId('kel-scoping-question').map((q) => q.querySelector('p')?.textContent)).toEqual([
       'Where should it live?',
@@ -484,5 +484,18 @@ describe('one live view — Needs you defers to the card', () => {
     renderChat();
     expect(await screen.findByTestId('kel-office-detail')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Receipts tidy-up' })).toBeTruthy();
+  });
+});
+
+describe('the chat keeps the engine’s message details', () => {
+  it('normalising a stored text message keeps kel_meta (the done and scoping cards read it)', async () => {
+    const { normalizeTextMessageContent } = await import('@/common/chat/chatLib');
+    const meta = { kind: 'result', verdict: 'VERIFIED', job: 'job-mic' };
+    expect(normalizeTextMessageContent({ content: 'Here it is', kel_meta: meta }).kel_meta).toEqual(meta);
+    expect(normalizeTextMessageContent(JSON.stringify({ content: 'x', kel_meta: { kind: 'scoping', scoping: 's-1' } })).kel_meta).toEqual({
+      kind: 'scoping',
+      scoping: 's-1',
+    });
+    expect(normalizeTextMessageContent({ content: 'plain' }).kel_meta).toBeUndefined();
   });
 });
