@@ -44,9 +44,9 @@ export const rendererKelRequestRefusal = (route: unknown, body?: unknown): strin
   }
   if (route === '/api/office' && body !== undefined) {
     // D-66/D-68: the live work view is read-only apart from removing a finished card (a bodyless
-    // call is the read itself).
+    // call is the read itself) and, Routing 2 §5.4, raising a budget-stopped job's budget.
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;
-    if (action !== 'dismiss') return 'The work view can only remove a finished card';
+    if (action !== 'dismiss' && action !== 'raise_budget') return 'The work view can only remove a finished card or raise a budget';
   }
   if (route === '/api/schedules') {
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;

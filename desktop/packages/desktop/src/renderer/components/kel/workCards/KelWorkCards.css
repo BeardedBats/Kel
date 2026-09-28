@@ -310,6 +310,8 @@
 .kel-wd--stopped .kel-wd-state__label { color: #8fa9d6; }
 .kel-wd-state__meta { overflow: hidden; color: #8fa9d6; font: 500 12px/16px var(--kel-wc-font); text-overflow: ellipsis; white-space: pre; }
 /* D-72: the work's cost (or "Included in your plan"), tokens and model time — the state meta's type. */
+/* Routing 2 §5.4: the budget-stopped panel's action row. */
+.kel-wd-budget__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
 .kel-wd-usage { color: #8fa9d6; font: 500 12px/16px var(--kel-wc-font); white-space: pre-wrap; }
 
 .kel-wd-actions, .kel-wd-confirm { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

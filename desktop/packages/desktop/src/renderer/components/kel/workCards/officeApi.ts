@@ -141,6 +141,32 @@ export interface OfficeItemDetail extends Omit<OfficeItem, 'team'> {
   question?: OfficeQuestion | null;
   /** D-72: the work's totals (tokens, time, approximate cost) for the detail header. */
   usage?: KelUsage | null;
+  /** Routing 2 §5.4: the work's budget, whether it stopped on it, and whether Nick can raise it. */
+  budget?: OfficeBudget | null;
+}
+
+export interface OfficeBudgetCeilings {
+  tokens?: number | null;
+  minutes?: number | null;
+  cost?: number | null;
+}
+
+export interface OfficeBudget {
+  class: string;
+  ceilings?: OfficeBudgetCeilings | null;
+  used?: { tokens?: number | null; ms?: number | null; cost?: number | null } | null;
+  held?: { tokens?: number | null; ms?: number | null; cost?: number | null } | null;
+  stopped?: boolean;
+  can_raise?: boolean;
+  next?: string | null;
+  next_ceilings?: OfficeBudgetCeilings | null;
+}
+
+export interface OfficeRaised {
+  job_id: string;
+  from: string;
+  to: string;
+  ceilings?: OfficeBudgetCeilings | null;
 }
 
 /** What kind of wait a needs-you card is (D-70), which decides where its answer goes. */
@@ -180,6 +206,10 @@ export const officeItem = (job: string): Promise<OfficeItemDetail> =>
 
 /** Remove a finished card; finished work stays at the top until Nick does this (D-68). */
 export const officeDismiss = (id: string): Promise<unknown> => kelRequest<unknown>('/api/office', { action: 'dismiss', id });
+
+/** Move a budget-stopped job one budget size up so it continues (Nick's own act; Routing 2 §5.4). */
+export const officeRaiseBudget = (id: string): Promise<OfficeRaised> =>
+  kelRequest<OfficeRaised>('/api/office', { action: 'raise_budget', id });
 
 /* ─── D-70: answering a needs-you card, and scoping ─────────────────────────────────────── */
 

@@ -180,6 +180,10 @@ class ApiTests(unittest.TestCase):
                     contract['staffing'] = staff.plan_job(service.store, contract)
                     job = service.store.create(contract)
                     before = budget.job_class(service.store, service.store.get(job))
+                    shown = service.office_item(job)['budget']
+                    # The card names the next size and its ceilings before Nick raises it.
+                    self.assertEqual(shown['next'], budget.ORDER[budget.ORDER.index(before) + 1])
+                    self.assertEqual(shown['next_ceilings'], budget.CEILINGS[shown['next']])
                     out = service.action('/api/office', {'action': 'raise_budget', 'id': job})
                     self.assertEqual(out['from'], before)
                     detail = service.office_item(job)
