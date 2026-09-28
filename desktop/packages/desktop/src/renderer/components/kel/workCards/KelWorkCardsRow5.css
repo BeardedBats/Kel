@@ -2,8 +2,47 @@
    line, 5c/5d the one-line in-thread view and the done card, 5e/5f the scoping card and the
    "Scoping" top card. Figma values; the app's SF Pro body face stands in for Instrument Sans. The
    in-thread pieces sit outside the row, so each carries the font itself. */
+
+/* VIS-2 / D-73.2: the colours every work-card piece uses (the row, the "+N more" menu, the detail, the
+   in-thread line, the done card, scoping, chips, the answer box, usage and the budget stop). Dark values
+   are the Figma values; Light mode swaps them below (no Figma frame yet; docs/v2/FIGMA_GAPS.md). Text
+   pairs meet 4.5:1 and state colours 3:1 on their surfaces in both modes (JR-25). */
+:root {
+  --kel-wc-text: #edf2fa;
+  --kel-wc-text-2: #c4d4e8;
+  --kel-wc-muted: #8fa9d6;
+  --kel-wc-faint: #889dc2; /* Figma #6f86ad, raised to 4.5:1 on the card fill (JR-25) */
+  --kel-wc-link: #9fc3ff;
+  --kel-wc-soft: #cfe7ff;
+  --kel-wc-scoping: var(--kel-figma-color-status-scoping, #cfe7ff);
+  --kel-wc-needs-text: #ffc481;
+  --kel-wc-done-text: #8fe3b4;
+  --kel-wc-blue: #7fa0ff;
+  --kel-wc-cyan: #76d3fb;
+  --kel-wc-amber: #fcac51;
+  --kel-wc-green: #7ee0a8;
+  --kel-wc-red: #f27d7d;
+  --kel-wc-grey: #6f86ad;
+}
+html[data-theme='light'] {
+  --kel-wc-text: #14233a;
+  --kel-wc-text-2: #2e3f58;
+  --kel-wc-muted: #4a5a73;
+  --kel-wc-faint: #56647a;
+  --kel-wc-link: #1f5bb8;
+  --kel-wc-soft: #1d3a6e;
+  --kel-wc-scoping: #2a5b8c;
+  --kel-wc-needs-text: #8f4c00;
+  --kel-wc-done-text: #16693b;
+  --kel-wc-blue: #2f6be0;
+  --kel-wc-cyan: #0a6a8c;
+  --kel-wc-amber: #b0650a;
+  --kel-wc-green: #1d8a4f;
+  --kel-wc-red: #b42318;
+  --kel-wc-grey: #56647a;
+}
 .kel-wc--scoping.kel-wc--row { border-color: rgba(207, 231, 255, 0.3); }
-.kel-wc--scoping .kel-wc-state-label { color: var(--kel-figma-color-status-scoping, #cfe7ff); }
+.kel-wc--scoping .kel-wc-state-label { color: var(--kel-wc-scoping); }
 .kel-wc-progress.kel-wc-progress--none { background: transparent; }
 
 .kel-na, .kel-na-answered, .kel-wl, .kel-dc, .kel-sc, .kel-sc-collapsed, .kel-chips, .kel-answer {
@@ -24,18 +63,18 @@
   border: 1px solid rgba(127, 160, 255, 0.35);
   border-radius: 8px;
   background: rgba(47, 107, 224, 0.12);
-  color: #cfe7ff;
+  color: var(--kel-wc-soft);
   font: 500 13px/17px var(--kel-wc-font);
   white-space: nowrap;
   cursor: pointer;
 }
 .kel-chip-pick > img { display: block; width: 12px; height: 12px; }
 .kel-chip-pick:hover:not(:disabled):not(.is-picked) { background: rgba(47, 107, 224, 0.22); }
-.kel-chip-pick:focus-visible { outline: 2px solid #9fc3ff; outline-offset: 2px; }
+.kel-chip-pick:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 2px; }
 .kel-chip-pick:disabled { opacity: 0.55; cursor: default; }
 .kel-chip-pick.is-picked { border-color: rgba(140, 150, 167, 0.5); background: linear-gradient(#6493f8, #2356b3); color: #fff1f0; }
-.kel-chip-pick--other { border-style: dashed; border-color: rgba(127, 160, 255, 0.4); background: transparent; color: #8fa9d6; }
-.kel-chip-pick--other.is-picked { border-color: rgba(127, 160, 255, 0.8); background: rgba(47, 107, 224, 0.12); color: #cfe7ff; }
+.kel-chip-pick--other { border-style: dashed; border-color: rgba(127, 160, 255, 0.4); background: transparent; color: var(--kel-wc-muted); }
+.kel-chip-pick--other.is-picked { border-color: rgba(127, 160, 255, 0.8); background: rgba(47, 107, 224, 0.12); color: var(--kel-wc-soft); }
 
 /* Answer input (reusable). */
 .kel-answer { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
@@ -48,11 +87,11 @@
   border: 1px solid rgba(127, 160, 255, 0.28);
   border-radius: 8px;
   background: linear-gradient(rgba(47, 107, 224, 0.1), rgba(47, 107, 224, 0.1)), rgba(6, 18, 46, 0.55);
-  color: #edf2fa;
+  color: var(--kel-wc-text);
   font: 400 14px/20px var(--kel-wc-font);
   outline: none;
 }
-.kel-answer__box::placeholder { color: #8fa9d6; }
+.kel-answer__box::placeholder { color: var(--kel-wc-muted); }
 .kel-answer__box:focus { border-color: rgba(127, 160, 255, 0.8); }
 .kel-answer .kel-wd-button--primary {
   box-sizing: border-box;
@@ -83,11 +122,11 @@
 .kel-na p { margin: 0; }
 .kel-na__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .kel-na__mark { display: block; flex: none; width: 16px; height: 16.73px; object-fit: contain; }
-.kel-na__head > strong { flex: none; color: #ffc481; font: 700 13px/17px var(--kel-wc-font); }
-.kel-na__meta { min-width: 0; overflow: hidden; color: #8fa9d6; font: 500 12px/16px var(--kel-wc-font); text-overflow: ellipsis; white-space: pre; }
-.kel-na__question { color: #edf2fa; font: 500 16px/22px var(--kel-wc-font); overflow-wrap: anywhere; }
-.kel-na__detail { color: #c4d4e8; font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
-.kel-na__goes { display: flex; align-items: center; gap: 6px; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); }
+.kel-na__head > strong { flex: none; color: var(--kel-wc-needs-text); font: 700 13px/17px var(--kel-wc-font); }
+.kel-na__meta { min-width: 0; overflow: hidden; color: var(--kel-wc-muted); font: 500 12px/16px var(--kel-wc-font); text-overflow: ellipsis; white-space: pre; }
+.kel-na__question { color: var(--kel-wc-text); font: 500 16px/22px var(--kel-wc-font); overflow-wrap: anywhere; }
+.kel-na__detail { color: var(--kel-wc-text-2); font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
+.kel-na__goes { display: flex; align-items: center; gap: 6px; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); }
 .kel-na__goes > img { display: block; flex: none; width: 12px; height: 12.55px; object-fit: contain; }
 
 /* 5b: the answer on its way. */
@@ -102,11 +141,11 @@
   background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
 }
 .kel-na-answered__check { display: block; flex: none; width: 14px; height: 14px; }
-.kel-na-answered__words { min-width: 0; overflow: hidden; color: #8fe3b4; font: 600 13px/17px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
-.kel-na-dot { flex: none; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); }
+.kel-na-answered__words { min-width: 0; overflow: hidden; color: var(--kel-wc-done-text); font: 600 13px/17px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
+.kel-na-dot { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); }
 .kel-na-answered__mark { display: block; flex: none; width: 13px; height: 13.59px; object-fit: contain; }
-.kel-na-answered__follow { flex: none; color: #c4d4e8; font: 500 13px/17px var(--kel-wc-font); white-space: nowrap; }
-.kel-na-answered__at { flex: none; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-na-answered__follow { flex: none; color: var(--kel-wc-text-2); font: 500 13px/17px var(--kel-wc-font); white-space: nowrap; }
+.kel-na-answered__at { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
 
 /* 5c/5d: the one line in the thread while the top card carries the work. */
 .kel-wl {
@@ -120,26 +159,26 @@
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 8px;
   background: rgba(47, 107, 224, 0.08);
-  color: #c4d4e8;
+  color: var(--kel-wc-text-2);
   font: 500 13px/17px var(--kel-wc-font);
   text-align: left;
   cursor: pointer;
 }
 .kel-wl:hover { background: rgba(47, 107, 224, 0.16); }
-.kel-wl:focus-visible { outline: 2px solid #9fc3ff; outline-offset: 2px; }
+.kel-wl:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 2px; }
 .kel-wl__lead { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 16px; height: 16px; }
 .kel-wl__lead--check { width: 13px; height: 13px; }
 .kel-wl__lead--check > img { display: block; width: 13px; height: 13px; }
 .kel-wl__handed { flex: none; white-space: nowrap; }
-.kel-wl__dot { flex: none; color: #6f86ad; }
-.kel-wl__title { min-width: 0; overflow: hidden; color: #edf2fa; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.kel-wl__state { flex: none; color: #9fc3ff; font: 600 12px/16px var(--kel-wc-font); white-space: nowrap; }
-.kel-wl--in_review .kel-wl__state { color: #76d3fb; }
-.kel-wl--needs_you .kel-wl__state { color: #ffc481; }
-.kel-wl--done .kel-wl__state { color: #8fe3b4; }
-.kel-wl--failed .kel-wl__state { color: #f27d7d; }
-.kel-wl--stopped .kel-wl__state { color: #8fa9d6; }
-.kel-wl__pointer { flex: none; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-wl__dot { flex: none; color: var(--kel-wc-faint); }
+.kel-wl__title { min-width: 0; overflow: hidden; color: var(--kel-wc-text); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.kel-wl__state { flex: none; color: var(--kel-wc-link); font: 600 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-wl--in_review .kel-wl__state { color: var(--kel-wc-cyan); }
+.kel-wl--needs_you .kel-wl__state { color: var(--kel-wc-needs-text); }
+.kel-wl--done .kel-wl__state { color: var(--kel-wc-done-text); }
+.kel-wl--failed .kel-wl__state { color: var(--kel-wc-red); }
+.kel-wl--stopped .kel-wl__state { color: var(--kel-wc-muted); }
+.kel-wl__pointer { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
 .kel-wl__chev { display: block; flex: none; width: 14px; height: 14px; }
 .kel-wl__chev--up { transform: rotate(180deg); }
 
@@ -161,14 +200,14 @@
 .kel-dc__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .kel-dc__lead { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 14px; height: 14px; }
 .kel-dc__lead > img { display: block; width: 14px; height: 14px; }
-.kel-dc__title { min-width: 0; overflow: hidden; color: #edf2fa; font: 600 14px/18px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
-.kel-dc__state { flex: none; color: #8fe3b4; font: 600 12px/16px var(--kel-wc-font); white-space: nowrap; }
-.kel-dc--failed .kel-dc__state { color: #f27d7d; }
-.kel-dc--stopped .kel-dc__state { color: #8fa9d6; }
-.kel-dc--needs_you .kel-dc__state { color: #ffc481; }
-.kel-dc__checks { flex: none; color: #8fa9d6; font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
-.kel-dc__result { color: #c4d4e8; font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
-.kel-dc__applied { display: flex; align-items: center; gap: 6px; min-width: 0; color: #8fa9d6; font: 500 12px/16px var(--kel-wc-font); }
+.kel-dc__title { min-width: 0; overflow: hidden; color: var(--kel-wc-text); font: 600 14px/18px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
+.kel-dc__state { flex: none; color: var(--kel-wc-done-text); font: 600 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-dc--failed .kel-dc__state { color: var(--kel-wc-red); }
+.kel-dc--stopped .kel-dc__state { color: var(--kel-wc-muted); }
+.kel-dc--needs_you .kel-dc__state { color: var(--kel-wc-needs-text); }
+.kel-dc__checks { flex: none; color: var(--kel-wc-muted); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-dc__result { color: var(--kel-wc-text-2); font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
+.kel-dc__applied { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--kel-wc-muted); font: 500 12px/16px var(--kel-wc-font); }
 .kel-dc__applied > img { display: block; flex: none; width: 13px; height: 13px; }
 .kel-dc__applied > span { min-width: 0; overflow-wrap: anywhere; }
 .kel-dc__actions { display: flex; align-items: center; gap: 4px; min-width: 0; }
@@ -183,14 +222,14 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #9fc3ff;
+  color: var(--kel-wc-link);
   font: 600 14px/20px var(--kel-wc-font);
   white-space: nowrap;
   cursor: pointer;
 }
 .kel-dc .kel-wd-button > img { display: block; width: 15px; height: 15px; }
 .kel-dc .kel-wd-button:hover:not(:disabled), .kel-sc .kel-wd-button:hover:not(:disabled) { background: rgba(159, 195, 255, 0.08); }
-.kel-dc .kel-wd-button:focus-visible, .kel-sc .kel-wd-button:focus-visible { outline: 2px solid #9fc3ff; outline-offset: 2px; }
+.kel-dc .kel-wd-button:focus-visible, .kel-sc .kel-wd-button:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 2px; }
 .kel-dc .kel-wd-button:disabled, .kel-sc .kel-wd-button:disabled { opacity: 0.55; cursor: default; }
 .kel-sc .kel-wd-button--primary {
   padding: 0 14px;
@@ -199,7 +238,7 @@
   color: #fff1f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 6px rgba(0, 0, 0, 0.25);
 }
-.kel-dc__notice, .kel-sc__notice { margin: 0; color: #8fa9d6; font: 400 12px/16px var(--kel-wc-font); }
+.kel-dc__notice, .kel-sc__notice { margin: 0; color: var(--kel-wc-muted); font: 400 12px/16px var(--kel-wc-font); }
 
 /* 5e: the scoping card; 5f: collapsed once started. */
 .kel-sc {
@@ -214,24 +253,29 @@
   border: 1px solid rgba(191, 216, 255, 0.14);
   border-radius: 12px;
   background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
-  color: #edf2fa;
+  color: var(--kel-wc-text);
 }
 .kel-sc p, .kel-sc h3 { margin: 0; }
+/* LIVE-7: the Scoping top card brought Nick here; the questions light up for a moment. */
+.kel-sc { transition: box-shadow 200ms ease, border-color 200ms ease; }
+.kel-sc.is-highlighted { border-color: var(--kel-wc-blue); box-shadow: 0 0 0 3px rgba(127, 160, 255, 0.35); }
+/* D-73 item 10: Vetting, reachable from the scoping card. */
+.kel-sc__vetting { flex: none; }
 .kel-sc__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .kel-sc__mark { display: block; flex: none; width: 16px; height: 16.73px; object-fit: contain; }
-.kel-sc__head > h3 { flex: none; color: #ffc481; font: 700 15px/20px var(--kel-wc-font); white-space: nowrap; }
-.kel-sc__state { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--kel-figma-color-status-scoping, #cfe7ff); font: 600 12px/16px var(--kel-wc-font); }
+.kel-sc__head > h3 { flex: none; color: var(--kel-wc-needs-text); font: 700 15px/20px var(--kel-wc-font); white-space: nowrap; }
+.kel-sc__state { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--kel-wc-scoping); font: 600 12px/16px var(--kel-wc-font); }
 .kel-sc__state > img { display: block; width: 13px; height: 13px; }
 .kel-sc__question { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.kel-sc__prompt { color: #edf2fa; font: 600 14px/18px var(--kel-wc-font); overflow-wrap: anywhere; }
+.kel-sc__prompt { color: var(--kel-wc-text); font: 600 14px/18px var(--kel-wc-font); overflow-wrap: anywhere; }
 /* Answers typed in the chat, understood by Kel, are pre-picked below this line (no Figma frame). */
-.kel-sc__typed { margin: 0; color: #9fc3ff; font: 500 13px/18px var(--kel-wc-font); }
+.kel-sc__typed { margin: 0; color: var(--kel-wc-link); font: 500 13px/18px var(--kel-wc-font); }
 .kel-sc__divider { height: 1px; background: rgba(191, 216, 255, 0.12); }
 .kel-sc__summary { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .kel-sc__summary > img { display: block; flex: none; width: 14px; height: 14px; }
-.kel-sc__summary > p { flex: 1 1 0; min-width: 0; color: #c4d4e8; font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
+.kel-sc__summary > p { flex: 1 1 0; min-width: 0; color: var(--kel-wc-text-2); font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }
 .kel-sc__actions { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
-.kel-sc__nothing { flex: none; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-sc__nothing { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
 .kel-sc-collapsed {
   display: flex;
   align-items: center;
@@ -246,10 +290,52 @@
   background: linear-gradient(rgba(47, 107, 224, 0.12), rgba(47, 107, 224, 0.12)), rgba(15, 45, 100, 0.35);
 }
 .kel-sc-collapsed > img { display: block; flex: none; width: 13px; height: 13px; }
-.kel-sc-collapsed__word { flex: none; color: #8fe3b4; font: 600 13px/17px var(--kel-wc-font); }
-.kel-sc-collapsed__answers { min-width: 0; overflow: hidden; color: #c4d4e8; font: 500 13px/17px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
-.kel-sc-collapsed__at { flex: none; color: #6f86ad; font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
+.kel-sc-collapsed__word { flex: none; color: var(--kel-wc-done-text); font: 600 13px/17px var(--kel-wc-font); }
+.kel-sc-collapsed__answers { min-width: 0; overflow: hidden; color: var(--kel-wc-text-2); font: 500 13px/17px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
+.kel-sc-collapsed__at { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
-  .kel-chip-pick, .kel-wl { transition: none; }
+  .kel-chip-pick, .kel-wl, .kel-sc { transition: none; }
 }
+
+/* ─── VIS-2 / D-73.2: Light mode surfaces (text colours swap through the tokens above) ─────────── */
+html[data-theme='light'] .kel-wc-backdrop { background: rgba(20, 32, 52, 0.28); }
+html[data-theme='light'] .kel-wc--row { border-color: #c9d4e5; background: #ffffff; box-shadow: 0 1px 2px rgba(20, 35, 60, 0.06); }
+html[data-theme='light'] .kel-wc--row:hover:not(.is-selected) { background: #f1f5fb; }
+html[data-theme='light'] .kel-wc--row.is-selected { border-color: #2f6be0; background: #e9f0fc; }
+html[data-theme='light'] .kel-wc--scoping.kel-wc--row { border-color: #93abd0; }
+html[data-theme='light'] .kel-wc-progress { background: #dde5f0; }
+html[data-theme='light'] .kel-wc-progress.kel-wc-progress--none { background: transparent; }
+html[data-theme='light'] :is(.kel-wc-avatar, .kel-wd-avatar) { background: #e8effb; }
+html[data-theme='light'] .kel-wc__remove:hover:not(:disabled) { background: rgba(20, 45, 80, 0.08); }
+html[data-theme='light'] .kel-wc-overflow { border-color: #c9d4e5; background: #f4f7fc; }
+html[data-theme='light'] .kel-wc-overflow:hover:not(.is-open) { background: #eaf0f9; }
+html[data-theme='light'] .kel-wc-overflow.is-open { border-color: #2f6be0; background: #e3ecfb; }
+html[data-theme='light'] :is(.kel-wc-menu, .kel-wd) {
+  border-color: #c4cee0;
+  background: #ffffff;
+  box-shadow: 0 20px 48px -16px rgba(20, 35, 60, 0.28), 0 1px 3px rgba(20, 35, 60, 0.08);
+}
+html[data-theme='light'] :is(.kel-wc--menu:hover, .kel-wc--menu:focus-within) { background: #eef3fb; }
+html[data-theme='light'] :is(.kel-wd-button, .kel-dc .kel-wd-button, .kel-sc .kel-wd-button):hover:not(:disabled):not(.kel-wd-button--primary) { background: rgba(31, 91, 184, 0.08); }
+html[data-theme='light'] .kel-wd-button--danger { border-color: rgba(180, 35, 24, 0.45); }
+html[data-theme='light'] :is(.kel-wd-result, .kel-wd-finding, .kel-na-answered, .kel-wl, .kel-dc, .kel-sc, .kel-sc-collapsed) {
+  border-color: #d3dcea;
+  background: #f4f7fc;
+}
+html[data-theme='light'] .kel-na { border-color: rgba(176, 101, 10, 0.45); background: #fbf7f1; }
+html[data-theme='light'] .kel-wl:hover { background: #eaf0f9; }
+html[data-theme='light'] .kel-sc__divider { background: #d3dcea; }
+html[data-theme='light'] .kel-chip-pick { border-color: #b3c2da; background: #eef3fb; }
+html[data-theme='light'] .kel-chip-pick:hover:not(:disabled):not(.is-picked) { background: #e2eaf7; }
+html[data-theme='light'] .kel-chip-pick--other { border-color: #8fa3c2; background: transparent; }
+html[data-theme='light'] .kel-chip-pick--other.is-picked { border-color: #2f6be0; background: #eef3fb; }
+html[data-theme='light'] .kel-answer__box { border-color: #b3c2da; background: #ffffff; }
+html[data-theme='light'] .kel-answer__box:focus { border-color: #2f6be0; }
+/* The Figma icons are drawn for the dark surfaces; on light ones they are darkened to keep 3:1. The
+   Kel mark and icons on a filled (primary / picked) control keep their own colours. */
+html[data-theme='light'] :is(.kel-wc-host, .kel-na, .kel-na-answered, .kel-wl, .kel-dc, .kel-sc, .kel-sc-collapsed, .kel-chips)
+  img:not(.kel-sc__mark):not(.kel-na__mark):not(.kel-na-answered__mark):not(.kel-wd-avatar > img) {
+  filter: brightness(0.5) saturate(1.5);
+}
+html[data-theme='light'] :is(.kel-wd-button--primary, .kel-chip-pick.is-picked) img { filter: none; }

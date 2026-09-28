@@ -10,12 +10,12 @@ import { StateIcon, iconClose } from './workCardIcons';
 import {
   clockTime,
   initials,
+  cardStateLabel,
   isFinished,
   progressFraction,
   questionCount,
   ringTone,
   roleName,
-  stateLabel,
   stepCount,
 } from './workCardModel';
 import './KelWorkCardsRow5.css';
@@ -42,7 +42,7 @@ export const KelAgentStack: React.FC<{ team: OfficeTeamChip[]; itemState: string
 
 /** The words a screen reader hears for a card: title, state, steps, team. */
 export const cardAccessibleName = (item: OfficeItem, team: OfficeTeamChip[]): string => {
-  const parts = [item.title, stateLabel(item.state)];
+  const parts = [item.title, cardStateLabel(item)];
   const count = stepCount(item);
   if (count) parts.push(`${count} steps`);
   const questions = item.state === 'scoping' ? questionCount(item) : null;
@@ -69,7 +69,7 @@ type Props = {
 export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', selected = false, removing = false, onOpen, onRemove }) => {
   const finished = isFinished(item.state);
   const scoping = item.state === 'scoping';
-  const label = stateLabel(item.state);
+  const label = cardStateLabel(item);
   // D-70 (5e): a scoping card counts Kel's questions, has no progress yet and no team yet.
   const count = scoping ? questionCount(item) : stepCount(item);
   const at = finished ? clockTime(item.finished_at ?? item.updated_at) : null;

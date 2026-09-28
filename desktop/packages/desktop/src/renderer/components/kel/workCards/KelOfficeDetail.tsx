@@ -7,7 +7,7 @@
  */
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { kelControl, kelHandoff, kelUndoChange, type KelChangeApplication } from '../kelApi';
+import { kelControl, kelHandoff, kelRequest, kelUndoChange, type KelChangeApplication } from '../kelApi';
 import { applicationLine, isApplied } from '../changeApplication';
 import type { OfficeFinding, OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
 import { officeItem } from './officeApi';
@@ -26,23 +26,31 @@ import {
   iconStop,
   iconUndo,
   iconWarning,
+  iconWarningAmber,
   stepPending,
 } from './workCardIcons';
 import {
+  UNCERTAIN_LABEL,
   clockTime,
   detailStateLabel,
   duration,
   failedChecks,
+  independenceWords,
   isCommander,
   isFinished,
+  isUncertain,
   modelLine,
-  oracleLine,
+  oracleLines,
   passed,
+  plainResultText,
   progressFraction,
   reasoningLabel,
   ringTone,
   roleName,
   initials,
+  teamMeta as teamMetaWords,
+  usedStandardPlan,
+  verificationLines,
 } from './workCardModel';
 
 type Props = {
@@ -64,13 +72,33 @@ const STEP_DONE = new Set(['done', 'accepted', 'verified', 'passed', 'complete',
 const STEP_NOW = new Set(['running', 'working', 'in_progress', 'active', 'claimed', 'review', 'in_review']);
 const STEP_FAILED = new Set(['failed', 'blocked', 'stopped']);
 
-type StepPhase = 'done' | 'now' | 'failed' | 'pending';
+type StepPhase = 'done' | 'now' | 'paused' | 'failed' | 'pending';
 const stepPhase = (step: OfficeStep): StepPhase => {
   const state = (step.state ?? '').toLowerCase();
+  if (state === 'paused') return 'paused';
   if (STEP_DONE.has(state)) return 'done';
   if (STEP_NOW.has(state)) return 'now';
   if (STEP_FAILED.has(state)) return 'failed';
   return 'pending';
+};
+
+/** "Calc demo" -> "calc-demo-change-report.md". */
+export const reportFileName = (title: string | null | undefined): string => {
+  const slug = String(title ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+  return `${slug || 'kel'}-change-report.md`;
+};
+
+const saveTextFile = (name: string, text: string) => {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 const openFindings = (findings: OfficeFinding[] | null | undefined) =>
@@ -101,7 +129,7 @@ const Member: React.FC<{ member: OfficeStaff; itemState: string }> = ({ member, 
           </span>
         </span>
         {member.doing ? <span className='kel-wd-doing'>{member.doing}</span> : null}
-        {member.note ? <span className='kel-wd-note-line'>{member.note}</span> : null}
+        {member.note && !usedStandardPlan(member) ? <span className='kel-wd-note-line'>{member.note}</span> : null}
       </span>
     </li>
   );
@@ -236,20 +264,37 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
     });
 
   const folder = application?.root ?? null;
+
+  // The checked change's report (the retired Work panel's "Download change report"), per finished step.
+  const reportSteps = coding && finished ? (view.steps ?? []).filter((step) => stepPhase(step) === 'done') : [];
+  const downloadReport = () =>
+    guarded(async () => {
+      const parts: string[] = [];
+      for (const step of reportSteps) {
+        const text = await kelRequest<string>(`/api/artifact?job=${encodeURIComponent(job)}&milestone=${encodeURIComponent(step.id)}`);
+        if (typeof text === 'string' && text.trim()) parts.push(text);
+      }
+      if (!parts.length) throw new Error('Kel has no change report for this work yet.');
+      saveTextFile(reportFileName(view.title), parts.join('\n\n---\n\n'));
+    });
   const showFolder = () =>
     guarded(async () => {
       if (folder && openFolder) await openFolder(folder);
     });
 
   const staff = view.staff ?? [];
-  const helpers = staff.filter((member) => !isCommander(member));
-  const hasKel = staff.some(isCommander);
-  const allDone = staff.length > 0 && staff.every((member) => member.state === 'done');
-  const teamMeta = staff.length
-    ? `${hasKel ? `Kel + ${helpers.length}` : `${helpers.length}`}${finished ? (allDone ? ', all done' : '') : ' on it'}`
-    : null;
+  const teamMeta = teamMetaWords(staff, view.state);
 
-  const steps = view.steps ?? [];
+  // VIS-6: paused work marks the step it paused at (amber warning, "Paused"). The engine's own step
+  // state wins; until it sends one, the step in progress (or the next one) of paused work is it.
+  const pausedWork = !finished && (view.paused === true || view.question?.kind === 'paused' || /\bpaused\b/i.test(view.status_line ?? ''));
+  const rawSteps = view.steps ?? [];
+  const engineMarkedPause = rawSteps.some((step) => stepPhase(step) === 'paused');
+  const nowIndex = rawSteps.findIndex((step) => stepPhase(step) === 'now');
+  const pausedIndex =
+    engineMarkedPause || !pausedWork ? -1 : nowIndex >= 0 ? nowIndex : rawSteps.findIndex((step) => stepPhase(step) === 'pending');
+  const steps = rawSteps.map((step, index) => (index === pausedIndex ? { ...step, state: 'paused' } : step));
+  const pausedAt = steps.findIndex((step) => stepPhase(step) === 'paused');
   const firstPending = steps.findIndex((step) => stepPhase(step) === 'pending');
   const stepMeta =
     view.progress && view.progress.total > 0 ? `${Math.min(view.progress.done, view.progress.total)} of ${view.progress.total}` : null;
@@ -267,6 +312,7 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
       : oracleStaff
         ? modelLine(oracleStaff)
         : null;
+  const uncertain = finished && isUncertain(view);
   const reviewTone = findings.length ? 'review' : reviewPassed ? 'done' : reviewFailed ? 'failed' : 'review';
   const reviewWord = findings.length
     ? `${findings.length} to fix`
@@ -274,9 +320,11 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
       ? 'Passed'
       : reviewFailed
         ? 'Didn’t pass'
-        : review?.verdict
-          ? 'Reviewing'
-          : 'Not yet';
+        : uncertain
+          ? UNCERTAIN_LABEL
+          : review?.verdict
+            ? 'Reviewing'
+            : 'Not yet';
   const reviewText = findings.length
     ? findings.map((finding) => finding.summary).filter(Boolean).join(' ')
     : review?.checked_by
@@ -284,34 +332,56 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
       : null;
 
   const verification = view.verification ?? null;
-  const verificationTone = reviewPassed ? 'done' : reviewFailed ? 'failed' : 'review';
+  const verificationTone = reviewPassed
+    ? 'done'
+    : reviewFailed
+      ? 'failed'
+      : verification?.result || view.state === 'in_review'
+        ? 'review'
+        : 'quiet';
+  // VIS-3: nothing checked yet is "Not run yet" (Figma 5a); "In progress" only while it is checked.
   const verificationWord = verification?.result
     ? reviewPassed
       ? 'Passed'
       : reviewFailed
         ? 'Didn’t pass'
-        : verification.result.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
+        : isUncertain({ verification })
+          ? UNCERTAIN_LABEL
+          : verification.result.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
     : running
-      ? 'In progress'
-      : 'Not reported';
-  const verificationText = [verificationWord, ...(verification?.summary ?? [])].filter(Boolean).join(' · ');
+      ? view.state === 'in_review'
+        ? 'In progress'
+        : 'Not run yet'
+      : 'Not run';
+  // VIS-4: the summary as a list — no second verdict, no bullets, one "Built by · Checked by" line.
+  const verificationList = verificationLines(verification?.summary, staff, review?.checked_by);
+  const oracle = oracleLines(view.oracle);
+  const oracleIndependence = independenceWords(view.oracle?.independence, 'second_opinion');
+  const reviewIndependence = independenceWords(review?.independence);
 
   const started = clockTime(view.started_at);
   const ended = clockTime(view.finished_at ?? view.updated_at);
   const took = finished ? duration(view.started_at, view.finished_at ?? view.updated_at) : null;
   const total = view.progress?.total ?? 0;
   const stepNow = total > 0 ? Math.min((view.progress?.done ?? 0) + 1, total) : 0;
+  const runningMeta =
+    pausedAt >= 0 && steps.length ? `Paused at step ${pausedAt + 1} of ${steps.length}` : total > 0 ? `Step ${stepNow} of ${total}` : null;
   const subtitle = [
-    running ? (total > 0 ? `Step ${stepNow} of ${total}` : null) : ended ? `Finished ${ended}` : null,
+    running ? runningMeta : ended ? `Finished ${ended}` : null,
     running ? (started ? `Started ${started}` : null) : took ? `Took ${took}` : null,
     projectName || null,
   ].filter(Boolean);
 
   // D-72: what the work has used so far (cost or "Included in your plan", tokens, model time).
   const usageLine = usageHeaderLine(view.usage);
-  const resultText = (view.result ?? '').trim() || (view.status_line ?? '').trim();
+  // LIVE-10 / LIVE-12: no literal backticks, and no second "Applied to <path>:" once the head says
+  // where the change went (or that it was undone).
+  const resultText = plainResultText(view.result, coding ? application : null) || (view.status_line ?? '').trim();
   const attention = view.state === 'needs_you' || view.state === 'failed' || view.state === 'stopped';
-  const attentionText = [view.why, view.next].filter((part) => part && part.trim()).join(' ');
+  // VIS-5: the result line is not said twice ("You stopped this work." as the result and as the why).
+  const attentionText = [view.why, view.next]
+    .filter((part) => part && part.trim() && (!finished || part.trim() !== resultText))
+    .join(' ');
   const appliedLine = coding ? applicationLine(application) : null;
   const titleId = `kel-office-detail-title-${job}`;
 
@@ -471,16 +541,42 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
                       <li key={step.id} className={`kel-wd-step kel-wd-step--${phase}`} data-testid='kel-office-step'>
                         <span className='kel-wd-step__lead' aria-hidden='true'>
                           <img
-                            src={phase === 'done' ? iconCheck14 : phase === 'now' ? iconLoader : phase === 'failed' ? iconWarning : stepPending}
+                            src={
+                              phase === 'done'
+                                ? iconCheck14
+                                : phase === 'now'
+                                  ? iconLoader
+                                  : phase === 'failed'
+                                    ? iconWarning
+                                    : phase === 'paused'
+                                      ? iconWarningAmber
+                                      : stepPending
+                            }
                             alt=''
                           />
                         </span>
                         <span className='kel-wd-step__label'>{step.label}</span>
                         <span className='kel-wd-step__when'>
-                          {phase === 'now' ? 'Now' : phase === 'pending' ? (index === firstPending && running ? 'Next' : '') : at ?? ''}
+                          {phase === 'now'
+                            ? 'Now'
+                            : phase === 'paused'
+                              ? 'Paused'
+                              : phase === 'pending'
+                                ? index === firstPending && running && pausedAt < 0
+                                  ? 'Next'
+                                  : ''
+                                : (at ?? '')}
                         </span>
                         <span className='kel-wc-sr'>
-                          {phase === 'done' ? ', done' : phase === 'now' ? ', in progress' : phase === 'failed' ? ', did not finish' : ', not started'}
+                          {phase === 'done'
+                            ? ', done'
+                            : phase === 'now'
+                              ? ', in progress'
+                              : phase === 'paused'
+                                ? ', paused here'
+                                : phase === 'failed'
+                                  ? ', did not finish'
+                                  : ', not started'}
                         </span>
                       </li>
                     );
@@ -509,6 +605,18 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
                 ) : (
                   <p className='kel-wd-empty'>No files changed.</p>
                 )}
+                {reportSteps.length ? (
+                  <button
+                    type='button'
+                    className='kel-wd-button kel-wd-files__report'
+                    disabled={busy}
+                    onClick={() => void downloadReport()}
+                    data-testid='kel-office-report'
+                  >
+                    <img src={iconFile} alt='' />
+                    Download change report
+                  </button>
+                ) : null}
               </section>
             ) : null}
           </div>
@@ -523,9 +631,7 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
                 <span className={`kel-wd-finding__word kel-wd-tone--${reviewTone}`}>{reviewWord}</span>
               </div>
               {reviewText ? <p>{reviewText}</p> : null}
-              {review?.independence && review.independence !== 'full' ? (
-                <p className='kel-wd-note'>{`Independence: ${review.independence}.`}</p>
-              ) : null}
+              {reviewIndependence ? <p className='kel-wd-note'>{reviewIndependence}</p> : null}
             </div>
             <div className='kel-wd-oracle' data-testid='kel-office-oracle'>
               <StatusDot tone='next' />
@@ -534,15 +640,28 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
                   <strong>Oracle</strong>
                   {oracleModel ? <span className='kel-wd-model'>{oracleModel}</span> : null}
                 </span>
-                <span className='kel-wd-oracle__why'>
-                  {oracleLine(view.oracle)}
-                  {view.oracle?.independence && view.oracle.independence !== 'full' ? ` Independence: ${view.oracle.independence}.` : ''}
+                <span className='kel-wd-oracle__line' data-testid='kel-office-oracle-line'>
+                  {oracle.line}
                 </span>
+                {oracle.why || oracleIndependence ? (
+                  <span className='kel-wd-oracle__why'>{[oracle.why, oracleIndependence].filter(Boolean).join(' ')}</span>
+                ) : null}
               </span>
             </div>
             <div className='kel-wd-verification' data-testid='kel-office-verification'>
-              <strong>Verification</strong>
-              <span className={`kel-wd-tone--${verificationTone}`}>{verificationText}</span>
+              <div className='kel-wd-verification__head'>
+                <strong>Verification</strong>
+                <span className={`kel-wd-tone--${verificationTone}`} data-testid='kel-office-verification-word'>
+                  {verificationWord}
+                </span>
+              </div>
+              {verificationList.length ? (
+                <ul className='kel-wd-verification__list' data-testid='kel-office-verification-list'>
+                  {verificationList.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </section>
         </div>

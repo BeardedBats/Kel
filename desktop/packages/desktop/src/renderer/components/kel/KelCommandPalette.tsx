@@ -207,7 +207,7 @@ const KelCommandPalette: React.FC = () => {
     const timer = window.setTimeout(() => {
       const bridge = (window as unknown as { kelAPI?: { request: (route: string, payload?: unknown) => Promise<{
         transcripts?: Array<{ id: string; title: string; snippet: string }>;
-        vetting?: Array<{ id: string; title: string; snippet: string }>;
+        vetting?: Array<{ id: string; title: string; snippet: string; conversation_id?: string | null }>;
         conversations?: Array<{ id: string; title: string; snippet: string }>;
       }> } }).kelAPI;
       const chatHits = searchKelConversationMessages({ keyword: needle, page_size: 8 }).catch((): null => null);
@@ -236,10 +236,21 @@ const KelCommandPalette: React.FC = () => {
             label: row.title, hint: row.snippet || 'open Ramble',
             run: () => navigate('/transcription'),
           }));
+          // Vetting runs in its chat (the Work panel is gone): a session opens the chat it lives in; when
+          // the engine does not say which, a new chat, where "start design vetting: …" picks it up.
           (data.vetting ?? []).forEach((row) => items.push({
             id: `found-vetting-${row.id}`, group: 'Vetting',
-            label: row.title, hint: row.snippet || 'open the chat; Vetting lives in the Work panel',
-            run: () => navigate('/guid'),
+            label: row.title, hint: row.snippet || (row.conversation_id ? 'open its chat to continue' : 'continue it in a chat'),
+            run: () => {
+              const open = (window as unknown as { kelAPI?: { openEngineConversation?: (cid: string) => Promise<string | null> } }).kelAPI?.openEngineConversation;
+              if (!row.conversation_id || !open) {
+                navigate('/guid');
+                return;
+              }
+              void open(row.conversation_id)
+                .then((donor) => navigate(donor ? `/conversation/${donor}` : '/guid'))
+                .catch(() => navigate('/guid'));
+            },
           }));
           // The engine's chat rows only when the chats themselves could not be searched.
           if (!chats) (data.conversations ?? []).forEach((row) => items.push({

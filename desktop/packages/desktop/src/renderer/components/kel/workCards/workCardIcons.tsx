@@ -31,6 +31,8 @@ export { default as iconCheck12Light } from '@renderer/assets/figma/work-cards/i
 export { default as iconSparkle } from '@renderer/assets/figma/work-cards/icon-sparkle.svg';
 export { default as iconChevronDown } from '@renderer/assets/figma/work-cards/icon-chevron-down.svg';
 export { default as iconFolder13 } from '@renderer/assets/figma/work-cards/icon-folder13.svg';
+// VIS-6 (Figma 5a): the step paused work stopped at carries the amber warning.
+export { default as iconWarningAmber } from '@renderer/assets/figma/work-cards/icon-warning-amber.svg';
 export { iconCheck, iconCheck14, iconWarning, iconStopMuted, dotNext, dotDone, dotReview, dotFailed };
 
 export type DotTone = 'working' | 'review' | 'needs' | 'done' | 'failed' | 'next';
