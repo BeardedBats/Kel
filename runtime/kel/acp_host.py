@@ -282,6 +282,10 @@ class ACPHost:
         (so a restarted host still recognises a chat that was opened but never used)."""
         if cid in self.reserved:
             return True
+        # CP-10a (D-77): with the engine chat store, a chat's live link is its reserved conversation.
+        view = self._chat_link(conversation=cid)
+        if view.get('mode') == 'engine' and view.get('donor'):
+            return True
         folder = self.client.data / 'aion-session-map'
         if folder.is_dir():
             for record in folder.glob('*.json'):
@@ -291,6 +295,28 @@ class ACPHost:
                 except (OSError, ValueError, AttributeError):
                     continue
         return False
+
+    @staticmethod
+    def _write_record(record, donor_id, cid):
+        record.parent.mkdir(exist_ok=True)
+        temporary = record.with_suffix('.' + uuid.uuid4().hex + '.tmp')
+        with temporary.open('w', encoding='utf-8') as handle:
+            json.dump({donor_id: cid}, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, record)
+
+    def _chat_link(self, donor=None, conversation=None):
+        """CP-10a (D-77): the engine's answer for one chat ({mode, conversation} or {mode, donor}).
+        An engine without the link table, or one that cannot be reached, means the legacy files."""
+        route = '/api/chat-link?' + ('donor=' + quote(donor) if donor else 'conversation=' + quote(conversation or ''))
+        try:
+            view = self.client.call(route)
+        except Exception:
+            return {'mode': 'legacy'}
+        if not isinstance(view, dict) or view.get('mode') not in ('legacy', 'engine'):
+            return {'mode': 'legacy'}
+        return view
 
     def session(self, session):
         """(conversation id, state, exists). A reserved chat with no row yet has empty state."""
@@ -318,6 +344,30 @@ class ACPHost:
                 safe_id = hashlib.sha256(donor_id.encode()).hexdigest()
                 record = self.client.data / 'aion-session-map' / (safe_id + '.json')
             map_path = self.client.data / 'aion-conversations.json'
+            view = self._chat_link(donor=donor_id) if donor_id else {}
+            if view.get('mode') == 'engine':
+                # CP-10a (D-77): the engine's link table is the one answer. The files are kept for
+                # a switch back to legacy: a new chat still gets its record, an existing one is never
+                # rewritten.
+                if view.get('conversation'):
+                    session = 'kel:' + view['conversation']
+                    self.dispatch('session/load', {'sessionId': session})
+                    return {'sessionId': session}
+                cid = str(uuid.uuid4())
+                with self.lock:
+                    self.reserved.add(cid)
+                linked = self.client.call('/api/chat-link', {'action': 'link', 'donor': donor_id,
+                                                             'conversation': cid, 'source': 'acp'})
+                linked = (linked or {}).get('conversation') or cid
+                if linked != cid:
+                    with self.lock:
+                        self.reserved.discard(cid)
+                    session = 'kel:' + linked
+                    self.dispatch('session/load', {'sessionId': session})
+                    return {'sessionId': session}
+                if not record.exists():
+                    self._write_record(record, donor_id, cid)
+                return {'sessionId': 'kel:' + cid}
             if donor_id:
                 mapping = json.loads(map_path.read_text(encoding='utf-8-sig')) if map_path.exists() else {}
                 if record.exists():
@@ -337,13 +387,7 @@ class ACPHost:
             with self.lock:
                 self.reserved.add(cid)
             if record:
-                record.parent.mkdir(exist_ok=True)
-                temporary = record.with_suffix('.' + uuid.uuid4().hex + '.tmp')
-                with temporary.open('w', encoding='utf-8') as handle:
-                    json.dump({donor_id: cid}, handle)
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                os.replace(temporary, record)
+                self._write_record(record, donor_id, cid)
             return {'sessionId': 'kel:' + cid}
         if method == 'session/load':
             session = params['sessionId']

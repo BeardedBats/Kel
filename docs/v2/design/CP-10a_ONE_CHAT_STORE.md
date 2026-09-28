@@ -1,6 +1,6 @@
 # CP-10a — One chat store
 
-Status: **design only, 2026-09-28. No code has changed.** Base read: `main@b091df1` (desktop, engine and
+Status: **stages 0 and 1 built, 2026-09-28** (switch default `legacy`; see "Built" below). The rest is design. Base read: `main@b091df1` (desktop, engine and
 docs), plus read-only copies of Nick's `Data\store\aionui-backend.db` and `Data\engine\kel.sqlite3`
 taken into a scratch folder. Nothing was written to `Data` or `App`.
 
@@ -363,6 +363,21 @@ one class.
   unlinked. Every conflict is logged in the report.
 
 *Rollback:* the switch set to `legacy` reads files again. The files were never modified.
+
+**Built (2026-09-28).** Stage 0 is `runtime/kel/chatstore.py` (`--json`, `--markdown`, `--show-text`); on the
+read-only copy its totals equal §1.5, and the plain-words report for Nick is
+`Desktop\Kel\Tools\chat-store-report-2026-09-28.md`. It also found 3 linked chats with one assistant row each that
+has no engine twin by the reconcile rule; they are listed in the report for the stage 2 review. Stage 1 is
+`runtime/kel/chat_links.py` (engine), `/api/chat-link` (GET lookups, POST `import`, `link`, `retire`, `mode`,
+`conflicts`), the ACP host's `session/new`, `projects.conversation_for_donor` / `donor_for_conversation`, and
+`desktop/.../kel/chatLinks.ts` for every reader and writer in `KelService.ts` and `reconcileHistory.ts`. Two
+deviations from the text above: `chat_links` keys on `(donor_id, conversation_id)` with a unique index on the live
+row per donor, so both sides of a conflict can be kept as retired rows; and several sides that all have messages
+resolve by precedence D, C, E (none in Nick's data). In `engine` mode the ACP host still writes a session record
+for a new chat, only when none exists, so a switch back to `legacy` finds it; C is only added to by adoption. A
+table link to a conversation with no row yet counts as reserved, so a dead link's first message creates it. The
+same work fixed the archived-chat read (`repairWorkspacePaths.ts` asked aioncore for 200 rows a page; it allows 100),
+which had left archived chats out of the start-up link fold.
 
 ### Stage 2 — history from the engine (fixes B-2, B-3, B-6, B-8, B-11, B-12, B-15, B-16). M, 3–5 days.
 

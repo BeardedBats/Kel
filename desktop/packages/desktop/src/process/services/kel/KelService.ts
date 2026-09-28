@@ -28,6 +28,7 @@ import {
 import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
+import { ChatLinks } from './chatLinks';
 import { protectedPaths } from './protectedPaths';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
@@ -411,16 +412,15 @@ export async function initializeKel(port: number): Promise<void> {
   await syncMuseCustody(kelRequest, { get: getCredential, set: setCredential })
     .then((outcome) => console.log('[KEL-BOOT] initializeKel Muse key: ' + outcome))
     .catch((): undefined => undefined);
-  const mapPath = path.join(root, 'aion-conversations.json');
   const historyPath = path.join(root, 'aion-history.json');
-  const mapping: Record<string, string> = fs.existsSync(mapPath) ? JSON.parse(fs.readFileSync(mapPath, 'utf8')) : {};
+  // CP-10a (D-77): every read and write of "which conversation is this chat" goes through the one
+  // link table (engine `chat_links`), or the old files when the `chat_store` switch says legacy.
+  const links = await ChatLinks.open(root, (route, body) => kelRequest(route, body));
+  const mapping = links.map;
+  console.log('[KEL-BOOT] initializeKel chat links: ' + links.mode);
   const history: Record<string, unknown[]> = fs.existsSync(historyPath)
     ? JSON.parse(fs.readFileSync(historyPath, 'utf8'))
     : {};
-  const liveMapDir = path.join(root, 'aion-session-map');
-  if (fs.existsSync(liveMapDir))
-    for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json')))
-      Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
   const saved = await kelRequest('/api/state');
   console.log('[KEL-BOOT] initializeKel engine state ok');
   // Re-home Kel scratch folders that point at a missing or moved data root (e.g. the removed
@@ -432,8 +432,8 @@ export async function initializeKel(port: number): Promise<void> {
   );
   if (workspaceRepairs.length) console.log('[KEL-BOOT] re-homed chat folders: ' + workspaceRepairs.length);
   // The same full list feeds the chat mapping, so chats past the first 20 keep their engine link.
-  for (const donor of repairCandidates)
-    if (typeof donor.extra?.kel_conversation_id === 'string') mapping[donor.id] = donor.extra.kel_conversation_id;
+  const folded = await links.foldDonorLinks(repairCandidates);
+  if (folded.conflicts) console.log('[KEL-BOOT] chat links settled conflicts: ' + folded.conflicts);
   const mapped = new Set(Object.values(mapping));
   // ST-23: one grouped engine query says which conversations are empty, so start-up never reads
   // each empty chat's full state. An older engine without the route falls back to reading each.
@@ -444,21 +444,12 @@ export async function initializeKel(port: number): Promise<void> {
     counts = null;
   }
   const persistMapping = () => {
-    for (const [file, value] of [
-      [mapPath, mapping],
-      [historyPath, history],
-    ] as const) {
-      fs.writeFileSync(file + '.tmp', JSON.stringify(value));
-      fs.renameSync(file + '.tmp', file);
-    }
+    links.persist();
+    fs.writeFileSync(historyPath + '.tmp', JSON.stringify(history));
+    fs.renameSync(historyPath + '.tmp', historyPath);
   };
-  const mergeLiveMap = () => {
-    if (fs.existsSync(liveMapDir))
-      for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json')))
-        Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
-  };
-  const donorFor = (cid: string): string | undefined =>
-    Object.keys(mapping).find((donorId) => mapping[donorId] === cid);
+  const mergeLiveMap = () => links.refresh();
+  const donorFor = (cid: string): string | undefined => links.donorFor(cid);
   type EngineConversationState = {
     messages?: KelMessage[];
     jobs?: unknown[];
@@ -492,7 +483,7 @@ export async function initializeKel(port: number): Promise<void> {
         assistant: { id: 'kel' },
         extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: cid, kel_project_id: conversation.project_id },
       });
-      mapping[donor.id] = cid;
+      await links.adopt(donor.id, cid);
       history[donor.id] = (existing.messages || []).map((message: KelMessage) => historyRow(donor.id, message));
       persistMapping();
       return donor.id as string;
@@ -603,14 +594,14 @@ export async function initializeKel(port: number): Promise<void> {
       });
     }
   }
-  for (const [id, cid] of Object.entries(mapping)) {
+  for (const [id, cid] of links.entries()) {
     try {
       await reconcile(id, cid);
     } catch (error) {
       if (!String(error).includes(': 404 ')) throw error;
       // Stale mapping: the donor conversation is gone; drop the pair so the
-      // catalog never re-imports a dead mapping on later launches.
-      delete mapping[id];
+      // catalog never re-imports a dead mapping on later launches (engine mode retires the link).
+      await links.drop(id, 'app chat gone');
       delete history[id];
     }
   }
@@ -619,13 +610,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.removeHandler('kel:conversation');
   ipcMain.handle('kel:conversation', (event, id: string) => {
     assertTrustedSender(event);
-    if (mapping[id]) return mapping[id];
-    if (fs.existsSync(liveMapDir))
-      for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json'))) {
-        const live = JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8'));
-        if (live[id]) return live[id];
-      }
-    return null;
+    return links.lookup(id);
   });
   ipcMain.removeHandler('kel:history-search');
   ipcMain.handle('kel:history-search', (event, query: string) => {
@@ -644,9 +629,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.removeHandler('kel:history');
   ipcMain.handle('kel:history', async (event, id: string) => {
     assertTrustedSender(event);
-    if (!mapping[id] && fs.existsSync(liveMapDir))
-      for (const file of fs.readdirSync(liveMapDir).filter((n) => n.endsWith('.json')))
-        Object.assign(mapping, JSON.parse(fs.readFileSync(path.join(liveMapDir, file), 'utf8')));
+    if (!mapping[id]) await links.refresh();
     if (mapping[id]) {
       const before = JSON.stringify(history[id]);
       await reconcile(id, mapping[id]);
@@ -675,8 +658,8 @@ export async function initializeKel(port: number): Promise<void> {
         items?: Array<{ conversation_id?: string; seq?: number }>;
       };
       if (seenSeq !== null) {
-        mergeLiveMap();
-        for (const donorId of donorsForMessages(mapping, since?.items))
+        if (links.mode === 'legacy' || since?.items?.length) await mergeLiveMap();
+        for (const donorId of donorsForMessages(links, since?.items))
           if (!pendingHistory.has(donorId)) pendingHistory.set(donorId, Date.now());
       }
       if (typeof since?.latest === 'number') seenSeq = Math.max(seenSeq ?? 0, since.latest);
@@ -718,7 +701,7 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:open-engine-conversation', async (event, cid: string) => {
     assertTrustedSender(event);
     if (typeof cid !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(cid)) throw new Error('That conversation is not one Kel knows');
-    mergeLiveMap();
+    await mergeLiveMap();
     return adoptEngineConversation(cid);
   });
   // D-57: every 20 s (and right after a schedule changes) bring the chat list in step with the
@@ -732,7 +715,7 @@ export async function initializeKel(port: number): Promise<void> {
     if (sweeping || quitRequested) return;
     sweeping = true;
     try {
-      mergeLiveMap();
+      await mergeLiveMap();
       let changed = false;
       for (const cid of [...hiddenToRemove]) {
         const donorId = donorFor(cid);
@@ -742,7 +725,7 @@ export async function initializeKel(port: number): Promise<void> {
           } catch (error) {
             if (!String(error).includes(': 404 ')) continue; // Retried on the next sweep.
           }
-          delete mapping[donorId];
+          await links.drop(donorId, 'schedule deleted');
           delete history[donorId];
           changed = true;
         }

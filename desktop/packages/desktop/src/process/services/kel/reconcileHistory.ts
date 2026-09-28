@@ -172,13 +172,16 @@ export function ensureWorkCards(
  * (`/api/messages/since` items). A conversation open in two app chats names both.
  */
 export function donorsForMessages(
-  mapping: Record<string, string>,
+  links: Record<string, string> | { entries(): Array<[string, string]> },
   items: Array<{ conversation_id?: unknown }> | undefined
 ): string[] {
   const wanted = new Set(
     (items || []).map((item) => item?.conversation_id).filter((cid): cid is string => typeof cid === 'string')
   );
-  return Object.entries(mapping)
-    .filter(([, cid]) => wanted.has(cid))
-    .map(([donorId]) => donorId);
+  // CP-10a (D-77): the main process hands in its chat links (`chatLinks.ts`), the one link table.
+  const pairs =
+    typeof links.entries === 'function'
+      ? (links as { entries(): Array<[string, string]> }).entries()
+      : Object.entries(links);
+  return pairs.filter(([, cid]) => wanted.has(cid)).map(([donorId]) => donorId);
 }

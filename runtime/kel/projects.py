@@ -16,7 +16,6 @@ Every decision about "which project does this belong to" lives here, so `service
 - `scope(data, write)` — the project a Knowledge/Map/Recipes/brief/Activity call acts in.
 """
 import contextlib
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -673,41 +672,19 @@ class Projects:
             return active
         return GENERAL
 
-    def _session_map(self):
-        """donor id -> Kel conversation id, as the ACP host recorded it."""
-        mapping = {}
-        path = Path(self.store.root) / 'aion-conversations.json'
-        try:
-            if path.exists():
-                mapping.update(json.loads(path.read_text(encoding='utf-8-sig')))
-        except (OSError, ValueError):
-            pass
-        return mapping
+    @property
+    def links(self):
+        """CP-10a (D-77): the one link table (or, with `chat_store` = legacy, the old files)."""
+        from .chat_links import ChatLinks
+        return ChatLinks(self.store)
 
     def conversation_for_donor(self, donor_id):
         if not donor_id:
             return None
-        record = Path(self.store.root) / 'aion-session-map' / (hashlib.sha256(str(donor_id).encode()).hexdigest() + '.json')
-        try:
-            if record.exists():
-                found = json.loads(record.read_text(encoding='utf-8-sig')).get(str(donor_id))
-                if found:
-                    return found
-        except (OSError, ValueError, AttributeError):
-            pass
-        return self._session_map().get(str(donor_id))
+        return self.links.resolve_donor(str(donor_id))
 
     def donor_for_conversation(self, cid):
-        folder = Path(self.store.root) / 'aion-session-map'
-        if folder.is_dir():
-            for record in folder.glob('*.json'):
-                try:
-                    for donor, mapped in json.loads(record.read_text(encoding='utf-8-sig')).items():
-                        if mapped == cid:
-                            return donor
-                except (OSError, ValueError, AttributeError):
-                    continue
-        return next((donor for donor, mapped in self._session_map().items() if mapped == cid), None)
+        return self.links.resolve_conversation(cid)
 
     def pending_project(self, cid):
         """Where a reserved (not yet created) chat will be created."""

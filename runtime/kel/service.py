@@ -1966,6 +1966,9 @@ class Service:
             # D-54: explicit project → the shell's binding for its chat (`donor`) → active → General.
             # An id the ACP host reserved (ST-04) that already exists keeps its own project.
             return self.projects.create_conversation(self.context,data)
+        if path=='/api/chat-link':
+            # CP-10a (D-77): the one link between an app chat and its conversation, and the switch.
+            return self.projects.links.apply(data)
         if path=='/api/conversation-title':
             return self.rename_conversation(self._required(data,'conversation','Pick a chat to rename first.'),
                                             data.get('title'))
@@ -2707,6 +2710,10 @@ def serve(root,port=0):
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
                     if parsed.path=='/api/conversations':self.reply(200,service.conversations());return
+                    if parsed.path=='/api/chat-link':
+                        # CP-10a (D-77): read-only lookups for the ACP host and the desktop.
+                        self.reply(200,service.projects.links.view((query.get('donor') or [None])[0],
+                                                                   (query.get('conversation') or [None])[0]));return
                     if parsed.path=='/api/health':
                         # CP-2: the desktop's 5 s liveness ping — no database work at all.
                         self.reply(200,{'ok':True,'engine_version':ENGINE_VERSION,'draining':service.draining});return

@@ -100,7 +100,9 @@ const conversationsOf = (items: SidebarGroupPage['items']): WorkspaceDonorConver
  */
 export const listConversationsForRepair = async (
   get: (route: string) => Promise<unknown>,
-  pageLimit = 200
+  // aioncore's sidebar refuses a limit above 100 ("limit out of range [1,100]"); 200 lost every
+  // archived chat, and with it their chat links.
+  pageLimit = 100
 ): Promise<WorkspaceDonorConversation[]> => {
   const byId = new Map<string, WorkspaceDonorConversation>();
   const add = (items: WorkspaceDonorConversation[]) => {
