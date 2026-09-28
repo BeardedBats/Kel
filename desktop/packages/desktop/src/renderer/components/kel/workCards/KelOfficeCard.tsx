@@ -8,6 +8,7 @@ import React from 'react';
 import type { OfficeItem, OfficeTeamChip } from './officeApi';
 import { StateIcon, iconClose } from './workCardIcons';
 import {
+  cardUncertain,
   clockTime,
   initials,
   cardStateLabel,
@@ -64,12 +65,17 @@ type Props = {
   removing?: boolean;
   onOpen: (item: OfficeItem, trigger: HTMLElement) => void;
   onRemove?: (item: OfficeItem) => void;
+  /** D-74.3: "Not now" on an open scoping card — cancels Kel's questions; nothing starts. */
+  onNotNow?: (item: OfficeItem) => void;
 };
 
-export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', selected = false, removing = false, onOpen, onRemove }) => {
+export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', selected = false, removing = false, onOpen, onRemove, onNotNow }) => {
   const finished = isFinished(item.state);
   const scoping = item.state === 'scoping';
   const label = cardStateLabel(item);
+  // LIVE-10: the list's own verdict tells work Kel couldn't fully check from work that failed.
+  const uncertain = cardUncertain(item);
+  const notNow = scoping && Boolean(onNotNow);
   // D-70 (5e): a scoping card counts Kel's questions, has no progress yet and no team yet.
   const count = scoping ? questionCount(item) : stepCount(item);
   const at = finished ? clockTime(item.finished_at ?? item.updated_at) : null;
@@ -92,7 +98,7 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
 
   return (
     <div
-      className={`kel-wc kel-wc--${variant} kel-wc--${item.state}${selected ? ' is-selected' : ''}${removable ? ' has-remove' : ''}`}
+      className={`kel-wc kel-wc--${variant} kel-wc--${item.state}${selected ? ' is-selected' : ''}${removable ? ' has-remove' : ''}${uncertain ? ' is-uncertain' : ''}${notNow ? ' has-not-now' : ''}`}
       data-testid='kel-office-card'
       data-job={item.job_id}
       data-state={item.state}
@@ -112,7 +118,7 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
             </span>
             {progress}
             <span className='kel-wc__state-row'>
-              <StateIcon state={item.state} />
+              <StateIcon state={item.state} uncertain={uncertain} />
               {labelText}
               {count ? <span className='kel-wc-count'>{count}</span> : null}
               <span className='kel-wc-push' />
@@ -122,7 +128,7 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
         ) : (
           <>
             <span className='kel-wc__title-row'>
-              <StateIcon state={item.state} />
+              <StateIcon state={item.state} uncertain={uncertain} />
               <span className='kel-wc__title'>{item.title}</span>
               <span className='kel-wc-push' />
             </span>
@@ -149,6 +155,22 @@ export const KelOfficeCard: React.FC<Props> = ({ item, team, variant = 'row', se
           data-testid='kel-office-card-remove'
         >
           <img src={iconClose} alt='' />
+        </button>
+      ) : null}
+      {notNow ? (
+        <button
+          type='button'
+          className='kel-wc__not-now'
+          aria-label={`Not now: ${item.title}`}
+          title='Cancel these questions. Nothing starts.'
+          disabled={removing}
+          onClick={(event) => {
+            event.stopPropagation();
+            onNotNow?.(item);
+          }}
+          data-testid='kel-office-card-not-now'
+        >
+          Not now
         </button>
       ) : null}
     </div>

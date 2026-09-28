@@ -12,7 +12,16 @@ import { useNavigate } from 'react-router-dom';
 import { getRouteConversationIdForKelId, resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 import { resolveEngineConversation } from '../KelApprovalCard';
 import { useConversationProject, useProjects } from '../activeProject';
-import { officeDismiss, officeItem, officeList, officeListForChat, type OfficeItem, type OfficeItemDetail, type OfficeTeamChip } from './officeApi';
+import {
+  officeDismiss,
+  officeItem,
+  officeList,
+  officeListForChat,
+  scopingDismiss,
+  type OfficeItem,
+  type OfficeItemDetail,
+  type OfficeTeamChip,
+} from './officeApi';
 import { KelOfficeCard } from './KelOfficeCard';
 import { KelOfficeDetail } from './KelOfficeDetail';
 import { StatusDot, dotToneFor, iconChev } from './workCardIcons';
@@ -20,7 +29,9 @@ import {
   OVERFLOW_MAX_DOTS,
   POLL_ACTIVE_MS,
   POLL_IDLE_MS,
+  cardStateLabel,
   cardTeam,
+  cardUncertain,
   fitCards,
   isFinished,
   isLive,
@@ -28,7 +39,7 @@ import {
   orderItems,
   overflowWidth,
 } from './workCardModel';
-import { OPEN_WORK_CARD_EVENT, REFRESH_WORK_CARDS_EVENT, takePendingWorkCard } from './workCardEvents';
+import { OPEN_WORK_CARD_EVENT, REFRESH_WORK_CARDS_EVENT, refreshWorkCards, takePendingWorkCard } from './workCardEvents';
 import './KelWorkCards.css';
 import './KelWorkCardsRow5.css';
 
@@ -353,6 +364,43 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
     [openJob, refresh, startedSeq]
   );
 
+  /**
+   * D-74.3: "Not now" on an open scoping card cancels Kel's questions (nothing starts). The card goes
+   * at once; if the engine keeps it, it comes back rather than disappearing untruthfully.
+   */
+  const notNow = useCallback(
+    (item: OfficeItem) => {
+      if (item.state !== 'scoping') return;
+      const mark = (value: number | null) =>
+        setDismissed((current) => {
+          const next = new Map(current);
+          if (value === null) next.delete(item.job_id);
+          else next.set(item.job_id, value);
+          return next;
+        });
+      mark(Number.POSITIVE_INFINITY);
+      scopingDismiss(item.scoping_id ?? item.job_id)
+        .then(() => {
+          mark(startedSeq.current);
+          refresh();
+          // The questions in the thread read again and settle into their "Not now" line.
+          refreshWorkCards();
+        })
+        .catch(() => mark(null));
+    },
+    [refresh, startedSeq]
+  );
+
+  /** LIVE-3: a needs-you card's "Change the model in Staff & models" goes to Settings; nothing is sent. */
+  const openSettings = useCallback(
+    (path: string) => {
+      setOpenJob(null);
+      triggerRef.current = null;
+      navigate(path);
+    },
+    [navigate]
+  );
+
   const talk = useCallback(
     async (item: OfficeItem) => {
       setOpenJob(null);
@@ -529,6 +577,7 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
               selected={openJob === item.job_id}
               onOpen={openDetail}
               onRemove={remove}
+              onNotNow={notNow}
             />
           </div>
         ))}
@@ -554,7 +603,7 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
               </span>
               <span className='kel-wc-overflow__dots' aria-hidden='true'>
                 {dots.map((item) => (
-                  <StatusDot key={item.job_id} tone={dotToneFor(item.state)} />
+                  <StatusDot key={item.job_id} tone={cardUncertain(item) ? 'needs' : dotToneFor(item.state)} />
                 ))}
               </span>
             </button>
@@ -564,7 +613,15 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
                   <>
                     <p className='kel-wc-menu__section'>Running</p>
                     {hiddenRunning.map((item) => (
-                      <KelOfficeCard key={item.job_id} item={item} team={teamFor(item)} variant='menu' onOpen={openDetail} onRemove={remove} />
+                      <KelOfficeCard
+                        key={item.job_id}
+                        item={item}
+                        team={teamFor(item)}
+                        variant='menu'
+                        onOpen={openDetail}
+                        onRemove={remove}
+                        onNotNow={notNow}
+                      />
                     ))}
                   </>
                 ) : null}
@@ -592,6 +649,7 @@ export const KelWorkCardRow: React.FC<Props> = ({ conversationId, availableWidth
             onRemove={remove}
             onTalk={(item) => void talk(item)}
             onChanged={refresh}
+            onOpenSettings={openSettings}
             openFolder={openFolder}
           />
         </div>
@@ -610,7 +668,8 @@ const stateWords = (item: OfficeItem) => {
     case 'scoping':
       return 'scoping, Kel has questions first';
     default:
-      return item.state;
+      // "couldn't fully check" and "undone" as the card itself says them.
+      return cardStateLabel(item).toLowerCase();
   }
 };
 

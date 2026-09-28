@@ -28,7 +28,55 @@ export interface StaffRoleRow {
   default?: { mode: StaffMode; model: string | null; reasoning: string } | null;
   /** What this role's last run asked for and what actually ran (the engine's record). */
   last_run?: StaffLastRun | null;
+  /** LIVE-3: the work the role exists for — `code` (changes code), `web` (searches the web) or `text`. */
+  purpose?: StaffPurpose | string | null;
+  /**
+   * LIVE-3: the models this role can pick, each available or not *for this role* with the engine's
+   * reason (DeepSeek Flash can't be the Builder: it can't change code).
+   */
+  model_options?: StaffRoleModelOption[] | null;
 }
+
+export type StaffPurpose = 'code' | 'web' | 'text';
+
+export interface StaffRoleModelOption {
+  id: string;
+  label: string;
+  available?: boolean;
+  note?: string | null;
+}
+
+/** What each purpose asks of a model, in plain words. */
+export const PURPOSE_WORDS: Record<string, string> = {
+  code: 'Needs a model that can change code',
+  web: 'Needs a model that can search the web',
+  text: 'Any model that writes well',
+};
+
+/**
+ * FN-06 — Kel's own model, and whether a chat overrides it (`in_effect`), exactly as the engine holds
+ * it (the roles payload and `/api/model get` both carry it).
+ */
+export interface KelModelView {
+  kel?: { source?: string | null; mode?: StaffMode | null; model?: string | null; reasoning?: string | null; label?: string | null } | null;
+  conversation_override?: { provider?: string | null; model?: string | null; label?: string | null } | null;
+  in_effect?: 'kel' | 'conversation' | string | null;
+}
+
+/**
+ * The one line that says which model is in effect: for a chat, "This chat uses its own model: X"
+ * or "This chat uses Kel's model: Y"; with no chat, Kel's model and that a chat may pick its own.
+ */
+export const inEffectLine = (view: KelModelView | null | undefined, forChat: boolean): string | null => {
+  if (!view?.kel) return null;
+  const kel = (view.kel.label ?? '').trim() || 'Automatic';
+  const own = (view.conversation_override?.label ?? view.conversation_override?.model ?? '').trim();
+  if (forChat && view.in_effect === 'conversation' && own) {
+    return `This chat uses its own model: ${own}. Kel’s model (the Kel row below) is ${kel}.`;
+  }
+  if (forChat) return `This chat uses Kel’s model: ${kel}.`;
+  return `Kel’s model: ${kel}. Every chat uses it unless you pick another model in that chat.`;
+};
 
 export interface StaffLastRun {
   asked?: string | null;
@@ -63,6 +111,8 @@ export interface StaffListing {
   roles: StaffRoleRow[];
   models: StaffModelOption[];
   modes?: Array<{ id: StaffMode; label: string }>;
+  /** FN-06: Kel's own model (no chat, so `in_effect` is always Kel's here). */
+  kel_model?: KelModelView | null;
 }
 
 export interface StaffRoleChoice {
@@ -77,11 +127,18 @@ const normalise = (payload: unknown): StaffListing => {
     roles: Array.isArray(data.roles) ? data.roles : [],
     models: Array.isArray(data.models) ? data.models : [],
     modes: Array.isArray(data.modes) ? data.modes : undefined,
+    kel_model: data.kel_model && typeof data.kel_model === 'object' ? data.kel_model : null,
   };
 };
 
 export const kelStaffRoles = async (): Promise<StaffListing> =>
   normalise(await kelRequest<unknown>('/api/model', { action: 'roles' }));
+
+/** FN-06: Kel's model and whether this chat (the engine's conversation id) uses its own instead. */
+export const kelModelInEffect = async (conversation: string): Promise<KelModelView | null> => {
+  const payload = (await kelRequest<unknown>('/api/model', { action: 'get', conversation })) as { kel_model?: KelModelView | null } | null;
+  return payload?.kel_model && typeof payload.kel_model === 'object' ? payload.kel_model : null;
+};
 
 /**
  * D-73.3 — one "Kel's model". The Kel row here IS Kel's model: Settings → Model, the Kel row in Staff &

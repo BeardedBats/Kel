@@ -135,6 +135,20 @@ Where the cards now differ from, or go beyond, those frames:
 | "Vet the design first" on the scoping card | 5e has Start and "Just start with your best guess" only | A third link-style action puts "start design vetting: <title>" in the composer (Design Vetting, formerly a Work panel tab, runs in the chat). | `KelScopingCard.tsx` |
 | One "Kel's model" (D-73.3) | Settings — Model `311:2239` "Default model" card; composer picker scope tabs "This chat" / "Default for new chats" | The card is "Kel's model": Automatic plus the models the Kel row of Staff & models can use (same rows, status and Use / Set up as drawn), a link to Staff & models for reasoning; an older default that still answers is named in one line until Kel's model is chosen. The picker's second tab reads "Kel's model" and edits that same value; "This chat" stays the per-chat override ("Use Kel's model (<name>)"). | `KelModelControl.tsx`, `KelDesktopModelMenu.tsx`, `KelMobileModelPicker.tsx`, `staffModelsApi.ts` |
 
+## The engine's own words on the cards and Staff & models (LIVE-3, LIVE-8, LIVE-10, LIVE-12, FN-03, FN-06) — 2026-09-28
+
+None of these states is drawn; each reuses the nearest part of rows 4–5 or the Staff & models rows.
+
+| State / element | Nearest Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Unconfirmed work on the row card | 4a failed card | The list's own `verdict` decides it: "Couldn't fully check" with the amber paused-step warning, amber label and bar (the red warning stays for work that failed its checks); the "+N more" dot is amber too. | `KelOfficeCard.tsx`, `workCardIcons.tsx`, `KelWorkCardsRow5.css` |
+| Undone work | 4a done card, 4d Result head | The card says "Undone"; the detail's Result head and the done card say "Undone at 10:42 AM — 3 files are back as they were; 1 empty folder removed." from the engine's `undone` record. | `workCardModel.ts` (`undoneLine`), `KelOfficeDetail.tsx`, `KelDoneCard.tsx` |
+| Independence and the Oracle | 4d review column | The engine's `independence_label` in a sentence ("Checked by a different model family from the one that did the work." / "Given by the same model family …, so less independent."); the Oracle's `conclusion` leads (also when it couldn't run), and its `coverage` follows as "What it looked at: …" in the quieter line. | `workCardModel.ts`, `KelOfficeDetail.tsx` |
+| Interrupted step | 5a paused step | The step a restart stopped (`interrupted`) carries the same amber warning with "Interrupted" instead of the loader and "Now". | `KelOfficeDetail.tsx` |
+| "No model can run it" / "Out of tries" needs-you | 5a "Kel is asking you" | Same panel; "Try again" is a quick-pick chip; "Change the model in Staff & models" is the panel's link-style button on the same line as the chips (a place to go, not an answer) and opens Settings → Staff & models for that chat. | `KelNeedsAnswer.tsx`, `needsAnswer.ts` |
+| "Not now" on scoping | 5e actions; 4a card's remove control | On the question card: a fourth link-style action after "Vet the design first"; once chosen, one collapsed line "Not now · Nothing started. Ask again whenever you want it." On the Scoping top card: a quiet 12px link-blue text button at the top right, where a finished card has its remove control. | `KelScopingCard.tsx`, `KelOfficeCard.tsx`, `KelWorkCardsRow5.css` |
+| Per-role models, purpose, model in effect | Staff & models rows (from Settings — Model `311:2239`) | The Model menu lists the engine's options for that role; one the role can't use is disabled and says why in the option ("DeepSeek Flash (can't change code, so it can't do the Builder's code work)"). Under each role's description, a 12px line says what its work needs ("Needs a model that can change code"). Above the rows, one 13px line says which model is in effect ("Kel's model: …" or, opened for a chat, "This chat uses its own model: …"). | `StaffModelsSettings/index.tsx`, `staffModels.css` |
+
 ## Chat batch: attachments, streaming, edit and regenerate, one Muse key, Recipes (FN-04..FN-17, D-75) — 2026-09-28
 
 None of these is drawn. Each reuses the nearest drawn control; none is claimed as exact parity.

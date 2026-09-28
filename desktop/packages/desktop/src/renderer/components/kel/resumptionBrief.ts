@@ -80,6 +80,91 @@ const recordedReason = (job: KelWorkJob): string | undefined =>
 
 const sentence = (text: string): string => text.trim().replace(/\.$/, '');
 
+/**
+ * LIVE-3 / FN-03 — why a job waits on Nick, as the engine's resume brief names it (`wait`):
+ * a restart stopped a step part-way (`interrupted`), it ran out of tries (`stuck`), its Fixed model
+ * can't run here (`fixed`), nothing set up here can do it (`no_route`), or it reached its budget
+ * (`budget`). Only Nick moves these on.
+ */
+export type BriefWait = 'interrupted' | 'stuck' | 'fixed' | 'no_route' | 'budget';
+const WAITS = new Set<BriefWait>(['interrupted', 'stuck', 'fixed', 'no_route', 'budget']);
+
+/** The engine's route-block prefixes (runtime/kel/core.py `route_wait_kind`), then its plain words. */
+const ROUTE_WAITS: Array<[string, BriefWait]> = [
+  ['Fixed model not available: ', 'fixed'],
+  ['Budget reached: ', 'budget'],
+  ['Out of tries: ', 'stuck'],
+  ['No model can do this: ', 'no_route'],
+];
+
+const OPEN_STATES = new Set(['CLOSED', 'DONE', 'CANCELLED', 'CANCELLING', 'PAUSED', 'PAUSING']);
+
+/**
+ * The job's `wait`: the engine's own when the payload carries it (on the job or its continuation
+ * entry), else read from the same facts the engine reads — the route block's prefix, or a step the
+ * engine marked `interrupted` (a WAITING_RESOURCE job without a route block is a fenced one).
+ */
+export const briefWait = (job: KelWorkJob, candidate?: KelContinuationCandidate | null): BriefWait | null => {
+  const told = (job as { wait?: unknown }).wait ?? (candidate as { wait?: unknown } | null | undefined)?.wait;
+  if (typeof told === 'string' && WAITS.has(told as BriefWait)) return told as BriefWait;
+  const state = String(job.state ?? '').toUpperCase();
+  if (OPEN_STATES.has(state)) return null;
+  const block = String(job.route_block ?? '');
+  if (state === 'WAITING_RESOURCE' && block) return ROUTE_WAITS.find(([prefix]) => block.startsWith(prefix))?.[1] ?? null;
+  const marked = Object.values(job.milestones ?? {}).some((entry) => (entry as { interrupted?: boolean }).interrupted === true);
+  if (state === 'WAITING_RESOURCE' || marked) return 'interrupted';
+  return null;
+};
+
+/** The route block's own sentence without its prefix ("GPT-6 Astra can't run here: …"). */
+const routeWords = (job: KelWorkJob): string | null => {
+  const block = String(job.route_block ?? '').trim();
+  const prefix = ROUTE_WAITS.find(([lead]) => block.startsWith(lead))?.[0];
+  const rest = (prefix ? block.slice(prefix.length) : '').trim();
+  return rest ? sentence(rest) : null;
+};
+
+/** What the Home brief says for each `wait`, and what to do — on the work's card when it has one. */
+export const waitWords = (wait: BriefWait, job: KelWorkJob, onCard: boolean): { label: string; detail: string } => {
+  const reason = routeWords(job);
+  const where = (action: string) => (onCard ? `${action} on its card` : `${action} in its chat`);
+  switch (wait) {
+    case 'interrupted':
+      return {
+        label: 'Interrupted',
+        detail: `Kel’s worker stopped unexpectedly (the app restarted) before a step finished, and Kel won’t repeat it on its own. ${
+          onCard ? 'Choose Try again on its card' : 'Reply “continue” in its chat'
+        } to start that step again.`,
+      };
+    case 'stuck':
+      return {
+        label: 'Out of tries',
+        detail: `It ran out of tries before it passed its checks${reason ? ` (${reason})` : ''}. ${
+          onCard ? 'Choose Try again on its card' : 'Reply “continue” in its chat'
+        } to give it more tries, or stop it.`,
+      };
+    case 'fixed':
+      return {
+        label: 'No model can run it',
+        detail: `${reason ?? 'Its Fixed model can’t run on this computer'}. Change the model in Settings → Staff & models, then ${
+          onCard ? 'choose Try again on its card' : 'reply “continue” in its chat'
+        }.`,
+      };
+    case 'no_route':
+      return {
+        label: 'No model can run it',
+        detail: `${reason ?? 'No model set up on this computer can do this kind of work'}. Change the model in Settings → Staff & models (or set one up), then ${
+          onCard ? 'choose Try again on its card' : 'reply “continue” in its chat'
+        }.`,
+      };
+    case 'budget':
+      return {
+        label: 'Stopped at its budget',
+        detail: `${reason ?? 'It used the budget it was given'}. ${where('Raise its budget')} to let it continue, or stop it.`,
+      };
+  }
+};
+
 export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrief {
   const jobs = (payload.jobs ?? []).toSorted(byUpdatedDesc);
   const candidates = payload.continuation ?? [];
@@ -102,8 +187,23 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
   }
 
   // 2) What needs you: jobs that wait on a decision (shared table), then permission and setup asks.
-  const needsYouJobs = jobs.filter((job) => job.state !== 'PAUSED' && workWords(job).needsYou);
+  // LIVE-3 / FN-03: work that only Nick can move on (`wait`) needs him even while it waits on a route.
+  const candidateOf = (job: KelWorkJob) => candidates.find((entry) => (entry.job_id || entry.job?.id) === job.id) ?? null;
+  const needsYouJobs = jobs.filter((job) => job.state !== 'PAUSED' && (workWords(job).needsYou || briefWait(job, candidateOf(job))));
   const jobNeeds: BriefLine[] = needsYouJobs.map((job) => {
+    const wait = briefWait(job, candidateOf(job));
+    if (wait) {
+      const onCard = hasWorkCard(job);
+      const words = waitWords(wait, job, onCard);
+      return {
+        id: `brief-needs-${job.id}`,
+        kind: 'needs-you',
+        tone: 'attention',
+        title: titleOf(job, candidates),
+        detail: `${words.label} — ${words.detail}`,
+        action: onCard ? cardAction(job, wait === 'budget' ? 'Open its card' : 'Try again on its card') : jobChatAction(job),
+      };
+    }
     const view = workWords(job);
     const reason = view.label === 'Interrupted' ? recordedReason(job) : undefined;
     return {

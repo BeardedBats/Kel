@@ -104,7 +104,7 @@ describe('buildResumptionBrief', () => {
     expect(needsYou[0].detail.startsWith('Blocked — needs your OK — ')).toBe(true);
   });
 
-  it('surfaces an orphaned run as needs-you exactly once, with the engine reason', () => {
+  it('surfaces an orphaned run as needs-you exactly once, in the engine’s interrupted words (LIVE-3)', () => {
     const result = brief({
       jobs: [
         job({
@@ -121,7 +121,9 @@ describe('buildResumptionBrief', () => {
     expect(line.kind).toBe('needs-you');
     expect(line.title).toBe('Tidy the notes');
     expect(line.detail).toMatch(/^Interrupted — /);
-    expect(line.detail).toContain('requires reconciliation');
+    // The engine's `wait: interrupted` words, not its internal fence reason.
+    expect(line.detail).toContain('Kel’s worker stopped unexpectedly (the app restarted)');
+    expect(line.detail).not.toContain('requires reconciliation');
     expect(result.summary).toBe('1 needs you');
   });
 

@@ -4,6 +4,7 @@
  * (a typed answer), the "I'll build: …" line, Start, "Just start with your best guess" and
  * "Nothing starts until you choose." (D-55). Once started the card collapses to one line with the
  * answers and when it started; the work itself then appears as a normal hand-off below.
+ * D-74.3: "Not now" cancels the questions — nothing starts, and the card settles into one line.
  */
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -11,7 +12,15 @@ import { emitter } from '@/renderer/utils/emitter';
 import { resolveEngineConversation } from '../KelApprovalCard';
 import { KelAnswerBox } from './KelAnswerBox';
 import { KelChoiceChips, OTHER_CHIP } from './KelChoiceChips';
-import { scopingBestGuess, scopingStart, scopingView, type ScopingAnswer, type ScopingRecorded, type ScopingView } from './officeApi';
+import {
+  scopingBestGuess,
+  scopingDismiss,
+  scopingStart,
+  scopingView,
+  type ScopingAnswer,
+  type ScopingRecorded,
+  type ScopingView,
+} from './officeApi';
 import { REFRESH_WORK_CARDS_EVENT, refreshWorkCards } from './workCardEvents';
 import { iconChat, iconCheck, iconSparkle } from './workCardIcons';
 import { clockTime } from './workCardModel';
@@ -125,6 +134,16 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
   }, [engineCid, open, read]);
 
   if (!view) return null;
+
+  if (view.state === 'dismissed') {
+    return (
+      <div className='kel-sc-collapsed kel-sc-collapsed--dismissed' data-testid='kel-scoping-dismissed' data-scoping-card={view.id}>
+        <img src={iconChat} alt='' />
+        <span className='kel-sc-collapsed__word'>Not now</span>
+        <span className='kel-sc-collapsed__answers'>Nothing started. Ask again whenever you want it.</span>
+      </div>
+    );
+  }
 
   if (view.state !== 'open') {
     const started = clockTime(view.started_at);
@@ -245,6 +264,16 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
           data-testid='kel-scoping-vetting'
         >
           Vet the design first
+        </button>
+        <button
+          type='button'
+          className='kel-wd-button'
+          disabled={busy}
+          title='Cancel these questions. Nothing starts.'
+          onClick={() => void run(() => scopingDismiss(view.id, engineCid || null))}
+          data-testid='kel-scoping-not-now'
+        >
+          Not now
         </button>
         <span className='kel-wc-push' />
         <span className='kel-sc__nothing'>Nothing starts until you choose.</span>

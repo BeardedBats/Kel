@@ -8,15 +8,19 @@
  * chat model stays on Settings → Model and in the composer (D-69: staff always use their role model).
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { KelButton, KelCard, KelLoading } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   MODE_HINTS,
   MODE_LABELS,
+  PURPOSE_WORDS,
   STAFF_DESCRIPTIONS,
   TIER_WORDS,
   fellBackLine,
+  inEffectLine,
+  kelModelInEffect,
   kelStaffRanking,
   kelScopingThreshold,
   kelSetScopingThreshold,
@@ -25,6 +29,7 @@ import {
   kelStaffSetRole,
   orderRoles,
   reasoningLabel,
+  type KelModelView,
   type RankingClass,
   type RankingView,
   type ScopingThresholdView,
@@ -32,6 +37,7 @@ import {
   type StaffMode,
   type StaffModelOption,
   type StaffRoleChoice,
+  type StaffRoleModelOption,
   type StaffRoleRow,
 } from '@renderer/components/kel/staffModels/staffModelsApi';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
@@ -59,13 +65,23 @@ const defaultSentence = (listing: StaffListing, row: StaffRoleRow): string | nul
   return `Default: ${MODE_LABELS[base.mode] ?? base.mode} · ${modelLabel(listing, base.model)}`;
 };
 
+/**
+ * LIVE-3: the models this role can pick — the engine's per-role options (each available or not for
+ * this role, with why) when it sends them, else the shared catalog.
+ */
+const roleOptions = (listing: StaffListing, row: StaffRoleRow): StaffRoleModelOption[] =>
+  row.model_options?.length ? row.model_options : listing.models;
+
 /** A model for Preferred/Fixed when the row has none yet: the role's default, else one that can run. */
-const pickModel = (listing: StaffListing, row: StaffRoleRow): string | null =>
-  row.model ??
-  row.default?.model ??
-  listing.models.find((model) => model.available !== false)?.id ??
-  listing.models[0]?.id ??
-  null;
+const pickModel = (listing: StaffListing, row: StaffRoleRow): string | null => {
+  if (row.model) return row.model;
+  const options = roleOptions(listing, row);
+  const perRole = Boolean(row.model_options?.length);
+  const fallback = row.default?.model ?? null;
+  // Per role, a default this role can't use is passed over for one it can.
+  if (fallback && (!perRole || options.find((model) => model.id === fallback)?.available !== false)) return fallback;
+  return options.find((model) => model.available !== false)?.id ?? fallback ?? options[0]?.id ?? null;
+};
 
 const reasoningOptionsFor = (listing: StaffListing, row: StaffRoleRow): string[] => {
   if (row.mode === 'AUTOMATIC' || !row.model) return ['auto'];
@@ -74,8 +90,17 @@ const reasoningOptionsFor = (listing: StaffListing, row: StaffRoleRow): string[]
   return fromRow ?? (fromModel?.length ? fromModel : ['auto']);
 };
 
-const optionText = (model: StaffModelOption): string =>
-  model.available === false ? `${model.label} (unavailable)` : model.label;
+/**
+ * "DeepSeek Flash (can't change code, so it can't do the Builder's code work)" for a model this role
+ * can't use (the engine's per-role reason); "(unavailable)" in the shared catalog of an older engine.
+ */
+const optionText = (model: StaffModelOption | StaffRoleModelOption, perRole: boolean): string => {
+  if (model.available !== false) return model.label;
+  if (!perRole) return `${model.label} (unavailable)`;
+  const note = String(model.note ?? '').trim().replace(/[.\s]+$/, '');
+  const why = note.toLowerCase().startsWith(model.label.toLowerCase()) ? note.slice(model.label.length).trim() : note;
+  return `${model.label} (${why || 'unavailable'})`;
+};
 
 function StaffRow({
   row,
@@ -96,6 +121,9 @@ function StaffRow({
   const reasoningOptions = reasoningOptionsFor(listing, row);
   const unavailable = !automatic && row.model && row.available === false;
   const description = STAFF_DESCRIPTIONS[row.role];
+  const options = roleOptions(listing, row);
+  const perRole = Boolean(row.model_options?.length);
+  const purpose = row.purpose ? PURPOSE_WORDS[row.purpose] ?? null : null;
   const fallbackDefault = defaultSentence(listing, row);
   const fellBack = fellBackLine(row.last_run);
 
@@ -121,6 +149,11 @@ function StaffRow({
         <div className='kel-staff-row__name'>
           <strong>{row.label}</strong>
           {description && <span>{description}</span>}
+          {purpose ? (
+            <span className='kel-staff-row__purpose' data-testid={`staff-purpose-${row.role}`} data-purpose={row.purpose}>
+              {purpose}
+            </span>
+          ) : null}
         </div>
         <div className='kel-staff-row__controls'>
           <label className='kel-staff-row__field'>
@@ -150,12 +183,18 @@ function StaffRow({
               onChange={(event) => changeModel(event.target.value)}
             >
               {automatic && <option value=''>Kel chooses</option>}
-              {!automatic && row.model && !listing.models.some((model) => model.id === row.model) && (
+              {!automatic && row.model && !options.some((model) => model.id === row.model) && (
                 <option value={row.model}>{row.model_label ?? row.model}</option>
               )}
-              {!automatic && listing.models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {optionText(model)}
+              {/* LIVE-3: a model the engine says this role can't use can't be picked (the current one stays shown). */}
+              {!automatic && options.map((model) => (
+                <option
+                  key={model.id}
+                  value={model.id}
+                  disabled={perRole && model.available === false && model.id !== row.model}
+                  title={model.note ?? undefined}
+                >
+                  {optionText(model, perRole)}
                 </option>
               ))}
             </select>
@@ -388,6 +427,33 @@ export function ScopingThresholdCard() {
   );
 }
 
+/**
+ * FN-06: which model is in effect, said plainly. Opened from a chat (`?conversation=` — the engine's
+ * id, e.g. from a needs-you card's "Change the model in Staff & models"), it names that chat's own
+ * model when it has one; otherwise Kel's model, which every chat uses unless it picks its own.
+ */
+const useInEffect = (listing: StaffListing | null): { line: string | null; forChat: boolean } => {
+  const { search } = useLocation();
+  const conversation = new URLSearchParams(search).get('conversation');
+  const [chatView, setChatView] = useState<KelModelView | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setChatView(null);
+    if (!conversation) return;
+    kelModelInEffect(conversation)
+      .then((view) => {
+        if (alive) setChatView(view);
+      })
+      .catch((): void => undefined);
+    return () => {
+      alive = false;
+    };
+    // Kel's model may have just changed on this page: read the chat's view again with the listing.
+  }, [conversation, listing]);
+  if (conversation && chatView) return { line: inEffectLine(chatView, true), forChat: true };
+  return { line: inEffectLine(listing?.kel_model, false), forChat: false };
+};
+
 const StaffModelsSettings: React.FC = () => {
   const [listing, setListing] = useState<StaffListing | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -428,6 +494,7 @@ const StaffModelsSettings: React.FC = () => {
   }, []);
 
   const rows = listing ? orderRoles(listing.roles) : [];
+  const inEffect = useInEffect(listing);
 
   return (
     <SettingsPageWrapper contentClassName='max-w-920px'>
@@ -445,6 +512,11 @@ const StaffModelsSettings: React.FC = () => {
               Kel's recommended default; change one here or reset it any time. The model you pick in a chat
               is only for Kel's own replies.
             </p>
+            {inEffect.line ? (
+              <p className='kel-staff-models__in-effect' data-testid='staff-kel-in-effect' data-for-chat={inEffect.forChat || undefined}>
+                {inEffect.line}
+              </p>
+            ) : null}
             {rows.length === 0 ? (
               <p className='kel-staff-models__note'>Kel did not list any staff roles. Try again in a moment.</p>
             ) : (

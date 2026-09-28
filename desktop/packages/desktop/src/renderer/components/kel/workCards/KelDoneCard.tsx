@@ -16,7 +16,7 @@ import { sendNeedsAnswer } from './needsAnswer';
 import { officeItem, type OfficeItemDetail } from './officeApi';
 import { REFRESH_WORK_CARDS_EVENT, openWorkCard, refreshWorkCards } from './workCardEvents';
 import { StateIcon, iconFolder, iconFolder13, iconUndo } from './workCardIcons';
-import { clockTime, detailStateLabel, isUncertain } from './workCardModel';
+import { clockTime, detailStateLabel, isUncertain, isUndone, undoneLine } from './workCardModel';
 import './KelWorkCardsRow5.css';
 
 const PASS = new Set(['passed', 'pass', 'verified', 'ok', 'success', 'accepted']);
@@ -119,7 +119,15 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
   const folder = application?.root ?? null;
   const state = detail.state;
   const label = state === 'failed' && !isUncertain(detail) ? 'Didn’t pass its checks' : detailStateLabel(detail);
-  const applyWords = (detail.kind ?? '') === 'code' ? appliedWords(application, detail.finished_at) : null;
+  // LIVE-12: an undone change says when it was undone and what came back (the engine's record).
+  const undone = (detail.kind ?? '') === 'code' && isUndone({ undone: detail.undone, application });
+  const applyWords =
+    (detail.kind ?? '') === 'code'
+      ? undone
+        ? undoneLine({ undone: detail.undone, application })
+        : appliedWords(application, detail.finished_at)
+      : null;
+  const uncertain = state === 'failed' && isUncertain(detail);
   const firstSentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
   const sentence = applyWords ? withoutPlace(firstSentence) : firstSentence;
   const checks = checksLine(meta);
@@ -142,7 +150,7 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
 
   return (
     <section
-      className={`kel-dc kel-dc--${state}`}
+      className={`kel-dc kel-dc--${state}${uncertain ? ' is-uncertain' : ''}`}
       aria-label={`${detail.title}: ${label}`}
       data-testid='kel-done-card'
       data-done-card={job}
@@ -150,7 +158,7 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
     >
       <div className='kel-dc__head'>
         <span className='kel-dc__lead'>
-          <StateIcon state={state} size='detail' />
+          <StateIcon state={state} size='detail' uncertain={uncertain} />
         </span>
         <span className='kel-dc__title'>{detail.title}</span>
         <span className='kel-dc__state' data-testid='kel-done-card-state'>

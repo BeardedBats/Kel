@@ -59,6 +59,22 @@ export interface OfficeItem {
   verdict?: string | null;
   /** VIS-6: the work is paused (the engine's PAUSED / PAUSING), so its open step shows "Paused". */
   paused?: boolean | null;
+  /** LIVE-12: set once Nick undid an applied change — when, and how many files and folders it put back. */
+  undone?: OfficeUndone | null;
+  /** Coding work: where its checked change stands (APPLIED / UNDONE / waiting…), without a detail read. */
+  application?: OfficeApplicationState | null;
+}
+
+export interface OfficeUndone {
+  at?: number | null;
+  files?: number | null;
+  folders?: number | null;
+}
+
+export interface OfficeApplicationState {
+  state?: string | null;
+  decision?: string | null;
+  waiting_reason?: string | null;
 }
 
 export interface OfficeList {
@@ -90,6 +106,8 @@ export interface OfficeStaff {
   /** Why what ran differs from what was asked, in plain words. */
   note?: string | null;
   independence?: 'different' | 'reduced' | string | null;
+  /** The engine's own words for how independent this member's check is (LIVE-10). */
+  independence_label?: string | null;
   started_at?: number | null;
   finished_at?: number | null;
   /** LIVE-10: Kel's row — no planning model answered because Kel used its standard plan. */
@@ -101,6 +119,9 @@ export interface OfficeStep {
   label: string;
   state?: string | null;
   at?: number | null;
+  attempts?: number | null;
+  /** LIVE-3: a restart or a lost worker stopped this step part-way; Kel won't repeat it on its own. */
+  interrupted?: boolean | null;
 }
 
 export interface OfficeFinding {
@@ -115,6 +136,8 @@ export interface OfficeReview {
   verdict?: string | null;
   checked_by?: string | null;
   independence?: string | null;
+  /** The engine's own words for how independent the check was (LIVE-10). */
+  independence_label?: string | null;
   findings?: OfficeFinding[] | null;
 }
 
@@ -127,6 +150,10 @@ export interface OfficeOracle {
   findings?: OfficeFinding[] | null;
   /** LIVE-10: what the second opinion concluded, in one plain sentence (null while it runs). */
   conclusion?: string | null;
+  /** What the second opinion looked at, and what it could not, in its own words. */
+  coverage?: string | null;
+  /** The engine's own words for how independent the second opinion was. */
+  independence_label?: string | null;
 }
 
 export interface OfficeVerification {
@@ -180,12 +207,31 @@ export interface OfficeRaised {
   ceilings?: OfficeBudgetCeilings | null;
 }
 
-/** What kind of wait a needs-you card is (D-70), which decides where its answer goes. */
-export type OfficeWaitKind = 'approval' | 'apply' | 'second_opinion' | 'paused' | 'interrupted' | 'blocked' | 'clarification';
+/**
+ * What kind of wait a needs-you card is (D-70), which decides where its answer goes. LIVE-3:
+ * `no_model` (no model here can run it) and `out_of_tries` (it ran out of tries) answer "Try again"
+ * like `interrupted`.
+ */
+export type OfficeWaitKind =
+  | 'approval'
+  | 'apply'
+  | 'second_opinion'
+  | 'paused'
+  | 'interrupted'
+  | 'no_model'
+  | 'out_of_tries'
+  | 'blocked'
+  | 'clarification';
 
 export interface OfficeQuestionOption {
   id: string;
   label: string;
+  /**
+   * LIVE-3: an option that is not an answer but a place to go (`open_settings`, with `target`
+   * 'staff' for Settings → Staff & models). Nothing is sent to Kel for it.
+   */
+  action?: 'open_settings' | string | null;
+  target?: string | null;
 }
 
 export interface OfficeQuestion {
@@ -219,8 +265,20 @@ export const officeListForChat = (conversation: string): Promise<OfficeList> =>
 export const officeItem = (job: string): Promise<OfficeItemDetail> =>
   kelRequest<OfficeItemDetail>(`/api/office/item?job=${encodeURIComponent(job)}`);
 
-/** Remove a finished card; finished work stays at the top until Nick does this (D-68). */
-export const officeDismiss = (id: string): Promise<unknown> => kelRequest<unknown>('/api/office', { action: 'dismiss', id });
+export interface OfficeDismissed {
+  dismissed?: boolean;
+  already?: boolean;
+  job_id?: string;
+  /** D-74.3: the id was an open scoping card's, so "Not now" cancelled its questions. */
+  scoping?: boolean;
+}
+
+/**
+ * Remove a finished card; finished work stays at the top until Nick does this (D-68). With a scoping
+ * card's `scoping_id` it is "Not now" (D-74.3): the questions are cancelled and nothing starts.
+ */
+export const officeDismiss = (id: string): Promise<OfficeDismissed> =>
+  kelRequest<OfficeDismissed>('/api/office', { action: 'dismiss', id });
 
 /** Move a budget-stopped job one budget size up so it continues (Nick's own act; Routing 2 §5.4). */
 export const officeRaiseBudget = (id: string): Promise<OfficeRaised> =>
@@ -258,7 +316,8 @@ export interface ScopingQuestion {
 export interface ScopingView {
   id: string;
   title: string;
-  state: 'open' | 'started' | 'best_guess';
+  /** `dismissed`: Nick chose "Not now" (D-74.3) — nothing started. */
+  state: 'open' | 'started' | 'best_guess' | 'dismissed';
   conversation_id: string;
   project_id?: string | null;
   questions: ScopingQuestion[];
@@ -270,6 +329,7 @@ export interface ScopingView {
   answer_line?: string | null;
   submission_id?: string;
   already?: boolean;
+  dismissed?: boolean;
   /** Answers recorded while the card is open — typed in the chat, understood by Kel — by question id. */
   recorded?: Record<string, ScopingRecorded> | null;
 }
@@ -294,3 +354,7 @@ export const scopingStart = (id: string, answers: Record<string, ScopingAnswer>,
 /** "Just start with your best guess": starts at once; Kel's assumptions are recorded. */
 export const scopingBestGuess = (id: string, conversation?: string | null) =>
   kelRequest<ScopingView>('/api/scoping', { action: 'best_guess', id, ...(conversation ? { conversation } : {}) });
+
+/** D-74.3 "Not now": cancel an open scoping card. Nothing is started; Kel says so in the chat. */
+export const scopingDismiss = (id: string, conversation?: string | null) =>
+  kelRequest<ScopingView>('/api/scoping', { action: 'not_now', id, ...(conversation ? { conversation } : {}) });
