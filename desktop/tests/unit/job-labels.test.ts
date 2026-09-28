@@ -33,13 +33,17 @@ describe('workLabelFor (HVRA-MINOR-001)', () => {
     expect(workLabelFor('job_review_summary', null)).toBe('Work item');
   });
 
-  it('takes only the first line and keeps the label bounded', () => {
+  it('names work the way its card does: the handoff title, else the request shortened like the engine (VIS-13)', () => {
     expect(workLabelFor('j1', [{ id: 'j1', contract: { request: 'Do the thing\nextra detail' } }])).toBe(
-      'Do the thing'
+      'Do the thing extra detail'
     );
-    const label = workLabelFor('j2', [{ id: 'j2', contract: { request: 'a'.repeat(400) } }]);
-    expect(label.length).toBeLessThanOrEqual(120);
+    expect(
+      workLabelFor('j3', [{ id: 'j3', contract: { request: 'Build me a tiny app', handoff: { title: 'Tiny app' } } }])
+    ).toBe('Tiny app');
+    const label = workLabelFor('j2', [{ id: 'j2', contract: { request: 'word '.repeat(80) } }]);
+    expect(label.length).toBeLessThanOrEqual(60);
     expect(label.endsWith('…')).toBe(true);
+    expect(label).not.toMatch(/ …$/);
   });
 });
 

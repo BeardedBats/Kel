@@ -15,6 +15,7 @@
 
 import type { KelBoundaryRequest, KelContinuationCandidate, KelSchedule, KelWorkJob } from './kelApi';
 import { workWords } from './workLanguage';
+import { workTitle } from './jobLabels';
 
 export type AttentionKind =
   | 'approval'
@@ -80,12 +81,9 @@ export interface AttentionFilter {
 const jobConversation = (job: KelWorkJob): string | undefined => job.conversation;
 export const jobProject = (job: KelWorkJob): string | undefined => job.contract?.project_id;
 
-/** A job's title: the first line of the person's own request (never an id). */
-export const requestTitle = (job: Pick<KelWorkJob, 'contract'> | null | undefined, fallback = 'Untitled work'): string => {
-  const line = job?.contract?.request?.trim().split(/\r?\n/, 1)[0]?.trim();
-  if (!line) return fallback;
-  return line.length > 120 ? `${line.slice(0, 119).trimEnd()}…` : line;
-};
+/** A job's title: the name its work card shows (VIS-13, `workTitle`), never an id. */
+export const requestTitle = (job: Pick<KelWorkJob, 'contract'> | null | undefined, fallback = 'Untitled work'): string =>
+  workTitle(job, fallback);
 
 /**
  * Activity, with this job highlighted. D-70: the Work page is retired; Activity lists every job
@@ -102,8 +100,8 @@ export const hasWorkCard = (job: Pick<KelWorkJob, 'contract'> | null | undefined
  * D-70: when a job has a card, Needs you defers to it — the one action opens the chat with that
  * card's panel open, where Kel's question and its answer box are.
  */
-export function cardAction(job: Pick<KelWorkJob, 'id' | 'conversation'>): AttentionAction {
-  return { ...jobChatAction(job, 'Answer on its card'), card: job.id };
+export function cardAction(job: Pick<KelWorkJob, 'id' | 'conversation'>, label = 'Answer on its card'): AttentionAction {
+  return { ...jobChatAction(job, label), card: job.id };
 }
 
 /**
