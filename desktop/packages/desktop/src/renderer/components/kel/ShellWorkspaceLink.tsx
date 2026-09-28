@@ -50,7 +50,8 @@ export default function ShellWorkspaceLink({ conversationId }: { conversationId?
       ? projectLabel(chat.project)
       : 'Project'
     : activeProjectLabel(view) || (view.loaded ? ALL_PROJECTS_LABEL : 'Projects');
-  const title = inChat ? chat.project?.root ?? undefined : view.activeProject?.root ?? undefined;
+  // VIS-11: the tooltip names the project (the full name when the chip truncates it), never a folder path.
+  const title = label;
 
   const toggle = () => {
     if (open) {

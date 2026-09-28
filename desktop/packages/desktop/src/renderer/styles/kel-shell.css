@@ -604,7 +604,9 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
 .kel-v2-shell[data-theme='dark'] .kel-shell-message-meta,
 [data-theme='dark'] .kel-v2-shell .kel-shell-message-meta { font: 500 13px/16px var(--kel-shell-heading); color: #cfe7ff; }
 @media (min-width: 768px) {
-  .kel-v2-shell .message-item .markdown-shadow { --kel-chat-list-line-height: 20px; --kel-chat-list-item-gap: 14px; --kel-chat-list-margin: 10px; --kel-chat-list-description-color: var(--kel-figma-color-text-muted); --kel-chat-list-primary-color: var(--kel-figma-color-text-primary); --kel-chat-list-title-font: var(--kel-shell-heading); --kel-chat-list-title-weight: 500; }
+  /* VIS-9: list items read like paragraphs (Figma 185:4284): primary text, the paragraph's font and
+     line height; bold stays in the body font. Only the spacing between items is list-specific. */
+  .kel-v2-shell .message-item .markdown-shadow { --kel-chat-list-item-gap: 14px; --kel-chat-list-margin: 10px; --kel-chat-list-description-color: var(--kel-figma-color-text-primary); --kel-chat-list-primary-color: var(--kel-figma-color-text-primary); }
   .kel-v2-shell .kel-shell-message-meta { font: 500 13px/16px var(--kel-shell-heading); letter-spacing: .1px; }
   .kel-v2-shell [data-message-position='left'] .kel-shell-message-meta { gap: 10px; margin-bottom: 10px; padding-bottom: 2px; }
   .kel-shell-message-avatar { display: flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; }
