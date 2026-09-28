@@ -16,6 +16,11 @@ export type ReplyQuote = {
   position: 'left' | 'right' | 'center' | 'pop';
 };
 
+/** D-75.2: what an edit or a regenerate asks the message list to do. */
+export type KelRewriteRequest =
+  | { kind: 'edit'; conversationId: string; messageId: string; text: string; newText: string; files: string[] }
+  | { kind: 'regenerate'; conversationId: string; messageId: string };
+
 interface EventTypes {
   // The 2nd arg is the target conversation id: only the send box whose
   // conversation matches consumes the event (team renders one send box per
@@ -44,6 +49,10 @@ interface EventTypes {
   'sendbox.fill': [string]; // prompt text to fill
   'agent.error.retry': [string, string]; // failed plain-text prompt, target conversation
   'agent.error.pick-model': [string]; // target conversation
+  /** D-75.2: edit a sent message or answer the last reply again (handled by the open message list). */
+  'kel.message.rewrite': [KelRewriteRequest];
+  /** D-75.2: send this text (with these attached files) as the next message of the target chat. */
+  'kel.message.resend': [string, string, string[]]; // text, target conversation, file paths
   'sendbox.reply': [ReplyQuote]; // reply/quote a message
   'sendbox.reply.clear': void; // clear reply quote
   /**

@@ -146,6 +146,7 @@ class Composer:
         with contextlib.closing(self.store.connect()) as db:
             rows = [dict(r) for r in db.execute(
                 'SELECT role, text FROM messages WHERE conversation_id=?'
+                ' AND seq NOT IN (SELECT seq FROM rewound_messages)'  # D-75.2: rewound turns are gone
                 ' ORDER BY seq DESC LIMIT ?', (conversation_id, recent_limit))]
         rows.reverse()
         lines = ['[%s] %s' % (row['role'], str(row['text'])[:400]) for row in rows]

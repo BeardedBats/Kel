@@ -50,7 +50,7 @@ import { useCrossSessionMessageEnabled } from '@/renderer/hooks/chat/useCrossSes
 import { emitter, useAddEventListener } from '@/renderer/utils/emitter';
 import { localSelectionItems, mergeFileSelectionItems } from '@/renderer/utils/file/fileSelection';
 import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/messageFiles';
-import type { ChatFileRef } from '@/common/types/chatFile';
+import { type ChatFileRef, uploadFileRef } from '@/common/types/chatFile';
 import { Button, Message, Tag } from '@arco-design/web-react';
 import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -480,6 +480,19 @@ Please check your local CLI tool authentication status`,
     if (targetConversationId !== conversation_id) return;
     void onSendHandler(message).catch((): void => {});
   }, [conversation_id, onSendHandler]);
+
+  // D-75.2: an edited message, or the message whose reply is being answered again, goes out as the
+  // chat's next message with its own files (never the composer's). While Kel is busy it waits in
+  // the composer instead, so nothing typed is lost.
+  useAddEventListener('kel.message.resend', (message: string, targetConversationId: string, paths: string[]) => {
+    if (targetConversationId !== conversation_id || !message.trim()) return;
+    if (!supportsMidturnDelivery && isBusy) {
+      setContent(message);
+      Message.warning('Kel is still answering. Your message is in the box; send it when the reply is done.');
+      return;
+    }
+    void executeCommand({ input: message, files: paths.map((path) => uploadFileRef(path)) }).catch((): void => {});
+  }, [conversation_id, executeCommand, isBusy, supportsMidturnDelivery, setContent]);
 
   useAddEventListener('agent.error.pick-model', (targetConversationId: string) => {
     if (targetConversationId !== conversation_id) return;
