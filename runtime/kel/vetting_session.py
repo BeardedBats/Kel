@@ -148,6 +148,33 @@ class Vetting:
         return {'session_id': session_id, 'topic': topic, 'batch': batch['ordinal'],
                 'question_ids': ids, 'message': message}
 
+    def open_questions(self, db, project_id, conversation, topic, questions, template='scoping',
+                       state='SCOPING', actor='kel'):
+        """A session over a caller's own short question set, inside the caller's transaction.
+
+        D-70 scoping: Kel's two or three "before I start" questions are vetting questions, so a
+        typed answer is understood by the same `VettingAnswerIngestion` as every other source. The
+        session never becomes the conversation's ACTIVE vetting session (its `state` is the
+        caller's), so ordinary chat messages are never read as answers to it. `questions`:
+        [{id, prompt, options:[{code,label}]}]; every question accepts a free-text answer.
+        """
+        session_id = uid()
+        now = time.time()
+        db.execute('INSERT INTO vetting_sessions(id,project_id,conversation_id,template,topic,state,'
+                   'current_batch,created,updated) VALUES(?,?,?,?,?,?,?,?,?)',
+                   (session_id, project_id or 'default', conversation, template, topic, state, 1, now, now))
+        ids = [question['id'] for question in questions]
+        db.execute('INSERT INTO vetting_batches(id,session_id,ordinal,title,question_ids,created)'
+                   ' VALUES(?,?,?,?,?,?)', (uid(), session_id, 1, 'Batch 1', json.dumps(ids), now))
+        for ordinal, question in enumerate(questions, 1):
+            db.execute(
+                'INSERT INTO vetting_questions(id,session_id,bank_id,section,ordinal,prompt,explain,'
+                'visual,open,options,created) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                (question['id'], session_id, template + ':' + question['id'], template, ordinal,
+                 question['prompt'], '', 0, 1, json.dumps(question['options']), now))
+        self._event(db, session_id, 'session_started', actor, {'topic': topic, 'template': template})
+        return session_id
+
     def _materialize(self, db, session_id, ids, ordinal):
         bank = self.bank()
         batch_id = uid()
@@ -530,7 +557,8 @@ class Vetting:
                 # A finished or paused session stays reachable: the panel keeps showing its
                 # decisions, open questions, greyboxes and the spec snapshot after the run ends.
                 session = _row(db.execute(
-                    'SELECT * FROM vetting_sessions WHERE conversation_id=? ORDER BY created DESC LIMIT 1',
+                    "SELECT * FROM vetting_sessions WHERE conversation_id=? AND template<>'scoping'"
+                    ' ORDER BY created DESC LIMIT 1',
                     (conversation,)).fetchone())
             if not session:
                 # The drawer may be pointed at a different conversation than the one the session
@@ -544,7 +572,7 @@ class Vetting:
                     cross = session['conversation_id'] != conversation
             if not session:
                 session = _row(db.execute(
-                    'SELECT * FROM vetting_sessions ORDER BY created DESC LIMIT 1').fetchone())
+                    "SELECT * FROM vetting_sessions WHERE template<>'scoping' ORDER BY created DESC LIMIT 1").fetchone())
                 if session:
                     cross = session['conversation_id'] != conversation
             if not session:

@@ -101,6 +101,10 @@ def state_of(store, job, brief=None):
             'Its saved request is kept in this conversation.'
     if state == 'CLOSED':
         if verdict == 'VERIFIED':
+            from .needs_answer import settled_line
+            settled = settled_line(store, job)  # D-70: Nick answered Apply anyway / Leave it on the card
+            if settled:
+                return settled[0], settled[1], False, settled[1], None
             needed = attention(store, job)
             if needed:
                 return 'needs_you', needed['why'], True, needed['why'], needed['next']
@@ -291,7 +295,7 @@ def _item(store, job, conv_map, clock, calls_by_job, runs_by_job, brief):
             'updated_at': last, 'finished_at': last if finished else None}
 
 
-GROUP = {'needs_you': 0, 'working': 1, 'in_review': 1, 'done': 2, 'failed': 2, 'stopped': 2}
+GROUP = {'scoping': 0, 'needs_you': 0, 'working': 1, 'in_review': 1, 'done': 2, 'failed': 2, 'stopped': 2}
 
 
 def _order_key(item):
@@ -324,6 +328,8 @@ def items(store, *, conversation=None, project=None):
     for job in chosen:
         out.append(_item(store, job, conv_map, clock, {job['id']: calls(store, job['id'])},
                          {job['id']: _run_states(store, job['id'])}, cont.resume_brief(job['id'])))
+    from .scoping import office_items
+    out.extend(office_items(store, conversation=conversation, project=project))  # D-70: "Scoping" cards
     out.sort(key=_order_key)
     for index, item in enumerate(out):
         item['order'] = index
@@ -422,6 +428,12 @@ def detail(store, job_id):
     published = _published(store, job_id)
     handoff = (job.get('contract') or {}).get('handoff') or {}
     out = dict(base)
+    if state == 'needs_you':
+        from .needs_answer import question
+        try:
+            out['question'] = question(store, job, why, nxt)  # D-70: answer "Needs you" inside the card
+        except Exception:
+            out['question'] = None
     try:
         from .budget import BUDGET_WAIT, view as budget_view
         budget = budget_view(store, job)

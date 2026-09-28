@@ -1294,6 +1294,7 @@ def verification_details(job):
                 reviewers.append(entry)
     summary = verification_summary(job)
     return {'kind': 'result', 'verdict': job.get('verdict'),
+            'job': job.get('id'),  # D-70: the result's done card reads its work card by this id
             'checks': [{'kind': c.get('kind'), 'verdict': c.get('verdict')} for c in checks],
             'executed_by': executors, 'reviewed_by': reviewers,
             'summary': summary.split('\n') if summary else []}

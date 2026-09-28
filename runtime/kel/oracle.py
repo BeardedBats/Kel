@@ -376,6 +376,9 @@ def attention(store, job):
     """{'why','next'} when the Oracle's result needs Nick (a live blocker, or it could not run), else None."""
     if job.get('state') != 'CLOSED' or job.get('verdict') != 'VERIFIED':
         return None
+    from .needs_answer import recorded
+    if recorded(store, job['id']):
+        return None  # D-70: Nick answered it on the card (Apply anyway / Leave it)
     reason = gate(store, job)
     if not reason or reason == 'the independent second opinion has not finished':
         return None

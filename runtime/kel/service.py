@@ -621,6 +621,7 @@ class Service:
                             decision=decide_turn(turn_model,packet,text,running,forced=forced,images=images,cancel=cancel)
                 if cancel.is_set():
                     return None  # stopped while deciding: nothing is said and nothing starts
+                model_decided=decision is not None
                 if decision is None:
                     # Today's keyword gate: no turn model, or it could not be reached.
                     gate_reply=not needs_work(text) and ((kind in CONVERSATION_KINDS and not code_floor) or (kind is None and not needs_research(text) and not lower.startswith(WORK_PREFIXES)))
@@ -635,6 +636,10 @@ class Service:
                 if decision['action']=='start_background_work':
                     if decision.get('request') and decision['request']!=text:
                         text=self._rewrite_request(sid,decision['request'])
+                    # D-70 item 4: big work (or a plan with open questions) is scoped first; nothing starts.
+                    from . import scoping
+                    if model_decided and scoping.maybe_ask(self,sid,cid,text,packet,kind,greenfield_flag,decision,choice):
+                        return None
                     return self._handoff(sid,cid,text,packet,kind,greenfield_flag,decision,choice)
                 if decision['action']=='reply':
                     self._say(sid,cid,decision['text'],choice)
@@ -1641,6 +1646,13 @@ class Service:
             # D-65: applied (on its own or by you) with Undo, undone, or waiting for you and why.
             from .auto_apply import describe as describe_applications
             view['application']=describe_applications(self.store,[job['id']]).get(job['id'])
+        if job['contract'].get('staffing'):
+            # D-70 item 2: staffed work has a top card; the in-thread card becomes one line that
+            # names the same state the top card shows.
+            from .office import state_of as office_state
+            view['staffed']=True
+            try:view['office_state']=office_state(self.store,job,brief)[0]
+            except Exception:view['office_state']=None
         return view
 
     def _oracle_attention(self,job):
@@ -1729,6 +1741,10 @@ class Service:
             from .apply_changes import apply_checked,undo_applied
             job=self._required(data,'job','Kel could not find that change to apply.')
             if data.get('action')=='undo':return undo_applied(self.store,job,actor='user')  # D-65 Undo
+            if data.get('action') in ('apply_anyway','leave'):
+                # D-70: a needs-you card's "Apply anyway" / "Leave it", answered with you as the actor.
+                from .needs_answer import answer_apply
+                return answer_apply(self.store,job,data['action'],actor='user')
             if data.get('action') not in (None,'apply'):raise PolicyError('Choose Apply or Undo.')
             return apply_checked(self.store,job,actor='user')
         if path=='/api/approval':
@@ -1800,6 +1816,10 @@ class Service:
             return Search(self.store).run(data.get('q',''))
         if path=='/api/approvals':
             return self._approvals_action(data)
+        if path=='/api/scoping':
+            # D-70 item 4: Start (with the answers) or "Just start with your best guess".
+            from .scoping import action as scoping_action
+            return scoping_action(self,data)
         if path=='/api/office':
             # D-68: the one write the live work view has — remove a finished card (Nick's own act) —
             # and Routing 2 §5.4: raise a budget-stopped job's budget so it continues.
@@ -2402,6 +2422,10 @@ def serve(root,port=0):
                         # CP-2: the desktop's 5 s liveness ping — no database work at all.
                         self.reply(200,{'ok':True,'engine_version':ENGINE_VERSION,'draining':service.draining});return
                     if parsed.path=='/api/office':self.reply(200,service.office(query));return
+                    if parsed.path=='/api/scoping':
+                        from .scoping import view as scoping_view
+                        self.reply(200,scoping_view(service.store,(query.get('id') or [''])[0],
+                                                    (query.get('conversation') or [None])[0]));return
                     if parsed.path=='/api/office/item':
                         self.reply(200,service.office_item((query.get('job') or [''])[0]));return
                     if parsed.path=='/api/handoff':
