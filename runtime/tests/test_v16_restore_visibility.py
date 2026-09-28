@@ -47,20 +47,24 @@ class RestoreOutcomeTests(unittest.TestCase):
         self.assertTrue(outcome['ok'])
         self.assertFalse((self.root / MARKER).exists())  # the marker still means "applied"
 
-    def test_a_failed_restore_is_recorded_and_keeps_its_marker(self):
+    def test_a_failed_restore_is_recorded_rolled_back_and_never_retried(self):
+        # FN-02 replaces "keep the marker": a restore is attempted once, all or nothing.
+        (self.root / 'notes.txt').write_text('live\n', encoding='utf-8')
         self._pending_restore()
-        original = backup._restore_entry
+        original = backup._rename
 
         def explode(source, destination):
             raise OSError('disk went away')
 
-        backup._restore_entry = explode
-        self.addCleanup(setattr, backup, '_restore_entry', original)
+        backup._rename = explode
+        self.addCleanup(setattr, backup, '_rename', original)
         self.assertFalse(apply_pending_restore(_Store(self.root)))
         outcome = self._recorded_outcome()
         self.assertFalse(outcome['ok'])
-        self.assertEqual(outcome['detail'], 'OSError')
-        self.assertTrue((self.root / MARKER).exists(), 'a half-applied restore must keep its marker')
+        self.assertEqual(outcome['technical'], 'OSError')
+        self.assertIn('Kel could not replace', outcome['detail'])
+        self.assertEqual((self.root / 'notes.txt').read_text(encoding='utf-8'), 'live\n')
+        self.assertFalse((self.root / MARKER).exists(), 'a failed restore is never re-applied')
 
     def test_the_service_survives_a_restore_that_cannot_start_and_surfaces_it(self):
         original = backup.apply_pending_restore
@@ -76,7 +80,8 @@ class RestoreOutcomeTests(unittest.TestCase):
         state = service.state()
         self.assertIn('restore', state)
         self.assertFalse(state['restore']['ok'])
-        self.assertEqual(state['restore']['detail'], 'RuntimeError')
+        self.assertEqual(state['restore']['technical'], 'RuntimeError')
+        self.assertIn('nothing was replaced', state['restore']['detail'])
 
     def test_a_clean_start_reports_no_restore_attempt(self):
         service = Service(str(self.root))
