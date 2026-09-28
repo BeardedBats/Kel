@@ -204,14 +204,12 @@ describe('the palette finds a vetting session and opens its chat (Work panel ret
     await act(async () => {
       fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     });
-    // The row no longer points at the retired Work panel (its words are what the palette matches on).
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'work panel' } });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-    });
-    expect(screen.queryByRole('option', { name: /Garden dashboard/ })).toBeNull();
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'open its chat' } });
+    // The row no longer points at the retired Work panel. (FN-08: a hit the engine matched is kept for
+    // its query, so the row's own words are read from its hover text rather than by filtering.)
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'garden' } });
     const option = await screen.findByRole('option', { name: /Garden dashboard/ }, { timeout: 3000 });
+    expect(option.getAttribute('title')).toBe('open its chat to continue');
+    expect(option.getAttribute('title')).not.toMatch(/work panel/i);
     fireEvent.click(option);
     await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/conversation/app-garden'));
   });
