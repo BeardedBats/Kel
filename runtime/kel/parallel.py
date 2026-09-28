@@ -195,8 +195,11 @@ def _stream_row(store, stream_id):
 
 
 def open_stream(store, *, mission_id, task_id, name, source_root, write_paths,
-                streams_root=None, now=None):
-    """Create one isolated stream workspace from the real source state (never the checkout)."""
+                streams_root=None, now=None, record=None):
+    """Create one isolated stream workspace from the real source state (never the checkout).
+
+    `record(db, stream)` runs inside the transaction that writes the stream row, so a caller's own
+    record of the copy (`code_streams`) exists exactly when the row does."""
     require_text(mission_id, 'mission_id')
     require_text(task_id, 'task_id')
     require_text(name, 'stream name')
@@ -213,6 +216,8 @@ def open_stream(store, *, mission_id, task_id, name, source_root, write_paths,
                    'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                    (stream_id, mission_id, task_id, str(name), str(workspace), str(source), base,
                     json.dumps(paths), 'OPEN', stamp, stamp))
+        if record is not None:
+            record(db, {'stream_id': stream_id, 'workspace': str(workspace), 'base': base})
     return {'stream_id': stream_id, 'mission_id': mission_id, 'task_id': task_id,
             'name': str(name), 'workspace': str(workspace), 'source_root': str(source),
             'base': base, 'write_paths': paths, 'state': 'OPEN'}

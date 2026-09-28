@@ -214,7 +214,7 @@ class EngineStaffingTests(Base):
         final, peak = self.run_engine(adapters, job,
                                       lambda j: sum(1 for m in ('p1', 'p2', 'p3')
                                                     if j['milestones'][m]['attempts'] >= 1) >= 2)
-        self.assertEqual(peak, 2, 'independent parts overlap (the engine cap is two runs)')
+        self.assertEqual(peak, 3, 'independent parts overlap (a D3 job runs up to three parts at once)')
         roles = {call['role'] for call in staff.calls(self.store, job)}
         self.assertEqual(roles, {'discovery'})
         self.assertGreaterEqual(max(call['instance'] for call in staff.calls(self.store, job)), 2,

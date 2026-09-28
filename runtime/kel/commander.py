@@ -14,6 +14,28 @@ def json_object(text):
     return value
 
 
+def _embedded_object(text, key):
+    """The JSON object carrying `key` in a model's answer, even when the runtime put a sentence
+    before it (found live: Codex answered "I'll inspect the project files…" and then the JSON)."""
+    try:
+        value = json_object(str(text or ''))
+        return value if key in value else None
+    except (ValueError, TypeError):
+        pass
+    decoder = json.JSONDecoder()
+    text = str(text or '')
+    start = text.find('{')
+    while start != -1:
+        try:
+            value, _end = decoder.raw_decode(text, start)
+            if isinstance(value, dict) and key in value:
+                return value
+        except ValueError:
+            pass
+        start = text.find('{', start + 1)
+    return None
+
+
 # A reviewer from the same family as the executor is not independent review:
 # the internal worker and the Claude CLI serve the same model line.
 # A reviewer whose model could not run at all (refused, not started): the review goes to the next one.
@@ -129,6 +151,50 @@ class Commander:
                 if question and question.lower() not in {c['question'].lower() for c in clean}:
                     clean.append({'question': question})
             return clean if len(clean) >= 2 else None
+        return None
+
+    def plan_code(self, request, files=(), model=None, on_result=None):
+        """D3 for code: Kel's own model reads a coding request and says whether it splits into 2–3
+        genuinely independent changes that separate Builders can make at the same time, each writing
+        only its own files. Returns the raw proposal (a dict) for `code_streams.validate_parts`, which
+        decides deterministically; None when no planner answered. Never executes anything."""
+        prompt = ('Plan a coding job. Do not write code. Decide whether the request contains two or three genuinely '
+                  'independent code changes that different developers could make at the same time in separate copies '
+                  'of the project: each part creates or changes only its own files (no file belongs to two parts), no '
+                  "part needs another part's new code (no part imports or calls what another part adds), and no part "
+                  'changes shared setup (test configuration, package manifests, lock files, __init__ files another part '
+                  'needs). If it is one change, or the parts depend on each other in any way, return one part and '
+                  'independent false. Return a JSON object {"parts":[{"objective":"what this part does",'
+                  '"source_quote":"exact words from the request","write_paths":["relative/path.py","test_path.py"]}],'
+                  '"independent":true|false}. write_paths lists every file the part creates or changes, including its '
+                  'tests, relative to the project root. Use submit_result to return the JSON text.\nProject files:\n'
+                  + '\n'.join(list(files)[:300]) + '\nSource request:\n' + request)
+        chain, seen = [], set()
+        for candidate in [model, self.model] + list(self.alternates):
+            key = (type(candidate).__name__, getattr(candidate, 'provider', None), getattr(candidate, 'model', None))
+            if candidate is None or key in seen:
+                continue
+            seen.add(key)
+            chain.append(candidate)
+        for candidate in chain:
+            started = time.monotonic()
+            try:
+                result = candidate.execute(prompt)
+            except Exception as exc:
+                result = {'outcome': 'FAILED', 'error': type(exc).__name__}
+            if on_result is not None:
+                try:
+                    on_result(candidate, result if isinstance(result, dict) else {}, int((time.monotonic() - started) * 1000))
+                except Exception:
+                    pass
+            if not isinstance(result, dict) or result.get('outcome') != 'SUCCESS':
+                continue
+            value = _embedded_object(result.get('text'), 'parts')
+            if value is None:
+                return {'independent': False, 'unreadable': True}
+            value['planner'] = {'provider': getattr(candidate, 'provider', None),
+                                'model': result.get('model_used') or getattr(candidate, 'model', None)}
+            return value
         return None
 
     def plan(self, request, context=None, model=None, on_result=None):

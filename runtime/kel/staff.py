@@ -176,6 +176,13 @@ def features_for(contract, request=None):
         consequence = 1  # applied to Nick's folder in Full access (undoable)
         novelty = 2 if contract.get('greenfield') else 0
         breadth = 2 if user_facing else (1 if FEATURE_WORK.search(text) else 0)
+        streams = (contract.get('code_streams') or {}).get('streams') or []
+        if 2 <= len(streams) <= 3:
+            # D3 for code: Kel's plan split the change into parts that write disjoint files and do not
+            # need each other (code_streams.validate_parts), each built in its own project copy.
+            decomposability = 3 if len(streams) >= 3 else 2
+            sequentiality = 0
+            breadth = max(breadth, len(streams))
     else:
         complexity = 0 if (words <= 30 and len(milestones) == 1) else 1
         if len(milestones) >= 3 or words > 150:
@@ -264,9 +271,16 @@ def plan_job(store, contract, request=None, *, tier_max=None):
         reasons.append('code is always written by a Builder (at least one specialist)')
     parts, final = _parts(contract)
     parallel = None
-    if kind == 'code' and tier in ('D3', 'D4'):
-        reasons.append('the coding runtime keeps one project copy per job, so code runs as a pod, '
-                       'not parallel streams')
+    streams = (contract.get('code_streams') or {}).get('streams') or []
+    if kind == 'code' and streams:
+        parallel = _code_parallel(contract, streams, tier, features, flags, reasons)
+        if parallel and tier == 'D2':
+            reasons.append('%d independent code parts that write separate files run at the same time, each '
+                           'in its own project copy (decomposability %d, sequentiality %d; doc 05 E3)'
+                           % (len(streams), features['decomposability'], features['sequentiality']))
+            tier = 'D3'
+    elif kind == 'code' and tier in ('D3', 'D4'):
+        reasons.append('no independent code parts in the plan, so one Builder makes the change')
     elif kind != 'code' and len(parts) >= 2 and final and TIER_RANK[tier] >= 2 \
             and features['decomposability'] >= 2 and features['sequentiality'] <= 1:
         try:
@@ -329,6 +343,39 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             'oracle': {'required': bool(oracle_why), 'why': oracle_why},
             'sentinel': sentinel, 'red_team': red_team,
             'caps': {'workers_max': staffing.CAPS['workers_max'], 'engine_concurrency': 2}}
+
+
+def _code_parallel(contract, streams, tier, features, flags, reasons):
+    """The decomposition statement for parallel code parts (R9), or None with the reason (R1/R6/R8)."""
+    from .parallel import STREAM_LIMIT, WORKER_LIMIT, plan_streams
+    if 'data_migration' in flags:
+        reasons.append('data migrations run one step at a time (R6), so the code parts are not run in parallel')
+        return None
+    if TIER_RANK[tier] < 2 or features['decomposability'] < 2 or features['sequentiality'] > 1:
+        reasons.append('the code parts are too small to be worth separate Builders; one Builder makes the change')
+        return None
+    # R8: every part's Builder at once, plus the one review worker, stays within the worker cap.
+    if len(streams) > STREAM_LIMIT or len(streams) + 1 > WORKER_LIMIT:
+        reasons.append('more parts than the parallel caps allow; one Builder makes the change')
+        return None
+    try:
+        plan = plan_streams({'streams': [{'name': s['id'], 'objective': s['objective'][:200],
+                                          'write_paths': s['write_paths']} for s in streams],
+                             'merge_strategy': contract['code_streams']['merge_strategy']})
+    except PolicyError as exc:
+        reasons.append('code parts are not run in parallel: %s' % exc)
+        return None
+    plan.update(kind='code', integration='code', order=list(contract['code_streams']['order']),
+                caps={'streams_max': STREAM_LIMIT, 'workers_max': WORKER_LIMIT,
+                      'concurrent_workers': len(streams) + 1})
+    return plan
+
+
+def parallel_step(job, milestone_id):
+    """True for one of a D3 job's independent parts (they may run together, up to three at once)."""
+    record = staffing_of(job)
+    parallel = (record or {}).get('parallel') or {}
+    return any(item.get('name') == milestone_id for item in parallel.get('streams') or [])
 
 
 def sentinel_decision(kind, tier, flags):

@@ -1047,6 +1047,8 @@ class Service:
                 project_id=packet['project']['id'];tests=json.loads(row['command'])
             contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
+            if not greenfield:
+                contract=self._plan_code_parts(sid,cid,text,contract)
         elif kind=='research' or classified=='research' or (not classified and needs_research(text)):
             from .research import compile_research
             # LIVE-6: Kel's own model decides whether the research splits into independent parts.
@@ -1064,6 +1066,29 @@ class Service:
         if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
         contract['submission_id']=sid
         return contract
+
+    def _plan_code_parts(self,sid,cid,text,contract):
+        """D3 for code: when a request may hold two or three independent changes, Kel's own model plans
+        the parts and `code_streams` checks the plan deterministically (quotes, disjoint files, no shared
+        test setup, no ordering words). Anything else keeps the one-step contract, with the reason."""
+        from . import code_streams, staff
+        if not (self.commander and staff.enabled() and code_streams.worth_planning(text)):
+            return contract
+        try:
+            kel=self._kel_model(False)
+            value=self.commander.plan_code(text,files=code_streams.project_files(contract['root']),model=kel,
+                on_result=lambda model,result,wall:self._kel_usage('plan',sid,cid,model,result,wall,'planning'))
+            if not value:
+                return contract
+            parts=code_streams.validate_parts(text,value,contract['test_command'])
+            planned=code_streams.parallel_contract(contract,parts)
+            planned['planner']={**(value.get('planner') or {}),'compiler':planned['compiler']}
+            return planned
+        except PolicyError as exc:
+            contract['code_plan']={'ran_as':'one step','why':str(exc)[:300]}
+            return contract
+        except Exception:
+            return contract
 
     def _start_work(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
         """Planning-pool half of a hand-off: compile, create the job, link it; or say it failed.
@@ -1180,13 +1205,25 @@ class Service:
         With the workforce off (KEL_WORKFORCE=0) nothing is added and the job runs as before. A
         decision that cannot be made never blocks the work: the job runs unstaffed and says why."""
         from . import staff
+        from .code_streams import collapse
         if not staff.enabled():
+            if contract.get('code_streams'):
+                collapse(contract,'the workforce is off')  # parts never run unstaffed
             return None
         try:
             contract['staffing']=staff.plan_job(self.store,contract,text)
+            if contract.get('code_streams') and not contract['staffing'].get('parallel'):
+                # D3 for code only when the staffing decision runs the parts side by side; otherwise
+                # the change is one Builder's step (never sequential parts in separate copies).
+                why=next((r for r in reversed(contract['staffing']['reasons']) if 'part' in r),
+                         'the parts did not qualify to run at the same time')
+                collapse(contract,why)
+                contract['staffing']=staff.plan_job(self.store,contract,text)
         except Exception as exc:
             contract.pop('staffing',None)
             contract['staffing_error']=type(exc).__name__
+            if contract.get('code_streams'):
+                collapse(contract,'the staffing decision could not be made')
         return contract.get('staffing')
 
     def _record_staffing(self,job_id,contract):

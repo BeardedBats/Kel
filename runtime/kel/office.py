@@ -239,7 +239,8 @@ def _call_state(call, runs):
 def _objective(job, milestone_id):
     spec = next((m for m in (job.get('contract') or {}).get('milestones') or [] if m.get('id') == milestone_id), {})
     if (job.get('contract') or {}).get('kind') == 'coding':
-        return 'the change'
+        from .code_streams import step_label
+        return step_label(job.get('contract'), milestone_id) or 'the change'
     if milestone_id == (job.get('contract') or {}).get('final_milestone'):
         return 'combining the parts'
     text = str(spec.get('objective') or '')
@@ -311,7 +312,17 @@ def _member(call, runs, job):
             'runtime_version': ran.get('runtime_version'), 'reasoning': REASONING_LABELS.get(reasoning, reasoning) if reasoning else None,
             'asked': asked_view, 'note': note, 'independence': ran.get('independence'),
             'independence_label': INDEPENDENCE_WORDS.get(ran.get('independence')),
-            'step': call.get('milestone_id'), 'started_at': call.get('started'), 'finished_at': call.get('finished')}
+            'step': call.get('milestone_id'), 'step_label': _step_label(job, call.get('milestone_id')) if call['kind'] == 'work' else None,
+            'started_at': call.get('started'), 'finished_at': call.get('finished')}
+
+
+def _step_label(job, milestone_id):
+    """The step a staff row works on, in words ("Part 2 of 3: …", "Combining the parts"), when the
+    work has more than one step; None for one-step work (the row's `doing` already says it)."""
+    if not milestone_id or len((job.get('contract') or {}).get('milestones') or []) < 2:
+        return None
+    what = _objective(job, milestone_id)
+    return what[:1].upper() + what[1:] if what else None
 
 
 def _standard_plan_note(job):
@@ -407,7 +418,11 @@ def _item(store, job, conv_map, clock, calls_by_job, runs_by_job, brief):
         line = line or _working_line(job, members)
     team = [{'role': 'kel', 'role_label': 'Kel', 'state': 'done'}]
     for member in members:
-        team.append({'role': member['role'], 'role_label': member['role_label'], 'state': member['state']})
+        # D3: each part's Builder is its own row, with the step it works on.
+        entry = {'role': member['role'], 'role_label': member['role_label'], 'state': member['state']}
+        if member.get('step_label'):
+            entry.update(instance=member.get('instance'), step_label=member['step_label'])
+        team.append(entry)
     first, last, worked = clock.get(job['id'], (job.get('created'), job.get('created'), job.get('created')))
     finished = state in FINISHED
     paused = job.get('state') in ('PAUSED', 'PAUSING')

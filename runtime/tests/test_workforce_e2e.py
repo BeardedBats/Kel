@@ -316,7 +316,7 @@ class EngineLevelTests(unittest.TestCase):
         finally:
             engine.close()
         self.assertEqual(final['verdict'], 'VERIFIED')
-        self.assertEqual(peak, 2, 'independent parts ran together (engine cap two)')
+        self.assertEqual(peak, 3, 'independent parts ran together (up to three at once for D3)')
         calls = staff.calls(self.store, job)
         builders = [c for c in calls if c['kind'] == 'work' and c['role'] == 'builder']
         self.assertEqual(len(builders), 3)

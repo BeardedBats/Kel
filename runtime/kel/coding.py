@@ -291,6 +291,10 @@ def retry_brief(store, run_id):
     elif not tests.get('source_stable_during_tests', True):
         failed.append('Running the tests changed files in the project copy; tests must not write into the source.')
         output = ''
+    elif (tests.get('ownership') or {}).get('outside'):
+        from .code_streams import ownership_words
+        failed.append(ownership_words(tests['ownership']['outside']) + ' Kel put those files back as they were before this try; leave them alone.')
+        output = ''
     else:
         return None
     text = ('What failed on the last try (Kel\'s own test runs, not a guess): ' + ' '.join(failed) + '\n'
@@ -407,8 +411,8 @@ class CodingAdapter:
             # D-64 Full access: go ahead without a prompt; the approval is still recorded
             # (actor full-access) and the job gets an Activity line saying what Kel did. Kel's own
             # app/data and credential folders stay out of reach (refused and recorded).
-            with contextlib.closing(self.store.connect()) as db:
-                ws=db.execute('SELECT path FROM code_workspaces WHERE job_id=?',(job['id'],)).fetchone()
+            from .code_streams import workspace_row
+            ws=workspace_row(self.store,job['id'],run['milestone_id'])  # a parallel part's own copy, else the job's
             reason=authority.protected_hit(self.store,action,ws['path'] if ws else None)
             if reason:
                 authority.refuse(self.store,job['id'],run['id'],action,reason,source='coding')
@@ -508,6 +512,18 @@ class CodingAdapter:
         # the first, so a project root that moves under one later is refused too.
         from .containment import assert_usable_root
         assert_usable_root(contract['root'],purpose='a coding snapshot',store=self.store)
+        # D3 for code (code_streams): a part works in its own project copy under its own write lease;
+        # the integration step combines the checked parts into the job's one copy before it runs.
+        from . import code_streams
+        stream=code_streams.stream_of(contract,run['milestone_id'])
+        integrating=code_streams.is_integration(contract,run['milestone_id'])
+        lease=None
+        if stream:
+            row=code_streams.stream_workspace(self.store,job,run['milestone_id'])
+            lease=code_streams.take_lease(self.store,job['id'],run['milestone_id'],run_id)
+        elif integrating and not row:
+            code_streams.integrate(self.store,job)
+            row=code_streams.workspace_row(self.store,job['id'],run['milestone_id'])
         if row:
             workspace=Path(row['path']);base=row['base'];baseline=json.loads(row['manifest'])
         else:
@@ -566,11 +582,31 @@ class CodingAdapter:
                 result=json.loads(phase['result'])
             else:
                 if not phase:
+                    if stream:
+                        # A part never carries an earlier try's change outside its own files.
+                        code_streams.restore_outside(workspace,base,baseline,stream['write_paths'])
                     with self.store.transaction() as db:
                         db.execute('INSERT INTO coding_phases VALUES(?,?,?,?)',(run_id,'TURN_DISPATCHED','{}',time.time()))
-                watch=runtime_guard.Watch(self.store.root,workspace,run_id)
-                result=connection.run('Source request: '+contract['request']+'\nWork in this isolated repository. '
-                    'Implement the requested change. Preserve existing tests: Kel also runs the original versions of the existing '
+                note=code_streams.integration_turn(self.store,job,run_id) if integrating else ''
+                if integrating and note is None:
+                    # Every part fitted: the combined copy goes straight to the full tests (no model turn).
+                    result=code_streams.merged_result(self.store,job)
+                    try:
+                        from .staff import update_call
+                        update_call(self.store,run_id,why='No model was needed: every part fitted together without a conflict.')
+                    except Exception:
+                        pass
+                else:
+                    watch=runtime_guard.Watch(self.store.root,workspace,run_id)
+                    head='Source request: '+contract['request']+'\nWork in this isolated repository. Implement the requested change.'
+                    if stream:
+                        head=('Source request (for context; the other parts are built at the same time by other Builders in '
+                              'separate copies): '+contract['request']+'\nWork in this isolated repository. Implement only your part: '
+                              +stream['quote']+'\nYou own only these files: '+', '.join(stream['write_paths'])+'. Create or change '
+                              'only these files; do not create, change or delete any other file (Kel refuses a change outside them).')
+                    elif integrating:
+                        head+='\n'+note
+                    result=connection.run(head+' Preserve existing tests: Kel also runs the original versions of the existing '
                     'test files and test settings against your code, so add new tests freely but do not change what existing tests expect. '
                     'Do not change the source checkout. '
                     'Do not delete caches or clean the workspace. Kel runs tests after your turn. Avoid generating bytecode. '
@@ -617,16 +653,23 @@ class CodingAdapter:
                       'source_stable_during_tests':stable,
                       'command':contract['test_command']}
             if tests.get('_kel_execution'):evidence['execution']=tests['_kel_execution']
+            if stream:
+                evidence['ownership']=code_streams.ownership(self.store,lease,baseline,after,stream['write_paths'])
+            if integrating:
+                evidence['integration']=code_streams.summary(self.store,job['id'])
             with self.store.transaction() as db:
                 db.execute('INSERT OR REPLACE INTO code_evidence VALUES(?,?,?,?,?,?,?,?)',
                     (run_id,str(workspace),encode(after),patch,digest(patch.encode()),encode(evidence),encode(protected),time.time()))
                 db.execute("UPDATE coding_phases SET phase='EVIDENCE_CAPTURED',at=? WHERE run_id=?",(time.time(),run_id))
             # Trusted evidence stays outside the writable worker folder.
-            verdict=tests['exitCode']==0 and preserved and stable and bool(patch.strip())
+            verdict=(tests['exitCode']==0 and preserved and stable and bool(patch.strip())
+                     and not (evidence.get('ownership') or {}).get('outside'))
             report='# Repository change\n\n'+result.get('text','')+'\n\n## Trusted checks\n'+json.dumps(evidence,indent=2)+'\n\n## Diff\n```diff\n'+patch+'\n```\n'
             result.update(text=report,code_verified=verdict)
             return result
-        finally:connection.close()
+        finally:
+            connection.close()
+            code_streams.release(self.store,lease)
 
 
 def check_evidence(store,run_id):
@@ -635,6 +678,7 @@ def check_evidence(store,run_id):
     if not row:return 'UNCERTAIN'
     tests=json.loads(row['tests'])
     if tests['exit_code']!=0 or not tests['existing_tests_preserved'] or not tests['source_stable_during_tests']:return 'FAILED'
+    if (tests.get('ownership') or {}).get('outside'):return 'FAILED'  # a parallel part wrote outside its files
     if not row['patch'].strip():return 'UNCERTAIN'
     if digest(row['patch'].encode())!=row['patch_digest']:return 'UNCERTAIN'
     if file_manifest(Path(row['workspace']))!=json.loads(row['manifest']):return 'UNCERTAIN'
@@ -668,6 +712,9 @@ def repository_check(store, run_id):
             check.update(failure='existing_tests', reason=existing)
         elif tests.get('exit_code') != 0:
             check.update(failure='tests', reason=summary)
+        elif (tests.get('ownership') or {}).get('outside'):
+            from .code_streams import ownership_words
+            check.update(failure='ownership', reason=ownership_words(tests['ownership']['outside']))
         else:
             check.update(failure='unstable',
                          reason='Running the tests changed files in the project copy, so the result cannot be trusted.')
@@ -709,7 +756,8 @@ def recover_pending_checks(store,run):
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='coding_phases'").fetchone():return None
         phase=db.execute('SELECT * FROM coding_phases WHERE run_id=?',(run['id'],)).fetchone()
         child=db.execute('SELECT * FROM native_processes WHERE run_id=?',(run['id'],)).fetchone()
-        workspace=db.execute('SELECT * FROM code_workspaces WHERE job_id=?',(run['job_id'],)).fetchone()
+    from .code_streams import workspace_row
+    workspace=workspace_row(store,run['job_id'],run['milestone_id'])
     if not phase or phase['phase']!='TURN_COMPLETED' or not child or not workspace:return None
     if run['state']!='RUNNING':return None
     try:

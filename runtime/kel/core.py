@@ -320,7 +320,10 @@ class Store:
                 raise PolicyError("Dependencies not accepted")
             if m['state'] not in ('READY', 'NEEDS_REPAIR', 'INVALIDATED') or m['attempts'] >= max_attempts:
                 raise PolicyError("Milestone cannot run")
-            if db.execute("SELECT count(*) FROM runs WHERE state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')").fetchone()[0]>=2:
+            # Two live workers, or three when this is one of a D3 job's independent parts (doc 05 D3).
+            from .staff import parallel_step
+            limit = 3 if parallel_step(job, milestone_id) else 2
+            if db.execute("SELECT count(*) FROM runs WHERE state IN ('RUNNING','WAITING_APPROVAL','CANCEL_REQUESTED')").fetchone()[0]>=limit:
                 raise PolicyError('Global worker concurrency limit reached')
             # One execution unit plus one verification unit must remain available.
             if job['budget'] - job['spent'] - job['reserved'] < 2:

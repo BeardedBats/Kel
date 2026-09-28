@@ -52,9 +52,9 @@ history advice. Kel's own application rules (recorded as reasons):
 | D3 — parallel | 2–3 genuinely independent steps run at the same time, each owned by its own instance; Kel combines | several specialists + Verifier |
 | D4 | runs as a D2/D3 pod with the security lens and a mandatory Oracle | + Oracle |
 
-- **Coding** is never below D1 (a Builder always writes code) and never D3: the coding bridge keeps
-  one project copy per job (`code_workspaces` is keyed by job), so parallel code streams are not
-  available; a D3 decision for code is capped at D2 with that reason.
+- **Coding** is never below D1 (a Builder always writes code). It reaches D3 only through §3b
+  (phase 3): Kel's plan splits the change into 2–3 independent parts that write disjoint files, each
+  built in its own project copy; any other D3/D4 decision for code keeps one Builder on the change.
 - **D3 only where the plan is genuinely parallel.** A writing/research plan with 2–3 independent
   parts (no `depends_on`, distinct outputs, one combine step) is validated through
   `parallel.plan_streams` (2..3 streams, unique names, pairwise-disjoint write paths = each part's own
@@ -62,8 +62,9 @@ history advice. Kel's own application rules (recorded as reasons):
   write ownership is structural: each part writes only its own artifact file, and the store allows one
   live run per step. A D2 decision whose plan has that shape runs its parts in parallel (doc 05 E4:
   decomposability ≥ 2, sequentiality ≤ 1); anything else runs **one step at a time** — the engine
-  does not start a second step of a staffed job below D3. R8 caps are recorded; the engine's own cap
-  (two concurrent runs) is lower.
+  does not start a second step of a staffed job below D3. R8 caps are recorded. The engine runs two
+  steps at once, or three when the third is one of a D3 job's independent parts (phase 3; doc 05 D3
+  "up to three parallel streams"; with the one review worker that stays within R8's six).
 - **Roles per step.** coding → Builder; web research → Discovery; design/UI writing → Designer;
   short mechanical work (format, convert, rename, translate, tidy) → Utility; other writing at D1+ →
   Builder (charter: "produces the implementation or artifact"); D0 writing and the combine step of a
@@ -207,6 +208,50 @@ existing RUNNING → INTERRUPTED reset and the two-attempt limit cover all three
 `staff_calls.kind` gains `sentinel` and `red_team`; a killed engine's open calls become `stopped`.
 Jobs staffed before this change carry no `sentinel`/`red_team` record and are never re-decided.
 
+## 3b. Parallel code streams — D3 for code (phase 3, 2026-09-28)
+`kel/code_streams.py` on top of `kel/parallel.py` (streams, leases, the disjoint-write rule) and
+`coding.snapshot`.
+- *Planning.* Only for a change in an existing project (not a new project, not a named-file action)
+  whose text could hold several changes (two/three/each/both/independent…, two or more file names, or a
+  list) and has no ordering words (then, after that, based on, depends, on top of, uses the new…). Kel's
+  own model (`Commander.plan_code`, one call; it sees the project's file list) proposes parts
+  `{objective, source_quote, write_paths}` and `independent`. `validate_parts` decides
+  deterministically: 2–3 parts, `independent: true`, every quote verbatim and distinct, 1–8 relative
+  files per part, pairwise-disjoint (case-folded) files, no shared test setup (D-71's setup files), no
+  ordering words. Anything else is one step, and `contract['code_plan']` says why.
+- *Contract.* `stream-1..N` (no dependencies; checks: length only — each part's trusted tests decide)
+  and the integration step `code` (depends on every part; the one-step rubric, so the Verifier reviews
+  the combined diff). `final_milestone: 'code'`; `code_streams` holds the order, the parts and the
+  one-step contract. Staffing (`staff.plan_job`): decomposability 2–3, sequentiality 0, breadth = parts;
+  a D2 decision becomes D3 with the reason (doc 05 E3); `parallel` records the plan, the order, the
+  integration step and the caps (3 streams, 6 workers, concurrent = parts + the review worker). R6: a
+  data-migration flag never runs parts in parallel. When the decision is not parallel — or the
+  workforce is off, or staffing failed — the service collapses the contract back to one step before
+  the job exists (parts never run sequentially in separate copies, and never unstaffed).
+- *A part.* One Builder instance (same role, several at once — D-66) in its own copy
+  (`missions/<job>/streams/<part>`, made by `parallel.open_stream`; its baseline is recorded in the same
+  transaction as its stream row, `code_stream_workspaces`), under an exclusive write lease for its
+  files, with the same guard (fd149f8: hook, sandbox, protected-place watch) as any coding run. Its turn
+  is told the whole request for context, its own part, and the files it owns. It runs the project's
+  tests and the D-71 original-tests check in its copy. Evidence gains `ownership {owned, changed,
+  outside}`; a change outside its files fails its check (`failure: 'ownership'`, retry brief says which
+  files), and the files it owns are re-checked against its live lease. A failed part is retried alone.
+- *Integration (`code`).* Kel applies each accepted part in plan order onto a fresh copy of the
+  project: every changed file byte for byte from the part's copy, each checked against the digest its
+  tests ran on. A part conflicts when an earlier part touched the same file, or when the project's own
+  copy of a file it changed moved since it copied it. The copy is built in a scratch folder and
+  recorded (`code_workspaces` + `code_integrations`, one transaction) only once every part was tried,
+  so a crash mid-merge rebuilds it and never applies a part twice. Clean: no model turn (the staff row
+  says "No model was needed…"); the full tests and the D-71 check run on the combined copy. Conflict:
+  **sequential fallback** — a Builder does the parts that did not fit, one after another, on top of the
+  combined code (given their quotes, files and checked diffs), then the same checks. (The Architect's
+  charter is read-only, so it does not write the integration.) Then the Verifier, Sentinel, the Oracle
+  and the Red Team as for any code change; apply/Undo read the combined copy (`code_workspaces`).
+- *Work card.* Each part's Builder is its own staff row. Work staff rows gain `step_label` ("Part 2 of
+  3: …", "Combining the parts"; null for one-step work and for review rows); the card's `team` entries
+  of multi-step work gain `instance` and `step_label` (one-step entries keep their old shape). `doing`
+  names the part ("Working on part 2 of 3: …").
+
 ## 4. Live state API (D-66, D-68)
 The renderer polls it for the row of work cards at the top of the chat (D-68). Plain words only — no
 tiers, lease ids, run ids or event names.
@@ -285,7 +330,7 @@ status, detail, PK(job_id, subject))`, `office_dismissals(job_id PK, at, actor)`
   change with no live pod or Oracle blocker.
 
 ## 7. What stays deferred (and why)
-- **Parallel code streams (D3 for coding):** needs per-stream project copies in the coding bridge.
+- ~~Parallel code streams (D3 for coding)~~: built in phase 3 (§3b).
 - ~~A separate Sentinel staff member~~ and ~~Red Team mode~~: built in phase 3 (§3a). The Verifier's
   pod review keeps its security lens as well (defence in depth).
 - **Adaptive gating (5.7), depth-2 grandchildren:** unchanged, still deferred.

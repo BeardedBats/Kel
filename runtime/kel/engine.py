@@ -14,6 +14,10 @@ from .instance_lock import InstanceLock
 
 
 LEASE_RENEW_SECONDS = 30
+# Concurrent runs: two, except a D3 job's independent parts, which may take it to three (doc 05 D3:
+# "up to three parallel streams"; R8's cap of six workers holds with the one review worker).
+RUN_CAP = 2
+PARALLEL_RUN_CAP = 3
 # D-67 FIXED_WAIT: a step whose role is Fixed to a model that cannot run here. Routing 2 §5.4
 # BUDGET_WAIT: a job that reached its budget. FN-03 STUCK_WAIT: a job out of tries. LIVE-3
 # NO_ROUTE_WAIT: nothing set up here can do the step. Only Nick moves these on (core.route_wait_kind).
@@ -42,7 +46,7 @@ class Engine:
     def __init__(self, store, adapters, concurrency=2, reviewer=None):
         self.store, self.adapters = store, adapters
         self.instance_lock = InstanceLock(store.root)
-        self.pool = ThreadPoolExecutor(max_workers=min(concurrency, 2), thread_name_prefix='kel-leaf')
+        self.pool = ThreadPoolExecutor(max_workers=PARALLEL_RUN_CAP, thread_name_prefix='kel-leaf')
         self.active = {}
         self.explicit = {}
         self.failures = {}
@@ -295,9 +299,12 @@ class Engine:
                     self.store.wait_for_route(job['id'], STUCK_WAIT+OUT_OF_TRIES)
                     continue
                 for mid, m in job['milestones'].items():
-                    if len(self.active) >= 2 or self.closed:
+                    if len(self.active) >= PARALLEL_RUN_CAP or self.closed:
                         break
                     if m['state'] not in ('READY', 'NEEDS_REPAIR', 'INVALIDATED') or m['attempts'] >= 4:
+                        continue
+                    from .staff import parallel_step
+                    if len(self.active) >= RUN_CAP and not parallel_step(job, mid):
                         continue
                     spec = next(s for s in job['contract']['milestones'] if s['id'] == mid)
                     if any(job['milestones'][d]['state'] != 'ACCEPTED' for d in spec.get('depends_on', [])):
