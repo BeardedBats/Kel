@@ -38,13 +38,13 @@ class MigrationTests(ModelPrefsBase):
 class DefaultChoiceTests(ModelPrefsBase):
     def test_default_roundtrip_and_clear(self):
         self.assertIsNone(self.prefs.default())
-        self.prefs.set_default('deepseek', 'deepseek-chat')
+        self.prefs.set_default('deepseek', 'deepseek-flash')
         self.assertEqual(self.prefs.default()['provider'], 'deepseek')
         self.prefs.clear('default')
         self.assertIsNone(self.prefs.default())
 
     def test_conversation_override_wins(self):
-        self.prefs.set_default('deepseek', 'deepseek-chat')
+        self.prefs.set_default('deepseek', 'deepseek-flash')
         self.prefs.set_conversation('c1', 'claude-code', 'claude-native')
         snap = self.prefs.snapshot('c1')
         self.assertEqual(snap['conversation']['provider'], 'claude-code')
@@ -73,7 +73,7 @@ class ResolutionTests(ModelPrefsBase):
                        'job_id TEXT, created REAL)')
             db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',
                        ('s1', 'c9', 'hello', 'DISPATCHED', None, 'job-9', 1.0))
-        self.prefs.set_default('deepseek', 'deepseek-chat')
+        self.prefs.set_default('deepseek', 'deepseek-flash')
         self.prefs.set_conversation('c9', 'internal', 'claude-sonnet-4-6')
         resolved = ModelPrefs.resolve_for_job(self.store, 'job-9')
         self.assertEqual(resolved['provider'], 'internal')
@@ -106,7 +106,7 @@ class LabelTests(unittest.TestCase):
 
     def test_labels_never_leak_raw_ids(self):
         self.assertEqual(provider_label('claude-code'), 'Claude')
-        self.assertEqual(model_label('deepseek-reasoner'), 'DeepSeek Reasoner')
+        self.assertEqual(model_label('deepseek-v4-pro'), 'DeepSeek V4 Pro')
         self.assertEqual(provider_label('unknown-id'), 'unknown-id')
 
 
@@ -153,7 +153,7 @@ class PayloadContractTests(unittest.TestCase):
                          [row['id'] for row in listed['providers']])
 
     def test_default_choice_round_trips_through_the_payload(self):
-        choice = {'provider': 'deepseek', 'model': 'deepseek-chat'}
+        choice = {'provider': 'deepseek', 'model': 'deepseek-flash'}
         self.service._model_action({'action': 'set_default', 'choice': choice})
         state = self.service._model_action({'action': 'get'})
         self.assertEqual(state['default']['provider'], 'deepseek')

@@ -76,7 +76,7 @@ def terminate_known_process(pid,identity):
 
 def recover_readonly_result(store,run,row):
     """Recover only tool-disabled leaf output after the recorded child exits."""
-    if row['provider']=='internal':
+    if row['provider'] in ('internal','deepseek','openrouter'):
         return {'outcome':'FAILED','error':'Read-only model broker exited before saving its answer; retry the bounded request.'}
     if row['provider'] not in ('codex','claude'):return None
     with contextlib.closing(store.connect()) as db:
@@ -253,6 +253,10 @@ def run_broker(store,run_id):
             elif provider=='internal':
                 from .internal import InternalAdapter
                 adapter=InternalAdapter(**options)
+            elif provider in ('deepseek','openrouter'):
+                # Routing 2 §5.6: a bounded text worker on an OpenAI-compatible API.
+                from .api_models import OpenAICompatAdapter
+                adapter=OpenAICompatAdapter(provider,model=binding.get('model_arg') or options.get('model'),timeout=180)
             elif provider in ('codex','claude'):
                 from .native import DEFAULT_EFFORT,NativeAdapter
                 adapter=NativeAdapter(provider,store.root/'workspaces'/provider,store.root/'native-logs',timeout=180,

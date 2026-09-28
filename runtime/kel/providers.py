@@ -39,11 +39,17 @@ DEFINITIONS = (
      'auth_mode': 'api_key', 'env': 'ANTHROPIC_API_KEY',
      'base_url': 'https://api.anthropic.com', 'adapters': ('internal', 'research'),
      'models': ({'id': 'claude-sonnet-4-6', 'capabilities': ('text', 'vision', 'tools')},)},
+    # Routing 2 §5.6: DeepSeek runs as a bounded text worker (kel.api_models); OpenRouter is a second
+    # route to catalog models. Keys come from the desktop's OS-backed custody at engine start.
     {'id': 'deepseek', 'label': 'DeepSeek API', 'class': 'api',
      'auth_mode': 'api_key', 'env': 'DEEPSEEK_API_KEY',
-     'base_url': 'https://api.deepseek.com/v1', 'adapters': (),
-     'models': ({'id': 'deepseek-chat', 'capabilities': ('text', 'tools')},
-                {'id': 'deepseek-reasoner', 'capabilities': ('text', 'tools')})},
+     'base_url': 'https://api.deepseek.com', 'adapters': ('deepseek',),
+     'models': ({'id': 'deepseek-flash', 'capabilities': ('text',)},
+                {'id': 'deepseek-v4-pro', 'capabilities': ('text',)})},
+    {'id': 'openrouter', 'label': 'OpenRouter', 'class': 'api',
+     'auth_mode': 'api_key', 'env': 'OPENROUTER_API_KEY',
+     'base_url': 'https://openrouter.ai/api/v1', 'adapters': ('openrouter',),
+     'models': ({'id': 'deepseek/deepseek-v4.1-flash', 'capabilities': ('text',)},)},
 )
 
 STATES = ('not_installed', 'installed_not_authenticated', 'authenticated', 'healthy',

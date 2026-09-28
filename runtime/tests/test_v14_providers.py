@@ -40,17 +40,17 @@ class ProviderBase(unittest.TestCase):
 class RegistryTests(ProviderBase):
     def test_definitions_cover_the_required_providers(self):
         self.assertEqual([item['id'] for item in DEFINITIONS],
-                         ['claude-code', 'codex', 'internal', 'deepseek'])
+                         ['claude-code', 'codex', 'internal', 'deepseek', 'openrouter'])
         self.assertEqual(definition('codex')['class'], 'native-cli')
         self.assertEqual(definition('codex')['auth_mode'], 'subscription')
-        self.assertEqual(definition('deepseek')['base_url'], 'https://api.deepseek.com/v1')
+        self.assertEqual(definition('deepseek')['base_url'], 'https://api.deepseek.com')
         self.assertEqual(definition('deepseek')['auth_mode'], 'api_key')
         with self.assertRaises(PolicyError):
             definition('nope')
 
     def test_capability_matrix(self):
         self.assertEqual([m['id'] for m in models('deepseek', 'text')],
-                         ['deepseek-chat', 'deepseek-reasoner'])
+                         ['deepseek-flash', 'deepseek-v4-pro'])
         self.assertEqual(models('internal', 'vision')[0]['id'], 'claude-sonnet-4-6')
         self.assertEqual(models('deepseek', 'vision'), [])
         self.assertIn('tools', capabilities('claude-code'))
@@ -60,7 +60,7 @@ class RegistryTests(ProviderBase):
         self.assertEqual(entry['label'], 'DeepSeek API')
         self.assertEqual(entry['auth_mode'], 'api_key')
         self.assertEqual([m['id'] for m in entry['models']],
-                         ['deepseek-chat', 'deepseek-reasoner'])
+                         ['deepseek-flash', 'deepseek-v4-pro'])
         self.assertIn(entry['status'],
                       ('installed_not_authenticated', 'healthy', 'quota_not_reported'))
 
@@ -142,23 +142,25 @@ class ReadinessTests(ProviderBase):
         self.assertIn('Preferred provider selected', result['reason'])
 
     def test_fallback_is_explained(self):
-        # CH-2: a stored DeepSeek key is not enough — Kel has no adapter that answers with it, so
-        # it is never chosen and the reason says so plainly.
+        # CH-2: a stored DeepSeek key is not enough — without the engine's DeepSeek worker running
+        # (Routing 2 §5.6: it starts when the key reaches the engine) it is never chosen, plainly.
+        from kel.providers import Providers
+        gated = Providers(self.store, runnable=lambda provider: provider != 'deepseek')
         with mock.patch('kel.providers.shutil.which', return_value=None):
             self.authenticate_api('deepseek')
             self.authenticate_api('internal')
-            result = self.providers.readiness('text', prefer='deepseek')
+            result = gated.readiness('text', prefer='deepseek')
         self.assertEqual(result['chosen']['provider'], 'internal')
         self.assertIn('Fell back to internal', result['reason'])
-        self.assertTrue([reason for reason in result['reasons'] if 'Not supported for chat yet' in reason])
+        self.assertTrue([reason for reason in result['reasons'] if 'Not connected yet' in reason])
 
     def test_available_means_kel_can_answer_with_it(self):
         with mock.patch('kel.providers.shutil.which', return_value=None):
             self.authenticate_api('deepseek')
             self.authenticate_api('internal')
             deepseek = self.status('deepseek')
-            self.assertEqual((deepseek['available'], deepseek['available_note']),
-                             (False, 'Not supported for chat yet'))
+            self.assertEqual((deepseek['available'], deepseek['available_note']), (True, None),
+                             'Routing 2 §5.6: DeepSeek has a worker now; a key makes it usable')
             self.assertTrue(self.status('internal')['available'])
             claude = self.status('claude-code')
             self.assertEqual((claude['available'], claude['available_note']),

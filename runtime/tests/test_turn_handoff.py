@@ -627,11 +627,11 @@ class HandoffServiceTests(unittest.TestCase):
     def test_a_reply_says_once_when_it_did_not_come_from_the_chosen_model(self):
         from kel.model_prefs import ModelPrefs
         self.turn.label, self.turn.provider = 'Claude', 'claude-code'
-        ModelPrefs(self.service.store).set_conversation(self.cid, 'deepseek', 'deepseek-chat')
+        ModelPrefs(self.service.store).set_conversation(self.cid, 'deepseek', 'deepseek-flash')
         first = self.service.submit({'text': 'How much sun do tomatoes need?', 'conversation': self.cid})
         self.assertEqual(self.wait(first), 'SETTLED')
         reply = self.service.state(self.cid)['messages'][-1]
-        self.assertEqual(reply['text'], REPLY['text'] + "\n\nUsed Claude — DeepSeek isn't available for chat yet.")
+        self.assertEqual(reply['text'], REPLY['text'] + "\n\nUsed Claude — DeepSeek isn't available right now.")  # Routing 2 §5.6: no DeepSeek key here
         self.assertEqual(reply['meta']['answered_by']['label'], 'Claude')
         self.assertEqual(reply['meta']['fallback_from']['provider'], 'deepseek')
         second = self.service.submit({'text': 'And how much sun do peppers need?', 'conversation': self.cid})
@@ -651,13 +651,13 @@ class HandoffServiceTests(unittest.TestCase):
         self.service.engine.adapters = {'claude': object()}
         listing = {row['id']: row for row in self.service._model_action({'action': 'get'})['providers']}
         self.assertFalse(listing['deepseek']['available'])
-        self.assertEqual(listing['deepseek']['note'], 'Not supported for chat yet')
+        self.assertEqual(listing['deepseek']['note'], 'API key needed')  # Routing 2 §5.6: honest key state
         self.assertFalse(any(option['available'] for option in listing['deepseek']['options']))
         self.assertFalse(listing['codex']['available'], 'no Codex adapter is registered here')
         providers = {row['provider']: row for row in
                      self.service.action('/api/providers', {'action': 'list'})['providers']}
         self.assertFalse(providers['deepseek']['available'])
-        self.assertEqual(providers['deepseek']['available_note'], 'Not supported for chat yet')
+        self.assertEqual(providers['deepseek']['available_note'], 'API key needed')
 
     # -- ST-04 / ST-23 / CH-10: start-up and idle cost ---------------------------------------------
     def test_a_reserved_chat_is_created_on_its_first_message_only_once(self):

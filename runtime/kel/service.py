@@ -130,6 +130,11 @@ class Service:
         if 'claude' in adapters:adapters['claude-code']=DurableAdapter(self.store,'claude-code',{'repository_edit','native_session'})
         if self.model:adapters['internal']=DurableAdapter(self.store,'internal',{'text','image'},options={'model':self.model.model})
         if self.model:adapters['research']=DurableAdapter(self.store,'research',{'text','web_research'},options={'model':self.model.model})
+        # Routing 2 §5.6: DeepSeek and OpenRouter run when their keys reached the engine's environment
+        # (the desktop injects them from its OS-backed custody); without a key they are not offered.
+        from .api_models import has_key
+        for api in ('deepseek','openrouter'):
+            if has_key(api):adapters[api]=DurableAdapter(self.store,api,{'text'})
         self.engine=Engine(self.store,adapters,reviewer=self.commander)
         if self.commander is not None:
             self.commander.staff=self  # D-67: the Verifier runs on its role's model for staffed work
@@ -313,8 +318,8 @@ class Service:
 
     def staff_adapters(self):
         """The model runtimes Kel can hand a staff role right now (D-67): installed CLIs and, when
-        its key is present, the Anthropic API worker."""
-        names={name for name in ('codex','claude') if name in self.engine.adapters}
+        their keys are present, the Anthropic API worker and the DeepSeek / OpenRouter workers."""
+        names={name for name in ('codex','claude','deepseek','openrouter') if name in self.engine.adapters}
         if isinstance(self.model,InternalAdapter):
             names.add('internal')
         return names
@@ -337,6 +342,15 @@ class Service:
         if name=='internal' and isinstance(self.model,InternalAdapter):
             return InternalAdapter(model=binding.get('model_arg') or self.model.model,
                                    timeout=20 if turn else self.model.timeout)
+        if name in ('deepseek','openrouter') and name in self.engine.adapters:
+            # Routing 2 §5.6: a bounded text worker on its API (the key stays in the environment).
+            from .api_models import OpenAICompatAdapter
+            from .role_models import note_refusal
+            adapter=OpenAICompatAdapter(name,model=binding.get('model_arg'),timeout=20 if turn else min(timeout,180))
+            model_id=binding.get('model')
+            if model_id:
+                adapter.on_refusal=lambda error,version:note_refusal(self.store,model_id,error,version)
+            return adapter
         return None
 
     def _kel_model(self,turn,images=False):
@@ -374,6 +388,11 @@ class Service:
                 if not turn and chosen==self.model.model:
                     return self.model
                 return InternalAdapter(model=chosen,timeout=20 if turn else self.model.timeout)
+            if provider in ('deepseek','openrouter'):
+                if provider not in self.engine.adapters:
+                    return None
+                from .api_models import OpenAICompatAdapter
+                return OpenAICompatAdapter(provider,model=preference.get('model'),timeout=20 if turn else 100)
             cli={'claude-code':'claude','claude':'claude','codex':'codex','codex-code':'codex'}.get(provider)
             if cli and cli in self.engine.adapters:
                 return NativeAdapter(cli,self.store.root/'workspaces'/cli,self.store.root/'logs',timeout=native_timeout)

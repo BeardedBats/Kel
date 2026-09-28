@@ -121,6 +121,12 @@ function spawnEngine(root: string): ChildProcess {
   const injectedEnv: NodeJS.ProcessEnv = { ...process.env };
   const anthropicKey = getCredential('anthropic', 'api_key');
   if (anthropicKey) injectedEnv.ANTHROPIC_API_KEY = anthropicKey;
+  // Routing 2 §5.6: DeepSeek and OpenRouter keys (saved on the Providers page under the engine's
+  // provider id) reach the engine the same way; without one the engine says the key is needed.
+  const deepseekKey = getCredential('deepseek', 'api_key');
+  if (deepseekKey) injectedEnv.DEEPSEEK_API_KEY = deepseekKey;
+  const openrouterKey = getCredential('openrouter', 'api_key');
+  if (openrouterKey) injectedEnv.OPENROUTER_API_KEY = openrouterKey;
   const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
     cwd: spec.cwd,
     detached: true,

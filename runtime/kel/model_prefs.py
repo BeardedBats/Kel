@@ -27,6 +27,7 @@ PROVIDER_LABELS = {
     'codex': 'Codex',
     'internal': 'Anthropic',
     'deepseek': 'DeepSeek',
+    'openrouter': 'OpenRouter',
 }
 MODEL_LABELS = {
     'claude-native': 'Claude (built-in)',
@@ -34,6 +35,9 @@ MODEL_LABELS = {
     'claude-sonnet-4-6': 'Claude Sonnet 4.6',
     'deepseek-chat': 'DeepSeek Chat',
     'deepseek-reasoner': 'DeepSeek Reasoner',
+    'deepseek-flash': 'DeepSeek Flash',
+    'deepseek-v4-pro': 'DeepSeek V4 Pro',
+    'deepseek/deepseek-v4.1-flash': 'DeepSeek Flash (OpenRouter)',
 }
 
 

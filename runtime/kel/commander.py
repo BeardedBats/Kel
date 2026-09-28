@@ -20,7 +20,7 @@ def json_object(text):
 DID_NOT_RUN=object()
 
 PROVIDER_FAMILIES={'claude':'anthropic','claude-code':'anthropic','internal':'anthropic',
-                   'codex':'openai','codex-code':'openai'}
+                   'codex':'openai','codex-code':'openai','deepseek':'deepseek','openrouter':'deepseek'}
 
 
 class Commander:
