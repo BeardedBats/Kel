@@ -890,3 +890,11 @@ engine) proceed now behind the `chat_store` switch (`legacy` rolls back; nothing
 (4 chats exist only in aioncore; 23 empty chats point at missing engine chats). Deleting a chat hides it
 and keeps its work in Activity. Stage 4 (bypassing aioncore) is decided after stage 3 has run a week.
 Real Data migrates only at an install point, after the automatic backup.
+
+**D-63 executed 2026-09-29.** Old evidence media (docs/**/*.png|jpg|jpeg|gif|webm|mp4|webp) and
+/packages/ were removed from all history with git filter-repo (pack 507 MB → 64 MB; the tree of main
+is byte-identical before and after). 11 fully merged branches were deleted on GitHub; `main` and the two
+unmerged `claude/*` branches remain; release tags were re-pointed. Commit IDs quoted in these docs
+before this date are pre-rewrite IDs: look them up in `Tools\kel-history-commit-map-D-63.txt`
+(old → new). The complete old history is kept in
+`Tools\kel-history-backup-2026-09-29-before-D-63.bundle` (verified).
