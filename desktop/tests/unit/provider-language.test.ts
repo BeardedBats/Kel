@@ -72,3 +72,21 @@ describe('provider names on the work surfaces (D19)', () => {
     expect(providersPage).toContain("?.label ?? id.replace(/-/g, ' ')");
   });
 });
+
+describe('Providers lists models by name, never by id (VIS-24)', () => {
+  it('shows the plain model names and skips a built-in CLI model that only repeats the provider', async () => {
+    const { modelNames } = await import('@renderer/pages/kel/providers');
+    expect(modelNames({ label: 'Claude (built-in)', models: [{ id: 'claude-native', capabilities: [], label: 'Claude (built-in)' }] })).toBe('');
+    expect(
+      modelNames({
+        label: 'DeepSeek API',
+        models: [
+          { id: 'deepseek-flash', capabilities: [], label: 'DeepSeek Flash' },
+          { id: 'deepseek-v4-pro', capabilities: [], label: 'DeepSeek V4 Pro' },
+        ],
+      })
+    ).toBe('DeepSeek Flash · DeepSeek V4 Pro');
+    // An engine without names (older build) shows nothing rather than a raw id.
+    expect(modelNames({ label: 'OpenRouter', models: [{ id: 'deepseek/deepseek-v4.1-flash', capabilities: [] }] })).toBe('');
+  });
+});

@@ -29,6 +29,17 @@ import {
 import { presentProvider, toneChipClass } from '@renderer/components/kel/providerStatus';
 import '@renderer/styles/kel-work.css';
 
+/**
+ * VIS-24: the models a provider runs, by their plain names. A built-in CLI's only model has the
+ * provider's own name, so it is not repeated; a model without a name is left out rather than shown
+ * as a raw id.
+ */
+export const modelNames = (provider: Pick<KelProviderStatus, 'label' | 'models'>): string =>
+  (provider.models ?? [])
+    .filter((model) => model.label && model.label !== model.id && model.label !== provider.label)
+    .map((model) => model.label)
+    .join(' · ');
+
 const Providers: React.FC = () => {
   const desktop = !useLayoutContext()?.isMobile;
   const navigate = useNavigate();
@@ -191,7 +202,7 @@ const Providers: React.FC = () => {
             const hasStored = credentialRows.some((row) => row.provider === provider.provider);
             return (
             <details className="kel-shell-provider" key={provider.provider}>
-              <summary><span>{provider.label}</span><span className="kel-meta">{(provider.models ?? []).map(model => model.id).join(' · ')}</span><span className="kel-grow" /><span className={toneChipClass(view.tone)}>{view.label}</span></summary>
+              <summary><span>{provider.label}</span><span className="kel-meta">{modelNames(provider)}</span><span className="kel-grow" /><span className={toneChipClass(view.tone)}>{view.label}</span></summary>
             <KelCard
               title={provider.label}
               chip={<span className={toneChipClass(view.tone)}>{view.label}</span>}
@@ -323,7 +334,7 @@ const Providers: React.FC = () => {
             <>
               <p className="kel-strong">
                 {readiness.chosen
-                  ? `Chosen: ${readiness.chosen.label} · ${readiness.chosen.model}`
+                  ? `Chosen: ${[readiness.chosen.label, readiness.chosen.model_label].filter((name, index, all) => name && all.indexOf(name) === index).join(' · ')}`
                   : 'No provider can take this capability right now'}
               </p>
               <p className="kel-meta">{readiness.reason}</p>
