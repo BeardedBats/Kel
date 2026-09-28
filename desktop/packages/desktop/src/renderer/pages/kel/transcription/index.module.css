@@ -238,7 +238,9 @@
   font-size: 13px;
   color: var(--kel-text-2);
   cursor: pointer;
-  transition: color var(--kel-dur-state) var(--kel-ease), background-color var(--kel-dur-state) var(--kel-ease);
+  transition:
+    color var(--kel-spring-micro-ms) var(--kel-spring-micro),
+    background-color var(--kel-spring-micro-ms) var(--kel-spring-micro);
 }
 .secondaryAction:hover {
   color: var(--kel-text-1);
