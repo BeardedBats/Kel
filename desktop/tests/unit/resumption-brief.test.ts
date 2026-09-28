@@ -59,27 +59,32 @@ describe('buildResumptionBrief', () => {
     expect(result.lines[0].action?.to).toBe('/settings');
   });
 
-  it('reports finished work in the shared words, with the chat action, and never as needs-you', () => {
+  it('never lists finished work under "Needs you" — done, checked or not (D-70)', () => {
     const result = brief({
       jobs: [
         job({ id: 'done', state: 'CLOSED', verdict: 'VERIFIED', updated: 300 }),
         job({ id: 'bad', state: 'CLOSED', verdict: 'FAILED', updated: 200, contract: { request: 'Ship the summary' } }),
         job({ id: 'meh', state: 'CLOSED', verdict: 'UNCERTAIN', updated: 100, contract: { request: 'Draft the plan' } }),
       ],
+      continuation: [candidate({ job_id: 'done' })],
     });
-    const finished = result.lines.filter((line) => line.kind === 'finished');
-    expect(finished.map((line) => [line.title, line.tone])).toEqual([
-      ['Tidy the notes', 'success'],
-      ['Ship the summary', 'attention'],
-      ['Draft the plan', 'attention'],
-    ]);
-    expect(finished[0].detail.startsWith('Done and checked — ')).toBe(true);
-    expect(finished[1].detail.startsWith("Didn't pass its checks — ")).toBe(true);
-    expect(finished[2].detail.startsWith('Finished — not fully checked — ')).toBe(true);
-    expect(finished[0].action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/activity?job=done' });
-    // Finished-but-unchecked is not "waiting on you".
-    expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
-    expect(result.summary).toBe('3 finished');
+    expect(result.lines).toEqual([]);
+    expect(result.lines.some((line) => /Done and checked/.test(line.detail))).toBe(false);
+    expect(result.quiet).toBe(true);
+    expect(result.summary).toBe('Nothing needs you right now.');
+  });
+
+  it('defers to the work card when the work has one (D-70)', () => {
+    const result = brief({
+      jobs: [
+        job({ id: 'carded', state: 'AWAITING_USER', contract: { request: 'Laptop research', staffing: { schema: 1 } } as never }),
+        job({ id: 'old', state: 'AWAITING_USER', updated: 1, contract: { request: 'Old work' } }),
+      ],
+    });
+    const needs = result.lines.filter((line) => line.kind === 'needs-you');
+    expect(needs.map((line) => line.title)).toEqual(['Laptop research', 'Old work']);
+    expect(needs[0].action).toEqual({ label: 'Answer on its card', to: '/conversation/conv-a', fallback: '/activity?job=carded', card: 'carded' });
+    expect(needs[1].action?.card).toBeUndefined();
   });
 
   it('separates paused work from needs-you work', () => {
@@ -120,16 +125,13 @@ describe('buildResumptionBrief', () => {
     expect(result.summary).toBe('1 needs you');
   });
 
-  it('keeps a route-blocked job as work that goes on by itself, never needs-you', () => {
+  it('keeps a route-blocked job out of "Needs you": it goes on by itself', () => {
     const result = brief({
       jobs: [job({ id: 'w1', state: 'WAITING_RESOURCE', route_block: 'No model is available right now' })],
       continuation: [candidate({ job_id: 'w1', reasons: ['No model is available right now'] })],
     });
     expect(result.lines.filter((line) => line.kind === 'needs-you')).toHaveLength(0);
-    const going = result.lines.filter((line) => line.kind === 'active');
-    expect(going).toHaveLength(1);
-    expect(going[0].detail).toContain('No model is available right now');
-    expect(going[0].detail).toContain('on its own');
+    expect(result.lines.filter((line) => line.kind === 'active')).toHaveLength(0);
   });
 
   it('carries the engine reason into a paused job line when one is recorded', () => {

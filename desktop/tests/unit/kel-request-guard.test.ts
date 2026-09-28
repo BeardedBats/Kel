@@ -63,6 +63,26 @@ describe('rendererKelRequestRefusal (D-33/D-34 credential custody)', () => {
     }
   });
 
+  it('allows the D-70 scoping card: its read and its Start / best-guess write', () => {
+    for (const route of [
+      '/api/scoping',
+      '/api/scoping?id=0f8c2a1e-1111-2222-3333-444455556666',
+      '/api/scoping?id=0f8c2a1e-1111&conversation=abc-123',
+    ]) {
+      expect(rendererKelRequestRefusal(route)).toBeNull();
+    }
+    expect(rendererKelRequestRefusal('/api/scoping', { action: 'start', id: 's-1', answers: { Q1: { option: 'A' } } })).toBeNull();
+    expect(rendererKelRequestRefusal('/api/scoping', { action: 'best_guess', id: 's-1' })).toBeNull();
+    for (const route of [
+      '/api/scoping?id=a/b',
+      '/api/scoping?conversation=abc',
+      '/api/scoping?id=a&conversation=*',
+      '/api/scoping/other',
+    ]) {
+      expect(rendererKelRequestRefusal(route)).toBe('Unknown Kel action');
+    }
+  });
+
   it('refuses unknown routes', () => {
     expect(rendererKelRequestRefusal('/api/shutdown-idle')).toBe('Unknown Kel action');
     expect(rendererKelRequestRefusal(42)).toBe('Unknown Kel action');

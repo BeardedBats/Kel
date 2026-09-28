@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelProviders, kelSchedules, kelState } from './kelApi';
 import { collectAttention, resolveAttentionRoute, type AttentionItem } from './needsAttention';
 import { KelButton } from './KelPrimitives';
+import { openWorkCard } from './workCards/workCardEvents';
 import { resolveConversationRoute } from '@/renderer/pages/conversation/GroupedHistory/hooks/useConversationListSync';
 
 export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) => {
@@ -76,7 +77,13 @@ export const NeedsAttention: React.FC<{ projectId?: string }> = ({ projectId }) 
               <span className='kel-meta'>{item.detail}</span>
             </div>
             {item.action && (
-              <KelButton variant='quiet' onClick={() => navigate(resolveAttentionRoute(item.action!, resolveConversationRoute))}>
+              <KelButton
+                variant='quiet'
+                onClick={() => {
+                  if (item.action!.card) openWorkCard(item.action!.card); // D-70: answer it on its card
+                  navigate(resolveAttentionRoute(item.action!, resolveConversationRoute));
+                }}
+              >
                 {item.action.label}
               </KelButton>
             )}

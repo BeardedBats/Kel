@@ -22,6 +22,10 @@ export type KelMessageMeta = {
   summary?: string[];
   submission?: string;
   replaced_job?: string | null;
+  /** D-70: the job a result belongs to (its done card reads that work's top card). */
+  job?: string | null;
+  /** D-70: Kel's "before I start" questions (`kind: 'scoping'`) are this scoping record. */
+  scoping?: string | null;
 };
 
 /** Notes Kel posts about the conversation itself, shown as quiet system lines. */
@@ -36,6 +40,6 @@ export const isKelNoteMeta = (meta: KelMessageMeta | null | undefined): boolean 
 export const shownKelMeta = (meta: unknown): KelMessageMeta | null => {
   if (!meta || typeof meta !== 'object' || Array.isArray(meta)) return null;
   const value = meta as KelMessageMeta;
-  if (value.kind === 'result' || isKelNoteMeta(value) || value.fallback_from) return value;
+  if (value.kind === 'result' || value.kind === 'scoping' || isKelNoteMeta(value) || value.fallback_from) return value;
   return null;
 };

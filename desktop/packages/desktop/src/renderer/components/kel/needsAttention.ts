@@ -49,6 +49,8 @@ export interface AttentionAction {
   to: string;
   /** Where to go when `to` names a chat this device cannot open (the job, highlighted on Activity). */
   fallback?: string;
+  /** D-70: the work has a card at the top of its chat; the action opens that card (answer it there). */
+  card?: string;
 }
 
 export interface AttentionProviderState {
@@ -91,6 +93,18 @@ export const requestTitle = (job: Pick<KelWorkJob, 'contract'> | null | undefine
  */
 export const jobRouteFor = (jobId: string | undefined): string =>
   jobId ? `/activity?job=${encodeURIComponent(jobId)}` : '/activity';
+
+/** D-70: staffed work has its own card at the top of the chat (older work does not). */
+export const hasWorkCard = (job: Pick<KelWorkJob, 'contract'> | null | undefined): boolean =>
+  Boolean((job?.contract as { staffing?: unknown } | undefined)?.staffing);
+
+/**
+ * D-70: when a job has a card, Needs you defers to it — the one action opens the chat with that
+ * card's panel open, where Kel's question and its answer box are.
+ */
+export function cardAction(job: Pick<KelWorkJob, 'id' | 'conversation'>): AttentionAction {
+  return { ...jobChatAction(job, 'Answer on its card'), card: job.id };
+}
 
 /**
  * "Open the chat" for a job: its conversation when the payload names one, with the job highlighted
@@ -135,7 +149,7 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
       title: requestTitle(job),
       projectId: jobProject(job),
       jobId: job.id,
-      action: openAction(jobConversation(job), 'Open the chat', job.id),
+      action: hasWorkCard(job) ? cardAction(job) : openAction(jobConversation(job), 'Open the chat', job.id),
       at: job.updated ?? 0,
     };
     if (job.state === 'AWAITING_USER') {
@@ -192,6 +206,8 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
   for (const candidate of payload.continuation ?? []) {
     const jobId = candidate.job_id || candidate.job?.id;
     const job = jobId ? byId.get(jobId) : undefined;
+    // Finished work (done, checked or not) is never something to pick up again (D-70).
+    if (job && (job.state === 'CLOSED' || job.state === 'CANCELLED')) continue;
     if (!job) {
       items.push({
         id: `stale-continuation-${jobId ?? 'unknown'}`,

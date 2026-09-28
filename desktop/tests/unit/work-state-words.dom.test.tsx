@@ -163,9 +163,10 @@ describe('Home "Needs you" — same words, named jobs', () => {
     expect(text).not.toMatch(/a paused task/i);
     expect(text).toContain('Book the dentist — Waiting for your OK');
     expect(text).toContain('Rename the holiday photos — Paused');
-    expect(text).toContain('Draft the garden plan — Finished — not fully checked');
-    expect(text).toContain('Write the weekly summary — Done and checked');
-    // Unchecked or failed results are not "waiting on you".
+    // D-70: finished work — checked or not — is never listed under "Needs you" (the live check
+    // found "Done and checked" there); the work cards carry it.
+    expect(text).not.toContain('Draft the garden plan');
+    expect(text).not.toContain('Done and checked');
     expect(text).not.toContain('needs a human eye');
     fireEvent.click(within(card).getByText(/Book the dentist/));
     expect((await screen.findByTestId('where')).textContent).toBe('/activity?job=ask');
