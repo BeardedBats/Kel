@@ -772,3 +772,22 @@ running); clicking anywhere outside closes it. The chat keeps the rest of the he
    The Oracle's triggers (over 10 files / 400 changed lines, security-flagged work, high-assurance)
    are kept.
 4. Writing work (posts, documents) staffed as Builder is kept as the default (no objection raised).
+
+## D-70 — Five UI changes that follow from the work cards
+
+**Decided by Nick 2026-09-27.**
+1. **Answer "Needs you" inside the card.** A needs-you card's detail shows Kel's question with an
+   answer box; the answer goes to Kel in that work's conversation (never to an agent) and the work
+   continues. The separate Needs-you surfaces defer to the card.
+2. **One live view.** The in-thread work card shrinks to one line pointing at the top card while work
+   runs; the thread receives the final result as a done card (verified state, Undo, Open folder).
+3. **"Staff & models" in Settings** (per-role mode, model, reasoning level over `/api/model` roles);
+   the composer's picker is labelled as Kel's own model (D-69).
+4. **Scoping before big work.** When Kel needs details first (D-55), a brief card with 2–3 questions,
+   quick-pick answers and "Start"; the top card shows "Scoping" until started. Starting threshold
+   (until Nick sets one): work Kel would staff as a Builder + Verifier pod or larger, or any request
+   whose plan has open questions that change the result.
+5. **Navigation clean-up.** Retire the Work page (the cards replace it); move Permissions, Providers
+   and Diagnostics into Settings; one Recipes entry; Projects keeps its chats, folder, Knowledge and
+   scheduled tasks.
+Items 1, 2 and 4 are drawn in Figma first; 3 and 5 follow existing patterns.
