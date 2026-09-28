@@ -541,6 +541,16 @@ class Service:
                                      'label':provider_label(wanted),'note':note}
         return choice
 
+    def _usage_meta(self,sid,meta):
+        """The message's metadata with what Kel's own calls for this message used (tokens, time,
+        approximate cost, which model) — shown as the usage chips under the reply."""
+        try:
+            from .usage import submission_usage
+            used=submission_usage(self.store,sid)
+        except Exception:
+            used=None
+        return dict(meta or {},usage=used) if used else meta
+
     def _with_choice(self,db,cid,text,choice):
         """The message text and its metadata for one answer. The first answer in a conversation that
         fell back from the saved choice says so in one plain line (CH-2); every answer records it."""
@@ -572,10 +582,13 @@ class Service:
         (CH-3) is dropped here — never posted later, never part of the conversation's history.
         `choice` (from `_chat_choice`) becomes the message's metadata. Returns False when dropped.
         """
+        usage_meta=self._usage_meta(sid,None)
         with self.store.transaction() as db:
             if not self._still_planning(db,sid):
                 return False
             text,meta=self._with_choice(db,cid,text,choice)
+            if usage_meta:
+                meta=dict(meta or {},**usage_meta)
             db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
                        (cid,'assistant',text,time.time(),encode(meta) if meta else None))
             db.execute("UPDATE submissions SET state='SETTLED',job_id=NULL WHERE id=?",(sid,))
@@ -756,6 +769,7 @@ class Service:
         title=title_for(text,decision.get('title'))
         ack=decision['acknowledgement'] if decision.get('scheduled') else \
             guard_ack(decision.get('acknowledgement'),decision.get('related_topic'))
+        usage_meta=self._usage_meta(sid,None)
         with self.handoff_lock:
             with self.store.transaction() as db:
                 if not self._still_planning(db,sid):
@@ -763,6 +777,8 @@ class Service:
                 row=db.execute('SELECT title FROM submission_acks WHERE submission_id=?',(sid,)).fetchone()
                 if not row:
                     ack,meta=self._with_choice(db,cid,ack,choice)
+                    if usage_meta:
+                        meta=dict(meta or {},**usage_meta)
                     seq=db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',
                                    (cid,'assistant',ack,time.time(),encode(meta) if meta else None)).lastrowid
                     db.execute('INSERT INTO submission_acks VALUES(?,?,?,?)',(sid,seq,title,time.time()))
@@ -1889,6 +1905,24 @@ class Service:
         first=lambda name:(query.get(name) or [None])[0]
         return items(self.store,conversation=first('conversation'),project=first('project'))
 
+    def usage_view(self,conversation=None,job=None):
+        """GET /api/usage: per message of one conversation ({seq: usage}) and/or one job's totals."""
+        from .usage import conversation_usage,job_usage
+        if not conversation and not job:
+            raise PolicyError('Pick a conversation or a piece of work first.')
+        out={}
+        if conversation:
+            out['conversation']=conversation
+            out['messages']=conversation_usage(self.store,conversation)
+        if job:
+            try:
+                record=self.store.get(job)
+            except KeyError:
+                raise PolicyError('Kel could not find that work.') from None
+            out['job']=job
+            out['usage']=job_usage(self.store,record)
+        return out
+
     def office_item(self,job):
         """GET /api/office/item (D-66): one piece of work in full, in plain words."""
         from .office import detail
@@ -2475,6 +2509,10 @@ def serve(root,port=0):
                         from .scoping import view as scoping_view
                         self.reply(200,scoping_view(service.store,(query.get('id') or [''])[0],
                                                     (query.get('conversation') or [None])[0]));return
+                    if parsed.path=='/api/usage':
+                        # D-72: what Kel's messages and one piece of work used (tokens, time, cost).
+                        self.reply(200,service.usage_view((query.get('conversation') or [None])[0],
+                                                          (query.get('job') or [None])[0]));return
                     if parsed.path=='/api/office/item':
                         self.reply(200,service.office_item((query.get('job') or [''])[0]));return
                     if parsed.path=='/api/handoff':

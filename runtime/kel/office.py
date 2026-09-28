@@ -454,6 +454,11 @@ def detail(store, job_id):
     except Exception:
         budget = None  # the budget view is additive; the detail never fails on it
     out['budget'] = budget
+    try:
+        from .usage import job_usage
+        out['usage'] = job_usage(store, job)  # D-72: cost and time for the detail header
+    except Exception:
+        out['usage'] = None
     out.update({'why': why, 'next': nxt, 'staff': staff_view, 'steps': steps, 'review': review,
                 'oracle': oracle_view, 'files_changed': files, 'application': application,
                 'verification': {'result': result_word, 'summary': summary.split('\n') if summary else []},

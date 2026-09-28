@@ -8,7 +8,7 @@
  * `kelOffice` / `kelOfficeItem` / `kelOfficeDismiss` (swap to those once they are committed). Every field the engine may
  * leave out is optional here, so a partial payload renders what it has and invents nothing.
  */
-import { kelRequest, type KelChangeApplication } from '../kelApi';
+import { kelRequest, type KelChangeApplication, type KelUsage } from '../kelApi';
 
 /** D-70: `scoping` — Kel is asking its "before I start" questions; nothing has started yet. */
 export type OfficeState = 'scoping' | 'working' | 'in_review' | 'needs_you' | 'done' | 'stopped' | 'failed';
@@ -139,6 +139,8 @@ export interface OfficeItemDetail extends Omit<OfficeItem, 'team'> {
   links?: { conversation_id?: string | null; submission_id?: string | null; message_seq?: number | null } | null;
   /** D-70: the question a needs-you card asks, when the work is waiting on Nick. */
   question?: OfficeQuestion | null;
+  /** D-72: the work's totals (tokens, time, approximate cost) for the detail header. */
+  usage?: KelUsage | null;
 }
 
 /** What kind of wait a needs-you card is (D-70), which decides where its answer goes. */

@@ -268,3 +268,87 @@ def job_spend(store, job_id):
             'cost_usd': round(sum(i['cost_usd'] for i in items if isinstance(i.get('cost_usd'), (int, float))), 6),
             'wall_ms': sum(i['wall_ms'] for i in items if isinstance(i.get('wall_ms'), (int, float))),
             'unmeasured': sum(1 for i in items if i.get('processed') is None)}
+
+
+# ---- per message and per job (what Nick sees) ---------------------------------------------------
+
+def _label(item):
+    from .role_models import MODELS, describe_model
+    if item.get('model') in MODELS:
+        return MODELS[item['model']]['label']
+    return describe_model(raw=item.get('raw_model'))[0]
+
+
+def _number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def summarize(items):
+    """One compact usage figure for a set of calls, or None when there were none.
+
+    {calls, tokens, ms, cost, cost_basis, billing, plan_calls, plan_cost_equivalent, model,
+    model_label, models}. `billing` is 'plan' when every call ran on a subscription runtime (its
+    cost is "included in your plan", never $0.00), 'metered' when none did and 'mixed' otherwise;
+    `cost` is what the metered calls cost, None when any of them is unknown (never guessed as free).
+    """
+    items = [i for i in items or () if isinstance(i, dict)]
+    if not items:
+        return None
+    tokens = [i['processed'] for i in items if _number(i.get('processed'))]
+    walls = [i['wall_ms'] for i in items if _number(i.get('wall_ms'))]
+    plan = [i for i in items if i.get('subscription')]
+    metered = [i for i in items if not i.get('subscription')]
+    costs = [i['cost_usd'] for i in metered if _number(i.get('cost_usd'))]
+    plan_costs = [i['cost_usd'] for i in plan if _number(i.get('cost_usd'))]
+    bases = {i.get('cost_basis') for i in metered if _number(i.get('cost_usd'))}
+    labels = []
+    for item in items:
+        label = _label(item)
+        if label and label not in labels:
+            labels.append(label)
+    last = items[-1]
+    return {'calls': len(items),
+            'tokens': int(sum(tokens)) if tokens else None,
+            'ms': int(sum(walls)) if walls else None,
+            'cost': round(sum(costs), 6) if metered and len(costs) == len(metered) else None,
+            'cost_basis': 'reported' if bases == {'reported'} else ('estimated' if bases else None),
+            'billing': 'plan' if not metered else ('mixed' if plan else 'metered'),
+            'plan_calls': len(plan),
+            'plan_cost_equivalent': round(sum(plan_costs), 6) if plan_costs else None,
+            'model': last.get('model'), 'model_label': _label(last), 'models': labels}
+
+
+def submission_usage(store, submission_id):
+    """What Kel's own calls for one message used (its turn decision, direct reply or plan)."""
+    if not submission_id:
+        return None
+    items = [i for i in rows(store, submission_id=str(submission_id)) if i.get('kind') in KEL_KINDS]
+    return summarize(sorted(items, key=lambda i: i.get('at') or 0))
+
+
+def job_usage(store, job):
+    """One piece of work's totals: every staffed call, check and second opinion, plus Kel's plan."""
+    job = job or {}
+    items = rows(store, job_id=job['id']) if job.get('id') else []
+    submission = (job.get('contract') or {}).get('submission_id')
+    if submission:
+        seen = {i.get('call_id') for i in items}
+        items += [i for i in rows(store, submission_id=str(submission))
+                  if i.get('kind') == 'plan' and i.get('call_id') not in seen]
+    return summarize(sorted(items, key=lambda i: i.get('at') or 0))
+
+
+def conversation_usage(store, conversation_id):
+    """{message seq: usage} for Kel's messages in one conversation that recorded their usage."""
+    out = {}
+    with contextlib.closing(store.connect()) as db:
+        found = db.execute("SELECT seq, meta FROM messages WHERE conversation_id=? AND role='assistant' "
+                           "AND meta LIKE ?", (str(conversation_id), '%"usage"%')).fetchall()
+    for row in found:
+        try:
+            meta = json.loads(row['meta'] or '{}')
+        except (TypeError, ValueError):
+            continue
+        if isinstance(meta, dict) and isinstance(meta.get('usage'), dict):
+            out[str(row['seq'])] = meta['usage']
+    return out
