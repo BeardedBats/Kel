@@ -28,6 +28,7 @@ import {
 import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
+import { protectedPaths } from './protectedPaths';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
@@ -138,6 +139,15 @@ function spawnEngine(root: string): ChildProcess {
   // D-75.3: the Muse (Ramble) key from the same custody; the engine takes it out of its environment.
   const museKey = getCredential(MUSE_PROVIDER, MUSE_FIELD);
   if (museKey) injectedEnv[MUSE_ENV] = museKey;
+  // FN-01: the installed app and the person's credential folders are off limits to every model
+  // runtime; the engine's runtime guard reads this list.
+  injectedEnv.KEL_PROTECTED_PATHS = protectedPaths({
+    existing: process.env.KEL_PROTECTED_PATHS,
+    home: app.getPath('home'),
+    appDir: app.isPackaged ? path.dirname(app.getPath('exe')) : undefined,
+    appData: process.env.APPDATA,
+    localAppData: process.env.LOCALAPPDATA,
+  });
   const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
     cwd: spec.cwd,
     detached: true,
