@@ -331,7 +331,7 @@ const MessageText: React.FC<{
   const cronMeta = message.content.cronMeta;
   const displaySenderName = senderName === 'team_system' ? t('team.systemNotice.sender') : senderName;
   const fallbackBackendLogo = senderAgentType ? resolveAgentLogo(logos, { backend: senderAgentType }) : null;
-  const actionsRow = showCopyRow && (
+  const actionsRow = showCopyRow && !editing && (
     <div
       className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
         'flex-row-reverse': isUserMessage,

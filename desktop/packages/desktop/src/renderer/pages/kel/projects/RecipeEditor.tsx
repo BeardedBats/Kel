@@ -74,7 +74,7 @@ const RecipeEditor: React.FC<{
         {steps.length < MAX_RECIPE_STEPS && !initial?.steps?.some((step) => step.id) && (
           <button type="button" onClick={() => setSteps((current) => [...current, { objective: '' }])}>Add a step</button>
         )}
-        <KelButton variant="quiet" disabled={busy} onClick={onCancel}>Cancel</KelButton>
+        <button type="button" disabled={busy} onClick={onCancel}>Cancel</button>
         <KelButton variant="primary" disabled={busy || !ready}
           onClick={() => onSave({ name: name.trim(), description: description.trim(), steps: steps.map((step) => ({ ...step, objective: step.objective.trim() })) })}>
           Save recipe

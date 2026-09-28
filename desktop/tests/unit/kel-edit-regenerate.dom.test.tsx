@@ -57,6 +57,7 @@ describe('message row actions', () => {
     fireEvent.click(screen.getByTestId('message-edit-button'));
     const box = screen.getByLabelText('Edit your message') as HTMLTextAreaElement;
     expect(box.value).toBe('What is basil?');
+    expect(screen.queryByTestId('message-edit-button')).toBeNull(); // no hover actions under the form
     fireEvent.change(box, { target: { value: 'What is sage?' } });
     fireEvent.click(screen.getByText('Send'));
     expect(asked).toHaveBeenCalledWith({
