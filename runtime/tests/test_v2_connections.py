@@ -351,6 +351,29 @@ class KnownServiceTests(unittest.TestCase):
                     self.assertTrue(value.startswith('http://') or value.startswith('https://'),
                                     '%s.%s' % (row['id'], key))
 
+    def test_the_catalogue_words_name_what_the_engine_actually_reads(self):
+        # The copy a person follows must match what the code needs: an account sign-in reads the app's
+        # `client_id` (and Google's `client_secret`) before Connect can start; basic auth reads
+        # `username` and `password`. Nothing may still claim the sign-in step is missing.
+        from kel.connection_framework import templates
+        for row in catalogue():
+            words = row['credential'] + ' ' + row.get('note', '')
+            if row['kind'] == 'oauth':
+                self.assertIn('client ID', row['credential'], row['id'])
+                self.assertIn('client_id', words, row['id'])
+                self.assertIn('client_secret', words, row['id'])
+                self.assertIn('Connect', words, row['id'])
+            if row['auth_method'] == 'basic':
+                self.assertIn('username', row['credential'], row['id'])
+                self.assertIn('password', row['credential'], row['id'])
+            self.assertNotIn('not built', words.lower(), row['id'])
+        for template in templates():
+            self.assertNotIn('not built', template['check'].lower(), template['id'])
+        # Google Drive says what it can see, and that is what its one permission allows.
+        drive = entry('google-drive')
+        self.assertIn('never their contents', drive['note'])
+        self.assertIn('changes nothing', drive['note'])
+
     def test_a_known_service_can_be_added_as_a_connection_unchanged(self):
         row = entry('github')
         saved = self.connections.save(**{key: row[key] for key in CATALOGUE_FIELDS if key in row})

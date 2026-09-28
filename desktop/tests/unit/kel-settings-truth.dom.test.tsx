@@ -174,25 +174,28 @@ const drive: KelKnownService = {
   auth_prefix: 'Bearer ',
   docs_url: '',
   test_endpoint: '',
-  credential: 'account authorization — you sign in and Kel keeps the token',
+  credential:
+    'your own Google sign-in app — an OAuth client ID and secret of the "Desktop app" type from Google Cloud Console. Then you choose Connect, sign in with Google in your browser, and Kel keeps the token',
   source: 'documented',
-  note: 'Google Drive needs the account sign-in step before Kel can check it.',
+  note: 'Kel can see the names and types of your Drive files — never their contents — and changes nothing. Before Connect works, save the client ID as a credential named client_id and the secret as one named client_secret.',
 };
 
 describe('Connections (ST-07, ST-10, ST-11, ST-12)', () => {
-  it('ST-10: Google Drive asks for a pasted token until sign-in exists', () => {
-    expect(knownServiceCredentialText(drive)).toMatch(/access token.*paste it/);
-    expect(knownServiceCredentialText(drive)).not.toMatch(/you sign in/);
+  it('ST-10: Google Drive says plainly what it needs, in the engine’s words', () => {
+    expect(knownServiceCredentialText(drive)).toBe(drive.credential);
+    expect(knownServiceCredentialText(drive)).toMatch(/OAuth client ID and secret/);
+    expect(knownServiceCredentialText({ credential: 'a key from your account.' })).toBe('a key from your account');
   });
 
   it('ST-11: a template note never lands in the purpose field', () => {
     const draft = draftFromKnownService(drive);
     expect(draft.notes).toBe('');
-    expect(draft.service_hint).toMatch(/One-click sign-in isn't built yet/);
+    expect(draft.service_hint).toBe(drive.note);
+    expect(draft.service_hint).toMatch(/never their contents/);
   });
 
   it('ST-12: the purpose placeholder fits the service', () => {
-    expect(purposePlaceholder('google-drive')).toBe('e.g. read files in my Drive');
+    expect(purposePlaceholder('google-drive')).toBe('e.g. see which files are in my Drive');
     expect(purposePlaceholder(undefined)).toMatch(/^e\.g\./);
   });
 

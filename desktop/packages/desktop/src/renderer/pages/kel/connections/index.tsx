@@ -96,18 +96,14 @@ const credentialDraftFor = (connection: KelConnection, list: KelConnectionList) 
 });
 
 /**
- * ST-10: an account-sign-in service (Google Drive) cannot be signed into with one click yet — the
- * engine's sign-in needs a client ID the person would have to create. Say what actually works today.
+ * ST-10: what the person has to go and get, in the engine's own words (`connection_services.py`), so
+ * the page and the catalogue cannot disagree. For Google Drive that is the person's own Google
+ * sign-in app (client ID and secret) before Connect works — said plainly, not "you just sign in".
  */
-export const knownServiceCredentialText = (service: Pick<KelKnownService, 'kind' | 'name' | 'credential'>): string =>
-  service.kind === 'oauth'
-    ? `an access token for your ${service.name} account — paste it as the credential. One-click sign-in isn't built yet`
-    : service.credential;
+export const knownServiceCredentialText = (service: Pick<KelKnownService, 'credential'>): string =>
+  service.credential.trim().replace(/\.$/, '');
 
-const knownServiceHint = (service: KelKnownService): string | undefined =>
-  service.kind === 'oauth'
-    ? `Paste an access token for your ${service.name} account as the credential. One-click sign-in isn't built yet.`
-    : service.note || undefined;
+const knownServiceHint = (service: KelKnownService): string | undefined => service.note || undefined;
 
 /** ST-11: a known service fills the form, but its note is a hint — never the purpose the person writes. */
 export const draftFromKnownService = (service: KelKnownService): Draft => ({
@@ -119,13 +115,14 @@ export const draftFromKnownService = (service: KelKnownService): Draft => ({
 
 /** ST-12: the purpose field's example matches the service being set up. */
 const PURPOSE_PLACEHOLDERS: Record<string, string> = {
-  'google-drive': 'e.g. read files in my Drive',
-  stripe: 'e.g. look up payouts only',
-  github: 'e.g. read my repositories and issues',
-  discord: 'e.g. post updates in one channel',
-  clickup: 'e.g. read and update my tasks',
-  figma: 'e.g. read my design files',
-  'pitcher-list': 'e.g. draft posts, never publish',
+  // Examples of limits a person might set, drawn from what Kel can actually do there (reads only).
+  'google-drive': 'e.g. see which files are in my Drive',
+  stripe: 'e.g. look up customers only',
+  github: 'e.g. read my notifications',
+  discord: 'e.g. check which bot Kel uses',
+  clickup: 'e.g. check which account Kel uses',
+  figma: 'e.g. check which account Kel uses',
+  'pitcher-list': 'e.g. read the latest posts',
   raptive: 'e.g. read ad earnings only',
 };
 export const purposePlaceholder = (serviceId?: string): string =>
@@ -637,6 +634,7 @@ const Connections: React.FC = () => {
                 service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
             </span>
             <span className="kel-connection-extra">Kel needs {knownServiceCredentialText(service)}.</span>
+            {service.note && <span className="kel-connection-extra">{service.note}</span>}
             <span className="kel-connection-extra">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
           </div>
           <span className="kel-grow" />

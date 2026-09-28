@@ -8,7 +8,7 @@ retry policy for everyone.
 What the framework is *not*: it is not a per-service mechanism, and it does not know any service by name.
 Templates describe the three kinds of credential, and the numbers below are the policy every request
 already runs under (`connections.REQUEST_ATTEMPTS` and friends). Actions — what Kel can *do* with a
-service — are tools, and they are not built yet: nothing here invents a request Kel is not asked to make.
+service — are rows in `connection_actions.py`: nothing here invents a request Kel is not asked to make.
 
 Design: docs/v2/DECISIONS.md (V2-04).
 """
@@ -28,8 +28,9 @@ TEMPLATES = (
         'hint': 'you sign in and Kel keeps the token',
         'credential_field': 'access_token',
         'credential_label': 'Access token',
-        'check': ('One authenticated GET with the token. The sign-in step that produces the token is not '
-                  'built yet, so today the token has to be pasted in.'),
+        'check': ('One authenticated GET with the token from your sign-in. Connect signs you in through your '
+                  "browser once the service's app client ID is saved; a pasted access token also works until "
+                  'it expires.'),
     },
     {
         'id': 'bot',

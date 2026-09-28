@@ -95,9 +95,14 @@ KNOWN_SERVICES = (
         'auth_prefix': 'Bearer ',
         'docs_url': 'https://developers.google.com/drive/api/reference/rest/v3',
         'test_endpoint': 'https://www.googleapis.com/drive/v3/about?fields=user',
-        'credential': 'account authorization — you sign in and Kel keeps the token',
+        'credential': ('your own Google sign-in app — an OAuth client ID and secret of the "Desktop app" type '
+                       'from Google Cloud Console. Then you choose Connect, sign in with Google in your browser, '
+                       'and Kel keeps the token'),
         'source': 'documented',
-        'note': 'Google Drive needs the account sign-in step before Kel can check it.',
+        'note': ('Kel can see the names and types of your Drive files — never their contents — and changes '
+                 'nothing. Before Connect works, save the client ID as a credential named client_id and the '
+                 'secret as one named client_secret. A pasted access token works too, but Google lets it '
+                 'expire after about an hour.'),
     },
     {
         'id': 'pitcher-list',
@@ -109,7 +114,8 @@ KNOWN_SERVICES = (
         'auth_prefix': '',
         'docs_url': 'https://developer.wordpress.org/rest-api/',
         'test_endpoint': 'https://pitcherlist.com/wp-json/wp/v2/users/me',
-        'credential': 'the WordPress application password from your Pitcher List account, with your username',
+        'credential': ('your Pitcher List username and a WordPress application password from your account, '
+                       'saved as two credentials named username and password'),
         'source': 'assumed',
         'note': 'Kel assumes the standard WordPress address; change it if Pitcher List gave you a different one.',
     },
