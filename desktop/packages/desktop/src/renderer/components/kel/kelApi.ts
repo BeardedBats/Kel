@@ -1494,12 +1494,6 @@ export const kelState = (conversation = 'main', project?: KelActiveProject) =>
     restore?: { ok: boolean; detail?: string; at?: number } | null;
   }>(`/api/state?conversation=${encodeURIComponent(conversation)}${project ? `&project=${encodeURIComponent(project)}` : ''}`);
 
-/** Markdown artifact text for an ACCEPTED milestone (the engine refuses anything unverified). */
-export const kelArtifact = (job: string, milestone: string) =>
-  call<unknown>(
-    `/api/artifact?job=${encodeURIComponent(job)}&milestone=${encodeURIComponent(milestone)}`
-  );
-
 export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =>
   call<{ ok: boolean }>('/api/control', { job, action });
 
@@ -1520,50 +1514,11 @@ export interface KelChangeApplication {
   folder?: string | null;
 }
 
-/** Write a checked change into the project (the "Apply checked changes" button). */
-export const kelApplyChange = (job: string) => call<Record<string, unknown>>('/api/apply', { job });
-
 /** D-65: put back the files an applied change replaced, from the saved backup. */
 export const kelUndoChange = (job: string) => call<Record<string, unknown>>('/api/apply', { job, action: 'undo' });
 
-/** Answer the permission request a Work row is waiting on. */
-export const kelApproval = (id: string, allow: boolean, conversation?: string) =>
-  call<{ ok?: boolean } & Record<string, unknown>>('/api/approval', {
-    id,
-    allow,
-    ...(conversation ? { conversation } : {}),
-  });
-
-/** A fenced run resumes as a normal conversation continuation, never as a silent replay. */
-export const kelSend = (conversation: string, text: string) =>
-  call<{ id: string }>('/api/send', { conversation, text });
-
 /** Retry a saved request that failed. The engine refuses anything that is not FAILED/INTERRUPTED. */
 export const kelRetry = (id: string) => call<{ id: string }>('/api/retry', { id });
-
-/** One row of the V2-06 attention surface: what it is, why, and the one action it offers. */
-export interface KelWorkRow {
-  job_id: string;
-  needs_you?: boolean;
-  priority?: 'now' | 'soon' | 'running' | 'later';
-  reason?: string;
-  next?: string;
-  direct?: { action: string; route: string; hint?: string; id?: string | null } | null;
-  related?: { project_id?: string; conversation?: string; approvals?: number; milestones?: number };
-}
-
-/** The rows themselves — the same authoritative surface the chat's Work panel reads. */
-export const kelWorkRows = (scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ work?: { jobs?: KelWorkRow[] } }>(`/api/work?${scopeQuery(scope)}`)
-    .then((payload) => payload.work?.jobs ?? []);
-
-export const kelBriefs = {
-  list: (projectId = 'default') =>
-    call<{ briefs: Array<{ brief_id: string; goal: string; state: string; chosen_option: string | null; updated: number }> }>(
-      '/api/brief',
-      { action: 'list', project_id: projectId }
-    ),
-};
 
 /** D-53: where one conversational hand-off stands, for its in-chat card. */
 export type KelHandoffPhase =

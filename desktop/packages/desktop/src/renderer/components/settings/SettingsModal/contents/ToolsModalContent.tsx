@@ -10,7 +10,7 @@ import { removeImageGenerationEnvKeys, resolveImageGenerationMcpEnv } from '@/co
 import { mcpService } from '@/common/adapter/ipcBridge';
 import { type IMcpServer, BUILTIN_IMAGE_GEN_ID, BUILTIN_IMAGE_GEN_NAME } from '@/common/config/storage';
 import { isImageGenSupported } from '@/common/utils/imageModelAllowlist';
-import { Button, Divider, Form, Tooltip, Message, Switch } from '@arco-design/web-react';
+import { Button, Divider, Form, Message, Switch } from '@arco-design/web-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -52,11 +52,10 @@ const areEnvRecordsEqual = (a: Record<string, string>, b: Record<string, string>
 const ModalMcpManagementSection: React.FC<{
   message: MessageInstance;
   mcpServers: IMcpServer[];
-  extensionMcpServers: IMcpServer[];
   setMcpServers: React.Dispatch<React.SetStateAction<IMcpServer[]>>;
   saveMcpServers: (serversOrUpdater: IMcpServer[] | ((prev: IMcpServer[]) => IMcpServer[])) => Promise<void>;
   isPageMode?: boolean;
-}> = ({ message, mcpServers, extensionMcpServers, setMcpServers, saveMcpServers, isPageMode }) => {
+}> = ({ message, mcpServers, setMcpServers, saveMcpServers, isPageMode }) => {
   const { t } = useTranslation();
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -66,9 +65,7 @@ const ModalMcpManagementSection: React.FC<{
     () => mcpServers.filter((server) => !isBuiltinImageGenServer(server)),
     [mcpServers]
   );
-  const selectedServer = [...visibleMcpServers, ...extensionMcpServers].find(
-    (server) => server.id === selectedServerId
-  );
+  const selectedServer = visibleMcpServers.find((server) => server.id === selectedServerId);
 
   const handleAuthRequired = useCallback(
     (server: IMcpServer) => {
@@ -306,7 +303,7 @@ const ModalMcpManagementSection: React.FC<{
           <ShellSourceCardHeader title='MCP servers' />
 
           <div className='flex-1 min-h-0'>
-            {visibleMcpServers.length === 0 && extensionMcpServers.length === 0 ? (
+            {visibleMcpServers.length === 0 ? (
               <div className='py-24px text-center text-t-secondary text-14px border border-dashed border-border-2 rd-12px'>
                 {t('settings.mcpNoServersFound')}
               </div>
@@ -332,19 +329,6 @@ const ModalMcpManagementSection: React.FC<{
                       onToggleEnabled={(target, enabled) => void handleToggleEnabled(target, enabled)}
                       isToggling={togglingServers[server.id] || false}
                       lastError={lastErrors[server.id]}
-                    />
-                  ))}
-                  {extensionMcpServers.map((server) => (
-                    <McpServerItem
-                      key={server.id}
-                      server={server}
-                      isCollapsed={mcpCollapseKey[server.id] || false}
-                      isTestingConnection={false}
-                      onToggleCollapse={() => openMobileServer(server)}
-                      onTestConnection={handleTestMcpConnection}
-                      onEditServer={() => {}}
-                      onDeleteServer={() => {}}
-                      isReadOnly
                     />
                   ))}
                 </div>
@@ -407,7 +391,7 @@ const ToolsModalContent: React.FC = () => {
   const [showMobileImageModel, setShowMobileImageModel] = useState(false);
   const [isImageModelMenuOpen, setIsImageModelMenuOpen] = useState(false);
   const { modelListWithImage: data } = useConfigModelListWithImage();
-  const { mcpServers, extensionMcpServers, saveMcpServers, setMcpServers, isMcpServersLoading } = useMcpServers();
+  const { mcpServers, saveMcpServers, setMcpServers, isMcpServersLoading } = useMcpServers();
   const builtinImageGenServer = useMemo(() => mcpServers.find(isBuiltinImageGenServer), [mcpServers]);
   const isImageGenerationServerLoading = isMcpServersLoading && !builtinImageGenServer;
 
@@ -632,7 +616,6 @@ const ToolsModalContent: React.FC = () => {
                 <ModalMcpManagementSection
                   message={mcpMessage}
                   mcpServers={mcpServers}
-                  extensionMcpServers={extensionMcpServers}
                   setMcpServers={setMcpServers}
                   saveMcpServers={saveMcpServers}
                   isPageMode={isPageMode}

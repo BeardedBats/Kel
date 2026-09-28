@@ -300,8 +300,6 @@ export default defineConfig(({ mode }) => {
                 id.includes('/react-syntax-highlighter/') ||
                 id.includes('/refractor/') ||
                 id.includes('/highlight.js/') ||
-                id.includes('/monaco-editor/') ||
-                id.includes('/@monaco-editor/') ||
                 id.includes('/codemirror/') ||
                 id.includes('/@codemirror/') ||
                 id.includes('/katex/') ||

@@ -10,6 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TChatConversation } from '@/common/config/storage';
 import { resetProjectsForTests } from '@renderer/components/kel/activeProject';
 import { resetSchedulesForTest } from '@renderer/pages/cron/useSchedules';
+// Imported up front (not inside a test) so a slow first import under a busy full run is not
+// charged to the first test's time budget.
+import { useConversationActions } from '@renderer/pages/conversation/GroupedHistory/hooks/useConversationActions';
+import ScheduledTasksPage from '@renderer/pages/cron/ScheduledTasksPage';
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() }));
 vi.mock('@arco-design/web-react', async (importOriginal) => ({
@@ -58,8 +62,6 @@ const chat = (overrides: Partial<TChatConversation> = {}) =>
   ({ id: 'chat-7', name: 'Weekly competitor digest', type: 'acp', extra: {}, createTime: 1, modifyTime: 1, ...overrides }) as unknown as TChatConversation;
 
 const renderFromChat = async (conversation: TChatConversation) => {
-  const { useConversationActions } = await import('@renderer/pages/conversation/GroupedHistory/hooks/useConversationActions');
-  const { default: ScheduledTasksPage } = await import('@renderer/pages/cron/ScheduledTasksPage');
   const MenuEntry = () => {
     const actions = useConversationActions({
       batchMode: false,

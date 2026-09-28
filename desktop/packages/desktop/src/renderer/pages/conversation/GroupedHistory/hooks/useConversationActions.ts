@@ -16,7 +16,7 @@ import { blockMobileInputFocus, blurActiveElement } from '@/renderer/utils/ui/fo
 import { Message, Modal } from '@arco-design/web-react';
 import { createElement, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { isConversationPinned } from '../utils/groupingHelpers';
 import { buildConversationMarkdown } from '../utils/exportHelpers';
@@ -52,7 +52,6 @@ export const useConversationActions = ({
   const [renameModalId, setRenameModalId] = useState<string | null>(null);
   const [renameLoading, setRenameLoading] = useState(false);
   const [dropdownVisibleId, setDropdownVisibleId] = useState<string | null>(null);
-  const { id } = useParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -81,22 +80,6 @@ export const useConversationActions = ({
       }
     },
     [batchMode, toggleSelectedConversation, markAsRead, navigate, onSessionClick]
-  );
-
-  const removeConversation = useCallback(
-    async (conversation_id: string) => {
-      const success = await ipcBridge.conversation.remove.invoke({ id: conversation_id });
-      if (!success) {
-        return false;
-      }
-
-      emitter.emit('conversation.deleted', conversation_id);
-      if (id === conversation_id) {
-        void navigate('/');
-      }
-      return true;
-    },
-    [id, navigate]
   );
 
   const handleBatchArchive = useCallback(() => {
