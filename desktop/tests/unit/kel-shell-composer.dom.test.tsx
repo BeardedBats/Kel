@@ -54,6 +54,13 @@ describe('Figma composer preserves production input behavior', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
     expect(props.onSend).toHaveBeenCalledTimes(1);
   });
+  it('FN-17: an attached file never puts a "File(n)" label over the placeholder', () => {
+    render(<GuidActionRow {...actionProps()} files={['C:\tmp\brief.txt']} />);
+    expect(document.body.textContent).not.toMatch(/File\(\d+\)/);
+    cleanup();
+    render(<LayoutContext.Provider value={{ isMobile: true, siderCollapsed: true, setSiderCollapsed: vi.fn() }}><GuidActionRow {...actionProps()} files={['brief.txt']} /></LayoutContext.Provider>);
+    expect(document.body.textContent).not.toMatch(/File\(\d+\)/);
+  });
   it('opens the mobile control sheet by a tap', () => {
     render(<LayoutContext.Provider value={{ isMobile: true, siderCollapsed: true, setSiderCollapsed: vi.fn() }}><GuidActionRow {...actionProps()} /></LayoutContext.Provider>);
     fireEvent.click(screen.getByRole('button', { name: 'Attach files and tools' }));

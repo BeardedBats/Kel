@@ -17,12 +17,12 @@ import type {
 import type { AgentModeOption } from '@/renderer/utils/model/agentTypes';
 import type { AgentRuntimeDerivedOption } from '@/renderer/utils/model/agentRuntimeCatalog';
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
-import { getCleanFileNames, FileService } from '@/renderer/services/FileService';
+import { FileService } from '@/renderer/services/FileService';
 import { iconColors } from '@/renderer/styles/colors';
 import { isElectronDesktop } from '@/renderer/utils/platform';
 import type { AcpModelInfo } from '../types';
 import { getAvailableModels } from '../utils/modelUtils';
-import { Button, Checkbox, Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
+import { Button, Checkbox, Dropdown, Menu, Message } from '@arco-design/web-react';
 import {
   ArrowUp,
   Brain,
@@ -583,14 +583,7 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                 aria-label='Attach files and tools'
                 onClick={() => setIsSheetOpen(true)}
               />
-              {files.length > 0 && (
-                <Tooltip
-                  className={'!max-w-max'}
-                  content={<span className='whitespace-break-spaces'>{getCleanFileNames(files).join('\n')}</span>}
-                >
-                  <span className='text-t-primary'>File({files.length})</span>
-                </Tooltip>
-              )}
+              {/* FN-17: attached files show as chips under the box, never a "File(n)" label over the placeholder. */}
             </span>
           ) : (
             <Dropdown trigger='click' onVisibleChange={handlePlusDropdownVisibleChange} droplist={menuContent}>
@@ -605,14 +598,6 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
                   data-testid='file-upload-btn'
                 aria-label='Attach files and tools'
                 />
-                {files.length > 0 && (
-                  <Tooltip
-                    className={'!max-w-max'}
-                    content={<span className='whitespace-break-spaces'>{getCleanFileNames(files).join('\n')}</span>}
-                  >
-                    <span className='text-t-primary'>File({files.length})</span>
-                  </Tooltip>
-                )}
               </span>
             </Dropdown>
           )}
