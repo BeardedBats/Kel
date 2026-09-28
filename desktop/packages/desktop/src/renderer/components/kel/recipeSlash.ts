@@ -133,7 +133,7 @@ export const useRecipeSlashCommands = (taken: ReadonlySet<string>) => {
         };
       }
       await kelRecipeRun(entry.recipeId, values, scope);
-      return { kind: 'started', text: `Started “${entry.name}” in ${projectName}. Follow it on Work.` };
+      return { kind: 'started', text: `Started “${entry.name}” in ${projectName}. Follow it in Activity.` };
     },
     [projectId, projectName]
   );

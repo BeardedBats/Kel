@@ -69,7 +69,7 @@ describe('Kel projects navigation (D-54)', () => {
     const request = vi.fn(async () => ({ projects: [{ id: 'default', name: 'General', kind: 'general' }], active: 'default' }));
     (window as unknown as { kelAPI: unknown }).kelAPI = { request };
     const { default: KelInChatFrame } = await import('@renderer/components/kel/KelInChatFrame');
-    const view = render(<MemoryRouter initialEntries={['/work']}><LayoutContext.Provider value={{ isMobile: false, siderCollapsed: true, setSiderCollapsed: vi.fn() }}>
+    const view = render(<MemoryRouter initialEntries={['/activity']}><LayoutContext.Provider value={{ isMobile: false, siderCollapsed: true, setSiderCollapsed: vi.fn() }}>
       <KelInChatFrame><p>page</p></KelInChatFrame><Location />
     </LayoutContext.Provider></MemoryRouter>);
     const projectsNav = screen.getByRole('navigation', { name: 'Projects pages' });

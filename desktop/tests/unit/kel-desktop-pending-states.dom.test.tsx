@@ -18,6 +18,8 @@ describe('Desktop pending states', () => {
   it('keeps loading distinct from an empty Activity result', async () => {
     let resolve: (value: object) => void;
     api.state.mockReturnValue(new Promise(done => { resolve = done; }));
+    // D-70: Activity also reads the provider names for its route sentence (moved from Work).
+    api.list.mockResolvedValue({ providers: [] });
     const view = render(<MemoryRouter><Activity /></MemoryRouter>);
     expect(screen.getByRole('status', { name: 'Loading activity' }).getAttribute('aria-busy')).toBe('true');
     expect(view.container.querySelectorAll('.kel-skeleton-row')).toHaveLength(7);
@@ -28,6 +30,7 @@ describe('Desktop pending states', () => {
   });
   it('prevents repeated provider retries and replaces failure after a successful reload', async () => {
     let resolve: (value: object) => void;
+    api.list.mockReset();
     api.credentials.mockResolvedValue({ credentials: [] });
     api.list.mockRejectedValueOnce(new Error('Request timed out')).mockReturnValueOnce(new Promise(done => { resolve = done; }));
     const view = render(<MemoryRouter><Providers /></MemoryRouter>);

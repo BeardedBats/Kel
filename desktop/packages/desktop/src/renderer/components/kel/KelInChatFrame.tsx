@@ -5,7 +5,6 @@ import ShellWorkspaceLink from './ShellWorkspaceLink';
 import ShellSettingsIcon from './ShellSettingsIcon';
 import { configService } from '@/common/config/configService';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
-import workIcon from '@renderer/assets/figma/refresh/work.svg';
 import activityIcon from '@renderer/assets/figma/refresh/activity.svg';
 import permissionsIcon from '@renderer/assets/figma/refresh/permissions.svg';
 import knowledgeIcon from '@renderer/assets/figma/refresh/knowledge.svg';
@@ -14,14 +13,11 @@ import providersIcon from '@renderer/assets/figma/refresh/providers.svg';
 import diagnosticsIcon from '@renderer/assets/figma/refresh/diagnostics.svg';
 import transcriptionIcon from '@renderer/assets/figma/refresh/transcriptions.svg';
 import setupIcon from '@renderer/assets/figma/refresh/setup.svg';
-import recipesIcon from '@renderer/assets/figma/refresh/recipes.svg';
 import projectsIcon from '@renderer/assets/figma/refresh/projects.svg';
 import mobileMenuIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconMenu.svg';
-import mobileWorkIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconProjects.svg';
 import mobileActivityIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconActivity.svg';
 import mobilePermissionsIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconLock.svg';
 import mobileKnowledgeIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconFolder1.svg';
-import mobileRecipesIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconStar.svg';
 import mobileScheduledIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconClock.svg';
 import mobileProvidersIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconFile.svg';
 import mobileDiagnosticsIcon from '@renderer/assets/figma/refresh/mobile-project-imgIconSparkle.svg';
@@ -31,37 +27,31 @@ import mobileProjectBackIcon from '@renderer/assets/figma/refresh/mobile-project
 type Item = { label: string; path: string; icon: string; sourceIcon?: boolean };
 type Group = { label: string; items: Item[] };
 
+// D-70 item 5: Projects keeps what belongs to a project — its chats and folder (All projects),
+// Knowledge, Scheduled tasks and Activity. The Work page is retired (the work cards replace it),
+// Recipes has one entry (the sidebar), and Permissions, Providers and Diagnostics moved to Settings.
 const projectGroups: Group[] = [
   { label: 'Projects', items: [
     { label: 'All projects', path: '/projects/list', icon: projectsIcon, sourceIcon: true },
-    { label: 'Work', path: '/work', icon: workIcon, sourceIcon: true },
     { label: 'Activity', path: '/activity', icon: activityIcon, sourceIcon: true },
-    { label: 'Permissions', path: '/autonomy', icon: permissionsIcon, sourceIcon: true },
     { label: 'Knowledge', path: '/projects/knowledge', icon: knowledgeIcon, sourceIcon: true },
-    { label: 'Recipes', path: '/projects/recipes', icon: recipesIcon, sourceIcon: true },
     { label: 'Scheduled tasks', path: '/scheduled', icon: scheduledIcon, sourceIcon: true },
-    { label: 'Providers', path: '/providers', icon: providersIcon, sourceIcon: true },
-    { label: 'Diagnostics', path: '/diagnostics', icon: diagnosticsIcon, sourceIcon: true },
   ] },
   // ST-20: no second Ramble library here — Transcriptions open Ramble itself.
 ];
 const mobileProjectItems: Item[] = [
   { label: 'All projects', path: '/projects/list', icon: mobileKnowledgeIcon, sourceIcon: true },
-  { label: 'Work', path: '/work', icon: mobileWorkIcon, sourceIcon: true },
   { label: 'Activity', path: '/activity', icon: mobileActivityIcon, sourceIcon: true },
-  { label: 'Permissions', path: '/autonomy', icon: mobilePermissionsIcon, sourceIcon: true },
   { label: 'Knowledge', path: '/projects/knowledge', icon: mobileKnowledgeIcon, sourceIcon: true },
-  { label: 'Recipes', path: '/projects/recipes', icon: mobileRecipesIcon, sourceIcon: true },
   { label: 'Scheduled tasks', path: '/scheduled', icon: mobileScheduledIcon, sourceIcon: true },
-];
-const mobileKelItems: Item[] = [
-  { label: 'Providers', path: '/providers', icon: mobileProvidersIcon, sourceIcon: true },
-  { label: 'Diagnostics', path: '/diagnostics', icon: mobileDiagnosticsIcon, sourceIcon: true },
 ];
 
 const settingsGroups: Group[] = [
   { label: 'Kel', items: [
     { label: 'Model', path: '/settings/model', icon: 'model' },
+    { label: 'Staff & models', path: '/settings/staff', icon: 'assistants' },
+    { label: 'Permissions', path: '/settings/permissions', icon: permissionsIcon, sourceIcon: true },
+    { label: 'Providers', path: '/settings/providers', icon: providersIcon, sourceIcon: true },
     { label: 'Tools', path: '/settings/tools', icon: 'tools' },
     { label: 'Skills', path: '/settings/skills', icon: 'skills' },
     { label: 'Connections', path: '/connections', icon: 'connections' },
@@ -70,6 +60,7 @@ const settingsGroups: Group[] = [
   { label: 'Application', items: [
     { label: 'Appearance', path: '/settings/appearance', icon: 'appearance' },
     { label: 'System', path: '/settings/system', icon: 'system' },
+    { label: 'Diagnostics', path: '/settings/diagnostics', icon: diagnosticsIcon, sourceIcon: true },
     { label: 'Remote / WebUI', path: '/settings/webui', icon: 'webui' },
   ] },
   { label: 'Data', items: [
@@ -79,9 +70,11 @@ const settingsGroups: Group[] = [
   { label: 'Other', items: [{ label: 'About', path: '/settings/about', icon: 'about' }] },
 ];
 const mobileSettingsGroups: Group[] = [
-  settingsGroups[0],
+  { label: 'Kel', items: settingsGroups[0].items.map((item) =>
+    item.path === '/settings/permissions' ? { ...item, icon: mobilePermissionsIcon }
+      : item.path === '/settings/providers' ? { ...item, icon: mobileProvidersIcon } : item) },
   { label: 'Application', items: [
-    ...settingsGroups[1].items,
+    ...settingsGroups[1].items.map((item) => item.path === '/settings/diagnostics' ? { ...item, icon: mobileDiagnosticsIcon } : item),
     { label: 'Ramble', path: '/transcription', icon: transcriptionIcon, sourceIcon: true },
   ] },
   { label: 'Data', items: [settingsGroups[2].items[0]] },
@@ -112,7 +105,6 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   const heading = pathname === '/onboarding' ? 'Set up Kel' : settings ? 'Settings' : pathname === '/transcription/library' ? 'Ramble' : pathname === '/projects/recipes' ? 'Recipes' : 'Projects';
   const mobileProjectGroups: Group[] = [
     { label: projectName, items: mobileProjectItems },
-    { label: 'Kel', items: mobileKelItems },
   ];
   const activeItem = [...settingsGroups, ...mobileProjectGroups].flatMap(group => group.items).find(item => matches(pathname, item.path));
   const selectedMcpName = pathname === '/settings/tools' && new URLSearchParams(search).has('mcp')

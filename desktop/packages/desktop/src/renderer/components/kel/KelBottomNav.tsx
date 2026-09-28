@@ -10,7 +10,7 @@ const links = [
   { label: 'Kibble', path: '/dogfood', icon: kibbleIcon, active: (path: string) => path === '/dogfood' },
   { label: 'Ramble', path: '/transcription', icon: rambleIcon, active: (path: string) => path.startsWith('/transcription') },
   { label: 'Recipes', path: '/projects/recipes', icon: recipesIcon, active: (path: string) => path === '/projects/recipes' },
-  { label: 'Projects', path: '/projects', icon: projectsIcon, active: (path: string) => /^(\/projects(?!\/recipes)|\/work|\/activity|\/autonomy|\/scheduled|\/providers|\/diagnostics)(\/|$)/.test(path) },
+  { label: 'Projects', path: '/projects', icon: projectsIcon, active: (path: string) => /^(\/projects(?!\/recipes)|\/activity|\/scheduled)(\/|$)/.test(path) },
   { label: 'Settings', path: '/settings/appearance', icon: settingsIcon, active: (path: string) => path.startsWith('/settings') || path === '/connections' || path === '/onboarding' },
 ] as const;
 

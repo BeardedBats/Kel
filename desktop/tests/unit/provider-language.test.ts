@@ -19,7 +19,7 @@ const repoRoot = path.resolve(here, '..', '..', '..');
 const read = (relative: string) => readFileSync(path.join(repoRoot, relative), 'utf8');
 
 const providersPage = read('desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx');
-const workPage = read('desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx');
+const activityPage = read('desktop/packages/desktop/src/renderer/pages/kel/activity/index.tsx');
 
 const anthropicRoute: KelJobRoute = {
   provider: 'internal',
@@ -52,10 +52,10 @@ describe('provider names on the work surfaces (D19)', () => {
     expect(sentence).not.toContain('claude-code');
   });
 
-  it('the Work page reads the provider inventory for those names', () => {
-    expect(workPage).toContain('kelProviders.list()');
-    expect(workPage).toContain('routeSentence(routes[activeJob.id], providerLabels)');
-    expect(workPage).toContain('setProviderLabels(');
+  it('Activity (which replaced the Work page, D-70) reads the provider inventory for those names', () => {
+    expect(activityPage).toContain('kelProviders.list()');
+    expect(activityPage).toContain('routeSentence(routes[job.id], providerLabels)');
+    expect(activityPage).toContain('setProviderLabels(');
   });
 
   it('the provider confirmation and the readiness choices name the provider', () => {

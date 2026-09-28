@@ -47,7 +47,7 @@ export interface AttentionItem {
 export interface AttentionAction {
   label: string;
   to: string;
-  /** Where to go when `to` names a chat this device cannot open (the job, selected on Work). */
+  /** Where to go when `to` names a chat this device cannot open (the job, highlighted on Activity). */
   fallback?: string;
 }
 
@@ -85,33 +85,36 @@ export const requestTitle = (job: Pick<KelWorkJob, 'contract'> | null | undefine
   return line.length > 120 ? `${line.slice(0, 119).trimEnd()}…` : line;
 };
 
-/** Work, with this job selected. */
-export const workRouteFor = (jobId: string | undefined): string =>
-  jobId ? `/work?job=${encodeURIComponent(jobId)}` : '/work';
+/**
+ * Activity, with this job highlighted. D-70: the Work page is retired; Activity lists every job
+ * (including work from before the work cards) with its one next step.
+ */
+export const jobRouteFor = (jobId: string | undefined): string =>
+  jobId ? `/activity?job=${encodeURIComponent(jobId)}` : '/activity';
 
 /**
- * "Open the chat" for a job: its conversation when the payload names one, with the job selected on
- * Work as the fallback (and as the target when no conversation is known). Never a guessed chat.
+ * "Open the chat" for a job: its conversation when the payload names one, with the job highlighted
+ * on Activity as the fallback (and as the target when no conversation is known). Never a guessed chat.
  */
 export function jobChatAction(job: Pick<KelWorkJob, 'id' | 'conversation'>, label = 'Open the chat'): AttentionAction {
   const conversation = job.conversation;
   return conversation
-    ? { label, to: `/conversation/${conversation}`, fallback: workRouteFor(job.id) }
-    : { label, to: workRouteFor(job.id) };
+    ? { label, to: `/conversation/${conversation}`, fallback: jobRouteFor(job.id) }
+    : { label, to: jobRouteFor(job.id) };
 }
 
 function openAction(conversation: string | undefined, label: string, jobId?: string): AttentionAction {
   // Both targets are existing surfaces that already own the follow-up: the conversation route
-  // that hosts the approval/result, or the Work list when the payload cannot name a conversation.
+  // that hosts the approval/result, or the Activity list when the payload cannot name a conversation.
   return conversation
-    ? { label, to: `/conversation/${conversation}`, ...(jobId ? { fallback: workRouteFor(jobId) } : {}) }
-    : { label, to: '/work' };
+    ? { label, to: `/conversation/${conversation}`, ...(jobId ? { fallback: jobRouteFor(jobId) } : {}) }
+    : { label, to: jobRouteFor(jobId) };
 }
 
 /**
  * Resolve an action to a route this device can open. `mapChat` turns an engine conversation route
  * into the app's own chat route and returns the input unchanged when it cannot; in that case the
- * action's fallback (the job on Work) is used instead of a chat that would not open.
+ * action's fallback (the job on Activity) is used instead of a chat that would not open.
  */
 export function resolveAttentionRoute(action: AttentionAction, mapChat: (to: string) => string): string {
   const mapped = mapChat(action.to);
@@ -180,7 +183,7 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
       kind: 'connection',
       title: 'A connection needs setup',
       detail: `${provider.label || provider.id} — finish setting it up so Kel can keep it available.`,
-      action: { label: 'Set it up', to: '/providers' },
+      action: { label: 'Set it up', to: '/settings/providers' },
       needsYou: true,
       at: 0,
     });
@@ -223,7 +226,7 @@ export function collectAttention(payload: AttentionPayload, filter: AttentionFil
       // The boundary payload binds to a scope, not to a project; when a project filter is active
       // this item is therefore excluded below (fail-closed) rather than attributed by guess.
       projectId: undefined,
-      action: { label: 'Review the request', to: '/autonomy' },
+      action: { label: 'Review the request', to: '/settings/permissions' },
       needsYou: true,
       at: request.created,
     });

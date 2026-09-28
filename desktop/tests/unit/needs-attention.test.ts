@@ -47,7 +47,7 @@ describe('collectAttention — mapping', () => {
     expect(kinds).toEqual(['approval', 'continuation', 'failure', 'input', 'permission', 'review']);
     for (const item of items) {
       if (item.action) {
-        expect(['/conversation/conv-a', '/work', '/autonomy']).toContain(item.action.to);
+        expect(['/conversation/conv-a', '/activity', '/settings/permissions']).toContain(item.action.to);
       }
     }
   });
@@ -102,9 +102,9 @@ describe('collectAttention — unknown/stale items fail honestly', () => {
     expect(items[0].title).toMatch(/no longer available/i);
   });
 
-  it('a waiting job without a conversation still opens the Work list, never a guessed chat', () => {
+  it('a waiting job without a conversation opens it on Activity, never a guessed chat', () => {
     const items = collectAttention({ jobs: [job({ id: 'j1', state: 'AWAITING_USER', conversation: undefined })] });
-    expect(items[0].action?.to).toBe('/work');
+    expect(items[0].action?.to).toBe('/activity?job=j1');
   });
 
   it('drops closed-and-verified work and non-pending boundary requests entirely', () => {
@@ -117,7 +117,7 @@ describe('collectAttention — unknown/stale items fail honestly', () => {
 });
 
 describe('collectAttention — D5 connection setup needs', () => {
-  it('surfaces providers that need setup, routed to the Providers surface, sorted below live asks', () => {
+  it('surfaces providers that need setup, routed to Settings → Providers, sorted below live asks', () => {
     const items = collectAttention({
       jobs: [job({ id: 'j1', state: 'AWAITING_USER' })],
       providers: [
@@ -132,7 +132,7 @@ describe('collectAttention — D5 connection setup needs', () => {
     // Persistent configuration sorts below live asks (no timestamp).
     expect(items[items.length - 1].kind).toBe('connection');
     for (const item of connections) {
-      expect(item.action?.to).toBe('/providers');
+      expect(item.action?.to).toBe('/settings/providers');
       expect(item.projectId).toBeUndefined();
     }
     expect(connections[0].detail).toContain('Codex');
@@ -208,11 +208,11 @@ describe('collectAttention — D7 orphaned runs need a person', () => {
     expect(failure?.detail.startsWith("Didn't pass its checks — ")).toBe(true);
   });
 
-  it('opens the job on Work when its chat cannot be opened on this device', async () => {
+  it('opens the job on Activity when its chat cannot be opened on this device', async () => {
     const { resolveAttentionRoute } = await import('@renderer/components/kel/needsAttention');
     const [item] = collectAttention({ jobs: [job({ id: 'a1', state: 'AWAITING_USER' })] });
-    expect(item.action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/work?job=a1' });
-    expect(resolveAttentionRoute(item.action!, (to) => to)).toBe('/work?job=a1');
+    expect(item.action).toEqual({ label: 'Open the chat', to: '/conversation/conv-a', fallback: '/activity?job=a1' });
+    expect(resolveAttentionRoute(item.action!, (to) => to)).toBe('/activity?job=a1');
     expect(resolveAttentionRoute(item.action!, () => '/conversation/donor-1')).toBe('/conversation/donor-1');
   });
 });

@@ -1,8 +1,8 @@
 /**
  * D14 — the optional high-level Activity view: composed from existing state, nothing internal.
  * Pins: the route + nav entry exist, the page speaks in user language, and no internals (leases,
- * epochs, worker/run ids, routing packets, DB rows) leak into it. The Work page and Activity share
- * their sentences through workLanguage.ts.
+ * epochs, worker/run ids, routing packets, DB rows) leak into it. D-70: the Work page is retired;
+ * Activity holds every job and shares its sentences through workLanguage.ts.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -18,7 +18,6 @@ const router = read('desktop/packages/desktop/src/renderer/components/layout/Rou
 const nav = read(
   'desktop/packages/desktop/src/renderer/components/layout/Sider/SiderNav/KelNavEntries.tsx'
 );
-const workPage = read('desktop/packages/desktop/src/renderer/pages/kel/work/index.tsx');
 const workLanguage = read(
   'desktop/packages/desktop/src/renderer/components/kel/workLanguage.ts'
 );
@@ -36,9 +35,10 @@ describe('Activity surface (D14)', () => {
     expect(activityPage).toContain('Recently finished');
     expect(activityPage).not.toContain('providers connected');
     expect(activityPage).toContain('workLabelFor(job.id, all)');
-    // One job, one story: sections and words come from the shared table; routing stays on Work.
+    // One job, one story: sections and words come from the shared table. D-70: the plain route
+    // sentence moved here from the retired Work page, for work that is still going.
     expect(activityPage).toContain('workWords(job).section');
-    expect(activityPage).not.toContain('routeSentence');
+    expect(activityPage).toContain("workWords(job).section === 'now' ? routeSentence(routes[job.id], providerLabels) : null");
   });
 
   it('never leaks internals', () => {
@@ -47,12 +47,12 @@ describe('Activity surface (D14)', () => {
     }
   });
 
-  it('shares its sentences with the Work page', () => {
+  it('shares its sentences through workLanguage.ts', () => {
     expect(workLanguage).toContain('export const VERDICT_TEXT');
     expect(workLanguage).toContain('export const routeSentence');
     expect(workLanguage).toContain('export const jobStateText');
     expect(workLanguage).toContain('export function workWords');
-    expect(workPage).toContain("import { routeSentence, workWords } from '@renderer/components/kel/workLanguage';");
-    expect(workPage).not.toContain('const routeSentence =');
+    expect(activityPage).toContain("import { routeSentence, workWords } from '@renderer/components/kel/workLanguage';");
+    expect(activityPage).not.toContain('const routeSentence =');
   });
 });

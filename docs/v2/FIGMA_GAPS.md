@@ -40,6 +40,20 @@ under the row, 340px menu right-aligned 6px under it). Differences that remain, 
 | Focus | not drawn | Opening the detail focuses the dialog (no button looks pre-selected); Tab stays inside; Escape returns focus to the card. | `KelOfficeDetail.tsx` |
 | Narrow windows / phone | desktop 1440 only | The row fits as many cards as the measured width allows; below 1100px the detail's columns wrap. The row is desktop-only (no phone frame). | `KelWorkCardRow.tsx`, `KelWorkCards.css` |
 
+## Staff & models and the navigation clean-up (D-70 items 3 and 5) — 2026-09-27
+
+D-70 says items 3 and 5 "follow existing patterns" (no new Figma frames). What was inferred, and from where:
+
+| State / element | Nearest Figma source | Inference | Implementation |
+| --- | --- | --- | --- |
+| Settings → Kel → **Staff & models** page | Settings — Model `311:2239` (source card, rows, green/amber status words); the retired Assistants row (`311:3140`) for the nav slot and its person icon | One "Staff" source card with a muted note, then one row per role: name over a 12px one-line description, three `.kel-select` controls (Mode, Model, Reasoning), and a foot line with the status word (Available / Can't run here / Kel chooses), the engine's reason plus what Kel does instead, "Default: …" and a quiet "Reset to default". Rows are split by a neutral full-width hairline (no one-side coloured border). The nav row sits right after Model where Assistants was. | `pages/settings/StaffModelsSettings/*`, `KelInChatFrame.tsx` |
+| Composer model picker labelled as Kel's own (D-69) | Overlay — Model picker `273:9301` | A 12px muted caption above the scope tabs: "Kel's model — staff use their own (Settings → Staff & models)", the same sentence as the trigger's tooltip and the phone sheet's caption; one extra menu row "Staff & models" under "Open model settings". The trigger label is unchanged. | `KelDesktopModelMenu.tsx`, `KelModelControl.tsx`, `KelMobileModelPicker.tsx` |
+| Settings nav order with the moved pages | Settings nav in `311:2239` | Kel group: Model, Staff & models, Permissions, Providers, Tools, Skills, Connections, Set up Kel. Diagnostics goes in Application after System (it is about the app's health, next to backup/restore). Permissions, Providers and Diagnostics keep their Projects-nav icons. | `KelInChatFrame.tsx` |
+| Projects nav after the clean-up | Projects `189:2193`, Recipes `284:8148` (both still draw Work, Permissions, Recipes, Providers, Diagnostics in the Projects nav) | Projects lists All projects, Activity, Knowledge, Scheduled tasks. Recipes keeps its one entry in the sidebar; its page keeps the Projects frame with no inner row selected — exactly as Figma's Recipes frame `284:8148` draws it. The Project page drops the "Recipes" summary card that `189:2193` draws (it only linked to the sidebar Recipes page). | `KelInChatFrame.tsx`, `projects/index.tsx` |
+| Scheduled tasks from Recipes | Recipes `284:8148` (no link drawn) | A link-style "Scheduled tasks" button after the "N available here" count in the Recipes card header. | `projects/index.tsx` |
+| Activity rows with Pause / Resume / Save as a recipe | Activity `189:1342` (rows with one secondary action) | The retired Work page's Pause, Resume and "Save as a recipe" (with its confirm step) sit on the job's own Activity row as a quiet or secondary button; notes and the recipe draft render under that row in a neutral outlined box. The route sentence ("Running on …") shows under running rows as a muted line. | `activity/index.tsx`, `kel-work.css` |
+| Work frame `189:907` | D-70 item 5 | Retired: `/work` (any query or sub-path) redirects to the chat home. Do not restore it from Figma. | `Router.tsx` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.

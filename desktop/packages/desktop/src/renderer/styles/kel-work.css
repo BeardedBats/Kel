@@ -137,3 +137,10 @@
 .kel-work-why-disabled {
   margin: 4px 0 0;
 }
+
+/* D-70 item 5: Activity keeps the Work page's Pause/Resume note and "Save as a recipe" draft under
+   the job's own row (no second row, no accent rail). */
+.kel-activity-job-extra { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.kel-activity-job-extra > .kel-meta { margin: 0; }
+.kel-activity-recipe-draft { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid rgba(191,216,255,.12); border-radius: 10px; }
+.kel-activity-recipe-draft > p { margin: 0; }

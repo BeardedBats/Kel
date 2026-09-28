@@ -6,6 +6,8 @@ describe('first-run setup routes', () => {
     for (const path of [
       '/onboarding', '/settings/appearance', '/settings/model', '/providers',
       '/connections', '/projects/knowledge', '/autonomy',
+      // D-70: Permissions, Providers and Diagnostics live in Settings now.
+      '/settings/permissions', '/settings/providers', '/settings/diagnostics', '/settings/staff',
     ]) {
       expect(setupRouteAllowed(path), path).toBe(true);
     }
@@ -17,10 +19,8 @@ describe('first-run setup routes', () => {
     }
   });
 
-  it('lets desktop show existing Work while keeping chat and new-work entry routes gated', () => {
-    expect(setupRouteAllowed('/work', true)).toBe(true);
-    expect(setupRouteAllowed('/work', false)).toBe(false);
-    for (const path of ['/guid', '/conversation/existing', '/projects/recipes', '/dogfood', '/work/other']) {
+  it('keeps chat and new-work entry routes gated on desktop too (the Work page is retired, D-70)', () => {
+    for (const path of ['/guid', '/conversation/existing', '/projects/recipes', '/dogfood', '/work', '/work/other']) {
       expect(setupRouteAllowed(path, true), path).toBe(false);
     }
   });

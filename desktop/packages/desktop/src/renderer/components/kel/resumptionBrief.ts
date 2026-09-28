@@ -5,14 +5,14 @@
  * what is paused, what finished (and whether it was checked), what is still running, and any
  * recorded restore outcome. This module owns no workflow truth and invents nothing:
  *   - job lines use the one shared state→words table (workLanguage.ts), so a job reads the same
- *     here as on Work, Activity and its in-chat card — and each job appears on exactly one line;
+ *     here as on Activity and its in-chat card — and each job appears on exactly one line;
  *   - permission and setup needs reuse the attention aggregator (needsAttention.ts);
  *   - the restore line reads the engine's recorded restore outcome (audit PER-02) — silence when
  *     no restore was ever attempted.
  * When there is nothing to say the brief is `quiet` and the caller renders nothing at all.
  *
  * Continuation is a human decision: the brief never resumes anything on its own. Every job line
- * names the job by its title and opens that job's chat (or the job on Work when no chat is known).
+ * names the job by its title and opens that job's chat (or the job on Activity when no chat is known).
  */
 import type { KelBoundaryRequest, KelContinuationCandidate, KelSchedule, KelWorkJob } from './kelApi';
 import {
@@ -131,8 +131,8 @@ export function buildResumptionBrief(payload: ResumptionPayload): ResumptionBrie
       kind: 'needs-you',
       tone: 'attention',
       title: `${needs.length - BRIEF_SECTION_CAP} more things need you`,
-      detail: 'The Work page lists every one of them.',
-      action: { label: 'Open Work', to: '/work' },
+      detail: 'Activity lists every one of them.',
+      action: { label: 'Open Activity', to: '/activity' },
     });
   }
 

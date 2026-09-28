@@ -13,7 +13,7 @@ import { DARK_THEME_ID } from '@/common/theme/constants';
 import { setActiveTheme } from '@renderer/utils/theme/applyTheme';
 import { KEL_ALL_CONVERSATIONS, kelState, kelWork } from '@renderer/components/kel/kelApi';
 import { workWords } from '@renderer/components/kel/workLanguage';
-import { requestTitle, workRouteFor } from '@renderer/components/kel/needsAttention';
+import { requestTitle, jobRouteFor } from '@renderer/components/kel/needsAttention';
 import searchIcon from '@renderer/assets/figma/palette/search.svg';
 import workIcon from '@renderer/assets/figma/palette/work.svg';
 import activityIcon from '@renderer/assets/figma/palette/activity.svg';
@@ -45,8 +45,7 @@ type PaletteItem = {
 };
 
 const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string }> = [
-  { id: 'nav-work', label: 'Work', hint: 'jobs and what needs you', path: '/work' },
-  { id: 'nav-activity', label: 'Activity', hint: 'recent work', path: '/activity' },
+  { id: 'nav-activity', label: 'Activity', hint: 'every job and what needs you', path: '/activity' },
   { id: 'nav-scheduled', label: 'Scheduled tasks', hint: 'recurring work', path: '/scheduled' },
   { id: 'nav-new-chat', label: 'New Chat', hint: 'start a conversation', path: '/guid' },
   { id: 'nav-transcription', label: 'Ramble', hint: 'record, upload, transcripts', path: '/transcription' },
@@ -55,12 +54,13 @@ const NAVIGATION: Array<{ id: string; label: string; hint: string; path: string 
   { id: 'nav-settings-system', label: 'Settings · System', hint: 'data, backup, updates', path: '/settings/system' },
   { id: 'nav-knowledge', label: 'Projects · Knowledge', hint: 'what Kel learned', path: '/projects/knowledge' },
   { id: 'nav-map', label: 'Projects · Map', hint: 'project map', path: '/projects/map' },
-  { id: 'nav-recipes', label: 'Projects · Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
-  { id: 'nav-providers', label: 'Providers', hint: 'connect a model', path: '/providers' },
+  { id: 'nav-recipes', label: 'Recipes', hint: 'ready-made tasks', path: '/projects/recipes' },
+  { id: 'nav-providers', label: 'Settings · Providers', hint: 'connect a model', path: '/settings/providers' },
+  { id: 'nav-staff', label: 'Settings · Staff & models', hint: 'the model each role uses', path: '/settings/staff' },
   { id: 'nav-connections', label: 'Connections', hint: 'services Kel can use', path: '/connections' },
-  { id: 'nav-autonomy', label: 'Permissions', hint: 'what Kel can access', path: '/autonomy' },
+  { id: 'nav-autonomy', label: 'Settings · Permissions', hint: 'what Kel can access', path: '/settings/permissions' },
   { id: 'nav-dogfood', label: 'Kibble', hint: 'what you captured with Ctrl+Shift+F', path: '/dogfood' },
-  { id: 'nav-diagnostics', label: 'Diagnostics', hint: 'health and an issue report', path: '/diagnostics' },
+  { id: 'nav-diagnostics', label: 'Settings · Diagnostics', hint: 'health and an issue report', path: '/settings/diagnostics' },
   { id: 'nav-setup', label: 'Set up Kel', hint: 'models, projects and permissions', path: '/onboarding' },
 ];
 
@@ -106,7 +106,7 @@ const KelCommandPalette: React.FC = () => {
           label: title.length > 60 ? `${title.slice(0, 59).trimEnd()}…` : title,
           hint: workWords(job).label,
           search: job.contract?.request ?? '',
-          run: () => navigate(workRouteFor(job.id)),
+          run: () => navigate(jobRouteFor(job.id)),
         });
       });
       (work?.memory?.records ?? []).forEach((record) => {
@@ -263,7 +263,7 @@ const KelCommandPalette: React.FC = () => {
       group: 'Go to',
       label: entry.label,
       hint: entry.hint,
-      icon: entry.id === 'nav-work' ? workIcon : entry.id === 'nav-activity' ? activityIcon : entry.id === 'nav-scheduled' ? clockIcon : undefined,
+      icon: entry.id === 'nav-activity' ? activityIcon : entry.id === 'nav-scheduled' ? clockIcon : undefined,
       run: () => navigate(entry.path),
     }));
     // Actions are real, verified behaviours: theme switch and a composer handoff that prefills
