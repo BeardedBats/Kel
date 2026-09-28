@@ -260,10 +260,10 @@ def result_text(store, job):
         what = '; '.join(parts) or 'no files'
         lead = ('Your new project is ready. ' if job['contract'].get('greenfield') else '')
         return (lead + 'Applied to ' + root + ': ' + what + ' (' + _count(len(changes), 'file') + ').\n\n'
-                + how + '\n\nThe earlier files are saved — Undo in Work puts them back.')
+                + how + '\n\nThe earlier files are saved — Undo on the result card puts them back.')
     if saved['decision'] == WAITING and saved.get('reason') and saved['reason'] != ASK_REASON:
         return ('The change passed its tests and a separate review. Kel did not apply it on its own: '
-                + saved['reason'] + '. Use Apply checked changes in Work to write it into ' + root
+                + saved['reason'] + '. Use Apply checked changes in Work context to write it into ' + root
                 + ' — Kel checks your project for conflicts and saves a backup first.')
     return None
 
