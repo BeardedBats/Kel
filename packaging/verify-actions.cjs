@@ -47,8 +47,9 @@ const STEPS = [
       })),
   },
   {
-    name: 'work-resume',
-    hash: '/work',
+    // D-70: the Work page is retired; a paused job's Resume lives on Activity ("Resume <work>").
+    name: 'activity-resume',
+    hash: '/activity',
     click: 'Resume',
     expect: 'Resume',
     probe: (session) =>

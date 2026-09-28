@@ -11,9 +11,13 @@
  *
  * Probes (the four installed replays left open by PACKAGE_EVIDENCE):
  *   D0-001  Permissions shows the work's own request, not a raw job id
- *   D0-004  The desktop-pet refusal shows exactly ONE message
+ *   D0-004  (retired by D-56) the Desktop Pet is gone: its old route lands on Appearance
  *   D1      Providers speak human status; Set up → Save → Verify keeps its words
- *   D2      The update check fails closed and says so truthfully
+ *   D2      (retired by D-56) no updater: About shows version and build, no update check
+ *
+ * Surfaces follow the current navigation (D-70): the Work page is retired (the work cards at the top
+ * of a chat replace it and Activity lists the jobs), Permissions and Providers live under Settings,
+ * and scheduled tasks are engine schedules (D-57) on Scheduled tasks.
  *
  * Usage (repo root):
  *   node packaging/verify-installed-battery.cjs --tour        # walk the real UI, dump structure
@@ -237,10 +241,10 @@ async function runBattery(page, results) {
   checks.timings.startupToWindow = results.startupMs;
 
   for (const [label, hash] of [
-    ['Work', '#/work'],
     ['Projects', '#/projects/knowledge'],
     ['Recipes', '#/projects/recipes'],
     ['Activity', '#/activity'],
+    ['Scheduled tasks', '#/scheduled'],
     ['Transcription', '#/transcription'],
     ['Team', '#/team/roster'],
     ['Settings', '#/settings/appearance'],
@@ -249,7 +253,7 @@ async function runBattery(page, results) {
     await visit(page, label, hash, checks);
   }
 
-  for (const probe of [probePermissions, probePetRefusal, probeProviders, probeUpdate]) {
+  for (const probe of [probePermissions, probePetRetired, probeProviders, probeAbout]) {
     try {
       await probe(page, checks);
     } catch (error) {
@@ -297,7 +301,7 @@ const safeShot = async (page, name) => {
 
 /** D0-001 — the Permissions Work column names the work, never a raw engine job id. */
 async function probePermissions(page, checks) {
-  checks.permissions_nav = await goTo(page, 'Permissions', '#/autonomy');
+  checks.permissions_nav = await goTo(page, 'Permissions', '#/settings/permissions');
   const engineForPermissions = engineFacts();
   const hasLease = Boolean(engineForPermissions.lease);
   // Wait for whichever truth this data root actually has: a lease table, or the honest empty state.
@@ -366,56 +370,25 @@ async function probePermissions(page, checks) {
   checks.permissions_screenshotError = await safeShot(page, 'probe-d0-001-permissions.png');
 }
 
-/** D0-004 — a refused pet enable shows exactly ONE message and settles the toggle off. */
-async function probePetRefusal(page, checks) {
+/**
+ * D0-004 (retired by D-56) — the Desktop Pet is gone, so there is no refusal left to count. The probe
+ * now proves the retirement: the old route lands on Appearance and nothing offers a pet.
+ */
+async function probePetRetired(page, checks) {
   checks.pet_nav = await goTo(page, null, '#/settings/pet');
   await wait(1500);
-  const switches = await page.evaluate(() => {
-    const out = [];
-    document.querySelectorAll('.arco-switch, button[role="switch"]').forEach((el, index) => {
-      let node = el;
-      let label = '';
-      for (let up = 0; up < 5 && node; up += 1) {
-        node = node.parentElement;
-        const text = node ? (node.innerText || '').replace(/\s+/g, ' ').trim() : '';
-        if (text) label = text;
-        if (text && text.length < 120) break;
-      }
-      out.push({ index, checked: el.getAttribute('aria-checked'), label: label.slice(0, 120) });
-    });
-    return out;
-  });
-  const enableIndex = switches.findIndex((entry) => /enable desktop pet/i.test(entry.label));
-  checks.pet_switch_found = enableIndex;
-  if (enableIndex < 0) {
-    checks.pet_single_message = { pass: false, reason: 'Enable Desktop Pet switch not found', switches };
-    return;
-  }
-  await page.locator('.arco-switch, button[role="switch"]').nth(enableIndex).click();
-  await wait(3000);
-  const toasts = await toastTexts(page);
-  const pageText = await bodyText(page);
-  const refusal = 'The desktop pet is not available in this build, so it stays off.';
-  const settled = await page.evaluate(
-    (index) => {
-      const el = document.querySelectorAll('.arco-switch, button[role="switch"]')[index];
-      return el ? el.getAttribute('aria-checked') : null;
-    },
-    enableIndex
-  );
-  checks.pet_single_message = {
-    pass: toasts.length === 1 && toasts[0].includes(refusal) && settled === 'false',
-    toastCount: toasts.length,
-    toasts,
-    occurrencesOfRefusalInPage: pageText.split(refusal).length - 1,
-    switchSettledOff: settled === 'false',
+  const text = await bodyText(page);
+  checks.pet_retired = {
+    pass: checks.pet_nav.hash === '#/settings/appearance' && !/desktop pet/i.test(text),
+    landedOn: checks.pet_nav.hash,
+    petMentioned: /desktop pet/i.test(text),
   };
-  checks.pet_screenshotError = await safeShot(page, 'probe-d0-004-pet.png');
+  checks.pet_screenshotError = await safeShot(page, 'probe-d0-004-pet-retired.png');
 }
 
 /** D1 — providers speak human status, and Set up → Save + Verify says what really happened. */
 async function probeProviders(page, checks) {
-  checks.providers_nav = await goTo(page, null, '#/providers');
+  checks.providers_nav = await goTo(page, null, '#/settings/providers');
   await page.waitForSelector('.kel-card', { timeout: 20000 });
   const pageText = await bodyText(page);
   checks.providers_human_status = {
@@ -514,55 +487,30 @@ async function probeProviders(page, checks) {
   checks.providers_screenshotError = await safeShot(page, 'probe-d1-providers.png');
 }
 
-/** D2 — the update check fails closed truthfully, with no donor infrastructure anywhere. */
-async function probeUpdate(page, checks) {
+/**
+ * D2 (retired by D-56) — Kel has no consumer updater, so there is no update check to fail closed.
+ * About shows the version and build only; the probe proves that and that no donor term leaks.
+ */
+async function probeAbout(page, checks) {
   checks.update_nav = await goTo(page, null, '#/settings/about');
   await wait(1500);
-  const before = await bodyText(page);
+  const text = await bodyText(page);
   checks.update_identity = {
-    pass: /v?1\.7\.0-dev/.test(before),
-    versionLine: (before.match(/v?[\d.]+-dev/) || [null])[0],
-    donorTermPresent: DONOR_TERMS.some((term) => before.toLowerCase().includes(term.toLowerCase())),
+    pass: /v?1\.7\.0-dev/.test(text),
+    versionLine: (text.match(/v?[\d.]+-dev/) || [null])[0],
+    donorTermPresent: DONOR_TERMS.some((term) => text.toLowerCase().includes(term.toLowerCase())),
   };
-  const button = page.getByRole('button', { name: 'Check for updates', exact: true }).first();
-  if ((await button.count().catch(() => 0)) === 0) {
-    checks.update_fails_closed = { pass: false, reason: 'no Check for updates control' };
-    return;
-  }
-  await button.click();
-  // The manual check talks to GitHub (30s timeout), so allow for a real wait.
-  const deadline = Date.now() + 60000;
-  let messages = [];
-  while (Date.now() < deadline) {
-    messages = await toastTexts(page);
-    if (messages.length) break;
-    await wait(1000);
-  }
-  const after = await bodyText(page);
-  const outcome = messages.join(' | ');
-  const honestUpToDate = /already on the latest version/i.test(outcome);
-  const honestFailure = /not allowed|timed out|request failed|Failed to check for updates|no result/i.test(
-    outcome
-  );
-  const donorLeak = DONOR_TERMS.some((term) =>
-    (after + ' ' + outcome).toLowerCase().includes(term.toLowerCase())
-  );
-  checks.update_fails_closed = {
-    pass: (honestUpToDate || honestFailure) && !donorLeak,
-    outcome,
-    interpretation: honestUpToDate
-      ? 'honest up-to-date answer (Kel publishes no release asset yet)'
-      : honestFailure
-        ? 'honest fail-closed answer'
-        : 'unrecognised outcome',
-    releaseCardShown: /Update available/i.test(after),
+  const updateControls = await page.getByRole('button', { name: /check for updates/i }).count().catch(() => 0);
+  checks.update_surface_removed = {
+    pass: updateControls === 0 && !/Update available/i.test(text),
+    updateControls,
   };
-  checks.update_screenshotError = await safeShot(page, 'probe-d2-update.png');
+  checks.update_screenshotError = await safeShot(page, 'probe-d2-about.png');
 }
 
 /** Inventory of the Providers page: every card, its heading, and its own controls. */
 async function dumpProviders(page) {
-  await goTo(page, null, '#/providers');
+  await goTo(page, null, '#/settings/providers');
   await wait(2500);
   const inventory = await page.evaluate(() => {
     const text = (node) => (node.innerText || '').replace(/\s+/g, ' ').trim();
@@ -585,7 +533,7 @@ async function dumpProviders(page) {
 /** Walk the installed UI so the probes are written against what is really there. */
 async function tour(page, out) {
   const steps = [];
-  for (const label of ['Work', 'Projects', 'Activity', 'Permissions', 'Transcription']) {
+  for (const label of ['Projects', 'Activity', 'Scheduled tasks', 'Transcription']) {
     const clicked = await clickByText(page, label);
     steps.push({ label, clicked, ...(await pageFacts(page)) });
     await page.screenshot({ path: path.join(OUT_DIR, `tour-${label.toLowerCase()}.png`) });

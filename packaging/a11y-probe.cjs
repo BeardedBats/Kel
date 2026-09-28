@@ -211,7 +211,8 @@ async function main() {
   const desc = await readDescriptor(dataDir, 120000);
   ENGINE_PID = desc.pid;
   out.engine = { pid: desc.pid, version: desc.engine_version || null };
-  await page.locator('text=Work & context').first().waitFor({ timeout: 60000 }).catch(() => {});
+  // UI ready gate: the shell itself (the Work & context drawer this used to wait for is retired).
+  await page.locator('.kel-v2-shell').first().waitFor({ timeout: 60000 }).catch(() => {});
   await page.waitForTimeout(2200);
 
   const win = await app.browserWindow(page);
@@ -247,10 +248,8 @@ async function main() {
   }
   await page.evaluate(() => { const a = document.activeElement; if (a && a.blur) a.blur(); });
 
-  // Open the work drawer for the second pass.
-  const trigger = page.locator('text=Work & context').first();
-  if (await trigger.count()) { await trigger.click({ timeout: 8000 }).catch(() => {}); await page.waitForTimeout(1500); }
-  out.workDrawer = await page.evaluate(PAGE_AUDIT);
+  // The second pass used to audit the Work & context drawer; that drawer is retired.
+  out.workDrawer = { retired: 'the Work & context drawer is no longer in the app (it left the sidebar on 2026-09-21; the D-68 work cards at the top of a chat and Activity replace it)' };
 
   // V1.4 surfaces: sample each route (--routes id:hash) after the drawer pass.
   out.routes = {};

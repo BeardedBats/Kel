@@ -287,19 +287,29 @@ test('audit 2 matches sidebar geometry and visible literal source copy', async (
 });
 
 
-test('scheduled source list selects a task and shows its stored instructions', async ({ page }) => {
+// D-57: scheduled tasks live in the engine (`POST /kel/api/schedules` from the WebUI), not the retired
+// donor cron endpoint. A row opens the task's own page (`/scheduled/:id`, WK-8).
+test('scheduled tasks list opens a task page with its stored instructions', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  const task = (id: string, name: string) => ({ id, name, enabled: true, schedule: { kind: 'every', everyMs: 7200000, description: 'Every 2 hours' }, target: { payload: { kind: 'message', text: `Instructions for ${name}` }, execution_mode: 'new_conversation' }, metadata: { conversation_id: '', agent_type: 'aionrs', created_by: 'user', created_at: 1, updated_at: 1 }, state: { run_count: 0, retry_count: 0, max_retries: 0, queue_enabled: true } });
+  const task = (id: string, name: string) => ({ id, name, project_id: 'default', project_name: 'General', target: { kind: 'instruction', text: `Instructions for ${name}` }, cadence: { kind: 'interval', minutes: 120 }, timezone: null, start_mode: 'new_conversation', conversation_id: null, model: null, model_label: 'Automatic', skip_if_running: true, enabled: true, status: 'active', description: 'Every 2 hours', next_due_at: Math.floor(Date.now() / 1000) + 3600, running: false, last_run: null, problem: null });
+  const tasks = [task('first', 'Morning brief'), task('second', 'Weekly rankings refresh')];
   await open(page, '/guid');
-  await page.route('**/api/cron/jobs', route => route.fulfill({ json: { success: true, data: [task('first', 'Morning brief'), task('second', 'Weekly rankings refresh')] } }));
+  await page.route('**/kel/api/schedules', route => {
+    const body = (route.request().postDataJSON() ?? {}) as { action?: string; id?: string };
+    if (body.action === 'list') return route.fulfill({ json: { schedules: tasks, needs_attention: 0 } });
+    if (body.action === 'get') return route.fulfill({ json: { schedule: tasks.find(t => t.id === body.id) ?? null, conversations: { created: 0, open: 0 } } });
+    if (body.action === 'history') return route.fulfill({ json: { rows: [] } });
+    return route.fulfill({ json: { valid: true, description: 'Every 2 hours', next: [] } });
+  });
   await open(page, '/scheduled');
   await expect(page.locator('.kel-shell-task-row')).toHaveCount(2);
   const listBox = await page.getByRole('region', { name: 'Scheduled tasks', exact: true }).boundingBox();
   expect(listBox?.x).toBe(388);
   expect(listBox?.y).toBe(112);
   await page.getByRole('button', { name: /Weekly rankings refresh/ }).click();
-  await expect(page.locator('.kel-shell-task-detail')).toContainText('Instructions for Weekly rankings refresh');
-  await expect(page.getByRole('button', { name: 'Go to conversation' })).toBeDisabled();
+  await expect(page).toHaveURL(/#\/scheduled\/second$/);
+  await expect(page.getByTestId('scheduled-detail-desktop')).toContainText('Instructions for Weekly rankings refresh');
+  await expect(page.getByTestId('scheduled-detail-desktop')).toContainText('No runs yet.');
   await record(page, '1440-scheduled-fixture');
 });
 

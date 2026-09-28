@@ -15,7 +15,7 @@ const { _electron: electron } = playwright;
 const appDir = path.resolve(process.argv[2] || '.');
 const dataDir = path.resolve(process.argv[3] || '');
 const rawHash = process.argv[4] || '/guid';
-// Git-Bash rewrites a bare "/work" argument into a Windows path; recover the route.
+// Git-Bash rewrites a bare "/activity" argument into a Windows path; recover the route.
 const hash =
   rawHash.includes('\\') || rawHash.includes(':')
     ? '/' + rawHash.split(/[\\/]/).filter(Boolean).pop()
@@ -45,7 +45,8 @@ const PROBE = () => {
   const scope = document.querySelector('.kel-scope');
   const density = scope instanceof HTMLElement ? scope.getAttribute('data-density') : null;
   const rows = document.querySelectorAll('.kel-table tbody tr').length;
-  for (const label of ['Work & context', 'Project conversations', 'Work in a project']) {
+  // 'Work & context' left with its drawer (retired); the remaining labels are still probed.
+  for (const label of ['Project conversations', 'Work in a project']) {
     const el = Array.from(document.querySelectorAll('span, div, button')).find(
       (node) => (node.textContent || '').trim() === label
     );
