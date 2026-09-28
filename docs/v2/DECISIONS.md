@@ -859,3 +859,13 @@ They are recommendations, not Nick's explicit picks — each is one setting to c
 3. **An open scoping card can be dismissed** ("Not now"), which cancels the scoping without starting work.
 4. **The engine keeps running if the app window dies** so work isn't lost (durability), and exits on
    its own once its work is settled and no app has reattached for 10 minutes.
+
+## D-75 — Functional-audit questions (recommended values, adopted under the "execute everything" instruction)
+
+**Adopted 2026-09-28** (Claude's recommendations, not Nick's explicit picks; each is easy to change).
+1. **Replies stream** word by word in the chat, as in ChatGPT and Claude (where the runtime supports it);
+   the Thinking indicator stays until the first words arrive.
+2. **Edit and regenerate.** Nick can edit a message he sent (Kel answers again from there) and ask Kel to
+   regenerate its last reply — ChatGPT/Claude parity. Work already handed off is not silently re-run.
+3. **One key flow.** The Muse (Ramble) key is managed where the other keys are (Settings → Providers),
+   through the same credential custody; Ramble links there instead of keeping its own paste box.
