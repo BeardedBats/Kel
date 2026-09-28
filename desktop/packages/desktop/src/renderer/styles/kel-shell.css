@@ -4528,3 +4528,25 @@ html[data-theme='light'] body .kel-v2-shell .kel-shell-ramble .kel-shell-ramble-
 /* CH polish: an inline action inside a toast (Archive → Undo). */
 .kel-toast-with-action { display: inline-flex; align-items: center; gap: 6px; }
 .kel-toast-action { padding: 0 4px; border: 0; background: transparent; color: #9fdaff; font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+/* VIS-26: the Back up / Restore dialog in Kel's modal style (Figma 314:4383) instead of stock Arco:
+   glass card, left-aligned title, link-style Cancel and one blue primary. */
+.arco-modal.kel-shell-dialog-modal { box-sizing: border-box; width: 480px !important; max-width: calc(100vw - 32px); padding: 0 !important; border-radius: 16px; }
+.arco-modal.kel-shell-dialog-modal :is(.arco-modal-header, .arco-modal-content, .arco-modal-footer) { border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.kel-shell-dialog-modal .arco-modal-header { height: auto; min-height: 0; margin: 0; padding: 20px 24px 0; }
+.kel-shell-dialog-modal .arco-modal-title { text-align: left; font: 600 18px/24px var(--kel-shell-heading); color: var(--kel-text-1); }
+.kel-shell-dialog-modal .arco-modal-close-icon { display: none; }
+.kel-shell-dialog-modal .arco-modal-content { padding: 12px 24px 0; }
+.kel-shell-dialog-modal .kel-shell-backup-dialog .kel-meta { margin: 0 0 8px; font: 400 14px/20px var(--kel-shell-body); }
+.kel-shell-dialog-modal .arco-modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin: 0; padding: 16px 24px 24px; }
+.kel-shell-dialog-modal .arco-modal-footer .arco-btn + .arco-btn { margin-left: 0; }
+.kel-shell-dialog-modal .arco-modal-footer .arco-btn { height: 34px; border-radius: 8px; font: 600 14px/20px var(--kel-shell-heading); }
+.kel-shell-dialog-modal .arco-modal-footer .arco-btn-secondary { border: 0; background: transparent; }
+.kel-shell-dialog-modal .arco-modal-footer .arco-btn-primary { padding: 0 14px; border: 1px solid rgba(140,150,167,.5); background: linear-gradient(180deg,#6493f8,#2356b3); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+.kel-shell-dialog-modal .arco-modal-footer .arco-btn-primary:disabled { opacity: .4; }
+html[data-theme='dark'] body .arco-modal.kel-shell-dialog-modal { border: 1px solid rgba(221,233,255,.5); background: linear-gradient(90deg,rgba(159,195,255,.05),rgba(159,195,255,.05)),#1b376b !important; box-shadow: 0 24px 32px rgba(5,13,36,.55); }
+html[data-theme='dark'] .kel-shell-dialog-modal .kel-shell-backup-dialog .kel-meta { color: #c4d4e8; }
+html[data-theme='dark'] .kel-shell-dialog-modal .arco-modal-footer .arco-btn-secondary { color: #9fc3ff; }
+html[data-theme='dark'] .kel-shell-dialog-modal :is(.arco-input, .arco-input-inner-wrapper) { border: 1px solid rgba(127,160,255,.28); border-radius: 8px; background: rgba(47,107,224,.1) !important; color: #edf2fa; }
+html[data-theme='light'] body .arco-modal.kel-shell-dialog-modal { border: 1px solid rgba(20,45,80,.12); background: #fff !important; box-shadow: 0 24px 32px rgba(20,45,80,.18); }
+html[data-theme='light'] .kel-shell-dialog-modal .arco-modal-footer .arco-btn-secondary { color: #2356b3; }

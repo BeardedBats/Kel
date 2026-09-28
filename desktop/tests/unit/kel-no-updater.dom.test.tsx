@@ -30,4 +30,12 @@ describe('About (no consumer updater)', () => {
     expect(screen.queryByText(/check for updates|prerelease|update log|report issue/i)).toBeNull();
     expect(screen.queryByRole('switch')).toBeNull();
   });
+
+  it('shows the build the package was made from (VIS-27)', async () => {
+    vi.stubGlobal('__APP_BUILD__', '5294c27');
+    vi.resetModules();
+    const { default: About } = await import('@renderer/components/settings/SettingsModal/contents/AboutModalContent');
+    render(<About />);
+    expect(screen.getByTestId('about-build').textContent).toBe('Build5294c27');
+  });
 });

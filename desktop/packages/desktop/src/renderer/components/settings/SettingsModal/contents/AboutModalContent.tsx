@@ -20,6 +20,9 @@ import { ipcBridge } from '@/common';
 // '../../../../../../package.json'` resolved to packages/desktop/package.json
 // which is a workspace placeholder permanently pinned at "0.0.0".
 declare const __APP_VERSION__: string;
+// The source commit the package was built from (electron.vite.config.ts); empty when unknown.
+declare const __APP_BUILD__: string;
+const appBuild = typeof __APP_BUILD__ === 'string' ? __APP_BUILD__ : '';
 
 // Kel has no consumer updater (handoff §26, D-56): About shows the version and
 // build only. Upgrades are manual installs of a new App build.
@@ -38,6 +41,7 @@ const AboutModalContent: React.FC = () => {
     <div className='kel-shell-about'>
       <KelCard title='Kel'>
         <div className='kel-shell-preference-row'><span>Version</span><span><span className='kel-desktop-only'>v{__APP_VERSION__}</span><span className='kel-phone-only'>{__APP_VERSION__.replace(/-/, ' · ')}</span></span></div>
+        <div className='kel-shell-preference-row' data-testid='about-build'><span>Build</span><span>{appBuild || 'Not recorded'}</span></div>
         <div className='kel-shell-preference-row'><span>Runtime</span><span>{isElectron ? `Electron ${navigator.userAgent.match(/Electron\/(\d+)/)?.[1] ?? 'desktop'}` : 'WebUI'}<span className='kel-shell-about-runtime-detail'>{` · React ${React.version.split('.')[0]}`}</span></span></div>
         <div className='kel-shell-preference-row kel-shell-about-data-row'><div><div>Data folder</div><div className='kel-meta'>{dataPath?.root ?? 'Unavailable in WebUI'}</div></div><Button disabled={!dataPath} onClick={() => dataPath && void ipcBridge.shell.showItemInFolder.invoke(dataPath.database)}>Show in folder</Button></div>
         <div className='kel-shell-preference-row kel-desktop-only kel-shell-about-notices-inline'><span>Third-party notices</span><button type='button' onClick={() => setShowNotices(true)}>View</button></div>

@@ -199,6 +199,7 @@ export const KelDataCard: React.FC = () => {
     <div className='kel-shell-preference-row kel-desktop-only'><div><div>Back up</div><p className='kel-meta'>Save a copy of your chats, projects and settings to a folder. Credentials are not included.</p></div><Button type='primary' onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
     <div className='kel-shell-preference-row kel-desktop-only'><div><div>Restore</div><p className='kel-meta'>Replace current data with a backup</p></div><Button onClick={() => setFolderDialog('restore')} data-testid='restore-inspect'>Restore...</Button></div>
     <Modal
+      className='kel-shell-dialog-modal'
       title={folderDialog === 'backup' ? 'Back up now' : 'Restore from a backup'}
       visible={folderDialog !== null}
       unmountOnExit
