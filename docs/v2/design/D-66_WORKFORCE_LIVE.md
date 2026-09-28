@@ -179,7 +179,7 @@ The desktop allowlist (`kelRequestGuard.ts`) admits exactly these two GET shapes
 exploration is choosing the design).
 
 ## 5. Migrations and storage
-One additive migration, **35 `v2-workforce-live`** (`staff.ensure_schema`, idempotent, no table
+One additive migration, **36 `v2-workforce-live`** (35 is General's default folder) (`staff.ensure_schema`, idempotent, no table
 altered): `role_models(role PK, mode, model, reasoning, updated)`, `staff_calls(id PK, job_id,
 milestone_id, role, instance, kind, subject, state, asked, ran, why, summary, started, finished)`,
 `staff_model_status(model PK, status, reason, at)`, `oracle_reviews(job_id, subject, attempts,

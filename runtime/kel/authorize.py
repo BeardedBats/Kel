@@ -89,8 +89,11 @@ def role_for(store, job_id, milestone_id):
     with contextlib.closing(store.connect()) as db:
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='team_assignments'").fetchone():
             return None
+        # D-66: the executor's snapshot governs the step; a read-only Verifier/Oracle assignment on
+        # the same step must never become the executor's tool policy (or widen/narrow it).
         row = db.execute('SELECT template_id, snapshot FROM team_assignments WHERE job_id=? AND '
-                         'milestone_id=? ORDER BY created DESC LIMIT 1',
+                         "milestone_id=? AND template_id NOT IN ('verifier','oracle','sentinel') "
+                         'ORDER BY created DESC LIMIT 1',
                          (job_id, milestone_id)).fetchone()
     if not row:
         return None

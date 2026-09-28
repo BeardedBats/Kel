@@ -306,7 +306,7 @@ class Store:
         with contextlib.closing(self.connect()) as db:
             return [json.loads(r['data']) for r in db.execute("SELECT data FROM jobs ORDER BY rowid DESC")]
 
-    def claim(self, job_id, milestone_id, provider="fixture", timeout=120, max_attempts=4, route=None, model=None):
+    def claim(self, job_id, milestone_id, provider="fixture", timeout=120, max_attempts=4, route=None, model=None, staff=None):
         with self.transaction() as db:
             job = self._get(db, job_id)
             if job['state'] not in ('READY', 'RUNNING', 'VERIFYING'):
@@ -327,6 +327,13 @@ class Store:
                        (run_id, job_id, milestone_id, epoch, 'RUNNING', 2, time.time()+timeout, None, None, provider, model))
             m.update(state='RUNNING', attempts=m['attempts']+1, provider=provider, model=model, error=None)
             job.update(state='RUNNING', reserved=job['reserved']+2, verdict='UNCERTAIN', assessment=None)
+            if staff:
+                # D-66: the step's staffing binding is written in the claim transaction, so a run
+                # never exists without the record of who was asked for and why.
+                from .staff import insert_call
+                insert_call(db, call_id=run_id, job_id=job_id, milestone_id=milestone_id,
+                            role=staff['role'], kind='work', asked=staff.get('asked'),
+                            ran=staff.get('ran'), why=staff.get('why'))
             self._save(db, job, "run.claimed", {"run_id": run_id, "epoch": epoch, "provider": provider,"route":route})
             return dict(id=run_id, epoch=epoch, job_id=job_id, milestone_id=milestone_id,
                         contract_version=job['contract_version'], spec=spec, attempt=m['attempts'], provider=provider, model=model)
@@ -403,8 +410,10 @@ class Store:
                            " AND name='assignment_artifacts'").fetchone()
         if not table:
             return None
+        # D-66: a Verifier/Oracle assignment on the same step never owns the executor's artifact.
         row = db.execute('SELECT assignment_id FROM team_assignments WHERE job_id=?'
-                         ' AND milestone_id=? ORDER BY created DESC LIMIT 1',
+                         " AND milestone_id=? AND template_id NOT IN ('verifier','oracle','sentinel')"
+                         ' ORDER BY created DESC LIMIT 1',
                          (job_id, milestone_id)).fetchone()
         if row is None:
             return None
@@ -439,6 +448,7 @@ class Store:
                     if not n:
                         job['state'] = 'PAUSED' if job['state'] == 'PAUSING' else 'CANCELLED'
                     db.execute("UPDATE inbox SET handled=1 WHERE id=?", (event['id'],))
+                    self._settle_staff_call(db, run['id'], 'stopped', result)
                     self._save(db, job, 'run.stopped', {'run_id': run['id'], 'receipt': result.get('outcome')})
                     count += 1
                     continue
@@ -452,6 +462,10 @@ class Store:
                 if outcome not in ('SUCCESS', 'PARTIAL', 'FAILED', 'BLOCKED', 'CANCELLED'):
                     result = {"outcome": "FAILED", "error": "Malformed worker result"}
                     outcome = 'FAILED'
+                if result.get('model_used'):
+                    # D-66: the model the runtime reported running, never the one merely asked for.
+                    m['model'] = str(result['model_used'])[:120]
+                    db.execute('UPDATE runs SET model=? WHERE id=?', (m['model'], run['id']))
                 if outcome in ('SUCCESS', 'PARTIAL') and isinstance(result.get('text'), str):
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
                     m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
@@ -478,9 +492,23 @@ class Store:
                 db.execute("UPDATE runs SET state='RESULT_RECORDED',result=?,native_session=?,reservation=? WHERE id=?",
                            (encode(result), result.get('session_id'), held, run['id']))
                 db.execute("UPDATE inbox SET handled=1 WHERE id=?", (event['id'],))
+                self._settle_staff_call(db, run['id'], 'done' if m['state'] == 'CHECKING' else 'failed', result)
                 self._save(db, job, 'worker.result_recorded', {'run_id': run['id'], 'outcome': outcome})
                 count += 1
         return count
+
+    @staticmethod
+    def _settle_staff_call(db, run_id, state, result):
+        """D-66: settle a staffed step's call with what its runtime reported (no-op when unstaffed)."""
+        try:
+            from .staff import update_call
+            update_call(None, run_id, state=state, db=db,
+                        ran={'model': result.get('model_used'),
+                             'reasoning': result.get('reasoning_used'),
+                             'model_confirmed': True if result.get('model_used') else None},
+                        summary=(result.get('error') if state == 'failed' else None))
+        except Exception:
+            pass  # the record is additive; it never blocks settlement
 
     def artifact_text(self, artifact):
         path = (self.root / artifact['path']).resolve()

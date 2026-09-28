@@ -191,6 +191,8 @@ class Service:
         ensure_assignment_schema(self.store)
         ensure_delegation_schema(self.store)
         ensure_parallel_schema(self.store)
+        from .staff import ensure_schema as ensure_staff_schema
+        ensure_staff_schema(self.store)  # D-66/D-67: migration 36
         Connections(self.store)
         # D-54: projects are the one context boundary (migration 32 runs here, once).
         from .projects import Projects
@@ -763,8 +765,10 @@ class Service:
                         text=current['text'];continue  # changed while planning: plan the change in
                     contract['handoff']={'submission_id':sid,'ack_seq':ack['message_seq'] if ack else None,
                                          'title':ack['title'] if ack else title_for(text)}
+                    self._staff_contract(contract,text)
                     # Create and link the job atomically with intake to prevent duplicate effects on restart.
                     jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+                    self._record_staffing(jid,contract)
                     self._link_origin(jid,cid,sid)
                     intake=packet.get('intake_seq')
                     with self.store.transaction() as db:
@@ -840,12 +844,38 @@ class Service:
         except PolicyError as exc:
             self.store.add_message(str(exc),'assistant',cid)
             return None
+        self._staff_contract(contract,text)
         jid=self.engine.submit(contract,budget=max(12,len(contract['milestones'])*4),conversation=cid)
+        self._record_staffing(jid,contract)
         self._link_origin(jid,cid,sid)
         with self.store.transaction() as db:
             dup=db.execute('SELECT seq FROM messages WHERE conversation_id=? AND role=? AND text=? AND job_id IS NULL ORDER BY seq DESC LIMIT 1',(cid,'user',text)).fetchone()
             if dup:db.execute('DELETE FROM messages WHERE seq=?',(dup['seq'],))
         return jid
+
+    def _staff_contract(self,contract,text):
+        """D-66: every real-work job carries its recorded staffing decision, frozen in its contract.
+
+        With the workforce off (KEL_WORKFORCE=0) nothing is added and the job runs as before. A
+        decision that cannot be made never blocks the work: the job runs unstaffed and says why."""
+        from . import staff
+        if not staff.enabled():
+            return None
+        try:
+            contract['staffing']=staff.plan_job(self.store,contract,text)
+        except Exception as exc:
+            contract.pop('staffing',None)
+            contract['staffing_error']=type(exc).__name__
+        return contract.get('staffing')
+
+    def _record_staffing(self,job_id,contract):
+        if not contract.get('staffing'):
+            return
+        from . import staff
+        try:
+            staff.record_decision(self.store,job_id,contract['staffing'])
+        except Exception:
+            pass  # the decision is frozen in the contract; the history event is additive
 
     def _project_of(self,cid):
         with contextlib.closing(self.store.connect()) as db:

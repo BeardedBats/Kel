@@ -9,8 +9,8 @@ into the assignment snapshot; tools are granted only inside the role's authority
 (fail-closed); budget is reserved before a worker may start.
 
 Boundaries kept deliberately:
-- Nothing here runs automatically: no live path calls `assign_worker` until the D1
-  increment (5.2). The `workforce.enabled` flag is recorded into snapshots and defaults off.
+- `workforce.enabled` is recorded into snapshots; since D-66 it defaults on (the everyday
+  path staffs through `kel.staff`), with `KEL_WORKFORCE=0` as the off-switch.
 - The role registry reuses the V1.4 `role_templates`/`role_versions` storage; the v2
   fields are additive (`validate_role_fields_v2`). Commander is Kel itself and is never a
   template and never spawned.
@@ -100,7 +100,9 @@ def flags_snapshot(env=None):
     def _on(name):
         return str(env.get(name, '')).strip().lower() in ('1', 'true', 'yes', 'on')
 
-    return {'workforce.enabled': _on('KEL_WORKFORCE'),
+    # D-66: the workforce is on by default; KEL_WORKFORCE=0|false|off|no is the off-switch.
+    from .staff import enabled as _workforce_enabled
+    return {'workforce.enabled': _workforce_enabled(env),
             'workforce.learning.shadow': _on('KEL_WORKFORCE_LEARNING_SHADOW')}
 
 
