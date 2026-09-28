@@ -228,9 +228,6 @@ const readChatProject = (donor: string): Promise<ChatProjectAnswer> => {
   return request;
 };
 
-/** Forget cached chat projects (a pending chat follows the active project). */
-export const forgetChatProjects = () => chatProjectCache.clear();
-
 export type ConversationProject = {
   /** The chat's project, merged with the engine's list row when there is one. */
   project: (Partial<KelProject> & { id: string; name: string }) | null;

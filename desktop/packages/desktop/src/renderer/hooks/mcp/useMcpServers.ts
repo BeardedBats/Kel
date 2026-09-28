@@ -2,9 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import type { IMcpServer } from '@/common/config/storage';
 import { ensureBackendMcpCatalog } from './catalog';
 
-/** D-60: Kel has no extensions, so no extension-contributed servers are ever listed. */
-const NO_EXTENSION_SERVERS: IMcpServer[] = [];
-
 /**
  * MCP server state hook: the servers Kel manages plus the ones the person added (D-60 — Kel has no
  * extension or marketplace servers).
@@ -37,8 +34,6 @@ export const useMcpServers = () => {
   return {
     mcpServers,
     isMcpServersLoading,
-    allMcpServers: mcpServers,
-    extensionMcpServers: NO_EXTENSION_SERVERS,
     setMcpServers,
     saveMcpServers,
   };

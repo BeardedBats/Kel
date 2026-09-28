@@ -9,7 +9,6 @@ const CONSUMERS = [
   'pages/kel/activity/index.tsx',
   'pages/kel/autonomy/index.tsx',
   'components/kel/KelCommandPalette.tsx',
-  'components/kel/KelNeedsAttention.tsx',
   'pages/guid/components/KelResumptionBrief.tsx',
   'hooks/system/notification/useKelAttentionNotification.ts',
 ];

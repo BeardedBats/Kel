@@ -11,8 +11,6 @@ interface McpServerItemProps {
   isTestingConnection: boolean;
   oauthStatus?: McpOAuthStatus;
   isLoggingIn?: boolean;
-  /** Extension-contributed servers are read-only (no edit/delete) */
-  isReadOnly?: boolean;
   onToggleCollapse: () => void;
   onTestConnection: (server: IMcpServer) => void;
   onEditServer: (server: IMcpServer) => void;
@@ -30,7 +28,6 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
   isTestingConnection,
   oauthStatus,
   isLoggingIn,
-  isReadOnly,
   onToggleCollapse,
   onTestConnection,
   onEditServer,
@@ -61,7 +58,6 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
               isTestingConnection={isTestingConnection}
               oauthStatus={oauthStatus}
               isLoggingIn={isLoggingIn}
-              isReadOnly={isReadOnly}
               onTestConnection={onTestConnection}
               onEditServer={onEditServer}
               onDeleteServer={onDeleteServer}
@@ -73,13 +69,11 @@ const McpServerItem: React.FC<McpServerItemProps> = ({
           name='1'
           className={'[&_div.arco-collapse-item-content-box]:py-3'}
         >
-          {!isReadOnly && (
-            <div className='kel-tools-mcp-mobile-action'>
-              <Button size='mini' loading={isTestingConnection} onClick={() => onTestConnection(server)}>
-                Check connection
-              </Button>
-            </div>
-          )}
+          <div className='kel-tools-mcp-mobile-action'>
+            <Button size='mini' loading={isTestingConnection} onClick={() => onTestConnection(server)}>
+              Check connection
+            </Button>
+          </div>
           <McpServerToolsList server={server} />
         </Collapse.Item>
       </Collapse>

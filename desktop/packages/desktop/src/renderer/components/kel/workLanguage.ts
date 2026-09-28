@@ -167,13 +167,6 @@ export const jobStateText = (state: string | undefined): string => {
   return workWords({ state, route_block: state === 'WAITING_RESOURCE' ? 'route' : null }).label;
 };
 
-/** The words for a job, keyed by state, for places that only need the label. */
-export const JOB_STATE_TEXT: Record<string, string> = Object.fromEntries(
-  ['QUEUED', 'READY', 'RUNNING', 'VERIFYING', 'PAUSED', 'AWAITING_USER', 'WAITING_RESOURCE', 'BLOCKED', 'CANCELLING', 'CANCELLED'].map(
-    (state) => [state, jobStateText(state)]
-  )
-);
-
 /* ── Access in plain words (JR-18): what Kel may touch, never "scope: kind: value" ──────────── */
 
 /** The last folder or file name of a path — never the absolute path (JR-16). */

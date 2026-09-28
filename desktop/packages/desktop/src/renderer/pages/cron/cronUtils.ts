@@ -201,18 +201,6 @@ export function formatNextRun(seconds: number | null | undefined, locale?: strin
   return formatDateTime(seconds * 1000, locale);
 }
 
-/**
- * The computer's IANA time zone, which a new schedule runs in. Falls back to UTC when the
- * environment cannot say.
- */
-export function getCurrentTimeZone(): string {
-  try {
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return timeZone && timeZone.trim() ? timeZone : 'UTC';
-  } catch {
-    return 'UTC';
-  }
-}
 
 /** A chat made by the old scheduler names its task here; links to it go through `?origin=`. */
 export function resolveCronJobId(extra: TChatConversation['extra'] | undefined): string | undefined {

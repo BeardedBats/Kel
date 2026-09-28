@@ -19,13 +19,11 @@ interface McpServerHeaderProps {
   isTestingConnection: boolean;
   oauthStatus?: McpOAuthStatus;
   isLoggingIn?: boolean;
-  /** Extension-contributed servers are read-only */
-  isReadOnly?: boolean;
   onTestConnection: (server: IMcpServer) => void;
   onEditServer: (server: IMcpServer) => void;
   onDeleteServer: (serverId: string) => void;
   onOAuthLogin?: (server: IMcpServer) => void;
-  /** ST-06: turn the server on or off for Kel's chats. Omitted for read-only servers. */
+  /** ST-06: turn the server on or off for Kel's chats. */
   onToggleEnabled?: (server: IMcpServer, enabled: boolean) => void;
   isToggling?: boolean;
 }
@@ -160,7 +158,6 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
   isTestingConnection,
   oauthStatus,
   isLoggingIn,
-  isReadOnly,
   onTestConnection,
   onEditServer,
   onDeleteServer,
@@ -211,7 +208,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
             feedbackExtra={{ mcpServerName: server.name, mcpServerStatus: statusText, transport: server.transport.type }}
           />
         )}
-        {!isReadOnly && onToggleEnabled && (
+        {onToggleEnabled && (
           <Switch
             size='small'
             className='kel-tools-mcp-switch'
@@ -221,7 +218,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
             onChange={(checked) => onToggleEnabled(server, checked)}
           />
         )}
-        {!isReadOnly && needsLogin && onOAuthLogin && (
+        {needsLogin && onOAuthLogin && (
           <Button
             size='mini'
             type='primary'
@@ -233,7 +230,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
             Sign in
           </Button>
         )}
-        {!isReadOnly && !needsLogin && (
+        {!needsLogin && (
           <Button
             className='kel-tools-mcp-retest'
             type='primary'
@@ -245,7 +242,7 @@ const McpServerHeader: React.FC<McpServerHeaderProps> = ({
             Test
           </Button>
         )}
-        {!isReadOnly && !server.builtin && (
+        {!server.builtin && (
           <Dropdown
             trigger='click'
             droplist={

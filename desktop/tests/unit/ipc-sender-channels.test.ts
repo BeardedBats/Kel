@@ -99,7 +99,6 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
   describe('backend-startup channels', () => {
     const deps = {
       getPort: vi.fn(() => 5199),
-      getInitialLanguage: vi.fn(() => 'en'),
       getStartupFailed: vi.fn(() => true),
       getStartupFailureInfo: vi.fn(() => ({ code: 'x' })),
       recoverCorruptedDatabase: vi.fn(async () => undefined),
@@ -107,7 +106,6 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
 
     beforeEach(() => {
       deps.getPort.mockClear();
-      deps.getInitialLanguage.mockClear();
       deps.getStartupFailed.mockClear();
       deps.getStartupFailureInfo.mockClear();
       deps.recoverCorruptedDatabase.mockClear();
@@ -116,10 +114,13 @@ describe('privileged IPC sender refusals (Campaign C AUD-MAJOR-002)', () => {
 
     const syncChannels: Array<[string, keyof typeof deps, unknown]> = [
       ['get-backend-port', 'getPort', 5199],
-      ['get-initial-language', 'getInitialLanguage', 'en'],
       ['get-backend-startup-failed', 'getStartupFailed', true],
       ['get-backend-startup-failure', 'getStartupFailureInfo', { code: 'x' }],
     ];
+
+    it('no longer serves an initial language (English only since D-61)', () => {
+      expect(listeners.has('get-initial-language')).toBe(false);
+    });
 
     for (const [channel, depKey, legitValue] of syncChannels) {
       it(`${channel}: refuses spoofed senders and answers null`, () => {

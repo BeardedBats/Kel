@@ -17,7 +17,7 @@ import { captureBackendStartupFailure, initSentry, scheduleStartupLogReport, set
 initSentry();
 
 import './process/utils/configureConsoleLog';
-import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session, shell } from 'electron';
+import { app, BrowserWindow, nativeImage, powerMonitor, session, shell } from 'electron';
 import fixPath from 'fix-path';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -273,7 +273,6 @@ let disposeCronResumeListener: (() => void) | null = null;
 let backendStartedOk = false;
 let backendStartupFailed = false;
 let backendStartupFailureInfo: BackendStartupFailureInfo | null = null;
-let rendererInitialLanguage: string | null = null;
 let backendMigrationsScheduled = false;
 let ensureAdminUserPromise: Promise<void> | null = null;
 
@@ -281,7 +280,6 @@ let ensureAdminUserPromise: Promise<void> | null = null;
 // surface; refusals fail closed (sync lookups answer null, recovery rejects).
 registerBackendStartupIpc({
   getPort: () => backendManager.port,
-  getInitialLanguage: () => rendererInitialLanguage,
   getStartupFailed: () => backendStartupFailed,
   getStartupFailureInfo: () => backendStartupFailureInfo,
   recoverCorruptedDatabase: performCorruptedDatabaseRecovery,
@@ -780,7 +778,6 @@ const handleAppReady = async (): Promise<void> => {
     kelBoot('before initializeProcess');
     await initializeProcess();
     kelBoot('after initializeProcess');
-    rendererInitialLanguage = ProcessConfig.getSync('language') ?? null;
     mark('initializeProcess');
   } catch (error) {
     kelBoot(`initializeProcess FAILED: ${String(error)}`);

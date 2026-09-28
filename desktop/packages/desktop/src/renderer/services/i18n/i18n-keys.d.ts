@@ -1108,7 +1108,6 @@ export type I18nKey =
   | 'cron.skill.saveSuccess'
   | 'cron.skill.turnIntoSkill'
   | 'cron.status.active'
-  | 'cron.status.defaultPrompt'
   | 'cron.status.error'
   | 'cron.status.paused'
   | 'cron.status.unconfigured'
