@@ -1708,7 +1708,24 @@ class Service:
             return Search(self.store).run(data.get('q',''))
         if path=='/api/approvals':
             return self._approvals_action(data)
+        if path=='/api/office':
+            # D-68: the one write the live work view has — remove a finished card (Nick's own act).
+            if data.get('action')!='dismiss':
+                raise PolicyError('The work view can only remove a finished card.')
+            from .office import dismiss
+            return dismiss(self.store,str(data.get('id') or data.get('job') or ''),actor='user')
         raise PolicyError('Unknown action')
+
+    def office(self,query):
+        """GET /api/office (D-66/D-68): the work cards for one chat, one project, or everything."""
+        from .office import items
+        first=lambda name:(query.get(name) or [None])[0]
+        return items(self.store,conversation=first('conversation'),project=first('project'))
+
+    def office_item(self,job):
+        """GET /api/office/item (D-66): one piece of work in full, in plain words."""
+        from .office import detail
+        return detail(self.store,self._required({'job':job},'job','Pick the work to open first.'))
 
     def _approvals_action(self,data):
         # In-chat approvals: presentation surface only - resolution runs through the SAME
@@ -2276,6 +2293,9 @@ def serve(root,port=0):
                     if parsed.path=='/api/health':
                         # CP-2: the desktop's 5 s liveness ping — no database work at all.
                         self.reply(200,{'ok':True,'engine_version':ENGINE_VERSION,'draining':service.draining});return
+                    if parsed.path=='/api/office':self.reply(200,service.office(query));return
+                    if parsed.path=='/api/office/item':
+                        self.reply(200,service.office_item((query.get('job') or [''])[0]));return
                     if parsed.path=='/api/handoff':
                         self.reply(200,service.handoff_view(query.get('conversation',['main'])[0],
                                                             (query.get('submission') or [''])[0]));return

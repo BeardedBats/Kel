@@ -160,19 +160,19 @@ tiers, lease ids, run ids or event names.
 ```
 {generated, scope, items:[{job_id, title, project_id, conversation_id, submission_id,
   kind:'code'|'writing'|'research'|'recipe', state, finished, status_line, needs_you,
-  progress:{done, total, label}, team:[{role, role_label}], team_size, started_at, updated_at,
-  finished_at}]}
+  progress:{done, total, label}, team:[{role, role_label, state}], team_size, started_at,
+  updated_at, finished_at, order}]}
 ```
 **Which items (D-68):** every staffed job that is still open, and every finished one (done / failed /
-stopped) **until Nick removes it** — never trimmed by age. Jobs that were already settled before the
-card row existed (before migration 36 was applied, or created while the workforce was off) are not
-cards. **Order (stable):** needs-you items first, then working / in-review items, then finished items;
+stopped) **until Nick removes it** — never trimmed by age. Only staffed work becomes a card, so jobs
+from before this change (or made while the workforce was off) never fill the row. **Order (stable,
+also given as `order`):** needs-you items first, then working / in-review items, then finished items;
 within the open groups newest start first, within finished newest finish first; ties by job id.
 `state` ∈ `working | in_review | needs_you | done | stopped | failed`. `progress` counts accepted steps
 out of real milestones and names the phase in words ("2 of 3 steps done", "Checking the result") —
 never a percentage.
 
-`POST /api/office {action:'dismiss', job}` removes one **finished** card (refused in plain words while
+`POST /api/office {action:'dismiss', id}` (`job` is accepted too) removes one **finished** card (refused in plain words while
 the work is open — stop it first). Durable (`office_dismissals`), idempotent (a second dismiss returns
 `{dismissed:true, already:true}` and records nothing), and one Activity line ("You removed finished
 work from the top of the chat."). It hides the card only: the job, its conversation, its result and
@@ -260,5 +260,5 @@ mission routing beyond the existing privacy filter; and the calibration harness 
 ## Still open for Nick
 - A schedule's model (D-57) is treated like a chat's model — Kel's own, not staff's — under D-69's
   "staff always use their role model". If Nick wants a schedule to pin its staff, that is one rule.
-- Jobs already settled before the card row existed are not shown as cards (so the row does not start
-  full of history). If Nick wants them, they appear as finished cards he can remove.
+- Only staffed work becomes a card, so work from before this change never appears in the row. If
+  Nick wants older work there, it can be listed as finished cards he removes.

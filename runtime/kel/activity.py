@@ -35,6 +35,8 @@ KIND_BY_TYPE = {
     'authorization.auto_granted': 'work', 'authority.changed': 'other',
     # D-65: a verified change written into the project (on its own under Full access), and its undo.
     'changes.auto_applied': 'work', 'changes.applied': 'work', 'changes.undone': 'work',
+    # D-68: Nick removed a finished work card from the top of the chat (the work itself is kept).
+    'office.dismissed': 'work',
 }
 KINDS = ('work', 'attention', 'learning', 'recipes', 'connections', 'network', 'staffing',
          'recovery', 'scheduled', 'other')
@@ -122,6 +124,8 @@ def sentence_for(event_type, payload):
         return 'The checked change was applied to your project.'
     if event_type == 'changes.undone':
         return 'The applied change was undone; the earlier files are back.'
+    if event_type == 'office.dismissed':
+        return 'You removed finished work from the top of the chat.'
     if event_type == 'authority.changed':
         return ('Full access is on: Kel acts without asking.' if detail.get('mode') == 'full'
                 else 'Ask first is on: Kel asks before it acts.')

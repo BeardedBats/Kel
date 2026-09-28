@@ -167,7 +167,7 @@ class Commander:
             try:
                 binding=resolve(store,'verifier',adapters=self.staff.staff_adapters(),purpose='text',
                                 avoid_family=builder_family)
-                model=self.staff.staff_model(binding,timeout=90)
+                model=self.staff.staff_model(binding,timeout=180)  # the model's own reasoning level takes longer than low
             except Exception:
                 binding=None;model=None
         why=(binding or {}).get('why')

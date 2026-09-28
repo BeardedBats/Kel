@@ -37,6 +37,32 @@ describe('rendererKelRequestRefusal (D-33/D-34 credential custody)', () => {
     }
   });
 
+  it('allows the D-66 live work reads and only the D-68 dismiss write', () => {
+    for (const route of [
+      '/api/office',
+      '/api/office?project=*',
+      '/api/office?project=default',
+      '/api/office?conversation=abc-123',
+      '/api/office/item?job=0f8c2a1e-1111-2222-3333-444455556666',
+    ]) {
+      expect(rendererKelRequestRefusal(route)).toBeNull();
+    }
+    expect(rendererKelRequestRefusal('/api/office', { action: 'dismiss', id: 'job-1' })).toBeNull();
+    for (const body of [{ action: 'restore', id: 'job-1' }, { id: 'job-1' }, {}]) {
+      expect(rendererKelRequestRefusal('/api/office', body)).not.toBeNull();
+    }
+    for (const route of [
+      '/api/office?project=a/b',
+      '/api/office?conversation=*',
+      '/api/office?project=*&conversation=x',
+      '/api/office/item',
+      '/api/office/item?job=a&x=1',
+      '/api/office/other',
+    ]) {
+      expect(rendererKelRequestRefusal(route)).toBe('Unknown Kel action');
+    }
+  });
+
   it('refuses unknown routes', () => {
     expect(rendererKelRequestRefusal('/api/shutdown-idle')).toBe('Unknown Kel action');
     expect(rendererKelRequestRefusal(42)).toBe('Unknown Kel action');
