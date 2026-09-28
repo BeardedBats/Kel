@@ -468,7 +468,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
                 }}
               >
                 <span className='kel-shell-default-model-lead' aria-hidden='true'><img src={plugIcon} alt='' width={14} height={14} /></span>
-                <span className='kel-shell-default-model-name'>{option.label}<span>{option.version || option.runtime || ''}</span></span>
+                <span className='kel-shell-default-model-name'>{option.label}<span>{option.version && option.version !== option.label ? option.version : ''}</span></span>
                 <span className={`kel-shell-default-model-status${note ? ' kel-shell-default-model-status--wait' : ''}`}>
                   {current && !note ? 'Current' : note ?? 'Available'}
                 </span>

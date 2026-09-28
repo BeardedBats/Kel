@@ -388,7 +388,7 @@ export const KelOfficeDetail: React.FC<Props> = ({ item, projectName, pollMs, on
   return (
     <div
       ref={dialogRef}
-      className={`kel-wd kel-wd--${view.state}`}
+      className={`kel-wd kel-wd--${view.state}${uncertain ? ' is-uncertain' : ''}`}
       role='dialog'
       aria-modal='true'
       aria-labelledby={titleId}

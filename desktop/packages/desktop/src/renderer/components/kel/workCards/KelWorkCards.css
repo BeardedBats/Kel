@@ -467,3 +467,8 @@
 @media (prefers-reduced-motion: reduce) {
   .kel-wc--row, .kel-wc-overflow__label > img { transition: none; }
 }
+
+/* LIVE-10: checks Kel could not confirm read as a caution, not a failure. */
+.kel-wd.is-uncertain .kel-wd-state__label,
+.kel-wd.is-uncertain .kel-wd-result__head > strong { color: var(--kel-wc-needs-text); }
+.kel-wd.is-uncertain .kel-wd-tone--review { color: var(--kel-wc-needs-text); }
