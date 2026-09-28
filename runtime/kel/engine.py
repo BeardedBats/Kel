@@ -179,6 +179,15 @@ class Engine:
             return
         self.reviews[key]=self.review_pool.submit(self._review,job['id'],mid,subject,version)
 
+    def _schedule_oracle(self, job):
+        """Start the Oracle for a settled job on the review pool (never inside the tick lock's work)."""
+        key = (job['id'], '__oracle__')
+        if key in self.reviews:
+            return
+        from .oracle import run as oracle_run
+        self.reviews[key] = self.review_pool.submit(oracle_run, self.store, job['id'],
+                                                    getattr(self.reviewer, 'staff', None))
+
     def tick(self):
         """One supervision pass. Returns True while something is moving (a run, a review, or a job
         the engine can advance) so the caller can slow down when Kel is idle (CH-10)."""
@@ -239,6 +248,16 @@ class Engine:
                     self.store.assess(job['id'])
                     job = self.store.get(job['id'])
                 if job['state'] == 'CLOSED':
+                    if job.get('verdict') == 'VERIFIED':
+                        # D-66/D-67: consequential work gets its independent second opinion (the
+                        # Oracle) before anything is applied or published; it runs on the review pool.
+                        from .oracle import pending as oracle_pending
+                        need = oracle_pending(self.store, job)
+                        if need == 'run':
+                            self._schedule_oracle(job)
+                            continue
+                        if need == 'wait':
+                            continue
                     if job['contract'].get('kind') == 'coding' and job.get('verdict') == 'VERIFIED':
                         # D-65: Full access applies a verified change before its result is published,
                         # so the one result message says what was applied. 'busy' = another

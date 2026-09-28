@@ -207,9 +207,18 @@ class Commander:
 
     def review(self, store, job_id, milestone_id):
         job=store.get(job_id)
-        m=job['milestones'][milestone_id]
         review_id=uid()
         model,call_id=self._staffed_reviewer(store,job,milestone_id,review_id)
+        try:
+            return self._review(store,job,milestone_id,review_id,model,call_id)
+        except Exception:
+            # A review that breaks is still recorded as having stopped (the engine records it UNCERTAIN).
+            self._settle_call(store,call_id,{},state='failed',summary='the review stopped unexpectedly')
+            raise
+
+    def _review(self, store, job, milestone_id, review_id, model, call_id):
+        job_id=job['id']
+        m=job['milestones'][milestone_id]
         spec=next(s for s in job['contract']['milestones'] if s['id']==milestone_id)
         text=store.artifact_text(m['artifact'])
         prompt=('Independently review this Markdown artifact against the source request and fixed rubric. '
@@ -252,6 +261,10 @@ class Commander:
             if images:kwargs['images']=images
         if spec.get('depends_on'):
             prompt+='\nAccepted dependency evidence:\n'+'\n'.join(store.artifact_text(job['milestones'][mid]['artifact']) for mid in spec['depends_on'])
+        from .pod_review import lens_prompt,lenses_for
+        lenses=lenses_for(job)
+        if lenses:
+            prompt+=lens_prompt(lenses)
         try:
             result=model.execute(prompt,run_id=review_id,**kwargs)
         except TypeError:
@@ -265,7 +278,14 @@ class Commander:
             # The reviewer's model as its runtime reported it (never only the one asked for).
             desc={'provider': getattr(model, 'provider', None),
                   'model': result.get('model_used') or getattr(model, 'model', None)}
-            verdict=store.record_review(job_id,milestone_id,m['artifact']['sha256'],review_id,review['verdict'],review['findings'],job['contract_version'],reviewer_provider=desc['provider'],reviewer_model=desc['model'])
+            verdict_in,findings_in=review['verdict'],review['findings']
+            if lenses:
+                # D-66 pod: lens findings go to the assurance ledger; a live blocker/critical holds the
+                # step (a VERIFIED verdict over it is recorded as FAILED, so the Builder repairs).
+                from .pod_review import record
+                verdict_in,findings_in=record(store,job,milestone_id,review_id,desc['provider'],lenses,
+                                              verdict_in,findings_in)
+            verdict=store.record_review(job_id,milestone_id,m['artifact']['sha256'],review_id,verdict_in,findings_in,job['contract_version'],reviewer_provider=desc['provider'],reviewer_model=desc['model'])
             self._settle_call(store,call_id,result,summary='said '+str(verdict).lower())
             return verdict
         except (ValueError,KeyError,TypeError,PolicyError,Conflict):
