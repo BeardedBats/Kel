@@ -1,6 +1,121 @@
+# KEL V2.0 — KNOWN LIMITATIONS
+
+## Current state — 2026-09-28 (read this first; CP-20)
+
+This block is the current truth. Everything under **History** below is the dated record as it was
+written; it is kept, not rewritten. Where a later decision or build changed a statement, the statement is
+marked *(Superseded 2026-09-28: …)*. Blanket supersessions for the history: every "App stays / still
+packages `8c67121`" or "App contains `6b90dbe`" line is superseded by the install below; the **Work page**
+is retired (D-70 — work cards and Activity replace it, `/work` redirects to Home); the word
+**Workspace** left the UI (D-54 — "Projects"); the **Desktop Pet**, the **updater** and "Update
+available" are gone (D-56); the **language selector** is gone (D-61, English only); reply **reactions**
+are gone (D-59); the **Autonomy** choice is settled as Full access with an "Ask first" switch (D-64); the
+donor **cron** scheduler is retired (D-57).
+
+**Source.** `main` at `C:\Users\Nick\Desktop\Kel\Kel`, pushed to `github.com/BeardedBats/Kel`.
+
+**Installed App.** Source **`5294c27`**, installed 2026-09-28 (`App\kel-install-provenance.json`):
+an `electron-builder --dir` package whose `resources/app.asar`, `app.asar.unpacked` and `kel-engine`
+replaced the previous ones (Kel.exe, bundled AionCore, hub and fonts kept). Previous install `44d4115`;
+rollback copy `Tools\.app-rollback-44d4115-to-5294c27`; Data backup
+`Data\backups\pre-install-2026-09-28-5294c27`; migrations 36+ applied on first launch. Checks recorded
+at install: desktop typecheck clean and 112 files / 866 tests; engine 1,645 passed; the packaged build
+ran a real coding job off-screen on a copy of real Data (Claude Opus 5.5 built it, GPT-6 Astra verified
+it, the original-tests gate passed, it was applied on its own with Undo); the installed app launched
+off-screen on real Data (engine up, Full access, 10 staff roles, Staff & models page, no console errors).
+
+**On `main`, not installed yet** (after `5294c27`): D-72 recorded and applied in the engine
+(`0577e58`, `1c97fbe`); off-screen test runs never raise desktop notifications (`edf999b`); usage shown
+for each reply and piece of work (`b96f713`); the result card names the project and folder once
+(`7eb8285`); Nick chooses when Kel scopes first, and typed scoping answers reach the open card
+(`4f64e2a`, `f46da65`); Staff & models shows per-role fall-backs and how Kel picks models, and a card
+stopped on its budget offers Raise budget (`5cda011`, `74d490a`); and the 2026-09-28 leftovers batch — "Create scheduled task" from a chat opens
+the D-57 editor filled in (`d2b65b4`), plain Connections wording (`40f6ae5`), e2e/packaged checks on
+today's screens (`c42533d`), engine messages name the work card instead of "Work context" (`eda6f27`,
+`2b4fa14`), dead code and the unused Monaco dependency removed (`5683226`), and this docs
+consolidation.
+
+**Workforce live (D-66, D-67, D-69).** Every real-work job is staffed; each staff role runs on its own
+model with a real reasoning level (D-67 table, changeable per role in Settings → Staff & models); a
+model picked in a chat applies only to Kel's own replies; the pod's lens review and the Oracle (a
+different model family where possible, reduced independence recorded) run before anything is applied;
+`/api/office` feeds the work cards. Design: `design/D-66_WORKFORCE_LIVE.md`.
+
+**Routing 2** (`design/ROUTING_2.md`): §5.0–§5.7 built — task classes and dispatch tiers, measured
+tokens/time/cost per staffed call, outcome-aware promotion and demotion, a budget governor that
+reserves before each step, model-primary classification with regex floors, DeepSeek Flash with
+OpenRouter as a second route, and an advisory calibration harness. D-72 adopted the recommended defaults
+(they are recommendations, not Nick's explicit picks). Still open: per-model overlays, local-only mission
+routing beyond the privacy filter, quota-pace projection and a live calibration campaign. The renderer's "How Kel picks models" table
+and "Raise budget" button are on `main` (`5cda011`, `74d490a`), not installed.
+
+**Decisions D-53..D-72 — where each stands** (text in `DECISIONS.md`):
+
+| Decision | State |
+| --- | --- |
+| D-53 background hand-off, chat stays usable | Built (`daa510c`), installed |
+| D-54 "Projects" is the one term; engine-backed Project switcher | Built (`d1857cc`, `a676200`), installed |
+| D-55 ask before starting; restart running work with a change | Built (`586ee8d`), installed |
+| D-56 no consumer updater, no Desktop Pet | Built (`b3b4ad2`, `6039891`, `5ca82a6`), installed |
+| D-57 scheduled tasks are scheduled Recipes in the engine | Built (`1384716`, `e72ef40`), installed; chat-menu entry opens the editor on `main` (`d2b65b4`) |
+| D-58 Data and repository clean-up | Done (`549969f`, `1ecc462`) |
+| D-59 reactions removed | Built (`150765b`), installed |
+| D-60 Settings show only what Kel has built | Built (`23f2b1a`), installed |
+| D-61 English only | Built (`35c1cf4`), installed; the preload's leftover initial-language hand-off removed on `main` |
+| D-62 General gets a default folder | Built (`a5b8684`), installed |
+| D-63 history rewrite and branch pruning | **Approved, not done** — old branches (`audit/*`, `dev/*`, `fix/*`, `integration/v2`) still exist and no backup bundle is in `Tools` |
+| D-64 Full access by default | Built (`a5b8684`, `ddcfcad`), installed |
+| D-65 Full access applies verified changes, with Undo | Built (`5b5b6ea`), installed |
+| D-66/D-67/D-69 live workforce, role models, Oracle | Built (`4ee8a61`, `5472836`, `1edb4d6`, `61c73ff`), installed |
+| D-68 work cards across the top of the chat | Built (`26196ea`), installed |
+| D-70 answer on the card, one live view, Staff & models, scoping, navigation clean-up | Built (`a728c4b`, `1adf219`, `da8d6e3`), installed; scoping threshold choice on `main` (`4f64e2a`) |
+| D-71 "existing tests preserved" = original tests still pass | Built (`f75c7aa`), installed |
+| D-72 routing defaults | Recorded and applied on `main` (`0577e58`, `1c97fbe`), not installed |
+
+**Phase table (unchanged by D-53..D-72).** Built: V2-00–V2-04 (with V2-04a and V2-04b), V2-06–V2-14,
+V2-17. Partial: V2-05, V2-16, V2-18, V2-19. Planned: V2-15, V2-20. Mobile stays paused; desktop first.
+
+**Open, and what needs Nick.**
+- **"Ask first" has no Apply button today.** A verified change that waits only because the mode is Ask
+  first has no Apply control: "Apply checked changes" lived in the Work & context drawer, which has not
+  been mounted since 2026-09-21, and the work card offers "Apply anyway" only when Kel had its own reason
+  to wait. The result text in that case still mentions "Download the change report" and "Apply checked
+  changes". Full access (the default) is unaffected.
+- **The Work & context drawer is dead code with no other home for some of its parts**
+  (`components/chat/KelWorkPanel.tsx`: its Vetting tab — the command palette still says "Vetting lives
+  in the Work panel" — and the change-report download). Decide: re-home those parts or delete it.
+- D-66's open questions: a schedule's model is Kel's own, not staff's; work from before staffing never
+  becomes a card.
+- D-72's six values are recommendations; D-63 is not executed.
+- Live acceptance still open: a physical iPhone, real personal services (Google Drive needs Nick's own
+  Google OAuth client — see `CONNECTION_FRAMEWORK.md`), fresh Muse audio, remote first response.
+
+**Limits added 2026-09-28.**
+- The coding path needs the project folder to be a git repository; a plain folder fails to start with
+  git's own message (Routing 2 §7).
+- Routing evidence records an outcome only for a reviewed verdict or a failed step, so work whose
+  contract has no review check never adds a success.
+- D-71: a test deleted while the code it checks still works is not caught by the two runs; an intended
+  behaviour change that an existing test pins cannot pass until Nick updates that test; older isolated
+  (non-native-host) runtimes keep the byte-for-byte rule.
+- Google Drive's sign-in needs Nick's own Google OAuth client ("Desktop app" type) saved as `client_id`
+  and `client_secret`; Kel ships no shared client. A pasted access token works until Google expires it
+  (about an hour). Kel sees file names and types only.
+- The retargeted e2e WebUI test (`desktop/tests/e2e/kel-shell.e2e.ts`) and the packaged scripts were
+  checked to parse and to name only routes the router serves (a unit test pins this); they were not run
+  against a live WebUI or an installed app in this batch. `verify-packaged-ui.cjs` and
+  `probe-drawer-tabs.cjs` were retired with the Work & context drawer.
+- Under a busy machine the full desktop suite can time out the first test of a heavy file (the same
+  files pass alone); treat a lone 30-40 s timeout as load until it repeats in isolation.
+
+## History
+
+The dated record below is kept as written (newest checkpoints were prepended above older ones, so the
+order is roughly newest first). Read it for evidence and provenance, not for current state.
+
 ## Desktop installed milestone (2026-09-26)
 
-[Installed milestone](evidence/figma-full-audit/DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](evidence/figma-full-audit/DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
+[Installed milestone](evidence/figma-full-audit/DESKTOP_INSTALLED_MILESTONE.md): App now contains desktop source 6b90dbe; main also has packaging-only alignment 9d5a1bf. All 265 renderer and 2,655 installed package files match. Chat/task/Tools and real isolated Work/Permissions passed bundled checks; installed Tools/task and 32 core route checks passed at 1440/800px. TypeScript/build and 65 files / 448 tests passed. All 2,949 canonical Data files stayed unchanged. [All 75 desktop frame dispositions](evidence/figma-full-audit/DESKTOP_FRAME_DISPOSITIONS.md) distinguish proof from limits. Autonomy/Pet decisions, live acceptance, exact Light palette and documented deviations remain open *(Superseded 2026-09-28: Autonomy is settled as Full access (D-64) and the Pet is removed (D-56); live acceptance and Light palette remain open)*; V2-16/18/19 remain partial and mobile paused. Temporary deletion was policy-blocked; tracked source clean, known packages/ cache preserved.
 
 ## Desktop Chat/task/Tools batch (2026-09-26)
 
@@ -57,7 +172,7 @@
 
 ## Desktop Setup retention checkpoint (2026-09-26)
 
-[Setup retention](evidence/figma-full-audit/DESKTOP_SETUP_RETENTION_SOURCE.md) passes real isolated folder-draft write/reload, canceled picker, Work setup-return banner and Chat gate at 1440/800px. Prior client preferences/history restored; zero overflow/errors. TypeScript/build, seven focused tests and full 63-file/443-test regression passed. Native picker intercepted; no provider/job/authority change. Package proof waits for the next larger milestone. Autonomy selection still awaits Nick. App/Data untouched; mobile paused.
+[Setup retention](evidence/figma-full-audit/DESKTOP_SETUP_RETENTION_SOURCE.md) passes real isolated folder-draft write/reload, canceled picker, Work setup-return banner and Chat gate at 1440/800px. Prior client preferences/history restored; zero overflow/errors. TypeScript/build, seven focused tests and full 63-file/443-test regression passed. Native picker intercepted; no provider/job/authority change. Package proof waits for the next larger milestone. Autonomy selection still awaits Nick. *(Superseded 2026-09-28: settled by D-64, Full access with an Ask first switch)* App/Data untouched; mobile paused.
 
 
 ## Desktop Kibble recovery / Light / Chat package checkpoint (2026-09-26)
@@ -79,7 +194,7 @@
 
 [Desktop Light menus](evidence/figma-full-audit/DESKTOP_LIGHT_MENUS_SOURCE.md) pass six menus at 1440/800px, with zero overflow/clipping/errors. Minimum measured word contrast is 4.81:1; marks 4.76:1. Gradient-backed Accept and pixel-level icon contrast are excluded. Source build passed. Memory/catalog/native picker actions were intercepted; no live provider ran. Package proof waits for the larger milestone. App/Data remain untouched.
 
-# KEL V2.0 — KNOWN LIMITATIONS
+### Original heading: KEL V2.0 — KNOWN LIMITATIONS
 
 ## Desktop Kibble build variants (2026-09-26)
 
@@ -87,11 +202,11 @@
 
 ## Desktop Pet and remote sign-in (2026-09-26)
 
-[Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420×330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. App/Data remain untouched.
+[Desktop Pet off/settings and remote sign-in](evidence/figma-full-audit/DESKTOP_PET_SIGNIN_CURRENT_REVISION.md) pass current 1440/800px source checks. Pet refusal/reload used real isolated IPC and kept Off. Sign-in is 420×330 with 34px fields and viewport-positioned language; input/show-hide/remember/invalid-login handoff passed with intercepted auth. TypeScript/build, 11 policy tests, and the full 62-file/433-test suite passed. Pet enable, real sign-in, measured Light parity, and package proof remain open. *(Superseded 2026-09-28: the Pet is removed (D-56); real sign-in and Light parity remain open)* App/Data remain untouched.
 
 ## Desktop Setup (2026-09-26)
 
-[Desktop Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md) now uses actual model state, accessible progress, and real folder selection/composer handoff. Isolated model/config writes and 1440/800px source checks passed. The warm setup-return banner passed on Knowledge; Work remains gated until setup finishes. The native picker result was intercepted. TypeScript/build, four focused tests, and 62 files / 433 desktop tests passed. Setup policy selection and broader persistence/parity remain open. App/Data remain untouched.
+[Desktop Setup](evidence/figma-full-audit/DESKTOP_SETUP_CURRENT_REVISION.md) now uses actual model state, accessible progress, and real folder selection/composer handoff. Isolated model/config writes and 1440/800px source checks passed. The warm setup-return banner passed on Knowledge; Work remains gated until setup finishes. *(Superseded 2026-09-28: the Work page is retired (D-70))* The native picker result was intercepted. TypeScript/build, four focused tests, and 62 files / 433 desktop tests passed. Setup policy selection and broader persistence/parity remain open. App/Data remain untouched.
 
 ## Desktop Kibble (2026-09-26)
 
@@ -108,7 +223,7 @@
 
 ## Desktop shared dialogs (2026-09-26)
 
-[Desktop Update available and task delete confirmation](evidence/figma-full-audit/DESKTOP_SHARED_DIALOGS_SOURCE.md) pass source checks at 1440/800px. Update uses actual versions/release notes and existing download authority. Delete now uses the Figma modal; Keep/Escape and intercepted deletion handoff passed. TypeScript, source build, and three update-policy tests passed. Stopped-engine inner surface styling was corrected and rechecked. These changes await the next larger package. Canonical App and Data remain untouched. Current desktop context coverage is 66 READ / 9 PENDING; READ does not mean complete parity.
+[Desktop Update available and task delete confirmation](evidence/figma-full-audit/DESKTOP_SHARED_DIALOGS_SOURCE.md) pass source checks at 1440/800px. Update uses actual versions/release notes and existing download authority. *(Superseded 2026-09-28: the updater and its dialogs are removed (D-56))* Delete now uses the Figma modal; Keep/Escape and intercepted deletion handoff passed. TypeScript, source build, and three update-policy tests passed. Stopped-engine inner surface styling was corrected and rechecked. These changes await the next larger package. Canonical App and Data remain untouched. Current desktop context coverage is 66 READ / 9 PENDING; READ does not mean complete parity.
 
 
 ## Desktop milestone and runtime views (2026-09-26)
@@ -198,7 +313,7 @@ The canonical App's Tools failure and enabled Image Model states ran on disposab
 
 WebUI was enabled in an isolated packaged App. Its local page loaded and its API required login. This does not prove remote access, authenticated phone use, or a model response. The available FINAL frame shows step 1; step-2 pixel parity is not claimed.
 
-The installed App still refuses Desktop Pet enable. The switch returns off, shows a clear refusal, and stays off after reload. `petPolicy.ts` sets `KEL_PET_SUBSYSTEM_ENABLED = false` under V1.6 finding AUD-MINOR-008. Enabling it requires a product and safety decision; changing a Figma control alone cannot verify the enabled state.
+The installed App still refuses Desktop Pet enable. *(Superseded 2026-09-28: the Desktop Pet is removed entirely (D-56))* The switch returns off, shows a clear refusal, and stays off after reload. `petPolicy.ts` sets `KEL_PET_SUBSYSTEM_ENABLED = false` under V1.6 finding AUD-MINOR-008. Enabling it requires a product and safety decision; changing a Figma control alone cannot verify the enabled state.
 
 ## Current r29 acceptance limits (2026-09-23)
 
@@ -244,7 +359,7 @@ limits are appended as phases land.
   Discord and Google Drive use the endpoints their own documentation publishes; Pitcher List is an
   assumption (the standard WordPress layout) and Raptive's API address is unknown to Kel until Nick
   pastes the one Raptive issues. Nothing here has been run against the real service.
-- **Google Drive cannot be checked beyond a pasted token.** There is no OAuth account sign-in step yet, so
+- **Google Drive cannot be checked beyond a pasted token.** *(Superseded 2026-09-28: the account sign-in was built in V2-04b; Drive needs Nick's own Google OAuth client)* There is no OAuth account sign-in step yet, so
   the token has to be supplied by hand; the catalogue entry says so rather than pretending otherwise.
 - **The Connections surface has not been verified in an installed app.** It is covered in jsdom through
   the shipped page components and the real bridge contract, and the connection credential namespace has

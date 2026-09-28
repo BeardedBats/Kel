@@ -10,7 +10,8 @@ $repo = (Resolve-Path "$PSScriptRoot\..").Path
 Push-Location (Join-Path $repo "desktop")
 try {
     if ($Install) { & $PackageManager install }
-    & $PackageManager run build
+    # `package` is the electron-vite build; `build` is the donor macOS installer build.
+    & $PackageManager run package
     Write-Host "Desktop build complete: desktop/out (main, preload, renderer)."
 } finally {
     Pop-Location
