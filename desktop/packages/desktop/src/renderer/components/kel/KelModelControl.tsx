@@ -13,6 +13,7 @@ import { KelCard } from './KelPrimitives';
 import { kelRequest } from './kelApi';
 import { KelDesktopModelMenu } from './KelDesktopModelMenu';
 import plugIcon from '@renderer/assets/figma/model/plug.svg';
+import { findByAttribute, useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
 
 export type Choice = { provider: string | null; model: string | null };
 /** `note` says, in plain words, why an option cannot answer in chat (CH-2), e.g. "Not supported for chat yet". */
@@ -160,6 +161,16 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   const { state, effectiveLabel, setDefault, setConversation } = useKelModelState(conversationId);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
   const [popupVisible, setPopupVisible] = useState(false);
+  // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to the picker, closes on
+  // page change). Hooks run before the early return below.
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const menuId = React.useId();
+  useMenuKeyboard({
+    open: popupVisible,
+    onClose: () => setPopupVisible(false),
+    getMenu: () => findByAttribute('data-kel-model-menu', menuId),
+    triggerRef,
+  });
   useEffect(() => {
     const resize = () => setDesktop(window.innerWidth >= 768);
     window.addEventListener('resize', resize);
@@ -182,7 +193,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
 
   const providers = state.providers ?? [];
   const items = (
-    <Menu style={{ maxHeight: 420, overflowY: 'auto', minWidth: 240 }}>
+    <Menu style={{ maxHeight: 420, overflowY: 'auto', minWidth: 240 }} data-kel-model-menu={menuId}>
       <Menu.Item key='kel-model-scope' onClick={() => navigate('/settings/staff')}>
         <span className='text-12px text-t-secondary'>{KEL_MODEL_SCOPE_NOTE}</span>
       </Menu.Item>
@@ -276,13 +287,17 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
       onClose={() => setPopupVisible(false)}
       onAdd={() => { setPopupVisible(false); navigate('/settings/model?add=1'); }}
       onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }}
-      onStaff={() => { setPopupVisible(false); navigate('/settings/staff'); }} /> : items}
+      onStaff={() => { setPopupVisible(false); navigate('/settings/staff'); }} menuId={menuId} /> : items}
       trigger='click' position={desktop ? 'tr' : 'bl'} unmountOnExit={desktop}
       popupVisible={popupVisible} onVisibleChange={setPopupVisible}>
       <button
+        ref={triggerRef}
         type='button'
         data-testid='kel-model-pill'
         title={KEL_MODEL_SCOPE_NOTE}
+        aria-label={`Kel's model: ${effectiveLabel.label}`}
+        aria-haspopup='dialog'
+        aria-expanded={popupVisible}
         className={desktop ? 'kel-desktop-model-trigger' : 'flex items-center gap-4px text-12px px-8px h-24px rounded-12px cursor-pointer'}
         style={desktop ? undefined : { background: 'var(--color-fill-2)', color: 'var(--color-text-1)', border: '1px solid var(--color-border-2)' }}
       >

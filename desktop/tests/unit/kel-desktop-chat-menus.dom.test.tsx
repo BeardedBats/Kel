@@ -47,10 +47,10 @@ describe('Desktop chat menus', () => {
     processed.mockResolvedValue([metadata]);
     render(<MemoryRouter><FileAttachButton openFileSelector={pick} onLocalFilesAdded={attach} /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: 'Attach files and tools' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Add files', exact: true }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Add files', exact: true }));
     expect(pick).toHaveBeenCalledOnce();
     fireEvent.click(screen.getByRole('button', { name: 'Attach files and tools' }));
-    expect(await screen.findByRole('button', { name: 'Upload from device', exact: true })).toBeTruthy();
+    expect(await screen.findByRole('menuitem', { name: 'Upload from device', exact: true })).toBeTruthy();
     fireEvent.change(screen.getByTestId('aionrs-file-upload-input'), { target: { files: [new File(['fixture'], 'fixture.txt')] } });
     await waitFor(() => expect(attach).toHaveBeenCalledWith([metadata]));
     expect(processed).toHaveBeenCalledOnce();

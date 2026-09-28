@@ -22,6 +22,7 @@ import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import fileIcon from '@renderer/assets/figma/chat-menus/file.svg';
 import uploadIcon from '@renderer/assets/figma/chat-menus/upload.svg';
 import '@renderer/components/kel/kel-desktop-chat-menus.css';
+import { useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
 
 interface FileAttachButtonProps {
   openFileSelector: () => void;
@@ -41,6 +42,7 @@ const MenuItem: React.FC<{
 }> = ({ icon, label, description, suffix, onClick, className = '', title }) => (
   <button
     type='button'
+    role='menuitem'
     className={`kel-attach-menu__item flex items-center gap-10px px-12px py-9px rounded-8px cursor-pointer hover:bg-fill-2 transition-colors text-14px text-t-primary select-none ${className}`}
     onClick={onClick}
     title={title}
@@ -89,10 +91,15 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
   const [uploading, setUploading] = useState(false);
   const [open, setOpen] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(false);
   const [mcpOpen, setMcpOpen] = useState(false);
+
+  // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to +, closes on page change).
+  useMenuKeyboard({ open, onClose: () => setOpen(false), getMenu: () => attachMenuRef.current, triggerRef });
 
   const skillNames = loadedSkills ?? conversationContext?.loadedSkills ?? [];
   const mcpStatuses = buildLoadedMcpStatuses(
@@ -229,7 +236,14 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
   );
 
   const menu = (
-    <div className={isMobile ? undefined : 'kel-attach-menu'} style={cardStyle} onClick={(e) => e.stopPropagation()}>
+    <div
+      ref={attachMenuRef}
+      role='menu'
+      aria-label='Attach files and tools'
+      className={isMobile ? undefined : 'kel-attach-menu'}
+      style={cardStyle}
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Loaded items stay above file actions so the session snapshot is visible */}
       {(hasMcpServers || hasSkills) && (
         <>
@@ -326,6 +340,9 @@ const FileAttachButton: React.FC<FileAttachButtonProps> = ({
           disabled={uploading}
           data-testid='aionrs-attach-folder-btn'
           aria-label='Attach files and tools'
+          aria-haspopup='menu'
+          aria-expanded={open}
+          ref={triggerRef}
         />
       </Trigger>
       <input
