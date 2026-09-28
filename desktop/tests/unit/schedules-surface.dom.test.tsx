@@ -299,3 +299,13 @@ describe('New scheduled task dialog (D-57)', () => {
     expect(within(advanced).getByText('Run a recipe instead')).toBeTruthy();
   });
 });
+
+describe('Empty Scheduled (VIS-17)', () => {
+  it('has one "New task" primary and an example that needs no connection Kel lacks', async () => {
+    engine.schedules = [];
+    await renderAt('/scheduled');
+    expect(await screen.findByText('No scheduled tasks yet.')).toBeTruthy();
+    expect(Array.from(document.querySelectorAll('.kel-btn--primary')).map((button) => button.textContent)).toEqual(['New task']);
+    expect(document.body.textContent).not.toMatch(/inbox|email|gmail/i);
+  });
+});

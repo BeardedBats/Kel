@@ -185,7 +185,7 @@ export default function KelOnboardingPage() {
         <KelCard title='Where work happens'>
           <div className='kel-row'>
             <div><div>Project folder</div><div className='kel-meta' title={projectFolder || undefined}>{isMobile ? (newChatProject?.name ?? (projectsLoaded ? 'General' : 'Loading…')) : projectFolder || 'No folder selected'}</div></div>
-            <span className='kel-grow' /><KelButton variant="primary" disabled={folderBusy} onClick={() => isMobile ? navigate('/projects/list') : void chooseProjectFolder()}>Change</KelButton>
+            <span className='kel-grow' /><KelButton variant="secondary" disabled={folderBusy} onClick={() => isMobile ? navigate('/projects/list') : void chooseProjectFolder()}>Change</KelButton>
           </div>
         </KelCard>
 
@@ -195,7 +195,7 @@ export default function KelOnboardingPage() {
         <KelAuthorityCard />
 
         <KelCard title="You're set">
-          <div className='kel-row'><KelButton variant={isMobile ? 'secondary' : 'primary'} onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
+          <div className='kel-row'><KelButton variant='secondary' onClick={() => void finish()}>Start using Kel</KelButton><span className='kel-meta'>You can change any of this later in Settings.</span></div>
         </KelCard>
 
       </main>

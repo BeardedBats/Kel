@@ -52,6 +52,8 @@ it('turns the chosen folder into the active project and ends in the composer wit
   await screen.findByTestId('kel-default-auto');
   expect(screen.getByText('Project folder')).toBeTruthy();
   expect(screen.getByText('No folder selected')).toBeTruthy();
+  // VIS-15: one primary per view — "Add model"; the folder's Change is secondary.
+  expect(Array.from(document.querySelectorAll('.kel-btn--primary')).map((button) => button.textContent)).toEqual(['Add model']);
   fireEvent.click(screen.getByRole('button', { name: 'Change', exact: true }));
   await screen.findByText('C:/fixture-workspace');
   expect(controls.choose).toHaveBeenCalledWith({ properties: ['openDirectory', 'createDirectory'] });

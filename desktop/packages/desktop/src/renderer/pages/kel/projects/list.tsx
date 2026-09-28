@@ -172,7 +172,7 @@ export default function KelProjectsList() {
           {isActive && <span className='kel-chip kel-chip--ok'>Active</span>}
           <span className='kel-grow' />
           {!project.archived && (
-            <KelButton variant={isActive ? 'quiet' : 'primary'} disabled={busy !== null} onClick={() => void open(project)}>
+            <KelButton variant={isActive ? 'quiet' : 'secondary'} disabled={busy !== null} onClick={() => void open(project)}>
               Open
             </KelButton>
           )}
