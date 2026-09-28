@@ -441,6 +441,11 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
         except Exception:
             ranked = None
     ranked_why = {entry['model']: entry['why'] for entry in ranked or ()}
+    if ranked:
+        # Every routing change is recorded with its plain reason (Routing 2 §5.3): the top of the
+        # class's ranking as it stood when this call was resolved.
+        asked['ranking'] = [{'model': entry['model'], 'why': entry['why']}
+                            for entry in ranked if entry['runnable']][:4]
     ranked_order = [entry['model'] for entry in ranked or () if entry['runnable']]
     if current['mode'] == 'AUTOMATIC':
         if not ranked:
@@ -504,7 +509,8 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
                 skipped.insert(0, '%s is from the same model family as the Builder, so %s reviews '
                                   'instead' % (preferred.get('label', current['model']), info['label']))
             if ranked and model_id not in FALLBACKS.get(role, ()) and role not in REVIEW_ROLES:
-                skipped.append('Kel picked %s next by its ranking for %s work' % (info['label'], task_class.replace('_', ' ')))
+                skipped.append('Kel picked %s next by its ranking for %s work (%s)'
+                               % (info['label'], task_class.replace('_', ' '), ranked_why.get(model_id)))
             out['why'] = '; '.join(skipped) or ('%s was chosen instead' % info['label'])
         if role in REVIEW_ROLES and avoid_family:
             out['independence'] = 'different' if info['family'] != avoid_family else 'reduced'

@@ -422,6 +422,31 @@ class Service:
     def _turn_model(self,cid='main'):
         return self._turn_choice(cid)[0]
 
+    def _staff_why(self,job_id):
+        """"Why this model?" for staffed work (Routing 2 §5.3): the latest step's own record — its
+        role, task class and tier, the model that ran (or was asked for) and the recorded reason."""
+        from . import staff
+        from .role_models import MODE_LABELS,describe_model
+        from .staff import ROLE_LABELS
+        from .task_routing import TIER_LABELS,label
+        calls=[c for c in staff.calls(self.store,job_id) if c['kind']=='work']
+        if not calls:
+            return None
+        call=calls[-1];asked=call.get('asked') or {};ran=call.get('ran') or {}
+        confirmed=bool(ran.get('model_confirmed') and ran.get('model'))
+        name=(describe_model(raw=ran.get('model'))[0] if confirmed else None) or asked.get('label') or "its runtime's default model"
+        role=ROLE_LABELS.get(call['role'],call['role'])
+        reason=call.get('why') or ('your %s choice for %s'%(MODE_LABELS.get(asked.get('mode'),'saved').lower(),role))
+        where=''
+        if asked.get('task_class'):
+            where=' (%s, %s tier)'%(label(asked['task_class']).lower(),TIER_LABELS.get(asked.get('dispatch'),'standard').lower())
+        answer='Kel used %s as the %s%s: %s.'%(name,role,where,str(reason).rstrip('.'))
+        if not confirmed:
+            answer+=' The runtime has not confirmed the model yet.'
+        return {'job':job_id,'role':call['role'],'task_class':asked.get('task_class'),'tier':asked.get('dispatch'),
+                'model':ran.get('model') if confirmed else None,'asked':asked.get('model'),'why':call.get('why'),
+                'ranking':asked.get('ranking') or [],'answer':answer}
+
     def _code_in_project(self,text,packet):
         """The coding floor beyond "starts with a coding verb" (the live check): a code change asked
         for after a lead-in, or naming a code file, inside a project with a folder and a test command."""
@@ -1929,6 +1954,9 @@ class Service:
                             'at':claimed['at'] or 0}
             if latest is None:
                 return {'answer':'No model choice has been made for this conversation yet.'}
+            staffed=self._staff_why(latest['job_id'])
+            if staffed:
+                return staffed
             route=latest['route']
             chosen=route.get('selected') or latest.get('provider') or ''
             label=provider_label(chosen) or chosen
