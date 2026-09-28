@@ -96,6 +96,22 @@ No new Figma frames were drawn for these; each reuses the nearest existing compo
 | A card stopped on its budget, "Raise budget" | "Needs you" result box (inferred for D-68, above) | The same amber-dot box headed "Stopped on its budget": what it used against its budget in plain numbers, a primary "Raise budget" and the next size ("Next size: large — up to 8M tokens, 4 hours of run time and $30 of model use"). After raising, one plain line says the new size and that Kel is continuing. Budget classes read small / standard / large / largest. | `KelBudgetStop.tsx`, `KelOfficeDetail.tsx` |
 | Where a change was applied (done card, result message) | 5d "Applied to Projects › mic-mute at 10:31 AM · you can undo it" | The project's name and its folder once — "Applied to Calc demo (folder R6Proj) at 10:31 AM · you can undo it", or just the folder when the project is named after it; the full path is the line's tooltip and stays behind Open folder. The done card's sentence drops the result's own "Applied to …:" lead ("Changed calc.py (1 file)."), and the engine's result message names the place the same way. | `KelDoneCard.tsx`, `changeApplication.ts`, `auto_apply.py` |
 
+## Visual-audit fixes (VIS, D-73) — 2026-09-28
+
+Where the app now differs from, or goes beyond, a Figma frame after the visual audit's fixes.
+
+| State / element | Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Notifications switch (D-73.1) | System `314:3912` has no such row | One more General row after Close to tray, same row and toggle: "Notifications — Tell you on the desktop when work finishes or Kel needs you while its window is in the background." Keep computer awake is back as the first General row, as drawn. | `SystemModalContent/index.tsx` |
+| About build row (D-56) | About `314:4871` shows Check for updates, no build | A "Build" row under Version with the source commit the package was made from. | `AboutModalContent.tsx`, `electron.vite.config.ts` |
+| Back up / Restore folder dialog | Restore confirm `314:4383` (the later "Restore this backup?" step) | The folder-picking step takes that dialog's styling: 16px glass card, left 18px title, link-style Cancel, one blue primary. The confirm step itself is unchanged. | `KelDataCard.tsx`, `kel-shell.css` (`.kel-shell-dialog-modal`) |
+| One primary per view on Set up Kel | Setup `189:4492` draws three primaries (Add Model, Change, Start using Kel) | Add model stays primary; Change and Start using Kel are secondary. Figma's button rule ("Secondary for any boxed action") and the audit's one-primary rule outrank the frame. | `onboarding/index.tsx` |
+| Recipes filter words | Recipes `284:8148` says "Favourites" | en-US (D-61): "Favorites", "Uncategorized". Preview takes the link style (14px semibold, link blue) as drawn. | `projects/index.tsx`, `recipes.py` |
+| Reconnect on the error card | Chat — Agent error `273:13090` has Pick another model / Try again only | A link-style "Reconnect" beside them restarts Kel's chat connection; the permanent title-bar restart icon (not in any frame) is gone. | `MessageTips.tsx` |
+| Ramble with recordings but none open | Ramble `194:1366` always shows an open transcript | The main pane lists the recordings (name, date, length) under "Your recordings"; the first-run empty state is kept for an empty library, without a second Upload button. | `transcription/index.tsx` |
+| Keyboard focus in menus (JR-26) | No focus frames for the row, model, attach or reply menus | Focus moves to the first item on open and follows the arrows; the focused item uses the existing 2px focus ring. The row's ⋯ button is shown while the row has focus. | `useMenuKeyboard.ts`, `ConversationRow.tsx` |
+| Markdown lists in replies | Chat `185:4284` | List items use the paragraph's primary colour, font and line height; bold stays in the body face. | `kel-shell.css` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.
