@@ -30,6 +30,9 @@ KIND_BY_TYPE = {
     'connection.called': 'connections', 'connection.denied': 'connections',
     'network.decided': 'network', 'network.requested': 'network',
     'staffing.decided': 'staffing', 'proposal.queued': 'staffing',
+    # D-70: Kel asked before starting big work, and how Nick started it; Nick answered a card.
+    'scoping.asked': 'work', 'scoping.started': 'work', 'scoping.best_guess': 'work',
+    'needs_you.answered': 'work',
     # D-64 Full access: what Kel went ahead with (or refused) instead of asking.
     'approval.auto_granted': 'work', 'approval.refused': 'work',
     'authorization.auto_granted': 'work', 'authority.changed': 'other',
@@ -126,6 +129,20 @@ def sentence_for(event_type, payload):
         return 'The checked change was applied to your project.'
     if event_type == 'changes.undone':
         return 'The applied change was undone; the earlier files are back.'
+    if event_type == 'scoping.asked':
+        count = detail.get('questions')
+        return 'Kel asked %s before starting %s; nothing ran yet.' % (
+            ('%s quick question%s' % (count, '' if count == 1 else 's')) if count else 'a few quick questions',
+            ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
+    if event_type == 'scoping.started':
+        return 'You answered Kel’s questions and started %s.' % (
+            ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
+    if event_type == 'scoping.best_guess':
+        return 'You started %s with Kel’s best guess; its assumptions are recorded.' % (
+            ('“%s”' % _snippet(detail.get('title'), 60)) if detail.get('title') else 'the work')
+    if event_type == 'needs_you.answered':
+        return ('You chose to apply the checked change anyway.' if detail.get('choice') == 'apply_anyway'
+                else 'You chose to leave the checked change unapplied.')
     if event_type == 'office.dismissed':
         return 'You removed finished work from the top of the chat.'
     if event_type == 'budget.raised':
@@ -232,6 +249,16 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
             if schedule_detail.get('project_id'):
                 row_projects = {schedule_detail['project_id']}
                 row_project = schedule_detail['project_id']
+        if event_type.startswith('scoping.'):
+            # D-70: Kel's "before I start" questions belong to the project the request was made in.
+            try:
+                raw = event.get('payload')
+                scope_detail = (json.loads(raw) if isinstance(raw, str) else raw or {}).get('detail') or {}
+            except (TypeError, ValueError, AttributeError):
+                scope_detail = {}
+            if scope_detail.get('project_id'):
+                row_projects = {scope_detail['project_id']}
+                row_project = scope_detail['project_id']
         if project_id and project_id not in row_projects:
             continue
         payload = event.get('payload')

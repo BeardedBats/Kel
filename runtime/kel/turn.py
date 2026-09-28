@@ -37,9 +37,17 @@ running_work that can still be changed ("can_amend": true). Kel stops that work 
 with the change; it never starts a second copy. Put that item's work_id in "work_id" and the
 complete request with the change applied in "amended_request".
 
+Before bigger work (building an app or a site, a multi-part document, a deep comparison) or when
+more than one open question would change the result, add "scoping" to start_background_work: two or
+three short questions Kel asks before anything starts, each with two to four short answers to pick
+from and your best guess, plus what you will make in one line. Kel shows them as a card; nothing
+starts until the person chooses. Leave "scoping" out for small, clear requests.
+
 {"action":"reply","text":"<plain, concise answer; do not claim you performed any action>"}
 {"action":"start_background_work","title":"<3-8 word name for the work>",
- "acknowledgement":"<what you say now>","related_topic":"<one short related topic>"}
+ "acknowledgement":"<what you say now>","related_topic":"<one short related topic>",
+ "scoping":{"questions":[{"question":"<short question>","options":["<answer>","<answer>"],
+ "best_guess":"<one of the answers>"}],"summary":"<what you will make, one line, no leading verb>"}}
 {"action":"amend_background_work","work_id":"<work_id from running_work>",
  "amended_request":"<the whole request with the change applied>","title":"<3-8 word name>"}
 
@@ -346,6 +354,8 @@ def decide(model, packet, text, running_work, forced=False, images=None, cancel=
         value = value or {}
         work = _work(text, value.get('title'), value.get('acknowledgement'), value.get('related_topic'))
         work.update(classification(value))
+        if isinstance(value.get('scoping'), dict):
+            work['scoping'] = value['scoping']  # D-70: bounded by kel.scoping before anything is shown
         return work
     if forced:
         return _work(text)
