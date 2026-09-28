@@ -64,6 +64,12 @@ export async function showNotification({
   body: string;
   conversation_id?: string;
 }): Promise<void> {
+  // Off-screen test runs (KEL_BACKGROUND_WINDOW=1) never notify.
+  if (process.env.KEL_BACKGROUND_WINDOW === '1') {
+    console.log('[Notification] Skipped: background test window');
+    return;
+  }
+
   // Check if notification is enabled
   const notificationEnabled = await ProcessConfig.get('system.notificationEnabled');
   if (notificationEnabled === false) {
