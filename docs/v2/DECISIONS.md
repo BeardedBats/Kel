@@ -746,3 +746,14 @@ routing may still fall back on health/availability, truthfully shown):
 Verifier and Oracle deliberately sit in a different model family from the Builder (independence,
 handoff §16). The detail view (D-66) shows each staff member's model, version and reasoning level.
 Architect, Sentinel and Release have no stated preference yet and start on Automatic.
+
+## D-68 — Work cards across the top of the chat
+
+**Decided by Nick 2026-09-27** (chooses the D-66 presentation after the Figma explorations on page
+"Office — D-66 explorations"). At the top of the chat, each piece of work Kel's staff is doing is
+its own card in one row, with a general progress bar (from real milestones) and the agents on it.
+Cards that don't fit go in a dropdown at the end of the row. Finished work stays at the top — done,
+failed or stopped — until Nick removes it himself (a remove control on the card). Clicking a card
+drops a detail panel down from the top (team with role · model · version · reasoning level, steps,
+review and Oracle findings, files changed, verification, "Talk to Kel about this", Stop while
+running); clicking anywhere outside closes it. The chat keeps the rest of the height.
