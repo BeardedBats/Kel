@@ -135,6 +135,22 @@ Where the cards now differ from, or go beyond, those frames:
 | "Vet the design first" on the scoping card | 5e has Start and "Just start with your best guess" only | A third link-style action puts "start design vetting: <title>" in the composer (Design Vetting, formerly a Work panel tab, runs in the chat). | `KelScopingCard.tsx` |
 | One "Kel's model" (D-73.3) | Settings — Model `311:2239` "Default model" card; composer picker scope tabs "This chat" / "Default for new chats" | The card is "Kel's model": Automatic plus the models the Kel row of Staff & models can use (same rows, status and Use / Set up as drawn), a link to Staff & models for reasoning; an older default that still answers is named in one line until Kel's model is chosen. The picker's second tab reads "Kel's model" and edits that same value; "This chat" stays the per-chat override ("Use Kel's model (<name>)"). | `KelModelControl.tsx`, `KelDesktopModelMenu.tsx`, `KelMobileModelPicker.tsx`, `staffModelsApi.ts` |
 
+## Chat batch: attachments, streaming, edit and regenerate, one Muse key, Recipes (FN-04..FN-17, D-75) — 2026-09-28
+
+None of these is drawn. Each reuses the nearest drawn control; none is claimed as exact parity.
+
+| State / element | Nearest Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Streaming reply (D-75.1) | Chat turn `185:4284` | Kel's reply grows in its own bubble as the words arrive; the Thinking indicator shows until the first words, as before. No cursor or new chrome. | `acp_host.py`, `service.py` (`/api/draft`) |
+| Edit a sent message (D-75.2) | User bubble and its hover actions in `185:4284` | A pencil beside Copy in the user bubble's hover row. Editing turns the bubble into a text box (accent border, 8px radius) with Cancel and a primary Send; Enter sends, Esc cancels. | `MessageText.tsx`, `kel-shell.css` |
+| Answer again (D-75.2) | Kel reply's "⋯" menu (D-59 Copy only) | On Kel's last reply only: a refresh icon beside "⋯" and an "Answer again" item in the menu. A reply that started work says why it can't be answered again. | `MessageText.tsx` |
+| Muse key in Providers (D-75.3) | Providers `76:3996` rows | One more collapsible row, "Muse · Ramble transcription", with the same Set up / Update key / Remove key buttons and password field as the API providers; the status line says where the working key comes from. Ramble's "API Key" button opens this row. The Ramble key modal is retired. | `providers/MuseKeyCard.tsx`, `transcription/index.tsx` |
+| New recipe, Rename and edit (FN-12) | Recipes `284:8148` (no create or edit drawn) | "New recipe" is a link-style button after "Scheduled tasks" in the card header. Writing or editing uses the Run form's field style: Name, What it is for, one text box per step (up to five). "More actions" in Preview opens one row of text buttons — Rename and edit, All runs — instead of the old second recipe table. | `projects/index.tsx`, `projects/RecipeEditor.tsx`, `kel-shell.css` |
+| Waiting on you with cards (FN-13) | Activity `189:1342` rows | A scoping or needs-you card is one row in Waiting on you (its title, one plain line, "Open the chat"), like a waiting job's row. | `activity/index.tsx` |
+| Palette hit past the first words (FN-08) | Command palette rows | The row stays its label; the words around the match show on hover (tooltip). | `KelCommandPalette.tsx` |
+| Diagnostics Maintenance (FN-14) | Diagnostics `76:4130` | The Clear / Restart rows are removed (they could never run); "First model reply" shows measured times. This supersedes the earlier "present and disabled" inference above. | `diagnostics/index.tsx` |
+| New chat composer attachments (FN-17) | Composer `185:4284` | No "File(n)" label beside +; the file chips under the box are the only list. | `GuidActionRow.tsx` |
+
 ## Frames retired by decisions D-59..D-64 — 2026-09-27 (trim and harden pass)
 
 Figma still draws these; the product no longer has them. Do not restore them from Figma.
