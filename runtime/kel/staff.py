@@ -65,7 +65,10 @@ def enabled(env=None):
 
 
 def ensure_schema(store):
-    """Migration 36 (additive, idempotent; no existing table is touched)."""
+    """Migration 36 (additive, idempotent; no existing table is touched). The workforce ledgers it
+    writes into (findings, evidence) are ensured too, so a bare engine store can run staffed work."""
+    from .workforce import ensure_schema as ensure_workforce_schema
+    ensure_workforce_schema(store)
     with contextlib.closing(store.connect()) as db:
         db.executescript(DDL)
         if not db.execute('SELECT 1 FROM schema_migrations WHERE version=?',

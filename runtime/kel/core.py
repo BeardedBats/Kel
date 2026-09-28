@@ -714,6 +714,16 @@ class Store:
                     text="Here's "+natural_title(handoff['title'])+' — it passed its checks.'+('\n\n'+text if text else '')
                 elif job['contract'].get('kind')!='coding':
                     text=(text+'\n\n' if text else '')+'It passed its checks.'
+                if job['contract'].get('staffing'):
+                    # D-66: an independent second opinion that raised a problem (or could not run)
+                    # is said once, with the result (read-only here, like the D-65 lookup above).
+                    try:
+                        from .oracle import result_note
+                        note=result_note(self,job)
+                    except Exception:
+                        note=None
+                    if note:
+                        text=text+'\n\n'+note
             else:
                 text=(explain_failure(job)
                       or ('I could not verify the complete result.' if job['verdict']=='UNCERTAIN' else 'The result did not pass its checks.'))

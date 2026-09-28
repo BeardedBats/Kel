@@ -119,6 +119,16 @@ def why_wait(store, job):
         return ASK_REASON
     if not verification_complete(store, job):
         return 'it did not pass every check'
+    # D-66: a staffed pod's verdict must be clean (no live blocker/critical on this change), and a
+    # triggered independent second opinion (the Oracle) must have run and found nothing blocking.
+    from .pod_review import live_serious
+    serious = live_serious(store, job, 'code')
+    if serious:
+        return 'the independent review found a problem: ' + serious[0]['summary']
+    from .oracle import gate as oracle_gate
+    reason = oracle_gate(store, job)
+    if reason:
+        return reason
     paths = changed_paths(store, job)
     if not paths:
         return 'Kel could not read which files it changes'

@@ -1051,6 +1051,13 @@ class Service:
                              next=('This work was stopped. Its saved request is kept in this '
                                    'conversation.' if stopped else
                                    'Nothing needed — ask for a new change for more work.'))
+                if job['contract'].get('staffing'):
+                    # D-66: the independent second opinion found a blocker (or could not run), so
+                    # Kel did not act on it by itself — that is Nick's decision now.
+                    from .oracle import attention
+                    needed=attention(self.store,job)
+                    if needed:
+                        entry.update(needs_you=True,why=needed['why'],next=needed['next'])
             # V2-06: a row says what it is, why it is here, how old it is, how urgent it is, what
             # belongs with it, and the one action the person can take right now. All of it is
             # derived from authoritative state — nothing here resolves, snoozes or re-runs anything.
@@ -1518,6 +1525,10 @@ class Service:
             phase='stopped'
         elif job_state=='CLOSED' and verdict=='VERIFIED' and job['contract'].get('kind')=='coding' and not self._published(job['id']):
             phase='running'  # D-65: settling (maybe applying) the change; the card must not stop on "done" before it
+        elif job_state=='CLOSED' and verdict=='VERIFIED' and job['contract'].get('staffing') and self._oracle_attention(job):
+            needed=self._oracle_attention(job)  # D-66: a second opinion's blocker needs Nick
+            phase='needs_you'
+            view.update(why=needed['why'],next=needed['next'])
         elif job_state=='CLOSED':
             phase='done' if verdict=='VERIFIED' else 'needs_look'
         elif pending or job_state=='AWAITING_USER' or brief.get('needs_you'):
@@ -1539,6 +1550,13 @@ class Service:
             from .auto_apply import describe as describe_applications
             view['application']=describe_applications(self.store,[job['id']]).get(job['id'])
         return view
+
+    def _oracle_attention(self,job):
+        from .oracle import attention
+        try:
+            return attention(self.store,job)
+        except Exception:
+            return None
 
     def _published(self,job_id):
         with contextlib.closing(self.store.connect()) as db:
