@@ -73,6 +73,7 @@ import './styles/markdown.css';
 import './styles/figma-variables.css';
 import './styles/kel-shell.css';
 import { loadKelFonts } from './utils/theme/kelFonts';
+import { installSpringProperties } from './motion/easing';
 
 // Config service — kick off initialization before i18n / theme modules load,
 // so their startup paths (which await configService.whenReady()) observe the
@@ -84,6 +85,8 @@ configService.initialize().catch((err) => {
 
 // Kel: register local UI fonts (Söhne headers / SF Pro Text body) when present.
 loadKelFonts();
+// Kel: write the motion springs' CSS easings (--kel-spring-*) before anything renders.
+installSpringProperties();
 
 // i18n
 import './services/i18n';

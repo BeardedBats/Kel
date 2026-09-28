@@ -33,7 +33,8 @@ stopped on its budget offers Raise budget (`5cda011`, `74d490a`); and the 2026-0
 the D-57 editor filled in (`d2b65b4`), plain Connections wording (`40f6ae5`), e2e/packaged checks on
 today's screens (`c42533d`), engine messages name the work card instead of "Work context" (`eda6f27`,
 `2b4fa14`), dead code and the unused Monaco dependency removed (`5683226`), and this docs
-consolidation.
+consolidation. Since then: the motion language was approved (D-77) and its stage-2 library
+`renderer/motion/` built (`design/MOTION.md` §11); the §10 moments are not wired to it yet.
 
 **Workforce live (D-66, D-67, D-69).** Every real-work job is staffed; each staff role runs on its own
 model with a real reasoning level (D-67 table, changeable per role in Settings → Staff & models); a

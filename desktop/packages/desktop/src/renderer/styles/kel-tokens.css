@@ -79,10 +79,9 @@
   --kel-shadow-card: 0 1px 2px rgba(20, 22, 26, 0.04);
   --kel-shadow-sheet: 0 12px 32px rgba(20, 22, 26, 0.16);
 
-  /* motion */
-  --kel-ease: cubic-bezier(0.2, 0, 0.2, 1);
-  --kel-dur-state: 120ms;
-  --kel-dur-enter: 160ms;
+  /* motion — the springs' CSS forms, --kel-spring-{micro,snappy,morph,gentle} and --kel-spring-*-ms,
+     are generated from the closed form and written on :root at startup by
+     renderer/motion/easing.ts (installSpringProperties). See docs/v2/design/MOTION.md §1. */
 
   /* density: compact default for a desktop shell */
   --kel-row-height: 36px;
@@ -282,7 +281,7 @@
   font-size: var(--kel-type-label);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--kel-dur-state) var(--kel-ease);
+  transition: background-color var(--kel-spring-micro-ms) var(--kel-spring-micro);
 }
 .kel-btn--primary {
   background: var(--kel-accent);
