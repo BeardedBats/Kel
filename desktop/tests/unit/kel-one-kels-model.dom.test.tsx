@@ -28,7 +28,7 @@ const PROVIDERS = [
   { id: 'codex', label: 'Codex', available: true, note: null, options: [{ id: 'codex-native', label: 'Codex', available: true, note: null }] },
 ];
 
-const engine = (start: { kel: Row; default?: { provider: string; model: string } | null }) => {
+const engine = (start: { kel: Row; default?: { provider: string; model: string } | null; reportsInEffect?: boolean }) => {
   const state = { kel: { ...start.kel }, default: start.default ?? null, conversation: null as null | { provider: string; model: string } };
   const listing = () => ({ roles: [state.kel, { role: 'builder', label: 'Builder', mode: 'PREFERRED', model: 'claude-opus-5-5', reasoning: 'auto' }], models: MODELS });
   const request = vi.fn(async (route: string, body?: Record<string, unknown>) => {
@@ -56,7 +56,14 @@ const engine = (start: { kel: Row; default?: { provider: string; model: string }
         state.conversation = body.choice as typeof state.conversation;
         return { default: state.default, conversation: state.conversation };
       case 'get':
-        return { default: state.default, conversation: state.conversation, providers: PROVIDERS };
+        return {
+          default: state.default,
+          conversation: state.conversation,
+          providers: PROVIDERS,
+          ...(start.reportsInEffect
+            ? { kel_model: { kel: { label: state.kel.model_label, model: state.kel.model, mode: state.kel.mode }, conversation_override: null, in_effect: 'kel' } }
+            : {}),
+        };
       default:
         return {};
     }
@@ -107,6 +114,24 @@ describe("Settings → Model edits Kel's model (the Kel row)", () => {
       { action: 'set_default', choice: null },
     ]);
     await waitFor(() => expect(screen.queryByTestId('kel-model-older-default')).toBeNull());
+  });
+
+  it('an engine that reports what is in effect wins over a stale older default (ec16a50 live check)', async () => {
+    engine({ kel: LUNA, default: { provider: 'codex', model: 'codex-native' }, reportsInEffect: true });
+    render(
+      <MemoryRouter>
+        <KelDefaultModelCard compact />
+      </MemoryRouter>
+    );
+    await screen.findByTestId('kel-kels-model-rows');
+    expect(screen.queryByTestId('kel-model-older-default')).toBeNull();
+    cleanup();
+    render(
+      <MemoryRouter>
+        <KelModelPill conversationId='c1' />
+      </MemoryRouter>
+    );
+    expect(await screen.findByLabelText("Kel's model: ChatGPT Luna")).toBeTruthy();
   });
 
   it('a change from the Staff & models Kel row reaches every open surface', async () => {

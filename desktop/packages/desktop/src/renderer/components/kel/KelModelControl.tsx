@@ -33,7 +33,19 @@ export type Choice = { provider: string | null; model: string | null };
 /** `note` says, in plain words, why an option cannot answer in chat (CH-2), e.g. "Not supported for chat yet". */
 type ModelOption = { id: string; label: string; available: boolean; note?: string | null };
 type ProviderRow = { id: string; label: string; available: boolean; note?: string | null; options: ModelOption[] };
-export type ModelState = { default: Choice | null; conversation: Choice | null; providers: ProviderRow[] };
+/** The engine's own answer for which model Kel uses (06ac92d): the Kel role, or this chat's override. */
+export type KelModelInEffect = {
+  kel?: { label?: string | null; model?: string | null; mode?: string | null; source?: string | null } | null;
+  conversation_override?: unknown;
+  in_effect?: 'kel' | 'conversation' | null;
+};
+
+export type ModelState = {
+  default: Choice | null;
+  conversation: Choice | null;
+  providers: ProviderRow[];
+  kel_model?: KelModelInEffect | null;
+};
 
 const request = <T,>(body: Record<string, unknown>): Promise<T> => kelRequest<T>('/api/model', body);
 
@@ -232,12 +244,18 @@ export const useKelModelState = (conversationId?: string) => {
   const effectiveLabel = useMemo(() => {
     if (!state) return null;
     if (state.conversation?.provider) return { label: choiceLabel(state, state.conversation), scope: 'this chat' };
+    // An engine that reports what is in effect has retired the older default: Kel's role decides.
+    if (state.kel_model) return { label: state.kel_model.kel?.label || kels.label || 'Automatic', scope: 'default' };
     if (state.default?.provider || !kels.label) return { label: choiceLabel(state, state.default), scope: 'default' };
     return { label: kels.label, scope: 'default' };
   }, [state, kels.label]);
 
   /** What "Use Kel's model" means right now, by name. */
-  const kelsLabel = state?.default?.provider ? choiceLabel(state, state.default) : kels.label ?? choiceLabel(state, null);
+  const kelsLabel = state?.kel_model
+    ? state.kel_model.kel?.label || kels.label || 'Automatic'
+    : state?.default?.provider
+      ? choiceLabel(state, state.default)
+      : kels.label ?? choiceLabel(state, null);
 
   return { state, cid, effectiveLabel, kels, kelsLabel, refresh, setDefault, setConversation };
 };
@@ -427,7 +445,8 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
         setBusy(false);
       }
     };
-    const older = state?.default?.provider ? choiceLabel(state, state.default) : null;
+    // Only an engine that still honours the older default gets it named; newer engines ignore it.
+    const older = state?.default?.provider && !state.kel_model ? choiceLabel(state, state.default) : null;
     return (
       <KelCard title={title ?? "Kel's model"} data-testid='kel-default-model-card'>
         {!compact && (
