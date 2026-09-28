@@ -150,8 +150,8 @@ class RuntimeTreeTests(BackupBase):
         con.close()
         self.assertFalse((Path(created['folder']) / 'engine' / 'host' / 'aionui' / 'aionui-backend.db-wal').exists())
 
-    def test_staged_restore_applies_while_kel_is_running(self):
-        """The app is already up when the engine starts, so the restore must merge, not delete."""
+    def test_staged_restore_keeps_runtime_state_and_replaces_the_database(self):
+        """FN-02: applied before anything opens the data; runtime state the backup leaves out stays."""
         with self.store.transaction() as db:
             db.execute("INSERT INTO transcripts(id, name, text, duration_ms, source_type, status, created, updated) "
                        "VALUES('t1','Keep me','hello world',400,'recording','complete',1,1)")
@@ -163,13 +163,7 @@ class RuntimeTreeTests(BackupBase):
         (self.store.root / 'logs').mkdir(exist_ok=True)
         (self.store.root / 'logs' / 'engine.stdout').write_text('noise', encoding='utf-8')
         self.backup.stage_restore(created['folder'])
-
-        holder = sqlite3.connect(str(self.store.db_path))
-        try:
-            self.assertTrue(apply_pending_restore(self.store))
-        finally:
-            holder.close()
-
+        self.assertTrue(apply_pending_restore(self.store))
         with contextlib.closing(self.store.connect()) as db:
             names = [row['name'] for row in db.execute('SELECT name FROM transcripts')]
         self.assertEqual(names, ['Keep me'])
@@ -177,6 +171,40 @@ class RuntimeTreeTests(BackupBase):
         self.assertTrue((self.store.root / 'logs' / 'engine.stdout').exists())
         self.assertFalse((self.store.root / STAGING).exists())
         self.assertFalse((self.store.root / MARKER).exists())
+
+    @unittest.skipUnless(sys.platform == 'win32', 'Windows refuses to move a file another handle holds open')
+    def test_a_database_held_open_rolls_the_restore_back_instead_of_half_applying(self):
+        """FN-02: the old restore merged into files the app held open and half-applied; now it undoes."""
+        with self.store.transaction() as db:
+            db.execute("INSERT INTO transcripts(id, name, text, duration_ms, source_type, status, created, updated) "
+                       "VALUES('t1','Keep me','hello world',400,'recording','complete',1,1)")
+        created = self.backup.create(str(self.target))
+        with self.store.transaction() as db:
+            db.execute('DELETE FROM transcripts')
+        self.write_file = (self.store.root / 'artifacts' / 'later.md')
+        self.write_file.parent.mkdir(parents=True, exist_ok=True)
+        self.write_file.write_text('made after the backup', encoding='utf-8')
+        self.backup.stage_restore(created['folder'])
+        self.addCleanup(setattr, backup_module, '_RENAME_ATTEMPTS', backup_module._RENAME_ATTEMPTS)
+        backup_module._RENAME_ATTEMPTS = 1
+        holder = sqlite3.connect(str(self.store.db_path))
+        try:
+            holder.execute('SELECT COUNT(*) FROM transcripts').fetchone()
+            self.assertFalse(apply_pending_restore(self.store))
+        finally:
+            holder.close()
+        # Nothing half-applied: the live database and the folder swapped before it are as they were.
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM transcripts').fetchone()[0], 0)
+        self.assertEqual(self.write_file.read_text(encoding='utf-8'), 'made after the backup')
+        outcome = backup_module.read_outcome(self.store.root)
+        self.assertEqual((outcome['ok'], outcome['status'], outcome['part']), (False, 'rolled_back', 'engine'))
+        self.assertIn('put back everything', outcome['detail'])
+        # Attempted once: the marker and the staged copy are gone, and no before-restore folder is left.
+        self.assertFalse((self.store.root / STAGING).exists())
+        self.assertFalse((self.store.root / MARKER).exists())
+        self.assertEqual(list(self.store.root.parent.glob(backup_module.BEFORE_PREFIX + '*')), [])
+        self.assertFalse(apply_pending_restore(self.store), 'nothing is re-applied on the next start')
 
     def test_a_file_the_app_holds_open_is_recorded_not_fatal(self):
         (self.store.root / 'aion-history.json').write_text('{"x": 1}', encoding='utf-8')

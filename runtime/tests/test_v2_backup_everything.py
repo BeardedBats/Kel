@@ -133,7 +133,8 @@ class CreateTests(Fixture):
         info = json.loads((folder / INFO).read_text(encoding='utf-8'))
         self.assertEqual(info['format'], 2)
         self.assertIn('Credentials are excluded', info['notes'])
-        self.assertIn('kel-credentials.json', info['skipped'])
+        self.assertNotIn('kel-credentials.json', info['skipped'])
+        self.assertIn('kel-credentials.json', info['left_out'])
 
     def test_the_summary_counts_the_sidebar_chats(self):
         created = self.backup.create(str(self.target))
@@ -173,6 +174,7 @@ class RestoreTests(Fixture):
         staged = self.backup.stage_restore(folder)
         self.assertTrue(staged['restart_required'])
         self.assertTrue((self.engine / MARKER).exists())
+        self.live.close()  # FN-02: applied at start, before the chat store opens its database
         self.assertTrue(apply_pending_restore(self.store))
         chats = self.chats / 'aionui-backend.db'
         self.assertEqual(sorted(r[0] for r in self.query(chats, 'SELECT id FROM conversations')),
@@ -188,12 +190,13 @@ class RestoreTests(Fixture):
         # Live runtime state and credentials are untouched; the previous data is kept beside.
         self.assertTrue((self.host / 'Cache' / 'data').exists())
         self.assertTrue((self.engine / 'kel-credentials.json').exists())
-        for part in ('engine', 'store', 'host'):
-            snapshots = list(self.data.glob(part + '.pre-restore-*'))
-            self.assertEqual(len(snapshots), 1, part)
-        before = next(self.data.glob('host.pre-restore-*'))
+        # One dated folder per restore holds the data from just before it, part by part.
+        kept = list(self.data.glob('Kel data before restore *'))
+        self.assertEqual(len(kept), 1, kept)
+        self.assertEqual(sorted(p.name for p in kept[0].iterdir()), ['engine', 'host', 'store'])
+        before = kept[0] / 'host'
         self.assertEqual((before / 'config' / 'aionui-config.txt').read_text(encoding='utf-8'), 'zoom=2')
-        store_before = next(self.data.glob('store.pre-restore-*')) / 'aionui-backend.db'
+        store_before = kept[0] / 'store' / 'aionui-backend.db'
         self.assertEqual(sorted(r[0] for r in self.query(store_before, 'SELECT id FROM conversations')),
                          ['c2', 'c3'])
         self.assertFalse((self.engine / STAGING).exists())

@@ -6,7 +6,14 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import { spawn, type ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { ensureWorkCards, historyRow, recoverHistory, type HistoryMessage, type KelMessage } from './reconcileHistory';
+import {
+  donorsForMessages,
+  ensureWorkCards,
+  historyRow,
+  recoverHistory,
+  type HistoryMessage,
+  type KelMessage,
+} from './reconcileHistory';
 import { engineVersionAccepted } from './engineVersion';
 import { EngineHealthMachine } from './engineHealth';
 import { conversationCounts, knownEmpty } from './conversationCounts';
@@ -437,7 +444,7 @@ export async function initializeKel(port: number): Promise<void> {
   type EngineConversationState = {
     messages?: KelMessage[];
     jobs?: unknown[];
-    conversations?: Array<{ id: string; title?: string; project_id?: string; hidden?: unknown }>;
+    conversations?: Array<{ id: string; title?: string; project_id?: string; hidden?: unknown; utility?: unknown }>;
     projects?: Array<{ id: string; root?: string | null }>;
   };
   const adopting = new Map<string, Promise<string | null>>();
@@ -456,7 +463,8 @@ export async function initializeKel(port: number): Promise<void> {
       const existing: EngineConversationState =
         known ?? (await kelRequest('/api/state?conversation=' + encodeURIComponent(cid)));
       const conversation = (existing.conversations || []).find((item) => item.id === cid);
-      if (!conversation || conversation.hidden) return null;
+      // FN-10: a project's utility chat ("Recipe runs") is Kel's own and never becomes an app chat.
+      if (!conversation || conversation.hidden || conversation.utility) return null;
       const project = (existing.projects || []).find((item) => item.id === conversation.project_id);
       const workspace = project?.root || path.join(root, 'aion-workspaces', cid);
       fs.mkdirSync(workspace, { recursive: true });
@@ -477,6 +485,7 @@ export async function initializeKel(port: number): Promise<void> {
   for (const conversation of saved.conversations) {
     if (mapped.has(conversation.id)) continue;
     if (conversation.hidden) continue;
+    if ((conversation as { utility?: unknown }).utility) continue; // FN-10: Kel's own utility chat
     if (knownEmpty(counts, conversation.id)) continue;
     const existing = await kelRequest('/api/state?conversation=' + conversation.id);
     if (!existing.messages.length && !existing.jobs.length) continue;
@@ -630,6 +639,62 @@ export async function initializeKel(port: number): Promise<void> {
     }
     return history[id] || [];
   });
+  // LIVE-7: a message that carries details (a scoping card, a result, a quiet note) reaches an open
+  // chat at once, not only when the chat is next reopened. The engine is asked cheaply for messages
+  // with details written since the last look; each affected chat's history is reconciled as soon as
+  // its turn has finished streaming, then the windows are told (`kel:history-updated`, donor id) so
+  // the open chat re-reads `kel:history`.
+  let seenSeq: number | null = null; // null until the first look sets the starting point
+  let watching = false;
+  const pendingHistory = new Map<string, number>(); // donor id -> first time it was due
+  const historyWatch = async (): Promise<void> => {
+    if (watching || quitRequested) return;
+    watching = true;
+    try {
+      const route = seenSeq === null ? '/api/messages/since' : '/api/messages/since?after=' + seenSeq;
+      const since = (await kelRequest(route, undefined, HEALTH_TIMEOUT_MS)) as {
+        latest?: number;
+        items?: Array<{ conversation_id?: string; seq?: number }>;
+      };
+      if (seenSeq !== null) {
+        mergeLiveMap();
+        for (const donorId of donorsForMessages(mapping, since?.items))
+          if (!pendingHistory.has(donorId)) pendingHistory.set(donorId, Date.now());
+      }
+      if (typeof since?.latest === 'number') seenSeq = Math.max(seenSeq ?? 0, since.latest);
+      for (const [donorId, due] of [...pendingHistory]) {
+        const cid = mapping[donorId];
+        if (!cid || Date.now() - due > 120000) {
+          pendingHistory.delete(donorId);
+          continue;
+        }
+        const info = await core('/api/conversations/' + encodeURIComponent(donorId)).catch((): null => null);
+        if (!info) {
+          pendingHistory.delete(donorId);
+          continue;
+        }
+        if (info.runtime?.is_processing) continue; // still streaming: look again on the next pass
+        const before = JSON.stringify(history[donorId]);
+        await reconcile(donorId, cid);
+        pendingHistory.delete(donorId);
+        if (JSON.stringify(history[donorId]) === before) continue;
+        persistMapping();
+        for (const window of BrowserWindow.getAllWindows()) {
+          try {
+            window.webContents.send('kel:history-updated', { conversationId: donorId });
+          } catch {
+            // Window disposed mid-broadcast: nothing to do.
+          }
+        }
+      }
+    } catch {
+      // A busy or restarting engine is simply asked again on the next pass.
+    } finally {
+      watching = false;
+    }
+  };
+  const historyWatchTimer = setInterval(() => void historyWatch(), 1200);
+  historyWatchTimer.unref?.();
   // D-57: open an engine conversation (a scheduled run's) as an app chat, making it on first use.
   ipcMain.removeHandler('kel:open-engine-conversation');
   ipcMain.handle('kel:open-engine-conversation', async (event, cid: string) => {

@@ -114,6 +114,8 @@ declare global {
       engineRetry?: () => Promise<unknown>;
       diagnostics?: () => Promise<unknown>;
       onEngineState?: (callback: (frame: unknown) => void) => () => void;
+      /** LIVE-7: a chat's Kel history gained details (scoping card, result) while it is open. */
+      onHistoryUpdated?: (callback: (update: { conversationId: string }) => void) => () => void;
       /** OS-backed credential custody: metadata only — there is deliberately no value getter. */
       credentials?: {
         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
@@ -262,6 +264,15 @@ export function onEngineState(listener: (frame: EngineStateFrame) => void): () =
   if (!api?.onEngineState) return () => undefined;
   return api.onEngineState((frame) => {
     if (frame && typeof frame === 'object') listener(frame as EngineStateFrame);
+  });
+}
+
+/** LIVE-7: called with the app conversation id whose Kel history (`kelAPI.history`) just changed. */
+export function onKelHistoryUpdated(listener: (conversationId: string) => void): () => void {
+  const api = typeof window === 'undefined' ? undefined : window.kelAPI;
+  if (!api?.onHistoryUpdated) return () => undefined;
+  return api.onHistoryUpdated((update) => {
+    if (update && typeof update.conversationId === 'string') listener(update.conversationId);
   });
 }
 

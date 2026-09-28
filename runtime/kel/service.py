@@ -73,13 +73,9 @@ def _accepts(model,name):
         return False
 
 def _restore_outcome(root):
-    """The last restore attempt recorded beside the data (audit PER-02); None if never attempted."""
-    path=Path(root)/'restore-outcome.json'
-    try:
-        data=json.loads(path.read_text(encoding='utf-8'))
-    except Exception:
-        return None
-    return {'ok':bool(data.get('ok')),'detail':data.get('detail') or '','at':data.get('at')}
+    """The last restore attempt recorded beside the data (PER-02), in plain words (FN-02); None if never."""
+    from .backup import read_outcome
+    return read_outcome(root)
 
 
 class Service:
@@ -2110,6 +2106,12 @@ class Service:
             return backup.inventory()
         if action=='restore':
             return backup.stage_restore(data.get('source'))
+        if action in ('outcome','outcome-seen','outcome-dismiss'):
+            # FN-02: the last restore's outcome for Settings; the one-time notice marks it seen.
+            from .backup import mark_outcome,read_outcome
+            if action=='outcome':return {'outcome':read_outcome(self.store.root)}
+            changes={'notice':False} if action=='outcome-seen' else {'notice':False,'dismissed':True}
+            return {'outcome':mark_outcome(self.store.root,**changes)}
         raise PolicyError('Unknown backup action')
 
     def _capabilities_action(self,data):
