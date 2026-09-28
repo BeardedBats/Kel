@@ -35,6 +35,7 @@ const request = vi.fn(async (route: string, body?: Record<string, unknown>) => {
       { recipe_id: 'r9', name: 'Ship it', source: 'project' },
     ]);
   }
+  if (route === '/api/recipes' && body?.action === 'categories') return { categories: [{ name: 'Uncategorized', count: 1 }] };
   if (route === '/api/recipes' && body?.action === 'get') return { recipe: { recipe_id: 'r9', name: 'Ship it', inputs: [], steps: [] } };
   if (route === '/api/recipes' && body?.action === 'preview') {
     return { needs_project: true, project_id: 'site', missing: ['folder'], message: 'This project needs a folder first.' };
@@ -106,5 +107,20 @@ describe('Projects pages follow the active project (D-54)', () => {
     );
     fireEvent.click((await screen.findAllByRole('button', { name: 'Set project folder' }))[0]);
     expect(screen.getByTestId('route').textContent).toBe('/projects/list?edit=site&focus=folder');
+  });
+});
+
+describe('Recipe library words (VIS-18)', () => {
+  it('uses en-US spellings and lists recipes without a category under Uncategorized', async () => {
+    engine.active = 'default';
+    open('/projects/recipes');
+    await screen.findAllByText('Tidy notes');
+    const library = document.querySelector('.kel-recipe-desktop-current') as HTMLElement;
+    const tabs = within(library).getByRole('tablist', { name: 'Recipe filters' });
+    expect(within(tabs).getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['All', 'Favorites', 'Uncategorized']);
+    expect(document.body.textContent).not.toMatch(/favourite|uncategorised/i);
+    fireEvent.click(within(tabs).getByRole('tab', { name: 'Uncategorized' }));
+    expect(within(library).getByText('Tidy notes')).toBeTruthy();
+    expect(within(library).getByRole('button', { name: 'Preview' }).className).toContain('kel-recipe-desktop-link');
   });
 });

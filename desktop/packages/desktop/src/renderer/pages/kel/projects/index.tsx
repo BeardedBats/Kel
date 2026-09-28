@@ -338,10 +338,12 @@ export default function KelProjectsPage() {
   const sections = work?.map?.sections ?? [];
   const entries = work?.recipes.entries ?? [];
   const listed = (found ?? entries).filter((entry) => !favouritesOnly || entry.favourite);
+  // The engine lists recipes without a category under "Uncategorized"; their entries carry ''.
+  const categoryOf = (entry: { category?: string | null }) => entry.category || 'Uncategorized';
   const mobileListed = (found ?? entries).filter((entry) => mobileRecipeTab === 'All'
-    || (mobileRecipeTab === 'Favourites' ? entry.favourite : entry.category === mobileRecipeTab));
+    || (mobileRecipeTab === 'Favorites' ? entry.favourite : categoryOf(entry) === mobileRecipeTab));
   const desktopListed = (found ?? entries).filter((entry) => desktopRecipeTab === 'All'
-    || (desktopRecipeTab === 'Favourites' ? entry.favourite : entry.category === desktopRecipeTab));
+    || (desktopRecipeTab === 'Favorites' ? entry.favourite : categoryOf(entry) === desktopRecipeTab));
   const libraryView = viewFromPath(pathname) === 'recipes';
   const populatedKnowledge = !libraryView && (pathname.startsWith('/projects/knowledge') || proposals.length > 0);
   /** The project a listed recipe belongs to (built-ins have none). */
@@ -610,7 +612,7 @@ export default function KelProjectsPage() {
                         placeholder="Search recipes" aria-label="Search recipes" />
                     </label>
                     <div className="kel-recipe-desktop-tabs" role="tablist" aria-label="Recipe filters">
-                      {['All', 'Favourites', ...categories.map((category) => category.name)].map((tab) => (
+                      {['All', 'Favorites', ...categories.map((category) => category.name)].map((tab) => (
                         <button key={tab} type="button" role="tab" aria-selected={desktopRecipeTab === tab}
                           onClick={() => setDesktopRecipeTab(tab)}>{tab}</button>
                       ))}
@@ -623,8 +625,8 @@ export default function KelProjectsPage() {
                     return <div className="kel-recipe-desktop-entry" key={recipeId}>
                       <div className="kel-recipe-desktop-row">
                         <button type="button" className="kel-recipe-desktop-star" disabled={busy !== null}
-                          aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
+                          aria-label={entry.favourite ? 'Remove from favorites' : 'Add to favorites'}
+                          onClick={() => void act(entry.favourite ? 'Remove from favorites' : 'Add to favorites', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                           <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                         </button>
                         <span>{recipeName(entry, recipeId)}</span>
@@ -696,7 +698,7 @@ export default function KelProjectsPage() {
                     />
                   </label>
                   <div className="kel-recipe-mobile-tabs" role="tablist" aria-label="Recipe filters">
-                    {['All', 'Favourites', ...categories.map((category) => category.name)].map((tab) => (
+                    {['All', 'Favorites', ...categories.map((category) => category.name)].map((tab) => (
                       <button key={tab} type="button" role="tab" aria-selected={mobileRecipeTab === tab}
                         onClick={() => setMobileRecipeTab(tab)}>{tab}</button>
                     ))}
@@ -708,8 +710,8 @@ export default function KelProjectsPage() {
                       {expanded ? <div className="kel-recipe-mobile-preview">
                         <div className="kel-recipe-mobile-row">
                           <button className="kel-recipe-mobile-star" type="button" disabled={busy !== null}
-                            aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                            onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
+                            aria-label={entry.favourite ? 'Remove from favorites' : 'Add to favorites'}
+                            onClick={() => void act(entry.favourite ? 'Remove from favorites' : 'Add to favorites', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                             <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                           </button>
                           <strong>{recipeName(entry, recipeId)}</strong>
@@ -724,8 +726,8 @@ export default function KelProjectsPage() {
                           onClick={() => void prepareRecipe(recipeId)}>Run</KelButton>
                       </div> : <div className="kel-recipe-mobile-row">
                         <button className="kel-recipe-mobile-star" type="button" disabled={busy !== null}
-                          aria-label={entry.favourite ? 'Remove favourite' : 'Add favourite'}
-                          onClick={() => void act(entry.favourite ? 'Unfavourite' : 'Favourite', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
+                          aria-label={entry.favourite ? 'Remove from favorites' : 'Add to favorites'}
+                          onClick={() => void act(entry.favourite ? 'Remove from favorites' : 'Add to favorites', () => kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id)))}>
                           <img src={entry.favourite ? mobileRecipeStarActiveIcon : mobileRecipeStarIcon} alt="" width={14} height={14} />
                         </button>
                         <button className="kel-recipe-mobile-name" type="button" aria-expanded={false}
@@ -750,7 +752,7 @@ export default function KelProjectsPage() {
                     variant={favouritesOnly ? 'primary' : 'quiet'}
                     onClick={() => setFavouritesOnly((previous) => !previous)}
                   >
-                    Favourites
+                    Favorites
                   </KelButton>
                   {categories.map((category) => (
                     <KelButton
@@ -773,7 +775,7 @@ export default function KelProjectsPage() {
                 {listed.length === 0 ? (
                   <KelEmpty
                     title="Nothing matches that."
-                    why="Clear the search or the favourites filter to see the whole project library."
+                    why="Clear the search or the favorites filter to see the whole project library."
                   />
                 ) : (
               <KelTable
@@ -787,12 +789,12 @@ export default function KelProjectsPage() {
                         variant="quiet"
                         disabled={busy !== null || !recipeId}
                         onClick={() =>
-                          void act(entry.favourite ? 'Unfavourite' : 'Favourite', () =>
+                          void act(entry.favourite ? 'Remove from favorites' : 'Add to favorites', () =>
                             kelRecipeFavourite(recipeId, !entry.favourite, writeScope(entry.project_id))
                           )
                         }
                       >
-                        {entry.favourite ? 'Favourited' : 'Favourite'}
+                        {entry.favourite ? 'Favorited' : 'Favorite'}
                       </KelButton>{' '}
                       <KelButton
                         variant="quiet"
