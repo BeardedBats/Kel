@@ -126,6 +126,10 @@ export const kelsModelNote = (option: StaffModelOption): string | null => {
   return !note || SETUP_NOTES.has(note.toLowerCase()) ? 'Needs setup' : note;
 };
 
+/** Settings → Staff & models, for the chat whose engine conversation is `cid` when there is one. */
+export const staffModelsPath = (cid?: string | null): string =>
+  cid ? `/settings/staff?conversation=${encodeURIComponent(cid)}` : '/settings/staff';
+
 export const useKelModelState = (conversationId?: string) => {
   const [state, setState] = useState<ModelState | null>(null);
   const [cid, setCid] = useState<string | null>(null);
@@ -244,7 +248,9 @@ const availabilityLabel = (note: string | null) => (
 
 export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversationId }) => {
   const navigate = useNavigate();
-  const { state, effectiveLabel, kels, kelsLabel, setDefault, setConversation } = useKelModelState(conversationId);
+  const { state, cid, effectiveLabel, kels, kelsLabel, setDefault, setConversation } = useKelModelState(conversationId);
+  // Staff & models opened from a chat names that chat's own model when it has one (FN-06).
+  const staffPath = staffModelsPath(cid);
   const [desktop, setDesktop] = useState(() => window.innerWidth >= 768);
   const [popupVisible, setPopupVisible] = useState(false);
   // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to the picker, closes on
@@ -280,7 +286,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
   const providers = state.providers ?? [];
   const items = (
     <Menu style={{ maxHeight: 420, overflowY: 'auto', minWidth: 240 }} data-kel-model-menu={menuId}>
-      <Menu.Item key='kel-model-scope' onClick={() => navigate('/settings/staff')}>
+      <Menu.Item key='kel-model-scope' onClick={() => navigate(staffPath)}>
         <span className='text-12px text-t-secondary'>{KEL_MODEL_SCOPE_NOTE}</span>
       </Menu.Item>
       {conversationId ? (
@@ -374,7 +380,7 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
       onClose={() => setPopupVisible(false)}
       onAdd={() => { setPopupVisible(false); navigate('/settings/model?add=1'); }}
       onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }}
-      onStaff={() => { setPopupVisible(false); navigate('/settings/staff'); }} menuId={menuId} /> : items}
+      onStaff={() => { setPopupVisible(false); navigate(staffPath); }} menuId={menuId} /> : items}
       trigger='click' position={desktop ? 'tr' : 'bl'} unmountOnExit={desktop}
       popupVisible={popupVisible} onVisibleChange={setPopupVisible}>
       <button
