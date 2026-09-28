@@ -201,13 +201,13 @@ def _member(call, runs, job):
     adapter = ran.get('adapter')
     family = ADAPTER_FAMILIES.get(adapter)
     reasoning = ran.get('reasoning') if confirmed else None
-    if confirmed and not reasoning and asked.get('reasoning') and state != 'working':
-        reasoning = asked.get('reasoning')
+    if confirmed and not reasoning and (asked.get('effort_arg') or asked.get('reasoning')) and state != 'working':
+        reasoning = asked.get('effort_arg') or asked.get('reasoning')  # a tier's level (Routing 2) wins over Auto
     asked_label = asked.get('label')
     asked_view = None
     if asked_label and (not confirmed or label != asked_label):
         asked_view = {'model_label': asked_label,
-                      'reasoning': REASONING_LABELS.get(asked.get('reasoning') or 'auto')}
+                      'reasoning': REASONING_LABELS.get(asked.get('effort_arg') or asked.get('reasoning') or 'auto')}
     note = call.get('why')
     if "can't run here" in str(call.get('summary') or ''):
         note = call['summary']  # the runtime refused the model: its plain reason is the note

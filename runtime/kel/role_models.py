@@ -48,6 +48,18 @@ MODELS = {
                        'runtime': 'deepseek', 'arg': 'deepseek-flash'},
 }
 
+# Routing 2 (ROUTING_2.md §5.1): a coarse strength per model (1 fast and cheap, 2 balanced, 3 the
+# strongest) that dispatch tiers aim at, and a list price in USD per million tokens (input, cached
+# input, output) used only to *estimate* a run's cost when its runtime reports tokens but no cost.
+# Sources, read 2026-09-27: DeepSeek's own pricing page (peak rates) and OpenRouter's public model
+# list. None = no published price Kel can rely on (the cost stays unknown, never "free").
+STRENGTH = {'gpt-6-luna': 1, 'gpt-6-astra': 3, 'codex': 2, 'claude-opus-5-5': 3,
+            'claude-fable-5-1': 3, 'claude-sonnet': 2, 'deepseek-flash': 1}
+PRICES = {'gpt-6-luna': (0.10, 0.01, 0.50), 'gpt-6-astra': (10.0, 1.0, 50.0),
+          'claude-opus-5-5': (4.0, 0.20, 20.0), 'claude-fable-5-1': (10.0, 0.25, 50.0),
+          'deepseek-flash': (0.30, 0.006, 1.20), 'codex': None, 'claude-sonnet': None}
+PRICE_SOURCE = 'list price (DeepSeek pricing page, OpenRouter model list), read 2026-09-27'
+
 # runtime -> the engine adapters that run it, per purpose ('code' repository work, 'text' writing
 # or review, 'web' live web research), and its own plain name.
 RUNTIMES = {
@@ -293,10 +305,13 @@ def rejected(store, model_id, now=None):
     stamp = time.time() if now is None else now
     if row and row['status'] == 'rejected':
         row = dict(row)
-        if row.get('kind') == 'runtime_old' and row.get('runtime_version'):
-            current = _current_runtime_version(model_id)
-            if current is None or current == row['runtime_version']:
-                return row['reason']
+        current = _current_runtime_version(model_id) if row.get('runtime_version') else None
+        if current and current != row['runtime_version']:
+            # Another runtime version (an updated CLI) gets to try the model again: the live check's
+            # "not supported with a ChatGPT account" came from an old Codex, not from the account.
+            pass
+        elif row.get('kind') == 'runtime_old' and row.get('runtime_version'):
+            return row['reason']
         elif stamp - row['at'] < REJECTION_HOURS * 3600:
             return row['reason'] or 'its runtime refused it recently'
     offered = codex_offers(model_id)
@@ -396,15 +411,17 @@ def effort_arg(model_id, reasoning):
 # ---- resolution ----------------------------------------------------------------------------------
 
 def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=None, exclude=(),
-            set_aside=None):
+            set_aside=None, task_class=None, tier=None):
     """Resolve one staff role to what should run, with the truth of what was asked and why.
 
     Returns `{'role','mode','asked':{...},'adapter','model','model_arg','fallback_arg',
     'effort_arg','family','why','independence','waiting'}`. `adapter` None with `waiting` False
-    means "Kel's usual routing decides" (Automatic, or a Preferred model that is not available);
-    `waiting` True means a Fixed model cannot run here and the step must wait with `why`.
+    means "Kel's usual routing decides" (Automatic without a task class, or nothing it ranked can
+    run); `waiting` True means a Fixed model cannot run here and the step must wait with `why`.
     `exclude` names models already tried for this call (a review hands over to the next one);
-    `set_aside` is passed to `adapter_for`.
+    `set_aside` is passed to `adapter_for`. With a `task_class` (Routing 2 §5.1) the class's ranked
+    list decides what Automatic picks and where a Preferred model falls back to, and `tier` sets the
+    reasoning level of a role whose reasoning is Auto.
     """
     current = setting(store, role)
     asked = {'role': role, 'mode': current['mode'], 'model': current['model'],
@@ -413,18 +430,38 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
     out = {'role': role, 'mode': current['mode'], 'asked': asked, 'adapter': None, 'model': None,
            'model_arg': None, 'fallback_arg': None, 'effort_arg': None, 'family': None,
            'why': None, 'independence': None, 'waiting': False}
+    ranked = None
+    if task_class:
+        from .task_routing import BASE_TIER, ranking
+        tier = tier or BASE_TIER.get(task_class)
+        asked.update(task_class=task_class, dispatch=tier)
+        try:
+            ranked = ranking(store, task_class, adapters=adapters, tier=tier, purpose=purpose,
+                             set_aside=set_aside, now=now, protect=False)
+        except Exception:
+            ranked = None
+    ranked_why = {entry['model']: entry['why'] for entry in ranked or ()}
+    ranked_order = [entry['model'] for entry in ranked or () if entry['runnable']]
     if current['mode'] == 'AUTOMATIC':
-        out['why'] = 'Automatic: Kel chose by health, capability and cost'
-        return out
-    order = [current['model']]
-    if current['mode'] == 'PREFERRED':
-        order += [model for model in FALLBACKS.get(role, ()) if model not in order]
-    if role in REVIEW_ROLES and current['mode'] == 'PREFERRED':
+        if not ranked:
+            out['why'] = 'Automatic: Kel chose by health, capability and cost'
+            return out
+        order = list(ranked_order)
+    else:
+        order = [current['model']]
+        if current['mode'] == 'PREFERRED':
+            order += [model for model in FALLBACKS.get(role, ()) if model not in order]
+            if ranked and role not in REVIEW_ROLES:
+                order += [model for model in ranked_order if model not in order]
+    if role in REVIEW_ROLES and current['mode'] in ('PREFERRED', 'AUTOMATIC') and \
+            (current['mode'] == 'PREFERRED' or ranked):
         # D-69: a reviewer (and the Oracle) always gets a model when any can run: another family
         # than the Builder first, then the Builder's own family with the reduced independence
         # recorded (coverage debt, workforce-os doc 10 §3).
         alternates = [model for models in INDEPENDENT.values() for model in models] + \
-            [model for model in MODELS if model not in order]
+            (ranked_order if ranked else [model for model in MODELS if model not in order])
+        if current['mode'] == 'AUTOMATIC':
+            alternates = ranked_order
         candidates = list(dict.fromkeys(order + alternates))
         if avoid_family:
             different = [m for m in candidates if MODELS[m]['family'] != avoid_family]
@@ -448,15 +485,26 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
             continue
         info = MODELS[model_id]
         asked['resolved'] = model_id
+        effort = effort_arg(model_id, current['reasoning'])
+        if (current['reasoning'] or 'auto') == 'auto' and tier:
+            from .task_routing import reasoning_for
+            effort = reasoning_for(tier, model_id)
+            asked['reasoning_source'] = 'tier'
         out.update(adapter=adapter, model=model_id, model_arg=model_arg(model_id, adapter),
                    fallback_arg=info.get('cli_fallback') if adapter in ('claude', 'claude-code') else None,
-                   effort_arg=effort_arg(model_id, current['reasoning']), family=info['family'])
-        if model_id != current['model']:
+                   effort_arg=effort, family=info['family'])
+        if current['mode'] == 'AUTOMATIC':
+            out['why'] = 'Automatic: ' + (ranked_why.get(model_id) or 'the top of Kel\'s ranking')
+            if skipped:
+                out['why'] += ' (' + '; '.join(skipped) + ')'
+        elif model_id != current['model']:
             preferred = MODELS.get(current['model']) or {}
             if role in REVIEW_ROLES and avoid_family and preferred.get('family') == avoid_family \
                     and info['family'] != avoid_family:
                 skipped.insert(0, '%s is from the same model family as the Builder, so %s reviews '
                                   'instead' % (preferred.get('label', current['model']), info['label']))
+            if ranked and model_id not in FALLBACKS.get(role, ()) and role not in REVIEW_ROLES:
+                skipped.append('Kel picked %s next by its ranking for %s work' % (info['label'], task_class.replace('_', ' ')))
             out['why'] = '; '.join(skipped) or ('%s was chosen instead' % info['label'])
         if role in REVIEW_ROLES and avoid_family:
             out['independence'] = 'different' if info['family'] != avoid_family else 'reduced'
@@ -466,6 +514,10 @@ def resolve(store, role, *, adapters, purpose='text', avoid_family=None, now=Non
         return out
     if current['mode'] == 'FIXED':
         out.update(waiting=True, why='; '.join(skipped))
+        return out
+    if current['mode'] == 'AUTOMATIC':
+        out['why'] = 'Automatic: no ranked model can run this here' + \
+            ((' (' + '; '.join(skipped) + ')') if skipped else '') + '; Kel used its usual routing instead'
         return out
     out['why'] = '; '.join(skipped) + '; Kel used its usual routing instead'
     return out

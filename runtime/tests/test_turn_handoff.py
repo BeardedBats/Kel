@@ -394,8 +394,13 @@ class HandoffServiceTests(unittest.TestCase):
         argv = model.argv()
         self.assertEqual(argv[argv.index('-m') + 1], 'gpt-6-luna')
         self.assertIn('model_reasoning_effort="low"', argv)
-        # Without Codex, the Kel role falls back to Kel's usual order (here, the connected fake).
+        # Without Codex, the Kel role falls to the next model in its quick-answer ranking (Routing 2):
+        # the closest fit for fast work that can run here — Claude Sonnet on Claude Code.
         self.service.engine.adapters = {'claude': object()}
+        fallback = self.service._turn_model(self.cid)
+        self.assertEqual((fallback.provider, fallback.model), ('claude', 'sonnet'))
+        # With nothing ranked able to run, Kel's usual order decides (here, the connected fake).
+        self.service.engine.adapters = {}
         self.assertIs(self.service._turn_model(self.cid), self.turn)
         self.service.engine.adapters = {'codex': object(), 'claude': object()}
         prefs.set_default('claude-code', None)

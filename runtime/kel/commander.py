@@ -191,7 +191,8 @@ class Commander:
         if self.staff is not None:
             try:
                 binding=resolve(store,'verifier',adapters=self.staff.staff_adapters(),purpose='text',
-                                avoid_family=builder_family,exclude=exclude)
+                                avoid_family=builder_family,exclude=exclude,task_class='review',
+                                tier='assurance')
                 model=self.staff.staff_model(binding,timeout=180)  # the model's own reasoning level takes longer than low
             except Exception:
                 binding=None;model=None

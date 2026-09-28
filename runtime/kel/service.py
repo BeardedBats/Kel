@@ -347,7 +347,10 @@ class Service:
             return None
         from .role_models import resolve
         try:
-            binding=resolve(self.store,'kel',adapters=self.staff_adapters(),purpose='text')
+            # Routing 2: quick answers (turns) and plans are Kel's own task classes; the class's
+            # ranking is where a refused Kel model falls back to.
+            binding=resolve(self.store,'kel',adapters=self.staff_adapters(),purpose='text',
+                            task_class='quick_answer' if turn else 'planning')
         except Exception:
             return None
         return self.staff_model(binding,timeout=30 if turn else 100,turn=turn)
@@ -1941,6 +1944,13 @@ class Service:
                     'why':why,'chain':route.get('chain') or ([chosen]+list(route.get('fallbacks') or [])),
                     'demoted':route.get('demoted') or [],'evidence':route.get('evidence') or {},
                     'excluded':route.get('excluded') or {},'answer':answer}
+        if action=='ranking':
+            # Routing 2 §5.8: read-only — per task class, the governing role, its tier, and every model
+            # in the order Kel would use it, each with the plain reason.
+            from . import task_routing
+            present=self.staff_adapters()|{name for name in ('codex-code','claude-code','research')
+                                           if name in self.engine.adapters}
+            return task_routing.overview(self.store,present)
         if action in ('roles','set_role','reset_role'):
             # D-67: the model each staff role runs on (Fixed / Preferred / Automatic) and its
             # reasoning level. Plain labels; the engine owns the catalog and what can run here.
