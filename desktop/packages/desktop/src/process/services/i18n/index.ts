@@ -5,7 +5,7 @@
  */
 
 import i18n from 'i18next';
-import { DEFAULT_LANGUAGE, normalizeLanguageCode } from '@/common/config/i18n';
+import { DEFAULT_LANGUAGE } from '@/common/config/i18n';
 
 // D-61: Kel ships in English (en-US) only. Static import so Vite bundles the strings into the
 // main-process output (the JSON files do not exist on disk in production).
@@ -24,5 +24,4 @@ export const i18nReady = (async (): Promise<void> => {
   console.error('[Main Process] Failed to initialize i18n:', error);
 });
 
-export { normalizeLanguageCode };
 export default i18n;

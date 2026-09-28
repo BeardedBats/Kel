@@ -144,13 +144,6 @@ export function formatByteSize(bytes: number, language?: string | null, maximumF
 }
 
 /**
- * Format a transfer rate as "1.2 MB/s" in the app language.
- */
-export function formatByteRate(bytesPerSecond: number, language?: string | null): string {
-  return `${formatByteSize(bytesPerSecond, language)}/s`;
-}
-
-/**
  * Format the time part only — the `toLocaleTimeString()` replacement.
  */
 export function formatTime(

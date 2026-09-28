@@ -16,14 +16,6 @@
 
 /* ── Selected job: plain summary first, machinery behind Details ─────────────────────────────── */
 
-.kel-work-confirm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0;
-}
-
 .kel-work-details {
   margin-top: 12px;
 }

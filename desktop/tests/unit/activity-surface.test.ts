@@ -15,9 +15,7 @@ const read = (relative: string) => readFileSync(path.join(repoRoot, relative), '
 
 const activityPage = read('desktop/packages/desktop/src/renderer/pages/kel/activity/index.tsx');
 const router = read('desktop/packages/desktop/src/renderer/components/layout/Router.tsx');
-const nav = read(
-  'desktop/packages/desktop/src/renderer/components/layout/Sider/SiderNav/KelNavEntries.tsx'
-);
+const nav = read('desktop/packages/desktop/src/renderer/components/kel/KelInChatFrame.tsx');
 const workLanguage = read(
   'desktop/packages/desktop/src/renderer/components/kel/workLanguage.ts'
 );
@@ -26,7 +24,7 @@ describe('Activity surface (D14)', () => {
   it('is routable and reachable from the sider as an optional place', () => {
     expect(router).toContain("const KelActivity = React.lazy(() => import('@renderer/pages/kel/activity'));");
     expect(router).toContain("<Route path='/activity' element={withRouteFallback(KelActivity)} />");
-    expect(nav).toContain("{ id: 'activity', path: '/activity', label: 'Activity', Icon: AllApplication },");
+    expect(nav).toContain("{ label: 'Activity', path: '/activity'");
   });
 
   it('shows only high-level state, in user language', () => {

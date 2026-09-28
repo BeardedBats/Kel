@@ -208,10 +208,7 @@
     }
   },
   "kel": {
-    "workContext": "Work & context",
     "conversation": "Conversation",
-    "work": "Work",
-    "noWork": "No saved work in this conversation.",
     "pause": "Pause",
     "resume": "Resume",
     "cancel": "Cancel",
@@ -231,7 +228,6 @@
     "checkedReport": "Checked report",
     "download": "Download",
     "automatic": "Automatic",
-    "continueWork": "Continue work",
     "noCandidates": "No unfinished work in this project.",
     "noCandidatesHint": "New requests start fresh work; unfinished jobs appear here.",
     "continueJob": "Continue",

@@ -18,19 +18,6 @@ import { ipcBridge } from '@/common';
 import type { Theme } from '@/common/theme/types';
 
 let cachedTheme: Theme | null = null;
-type ThemeListener = (t: Theme) => void;
-const listeners = new Set<ThemeListener>();
-
-export function getCachedTheme(): Theme | null {
-  return cachedTheme;
-}
-
-export function onThemeChanged(listener: ThemeListener): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
 
 /**
  * 初始化主题桥接
@@ -44,9 +31,8 @@ export function initThemeBridge(): void {
   ipcBridge.theme.setActive.provider(async (resolved: Theme) => {
     cachedTheme = resolved;
     ipcBridge.theme.changed.emit(resolved);
-    listeners.forEach((l) => l(resolved));
   });
 
-  // A freshly-loaded window (e.g. pet) pulls the current theme on load.
+  // A freshly-loaded window (e.g. a Markdown shadow view) pulls the current theme on load.
   ipcBridge.theme.requestCurrent.provider(async () => cachedTheme);
 }

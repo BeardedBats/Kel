@@ -243,10 +243,3 @@
   }
 }
 
-/* Direction-implying icons (chevrons meaning "enter/forward") must mirror under RTL. */
-
-/* LTR islands (paths, file names) inside an RTL layout: pin the text to the
-   page's reading edge. LTR pages keep the island's natural left alignment. */
-[dir='rtl'] .rtl-text-right {
-  text-align: right;
-}

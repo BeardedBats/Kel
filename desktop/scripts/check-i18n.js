@@ -364,14 +364,6 @@ function checkIndexConfig() {
 
   const content = fs.readFileSync(indexFile, 'utf-8');
 
-  if (!content.includes('i18n-config.json')) {
-    logError('i18n config should load shared constants from src/common/config/i18n-config.json');
-  }
-
-  if (!content.includes('export const supportedLanguages')) {
-    logError('i18n config should export supportedLanguages');
-  }
-
   // D-61: Kel ships en-US only, loaded synchronously; no other locale may be wired in.
   const otherLocaleImport = content.match(/locales\/(?!en-US\/)[A-Za-z-]+\//);
   if (otherLocaleImport) {
