@@ -149,6 +149,11 @@ const Member: React.FC<{ member: OfficeStaff; itemState: string }> = ({ member, 
         <span className='kel-wd-member__line'>
           <strong>{roleName(member)}</strong>
           {commander ? <span className='kel-wc-sr'>, Commander</span> : null}
+          {member.step_label ? (
+            <span className='kel-wd-step' data-testid='kel-office-step-label'>
+              {member.step_label.split(':')[0]}
+            </span>
+          ) : null}
           <span className='kel-wd-model' data-testid='kel-office-model'>
             {modelLine(member)}
           </span>

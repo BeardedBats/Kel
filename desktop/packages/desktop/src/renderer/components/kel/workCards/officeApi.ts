@@ -92,6 +92,8 @@ export interface OfficeStaff {
   id: string;
   role: string;
   role_label?: string | null;
+  /** Parallel code streams: 'Part 2 of 3: …' or 'Combining the parts'; null for one-step work. */
+  step_label?: string | null;
   doing?: string | null;
   state?: OfficeStaffState | null;
   model?: string | null;

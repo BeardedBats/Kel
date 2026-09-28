@@ -401,6 +401,7 @@
 .kel-wd-member__line { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex-wrap: wrap; row-gap: 0; }
 .kel-wd-member__line > strong { flex: none; color: var(--kel-wc-text); font: 600 13px/17px var(--kel-wc-font); }
 .kel-wd-model { min-width: 0; color: var(--kel-wc-muted); font: 500 12px/16px var(--kel-wc-font); }
+.kel-wd-step { flex: none; color: var(--kel-wc-muted); font: 600 11px/16px var(--kel-wc-font); letter-spacing: .02em; }
 .kel-wd-doing { color: var(--kel-wc-text-2); font: 400 12px/16px var(--kel-wc-font); overflow-wrap: anywhere; }
 .kel-wd-note-line { color: var(--kel-wc-muted); font: 400 12px/16px var(--kel-wc-font); overflow-wrap: anywhere; }
 
