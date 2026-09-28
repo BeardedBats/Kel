@@ -5,6 +5,7 @@ import rowIcon from '@renderer/assets/figma/nav-skills.svg';
 import React from 'react';
 import useSWR from 'swr';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
+import { kelVisibleSkills } from '@renderer/components/kel/kelSkills';
 
 type Skill = Awaited<ReturnType<typeof ipcBridge.fs.listAvailableSkills.invoke>>[number];
 
@@ -31,15 +32,17 @@ const SkillList: React.FC<{ title: string; skills: Skill[]; empty: string; testI
 
 const SkillsOverviewSettings: React.FC = () => {
   const { data, error, isLoading } = useSWR<Skill[]>('kel.settings.skills', () => ipcBridge.fs.listAvailableSkills.invoke());
-  const builtIn = (data ?? []).filter((skill) => skill.source === 'builtin');
-  const mine = (data ?? []).filter((skill) => skill.source === 'custom');
+  // VIS-21: aioncore's donor skills are not Kel's; only Kel's own allowlist and the person's own show.
+  const visible = kelVisibleSkills(data ?? []);
+  const builtIn = visible.filter((skill) => skill.source === 'builtin');
+  const mine = visible.filter((skill) => skill.source === 'custom');
 
   return <SettingsPageWrapper>
     <div className='kel-shell-catalog-stack' data-testid='kel-settings-skills'>
       {isLoading ? <section className='kel-card kel-shell-catalog-card'><p className='kel-shell-catalog-status'>Loading skills…</p></section>
         : error ? <section className='kel-card kel-shell-catalog-card'><p className='kel-shell-catalog-status'>Kel couldn't load its skills. Try again in a moment.</p></section>
         : <>
-          <SkillList title='Built into Kel' skills={builtIn} empty='No built-in skills found' testId='kel-settings-skills-builtin' />
+          {builtIn.length > 0 && <SkillList title='Built into Kel' skills={builtIn} empty='' testId='kel-settings-skills-builtin' />}
           <SkillList title='Added by you' skills={mine} empty='You haven’t added any skills' testId='kel-settings-skills-custom' />
         </>}
       <section className='kel-card kel-shell-catalog-tip'>

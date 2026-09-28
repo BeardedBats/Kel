@@ -43,6 +43,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useSWR from 'swr';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
+import { donorAutoInjectSkills, kelVisibleSkills } from '@renderer/components/kel/kelSkills';
 import styles from './index.module.css';
 
 type GuidNavigationState = {
@@ -75,6 +76,8 @@ const GuidPage: React.FC = () => {
   const [allSkills, setAllSkills] = useState<Array<{ name: string; description: string; isAuto: boolean }>>([]);
   const [guidDisabledBuiltinSkills, setGuidDisabledBuiltinSkills] = useState<string[] | undefined>(undefined);
   const [guidEnabledSkills, setGuidEnabledSkills] = useState<string[] | undefined>(undefined);
+  // VIS-21: aioncore's own auto-inject skills are always left out of a new chat.
+  const [donorAutoSkills, setDonorAutoSkills] = useState<string[]>([]);
   const [availableMcpServers, setAvailableMcpServers] = useState<IMcpServer[]>([]);
   const [guidSelectedMcpServerIds, setGuidSelectedMcpServerIds] = useState<string[] | undefined>(undefined);
 
@@ -82,8 +85,9 @@ const GuidPage: React.FC = () => {
     ipcBridge.fs.listAvailableSkills
       .invoke()
       .then((availableSkills) => {
+        setDonorAutoSkills(donorAutoInjectSkills(availableSkills));
         setAllSkills(
-          availableSkills.map((s) => ({
+          kelVisibleSkills(availableSkills).map((s) => ({
             name: s.name,
             description: s.description,
             isAuto: s.source === 'builtin' && s.is_auto_inject,
@@ -261,10 +265,10 @@ const GuidPage: React.FC = () => {
     selectedThoughtLevelValue: agentSelection.selectedThoughtLevelValue,
     current_model: modelSelection.current_model,
 
-    guidDisabledBuiltinSkills,
+    guidDisabledBuiltinSkills: guidDisabledBuiltinSkills && [...guidDisabledBuiltinSkills, ...donorAutoSkills],
     guidEnabledSkills,
     assistantDefaultSkillIds: resolvedAssistantDefaults.skillIds,
-    assistantDefaultDisabledBuiltinSkillIds: resolvedAssistantDefaults.disabledBuiltinSkillIds,
+    assistantDefaultDisabledBuiltinSkillIds: [...resolvedAssistantDefaults.disabledBuiltinSkillIds, ...donorAutoSkills],
     availableMcpServers,
     selectedMcpServerIds: guidSelectedMcpServerIds,
     assistantDefaultMcpIds: resolvedAssistantDefaults.mcpIds,
