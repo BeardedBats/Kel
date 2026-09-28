@@ -3,13 +3,16 @@
  * that replaces it once the answer is on its way (5b). The question, Kel's quick picks, an answer
  * box with Send, and the reminder that the answer goes to Kel, not to an agent. The card itself
  * takes its new state from the next read of the engine.
+ *
+ * LIVE-3: an option that is a place to go ("Change the model in Staff & models") is a plain button
+ * beside the answers; it opens that page and sends nothing to Kel.
  */
 import kelMark from '@renderer/assets/figma/kel-mark.png';
 import React, { useState } from 'react';
 import { KelAnswerBox } from './KelAnswerBox';
 import { KelChoiceChips } from './KelChoiceChips';
 import type { OfficeQuestion } from './officeApi';
-import { answeredFollowUp, answeredWords, sendNeedsAnswer, type NeedsAnswer } from './needsAnswer';
+import { answeredFollowUp, answeredWords, isPlaceOption, placePath, sendNeedsAnswer, type NeedsAnswer } from './needsAnswer';
 import { iconCheck14 } from './workCardIcons';
 import { clockTime } from './workCardModel';
 
@@ -21,6 +24,12 @@ type Props = {
   onAnswered: (note: AnsweredNote) => void;
   /** Test seam: the route an answer takes. */
   send?: (question: OfficeQuestion, answer: NeedsAnswer) => Promise<void>;
+  /** Open a page in Kel (the router's navigate); without one the app's hash route is changed. */
+  onOpenSettings?: (path: string) => void;
+};
+
+const openByHash = (path: string) => {
+  if (typeof window !== 'undefined') window.location.hash = `#${path}`;
 };
 
 export const KelAnsweredLine: React.FC<{ note: AnsweredNote }> = ({ note }) => (
@@ -37,10 +46,11 @@ export const KelAnsweredLine: React.FC<{ note: AnsweredNote }> = ({ note }) => (
   </div>
 );
 
-export const KelNeedsAnswer: React.FC<Props> = ({ question, onAnswered, send = sendNeedsAnswer }) => {
+export const KelNeedsAnswer: React.FC<Props> = ({ question, onAnswered, send = sendNeedsAnswer, onOpenSettings = openByHash }) => {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
-  const options = question.options ?? [];
+  const options = (question.options ?? []).filter((option) => !isPlaceOption(option));
+  const places = (question.options ?? []).filter(isPlaceOption);
 
   const answer = async (value: NeedsAnswer) => {
     if (busy) return;
@@ -68,17 +78,35 @@ export const KelNeedsAnswer: React.FC<Props> = ({ question, onAnswered, send = s
         {question.text}
       </p>
       {question.detail ? <p className='kel-na__detail'>{question.detail}</p> : null}
-      {options.length ? (
-        <KelChoiceChips
-          label={question.text}
-          options={options}
-          disabled={busy}
-          onPick={(id) => {
-            const option = options.find((entry) => entry.id === id);
-            if (option) void answer({ option });
-          }}
-          testId='kel-needs-chips'
-        />
+      {options.length || places.length ? (
+        <div className='kel-na__choices'>
+          {options.length ? (
+            <KelChoiceChips
+              label={question.text}
+              options={options}
+              disabled={busy}
+              onPick={(id) => {
+                const option = options.find((entry) => entry.id === id);
+                if (option) void answer({ option });
+              }}
+              testId='kel-needs-chips'
+            />
+          ) : null}
+          {places.map((option) => {
+            const path = placePath(option, question.conversation_id);
+            return path ? (
+              <button
+                key={option.id}
+                type='button'
+                className='kel-wd-button kel-na__place'
+                onClick={() => onOpenSettings(path)}
+                data-testid={`kel-needs-place-${option.id}`}
+              >
+                {option.label}
+              </button>
+            ) : null;
+          })}
+        </div>
       ) : null}
       {question.answer_box !== false ? (
         <KelAnswerBox label={`Your answer to: ${question.text}`} disabled={busy} onSend={(text) => answer({ text })} />

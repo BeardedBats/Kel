@@ -468,7 +468,7 @@ describe('5e — scoping before big work', () => {
     const scroll = vi.fn();
     const thread = await screen.findByTestId('kel-scoping-card');
     thread.scrollIntoView = scroll;
-    fireEvent.click(within(card).getByRole('button', { name: /Plumbing website/ }));
+    fireEvent.click(within(card).getByRole('button', { name: /^Plumbing website,/ }));
     expect(scroll).toHaveBeenCalled();
     expect(screen.queryByTestId('kel-office-detail')).toBeNull();
   });

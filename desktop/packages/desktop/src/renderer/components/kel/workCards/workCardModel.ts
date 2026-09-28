@@ -61,9 +61,46 @@ const UNCERTAIN_WORDS = new Set(['not_confirmed', 'uncertain', 'unconfirmed', 'n
 export const isUncertain = (item: Partial<Pick<OfficeItemDetail, 'verification' | 'review'>> & { verdict?: string | null }): boolean =>
   UNCERTAIN_WORDS.has(word(item.verification?.result)) || word(item.review?.verdict) === 'uncertain' || word(item.verdict) === 'uncertain';
 
-/** The card's state words: "Couldn't fully check" instead of "Failed" when the checks were only unconfirmed. */
-export const cardStateLabel = (item: Pick<OfficeItem, 'state'> & { verdict?: string | null }): string =>
-  item.state === 'failed' && isUncertain(item) ? UNCERTAIN_LABEL : stateLabel(item.state);
+/** LIVE-10: finished work the list itself marks as unconfirmed (its `verdict`), not failed. */
+export const cardUncertain = (item: Pick<OfficeItem, 'state'> & { verdict?: string | null }): boolean =>
+  item.state === 'failed' && isUncertain(item);
+
+/** LIVE-12: Nick undid this work's applied change (the list's `undone`, or its application's state). */
+export const isUndone = (item: Pick<OfficeItem, 'undone'> & { application?: { state?: string | null } | null }): boolean =>
+  Boolean(item.undone) || word(item.application?.state) === 'undone';
+
+export const UNDONE_LABEL = 'Undone';
+
+/**
+ * The card's state words: "Couldn't fully check" instead of "Failed" when the checks were only
+ * unconfirmed (the list's `verdict`), and "Undone" for checked work whose change Nick undid.
+ */
+export const cardStateLabel = (
+  item: Pick<OfficeItem, 'state'> & { verdict?: string | null; undone?: OfficeItem['undone']; application?: { state?: string | null } | null }
+): string => {
+  if (cardUncertain(item)) return UNCERTAIN_LABEL;
+  if (item.state === 'done' && isUndone(item)) return UNDONE_LABEL;
+  return stateLabel(item.state);
+};
+
+/**
+ * "Undone at 10:42 AM — 3 files are back as they were; 1 empty folder removed." from the engine's
+ * record of the undo (LIVE-12). Null when the change was not undone.
+ */
+export const undoneLine = (
+  item: Pick<OfficeItem, 'undone'> & { application?: { state?: string | null } | null }
+): string | null => {
+  if (!isUndone(item)) return null;
+  const when = clockTime(item.undone?.at);
+  const files = item.undone?.files;
+  const folders = item.undone?.folders;
+  const back =
+    typeof files === 'number' && files > 0
+      ? `${files === 1 ? 'the file is' : `${files} files are`} back as ${files === 1 ? 'it was' : 'they were'}`
+      : 'the earlier files are back';
+  const removed = typeof folders === 'number' && folders > 0 ? `; ${folders} empty folder${folders === 1 ? '' : 's'} removed` : '';
+  return `Undone${when ? ` at ${when}` : ''} — ${back}${removed}.`;
+};
 
 /** The detail header's state: only work whose checks passed may say "checked" (D-53). */
 export const detailStateLabel = (item: Pick<OfficeItemDetail, 'state' | 'verification' | 'review'> & { verdict?: string | null }): string => {
@@ -287,8 +324,11 @@ export const oracleLines = (oracle: OfficeOracle | null | undefined): { line: st
       return { line: 'Second opinion before hand-over.', why: why ? `Asked because: ${why}` : null };
     case 'running':
       return { line: 'Giving a second opinion now.', why: why ? `Asked because: ${why}` : null };
-    case 'could_not_run':
+    case 'could_not_run': {
+      const told = (oracle.conclusion ?? '').trim();
+      if (told) return { line: sentence(told), why: null };
       return { line: why ? `Couldn’t run: ${why}` : 'Couldn’t run for this work.', why: null };
+    }
     case 'done': {
       // The engine's own sentence when it sends one; otherwise read from the findings.
       const told = (oracle.conclusion ?? '').trim();
@@ -313,11 +353,33 @@ export const oracleLine = (oracle: OfficeOracle | null | undefined): string => {
   return why ? `${line} ${sentence(why)}` : line;
 };
 
+/** What the second opinion looked at (and could not), in its own words — only once it concluded. */
+export const oracleCoverage = (oracle: OfficeOracle | null | undefined): string | null => {
+  const coverage = (oracle?.coverage ?? '').trim();
+  if (!coverage || oracle?.state !== 'done') return null;
+  const text = lowerFirst(coverage);
+  return `What it looked at: ${/[.!?…]$/.test(text) ? text : `${text}.`}`;
+};
+
+const lowerFirst = (text: string): string => {
+  // Keep a leading proper name or acronym ("GPT-6", "Kel") as it is.
+  if (/^[A-Z][A-Z0-9-]/.test(text) || /^Kel\b/.test(text)) return text;
+  return text.charAt(0).toLowerCase() + text.slice(1);
+};
+
 /**
- * LIVE-10: the engine's independence word in plain words. "full"/empty says nothing; "different" names
- * the other model family; "reduced"/"same" says the check is less independent.
+ * LIVE-10: how independent a check was, in plain words. The engine's own `independence_label` wins
+ * ("Checked by a different model family from the one that did the work."); without it the engine's
+ * word is read here: "full"/empty says nothing; "different" names the other model family;
+ * "reduced"/"same" says the check is less independent.
  */
-export const independenceWords = (value: string | null | undefined, who: 'check' | 'second_opinion' = 'check'): string | null => {
+export const independenceWords = (
+  value: string | null | undefined,
+  who: 'check' | 'second_opinion' = 'check',
+  label?: string | null
+): string | null => {
+  const told = (label ?? '').trim();
+  if (told) return sentence(`${who === 'check' ? 'Checked by' : 'Given by'} ${lowerFirst(told)}`);
   const key = word(value);
   if (!key || key === 'full' || key === 'none') return null;
   if (key === 'different')

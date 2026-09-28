@@ -339,3 +339,38 @@ html[data-theme='light'] :is(.kel-wc-host, .kel-na, .kel-na-answered, .kel-wl, .
   filter: brightness(0.5) saturate(1.5);
 }
 html[data-theme='light'] :is(.kel-wd-button--primary, .kel-chip-pick.is-picked) img { filter: none; }
+
+/* LIVE-3 / LIVE-8 / LIVE-10 (no Figma frame; docs/v2/FIGMA_GAPS.md): the new states reuse the card's own
+   parts. Work Kel couldn't fully check takes the amber caution, not the red failure; a scoping card's
+   "Not now" is a quiet text button where a finished card has its remove control; a needs-you card's "Change the
+   model in Staff & models" is the panel's usual button beside the quick picks; an interrupted step
+   carries the paused step's amber warning. */
+.kel-wc.is-uncertain .kel-wc-state-label,
+.kel-dc.is-uncertain .kel-dc__state { color: var(--kel-wc-needs-text); }
+.kel-wc.is-uncertain .kel-wc-progress__fill,
+.kel-wd.is-uncertain .kel-wc-progress__fill { background: var(--kel-wc-amber); }
+.kel-wc.has-not-now .kel-wc__title-row { padding-right: 62px; }
+.kel-wc__not-now {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  height: 22px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--kel-wc-link);
+  font: 600 12px/16px var(--kel-wc-font);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kel-wc__not-now:hover:not(:disabled) { background: rgba(191, 216, 255, 0.08); }
+.kel-wc__not-now:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 1px; }
+.kel-wc__not-now:disabled { opacity: 0.5; cursor: default; }
+.kel-wc--menu .kel-wc__not-now { top: 7px; right: 4px; }
+html[data-theme='light'] .kel-wc__not-now:hover:not(:disabled) { background: rgba(20, 45, 80, 0.08); }
+.kel-na__choices { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.kel-na__choices > .kel-chips { flex: 0 1 auto; }
+.kel-wd-step--interrupted .kel-wd-step__label { font-weight: 600; }
+.kel-wd-step--interrupted .kel-wd-step__when { color: var(--kel-wc-needs-text); }
+.kel-sc-collapsed--dismissed .kel-sc-collapsed__word { color: var(--kel-wc-muted); }

@@ -14,6 +14,7 @@ import iconCheck14 from '@renderer/assets/figma/work-cards/icon-check14.svg';
 import iconWarning from '@renderer/assets/figma/work-cards/icon-warning.svg';
 import iconStopMuted from '@renderer/assets/figma/work-cards/icon-stop-muted.svg';
 import iconChatSrc from '@renderer/assets/figma/work-cards/icon-chat.svg';
+import iconWarningAmberSrc from '@renderer/assets/figma/work-cards/icon-warning-amber.svg';
 import type { OfficeState } from './officeApi';
 
 export { default as iconClose } from '@renderer/assets/figma/work-cards/icon-close.svg';
@@ -71,7 +72,18 @@ export const dotToneFor = (state: OfficeState | string): DotTone => {
 };
 
 /** The lead icon before a state label: a dot while running, a check, warning or stop when finished. */
-export const StateIcon: React.FC<{ state: OfficeState | string; size?: 'card' | 'detail' }> = ({ state, size = 'card' }) => {
+export const StateIcon: React.FC<{ state: OfficeState | string; size?: 'card' | 'detail'; uncertain?: boolean }> = ({
+  state,
+  size = 'card',
+  uncertain = false,
+}) => {
+  // LIVE-10: work Kel couldn't fully check carries the amber caution, not the red failure.
+  if (state === 'failed' && uncertain)
+    return (
+      <span className='kel-wc-icon kel-wc-icon--14' aria-hidden='true'>
+        <img src={iconWarningAmberSrc} alt='' />
+      </span>
+    );
   if (state === 'scoping')
     return (
       <span className='kel-wc-icon kel-wc-icon--check-card' aria-hidden='true'>
