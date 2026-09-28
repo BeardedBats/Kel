@@ -202,7 +202,9 @@ class Store:
                                  ('model', 'TEXT'), ('ms', 'INTEGER'), ('at', 'REAL'),
                                  ('fallback', 'INTEGER'), ('source', 'TEXT'),
                                  ('review_provider', 'TEXT'), ('review_model', 'TEXT'),
-                                 ('cost', 'REAL')):
+                                 ('cost', 'REAL'),
+                                 # Routing 2 §5.3: outcomes per (task class, model), not per provider only.
+                                 ('task_class', 'TEXT')):
                 if column not in outcome_columns:
                     db.execute('ALTER TABLE routing_outcomes ADD COLUMN %s %s' % (column, kind))
 
@@ -482,8 +484,9 @@ class Store:
                         from .routing_evidence import record as _record_outcome
                         _record_outcome(self, run['id'], run['provider'], 'FAILED',
                                         job_kind=job['contract'].get('kind'),
-                                        attempts=m.get('attempts'), model=run['model'],
-                                        source='milestone', db=db)
+                                        attempts=m.get('attempts'), model=m.get('model') or run['model'],
+                                        source='milestone', task_class=self._task_class(job, run['milestone_id']),
+                                        db=db)
                     except Exception:
                         pass  # evidence is additive; it never blocks settlement
                 held = 1 if m['state'] == 'CHECKING' else 0
@@ -499,16 +502,25 @@ class Store:
                 count += 1
         return count
 
+    @staticmethod
+    def _task_class(job, milestone_id):
+        """The step's task class (Routing 2): frozen with its staffing, else from the job's kind."""
+        try:
+            from .staff import step_routing
+            task_class = step_routing(job, milestone_id)[0]
+            if task_class:
+                return task_class
+            from .task_routing import class_for_role
+            kind = job['contract'].get('kind')
+            return class_for_role(None, 'code' if kind == 'coding' else kind)
+        except Exception:
+            return None
+
     def _record_usage(self, db, job, run, result):
         """Routing 2 §5.2: the run's measured tokens, wall-clock and cost (additive; never blocks)."""
         try:
-            from .staff import step_routing
             from .usage import record
-            task_class = step_routing(job, run['milestone_id'])[0]
-            if task_class is None:
-                from .task_routing import class_for_role
-                kind = job['contract'].get('kind')
-                task_class = class_for_role(None, 'code' if kind == 'coding' else kind)
+            task_class = self._task_class(job, run['milestone_id'])
             record(self, run['id'], job_id=job['id'], milestone_id=run['milestone_id'], kind='work',
                    adapter=run['provider'], model=result.get('model_used') or run['model'],
                    task_class=task_class, result=result, db=db)
@@ -641,7 +653,8 @@ class Store:
                                 escalated=escalated, model=m.get('model'),
                                 ms=_observed_ms(self, m['artifact']['run_id'], db=db),
                                 source='review', review_provider=reviewer_provider,
-                                review_model=reviewer_model, db=db)
+                                review_model=reviewer_model, task_class=self._task_class(job, milestone_id),
+                                db=db)
                 # The provider's quality is now a decayed, windowed reading: it recovers as old
                 # failures age out, and it stays None until the evidence floor is met.
                 scored=_evidence_score(self, m['provider'], db=db)

@@ -29,11 +29,22 @@ DEMOTION_RATE = 0.5
 
 COLUMNS = (('model', 'TEXT'), ('ms', 'INTEGER'), ('at', 'REAL'), ('fallback', 'INTEGER'),
            ('source', 'TEXT'), ('review_provider', 'TEXT'), ('review_model', 'TEXT'),
-           ('cost', 'REAL'))
+           ('cost', 'REAL'), ('task_class', 'TEXT'))
+# Routing 2 §5.3 — per (task class, model): a first-try verified outcome counts 1, a verified outcome
+# that needed rework counts half, a failure 0. Promote at or above PROMOTION_RATE, demote below
+# DEMOTION_RATE; only with at least MIN_SAMPLES outcomes *and* the decayed weight floor.
+PROMOTION_RATE = 0.85
+MIN_SAMPLES = 3
+# Three fresh outcomes weigh just under 3.0; the weight floor for a class keeps them (≥ 2.5) while
+# three outcomes a week old (≈ 1.5) no longer move anything.
+CLASS_MIN_WEIGHT = 2.5
+REWORK_CREDIT = 0.5
+# Older rows carry only the job's kind; these kinds map to one class without guessing.
+KIND_CLASSES = {'coding': 'coding', 'research': 'research'}
 
 _RECORD_SQL = (
     'INSERT INTO routing_outcomes(run_id,provider,verdict,job_kind,attempts,escalated,model,ms,at,'
-    'fallback,source,review_provider,review_model,cost) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) '
+    'fallback,source,review_provider,review_model,cost,task_class) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '
     'ON CONFLICT(run_id) DO UPDATE SET verdict=excluded.verdict,'
     ' job_kind=COALESCE(excluded.job_kind, job_kind), attempts=COALESCE(excluded.attempts, attempts),'
     ' escalated=COALESCE(excluded.escalated, escalated), model=COALESCE(excluded.model, model),'
@@ -41,7 +52,7 @@ _RECORD_SQL = (
     ' fallback=COALESCE(excluded.fallback, fallback), source=COALESCE(excluded.source, source),'
     ' review_provider=COALESCE(excluded.review_provider, review_provider),'
     ' review_model=COALESCE(excluded.review_model, review_model),'
-    ' cost=COALESCE(excluded.cost, cost) '
+    ' cost=COALESCE(excluded.cost, cost), task_class=COALESCE(excluded.task_class, task_class) '
     "WHERE IFNULL(routing_outcomes.source,'')<>'review' OR IFNULL(excluded.source,'')='review'"
 )
 
@@ -71,12 +82,12 @@ def weight(age_seconds, half_life_days=HALF_LIFE_DAYS):
 
 def record(store, run_id, provider, verdict, *, job_kind=None, attempts=None, escalated=None,
            model=None, ms=None, cost=None, fallback=None, source='review', review_provider=None,
-           review_model=None, at=None, db=None):
+           review_model=None, at=None, task_class=None, db=None):
     """Write one outcome for one run — idempotent per run, with review precedence."""
     row = (str(run_id), str(provider), str(verdict), job_kind, attempts,
            None if escalated is None else int(bool(escalated)), model, ms,
            float(at if at is not None else time.time()), fallback, source, review_provider,
-           review_model, cost)
+           review_model, cost, task_class)
     if db is not None:
         db.execute(_RECORD_SQL, row)
         return
@@ -168,4 +179,70 @@ def summary(store, names, window_days=WINDOW_DAYS, now=None):
         scored['demote'] = bool(scored['verified_rate'] is not None
                                 and scored['verified_rate'] < (1 - DEMOTION_RATE))
         out[str(name)] = scored
+    return out
+
+
+def _class_of(row):
+    return row.get('task_class') or KIND_CLASSES.get(row.get('job_kind'))
+
+
+def class_score(store, task_class, model, window_days=WINDOW_DAYS, now=None, rows=None):
+    """The decayed record of one catalog model for one task class (Routing 2 §5.3).
+
+    `rate` is None under the floor (fewer than MIN_SAMPLES outcomes, or less than MIN_WEIGHT of
+    recent weight): thin evidence never moves a model."""
+    from .role_models import catalog_id
+    now = float(now if now is not None else time.time())
+    rows = rows if rows is not None else _rows(store, None, window_days, now)
+    total = earned = 0.0
+    samples = 0
+    last = None
+    for row in rows:
+        if not row.get('at') or _class_of(row) != task_class:
+            continue
+        if catalog_id(row.get('model'), row.get('provider')) != model:
+            continue
+        verdict = str(row.get('verdict'))
+        if verdict not in ('VERIFIED', 'FAILED'):
+            continue
+        samples += 1
+        weighed = weight(max(0.0, now - float(row['at'])))
+        total += weighed
+        if verdict == 'VERIFIED':
+            earned += weighed * (1.0 if (row.get('attempts') or 1) <= 1 else REWORK_CREDIT)
+        last = float(row['at']) if last is None else max(last, float(row['at']))
+    rate = (earned / total) if (samples >= MIN_SAMPLES and total >= CLASS_MIN_WEIGHT) else None
+    verdict = None
+    if rate is not None:
+        verdict = 'promote' if rate >= PROMOTION_RATE else ('demote' if rate < DEMOTION_RATE else None)
+    return {'model': model, 'task_class': task_class, 'samples': samples, 'weight': round(total, 2),
+            'rate': None if rate is None else round(rate, 3), 'verdict': verdict, 'last_at': last,
+            'window_days': window_days}
+
+
+def class_sentence(scored):
+    """"Verified in about 92% of its recent coding runs (5 runs, last 30 days)." — the same words
+    everywhere a ranking reason is shown."""
+    from .task_routing import label
+    what = label(scored['task_class']).lower()
+    if not scored.get('samples'):
+        return 'No finished %s work to judge yet.' % what
+    if scored.get('rate') is None:
+        return 'Only %d recent %s run%s so far; not enough to judge.' % (
+            scored['samples'], what, '' if scored['samples'] == 1 else 's')
+    return ('Verified in about %d%% of its recent %s runs (%d runs, last %d days; rework counts half).'
+            % (round(scored['rate'] * 100), what, scored['samples'], int(scored['window_days'])))
+
+
+def class_summary(store, task_class, models, window_days=WINDOW_DAYS, now=None):
+    """{model: scored + sentence} for the models that have outcomes in this class."""
+    now = float(now if now is not None else time.time())
+    rows = _rows(store, None, window_days, now)
+    out = {}
+    for model in models or ():
+        scored = class_score(store, task_class, model, window_days, now, rows=rows)
+        if not scored['samples']:
+            continue
+        scored['sentence'] = class_sentence(scored)
+        out[model] = scored
     return out
