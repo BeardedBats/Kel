@@ -285,7 +285,10 @@ class Continuation:
         if state == 'CLOSED' and job.get('verdict') == 'VERIFIED':
             why, nxt, needs = 'Done and verified.', 'Nothing needed — ask for a new change for more work.', False
         elif state == 'CLOSED' and job.get('verdict') == 'FAILED':
-            why, nxt, needs = ("It finished, but it didn't pass its checks.",
+            from .core import plain_check
+            found = next((plain_check(c) for m in milestones.values() for c in m.get('checks') or []
+                          if isinstance(c, dict) and c.get('verdict') == 'FAILED'), None)
+            why, nxt, needs = ("It finished, but it didn't pass its checks" + (': ' + found if found else '.'),
                                'Try it again, or ask for a change.', False)
         elif state == 'CLOSED':
             why, nxt, needs = ("It finished, but Kel couldn't fully verify the result.",

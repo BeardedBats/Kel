@@ -56,7 +56,8 @@ class TrustSummaryTests(unittest.TestCase):
             ]}})
         summary = verification_summary(job)
         self.assertEqual(summary.splitlines()[0], 'Failed')
-        self.assertIn('• Failed check: contains (expected ACCEPT)', summary)
+        self.assertIn('• Failed check: The result did not include "ACCEPT".', summary)
+        self.assertNotIn('expected', summary)  # D-71: never the check's internal kind or expected value
 
     def test_internal_reviewer_uses_model_label(self):
         job = settled('UNCERTAIN', {'document': {

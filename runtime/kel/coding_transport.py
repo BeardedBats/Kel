@@ -82,17 +82,20 @@ class DurableCodingConnection:
             time.sleep(.05)
         self.events=SavedEvents(self)
 
-    def call(self,method,params,timeout=25):
+    def call(self,method,params,timeout=25,key=None):
         # This runtime permits one of each RPC per coding run. A changed action
         # cannot reuse a prior receipt, and an interrupted call retains its identity.
+        # `key` names a second call of the same method ('method#purpose'; D-71's original-tests run).
+        if key is None:key=method
+        if key!=method and not key.startswith(method+'#'):raise PolicyError('Native RPC identity must name its method')
         encoded=encode(params)
         with self.store.transaction() as db:
-            row=db.execute('SELECT * FROM coding_calls WHERE run_id=? AND key=?',(self.run_id,method)).fetchone()
+            row=db.execute('SELECT * FROM coding_calls WHERE run_id=? AND key=?',(self.run_id,key)).fetchone()
             if row and row['params']!=encoded:raise PolicyError('Native RPC identity cannot change its parameters')
-            if not row:db.execute("INSERT INTO coding_calls VALUES(?,?,?,'QUEUED',NULL)",(self.run_id,method,encoded))
+            if not row:db.execute("INSERT INTO coding_calls VALUES(?,?,?,'QUEUED',NULL)",(self.run_id,key,encoded))
         end=time.monotonic()+timeout
         while True:
-            with contextlib.closing(self.store.connect()) as db:row=db.execute('SELECT * FROM coding_calls WHERE run_id=? AND key=?',(self.run_id,method)).fetchone()
+            with contextlib.closing(self.store.connect()) as db:row=db.execute('SELECT * FROM coding_calls WHERE run_id=? AND key=?',(self.run_id,key)).fetchone()
             if row['result']:
                 reply=json.loads(row['result'])
                 if 'error' in reply:raise RuntimeError(reply['error'])
@@ -150,7 +153,7 @@ def serve(store,run_id):
             db.execute('INSERT OR REPLACE INTO native_processes VALUES(?,?,?,?,?)',
                 (run_id,connection.process.pid,native_identity,str(store.root/'native-logs'/run_id),host['deadline']))
         def dispatch(call):
-            try:reply={'result':connection.call(call['key'],json.loads(call['params']),timeout=110)}
+            try:reply={'result':connection.call(call['key'].split('#',1)[0],json.loads(call['params']),timeout=110)}
             except Exception as exc:reply={'error':type(exc).__name__+': '+str(exc)}
             with store.transaction() as db:
                 db.execute("UPDATE coding_calls SET result=?,state='FINISHED' WHERE run_id=? AND key=?",(encode(reply),run_id,call['key']))

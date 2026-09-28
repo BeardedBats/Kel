@@ -791,3 +791,32 @@ running); clicking anywhere outside closes it. The chat keeps the rest of the he
    and Diagnostics into Settings; one Recipes entry; Projects keeps its chats, folder, Knowledge and
    scheduled tasks.
 Items 1, 2 and 4 are drawn in Figma first; 3 and 5 follow existing patterns.
+
+## D-71 — "Existing tests preserved" means the original tests still pass, not that test files are untouched
+
+Found in a live test (packaged main@467c1ff, Full access): asked to "add a multiply(a, b) function to
+calc.py and a pytest test for it in test_calc.py", Claude Opus 5.5 did exactly that — and Kel failed
+it, because the gate demanded every existing test file stay byte-identical. It then retried the same
+deterministic failure four times across models (about $1) and said "failed check repository_evidence:
+expected None". The gate's purpose (D-49: a Builder must not weaken, delete or bypass existing tests)
+is kept; its definition changes. A change now preserves the existing tests when **(1)** every original
+test file still exists, **(2)** the configured test run passes, and **(3)** a second trusted run passes:
+the same command, sandbox request, scrubbed keys and time budget, in a throwaway copy of the changed
+project where every original *test file* and *test setup file* is put back to its original bytes.
+Test setup files are anything that changes what the command collects or how it starts — conftest.py,
+sitecustomize.py, pytest.ini/tox.ini/setup.cfg/pyproject.toml, package.json, jest/vitest/mocha/karma
+configs, Makefiles, and a module that would shadow a `-m` runner (`pytest.py`). **Stricter choice,
+recorded:** new setup files are left out of that copy, and so are new test files whenever the project
+already had tests (a new test module can patch the code under test when it is imported); new tests
+are covered by the first run. The second run is skipped only when the copy would equal the project
+(nothing test-related changed). Both runs are recorded in the evidence with plain summaries ("Your
+existing tests still pass" / "An existing test was changed or removed: test_calc.py::test_add no
+longer passes in its original form"), which the result, the Office detail and the verification
+summary show instead of check ids. **Retries:** an original test that fails, or a removed test file,
+is deterministic, so the next try is told exactly what failed and how Kel checks; if that one informed
+try fails the same way the step stops (`EXHAUSTED`) instead of cycling models, and the result says so.
+*Known limits:* a test deleted while the code it checks still works is not caught by the runs (the
+independent review's rubric still asks for intact tests); an intended behaviour change that an
+existing test pins cannot pass — Nick updates that test himself first (no allowance mechanism yet);
+older isolated (non-native-host) runtimes keep the byte-for-byte rule. *Forbids:* accepting a change
+because its own edited tests pass; test setup that only exists in the change deciding the verdict.

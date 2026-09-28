@@ -9,6 +9,11 @@ from .native import executable
 from .core import PolicyError
 
 
+# D-71: the second trusted test run (the original test suite against the new code) runs in a throwaway
+# copy inside this run's log folder; it is the only other folder a trusted test run may use.
+ORIGINAL_TESTS_DIR = 'original-tests'
+
+
 def test_command_env():
     """Environment for the configured test command: provider authentication is not needed."""
     env = os.environ.copy()
@@ -60,9 +65,11 @@ class HostConnection(CodexConnection):
         if method=='turn/start':params['sandboxPolicy']={'type':'dangerFullAccess'}
         if method!='command/exec':return super().call(method,params,timeout)
         cwd=Path(params.get('cwd',self.workspace)).resolve()
-        if cwd!=Path(self.workspace).resolve():raise PolicyError('Trusted tests changed their working directory')
+        original=cwd==(Path(self.logs)/ORIGINAL_TESTS_DIR).resolve()
+        if cwd!=Path(self.workspace).resolve() and not original:raise PolicyError('Trusted tests changed their working directory')
         argv=host_command(params['command'])
-        out=self.logs/'host-tests.stdout';err=self.logs/'host-tests.stderr'
+        name='host-original-tests' if original else 'host-tests'
+        out=self.logs/(name+'.stdout');err=self.logs/(name+'.stderr')
         env=test_command_env()
         with out.open('wb') as stdout,err.open('wb') as stderr:
             process=subprocess.Popen(argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env,
