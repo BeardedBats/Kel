@@ -34,6 +34,16 @@
 .kel-staff-row__detail { flex: 1 1 260px; min-width: 0; color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
 .kel-staff-row__default { flex: none; color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
 .kel-staff-row__foot .kel-grow { flex: 0 0 0; }
+.kel-staff-row__last { margin: 0; color: var(--kel-status-attention-text, #ffc481); font: 400 12px/16px var(--kel-shell-body); }
+/* How Kel picks models: a plain read-only table, rows split by the same neutral hairline. */
+.kel-staff-ranking__scroll { overflow-x: auto; }
+.kel-staff-ranking { width: 100%; border-collapse: collapse; font: 400 13px/18px var(--kel-shell-body); color: var(--kel-text-2); }
+.kel-staff-ranking th, .kel-staff-ranking td { padding: 10px 12px 10px 0; text-align: left; vertical-align: top; }
+.kel-staff-ranking thead th { color: var(--kel-text-3); font: 500 12px/16px var(--kel-shell-heading); }
+.kel-staff-ranking tbody th { color: var(--kel-text-1); font: 500 13px/18px var(--kel-shell-heading); white-space: nowrap; }
+.kel-staff-ranking tbody tr { box-shadow: 0 -1px 0 rgba(191,216,255,.08); }
+.kel-staff-ranking__order { display: block; color: var(--kel-text-1); }
+.kel-staff-ranking__why { display: block; color: var(--kel-text-3); font: 400 12px/16px var(--kel-shell-body); }
 .kel-staff-row__error { margin: 0; color: var(--kel-failed-fg, #ff9a8f); font: 400 13px/18px var(--kel-shell-body); }
 
 @media (max-width: 1100px) {
