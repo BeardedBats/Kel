@@ -1766,9 +1766,15 @@ class Service:
         if path=='/api/approvals':
             return self._approvals_action(data)
         if path=='/api/office':
-            # D-68: the one write the live work view has — remove a finished card (Nick's own act).
+            # D-68: the one write the live work view has — remove a finished card (Nick's own act) —
+            # and Routing 2 §5.4: raise a budget-stopped job's budget so it continues.
+            if data.get('action')=='raise_budget':
+                from .budget import raise_class
+                result=raise_class(self.store,str(data.get('id') or data.get('job') or ''),actor='user')
+                self.wake.set()
+                return result
             if data.get('action')!='dismiss':
-                raise PolicyError('The work view can only remove a finished card.')
+                raise PolicyError('The work view can only remove a finished card or raise a budget.')
             from .office import dismiss
             return dismiss(self.store,str(data.get('id') or data.get('job') or ''),actor='user')
         raise PolicyError('Unknown action')

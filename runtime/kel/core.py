@@ -308,7 +308,8 @@ class Store:
         with contextlib.closing(self.connect()) as db:
             return [json.loads(r['data']) for r in db.execute("SELECT data FROM jobs ORDER BY rowid DESC")]
 
-    def claim(self, job_id, milestone_id, provider="fixture", timeout=120, max_attempts=4, route=None, model=None, staff=None):
+    def claim(self, job_id, milestone_id, provider="fixture", timeout=120, max_attempts=4, route=None, model=None, staff=None,
+              reservation=None):
         with self.transaction() as db:
             job = self._get(db, job_id)
             if job['state'] not in ('READY', 'RUNNING', 'VERIFYING'):
@@ -336,6 +337,11 @@ class Store:
                 insert_call(db, call_id=run_id, job_id=job_id, milestone_id=milestone_id,
                             role=staff['role'], kind='work', asked=staff.get('asked'),
                             ran=staff.get('ran'), why=staff.get('why'))
+            if reservation:
+                # Routing 2 §5.4: reserve before spawn — the step's budget share rides its claim.
+                from .budget import reserve
+                reserve(db, job_id=job_id, run_id=run_id, milestone_id=milestone_id,
+                        budget_class=reservation['budget_class'], step=reservation['step'])
             self._save(db, job, "run.claimed", {"run_id": run_id, "epoch": epoch, "provider": provider,"route":route})
             return dict(id=run_id, epoch=epoch, job_id=job_id, milestone_id=milestone_id,
                         contract_version=job['contract_version'], spec=spec, attempt=m['attempts'], provider=provider, model=model)
@@ -524,6 +530,8 @@ class Store:
             record(self, run['id'], job_id=job['id'], milestone_id=run['milestone_id'], kind='work',
                    adapter=run['provider'], model=result.get('model_used') or run['model'],
                    task_class=task_class, result=result, db=db)
+            from .budget import settle
+            settle(db, run['id'], consumed=True)  # the measured usage now stands for the reservation
         except Exception:
             pass
 
@@ -1162,6 +1170,12 @@ def explain_failure(job):
                 milestone_errors[0],
                 'Kel preserved your project copy and paused automatic retries so a partial change would not be replayed.',
                 'Open Work context to review the preserved work, then retry or re-request the task.')
+        if str(job.get('route_block') or '').startswith('Budget reached: '):
+            return _explain(
+                'This work reached its budget.',
+                str(job['route_block'])[len('Budget reached: '):],
+                'Kel stopped before the next step and did not switch to a cheaper model.',
+                'Raise its budget on its card to continue, or stop it.')
         if job.get('route_block'):
             return _explain(
                 'No model could start this work.',

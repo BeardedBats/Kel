@@ -14,6 +14,8 @@ from .instance_lock import InstanceLock
 LEASE_RENEW_SECONDS = 30
 # D-67: the route block of a step whose role is Fixed to a model that cannot run here.
 FIXED_WAIT = 'Fixed model not available: '
+# Routing 2 §5.4: the route block of a job that reached its budget (only Nick moves it on).
+BUDGET_WAIT = 'Budget reached: '
 # Job states the supervision pass can move forward by itself (anything else waits on a person, a
 # model becoming available, or nothing at all).
 ADVANCING_STATES = ('READY', 'RUNNING', 'VERIFYING', 'CANCELLING', 'PAUSING')
@@ -242,6 +244,8 @@ class Engine:
                         # D-67: a Fixed role waits until its model is set up here (or Nick changes it).
                         if self._fixed_roles_runnable(job):
                             self.store.retry_route(job['id']);job=self.store.get(job['id'])
+                    elif str(job['route_block']).startswith(BUDGET_WAIT):
+                        pass  # Routing 2 §5.4: only Nick raising the budget (or stopping it) moves it
                     else:
                         health=self.store.provider_states()
                         if any(s.get('circuit_until',0)<=time.time() and s.get('quota')!=0 for s in health.values()):
@@ -355,6 +359,22 @@ class Engine:
                     except PolicyError as exc:
                         self.store.wait_for_route(job['id'],str(exc))
                         continue
+                    reservation=None
+                    if role:
+                        # Routing 2 §5.4: reserve before spawn. A step that would take the job past its
+                        # budget does not start; the job waits for Nick with the plain reason, and is
+                        # never continued on a cheaper model.
+                        from . import budget as _budget
+                        from .role_models import catalog_id
+                        from .staff import step_routing
+                        chosen_model = (binding or {}).get('model') if (binding or {}).get('adapter') == route['selected']                             else catalog_id(None, route['selected'])
+                        step = _budget.estimate(self.store, step_routing(job, mid)[0], chosen_model,
+                                                reviewed=any(c.get('kind') == 'manual_review' for c in spec.get('checks') or []))
+                        refusal = _budget.check(self.store, job, step)
+                        if refusal:
+                            self.store.wait_for_route(job['id'], _budget.BUDGET_WAIT + refusal)
+                            continue
+                        reservation = {'budget_class': _budget.job_class(self.store, job), 'step': step}
                     try:
                         self.store.controller_lease(self.owner)
                         adapter=self.adapters[route['selected']]
@@ -364,7 +384,7 @@ class Engine:
                             staff_record=self._staff_record(role, binding, route, model)
                             if staff_record['asked'].get('model_arg') is not None or staff_record.get('uses_role_model'):
                                 model=staff_record['asked'].get('model_arg') or model
-                        run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model,staff=staff_record)
+                        run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if job['contract'].get('kind')=='coding' else 190,route=route,model=model,staff=staff_record,reservation=reservation)
                     except PolicyError:
                         continue
                     job['milestones'][mid]['state'] = 'RUNNING'  # later steps of this pass see it

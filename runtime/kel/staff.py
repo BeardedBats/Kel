@@ -280,6 +280,9 @@ def plan_job(store, contract, request=None, *, tier_max=None):
                                                             'tier': tier}, hint)
         steps[milestone['id']] = {'role': role, 'label': ROLE_LABELS[role], 'task_class': task_class,
                                   'dispatch': dispatch, 'dispatch_why': dispatch_why}
+    from .budget import CEILINGS, class_for
+    budget_class = class_for(tier, flags, features)
+    reasons.append('budget class %s' % budget_class)
     pod = TIER_RANK[tier] >= 2
     lenses = list(REVIEW_LENSES[kind]) if pod else []
     for flag in flags:
@@ -297,7 +300,9 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             'decided_tier': decision['tier'], 'score': decision['score'],
             'rules': [item['id'] for item in decision['rules_fired']], 'reasons': reasons,
             'advice': decision.get('advice'), 'features': features, 'flags': flags,
-            'budget_class': decision['budget_class'], 'steps': steps,
+            # Routing 2 §5.4: the budget class (and its ceilings) the governor holds this job to.
+            'budget_class': budget_class, 'budget': {'class': budget_class, 'ceilings': CEILINGS[budget_class]},
+            'steps': steps,
             'parallel': parallel, 'serial': parallel is None,
             'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses},
             'oracle': {'required': bool(oracle_why), 'why': oracle_why},
