@@ -168,6 +168,16 @@ describe('D-79 Review Team', () => {
     expect(reviewTeamState(view as OfficeItemDetail)).toBe(word);
   });
 
+  it('checks that never ran read "Never ran" — never "Failed" (Nick, 2026-09-29)', async () => {
+    const never = { ...base, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_confirmed', summary: [] } } as OfficeItemDetail;
+    expect(reviewTeamState(never)).toBe('Never ran');
+    renderDetail(never);
+    const review = await screen.findByTestId('kel-office-review');
+    expect(within(review).getByTestId('kel-office-review-state').textContent).toBe('Never ran');
+    expect(screen.getByTestId('kel-office-detail-state').textContent).toBe('Never ran');
+    expect(screen.getByTestId('kel-office-detail').textContent).not.toMatch(/Failed|Didn’t pass|Couldn’t fully check/);
+  });
+
   it('a problem is one line: what it is and who is on it', () => {
     const view = {
       ...base,

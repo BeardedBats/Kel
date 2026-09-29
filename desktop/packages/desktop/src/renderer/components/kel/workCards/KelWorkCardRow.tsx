@@ -803,7 +803,7 @@ const stateWords = (item: OfficeItem) => {
     case 'scoping':
       return 'scoping, Kel has questions first';
     default:
-      // "couldn't fully check" and "undone" as the card itself says them.
+      // "never ran" and "undone" as the card itself says them.
       return cardStateLabel(item).toLowerCase();
   }
 };

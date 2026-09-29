@@ -83,8 +83,8 @@ describe('work card rules (D-68)', () => {
     expect(detailStateLabel({ state: 'done', review: { verdict: 'VERIFIED' } })).toBe('Done and checked');
     expect(detailStateLabel({ state: 'done', verification: { result: 'not_run' } })).toBe('Done');
     expect(detailStateLabel({ state: 'failed' })).toBe('Failed');
-    expect(detailStateLabel({ state: 'failed', verification: { result: 'not_confirmed' } })).toBe('Couldn’t fully check');
-    expect(cardStateLabel({ state: 'failed', verdict: 'uncertain' })).toBe('Couldn’t fully check');
+    expect(detailStateLabel({ state: 'failed', verification: { result: 'not_confirmed' } })).toBe('Never ran');
+    expect(cardStateLabel({ state: 'failed', verdict: 'uncertain' })).toBe('Never ran');
     expect(cardStateLabel({ state: 'failed', verdict: 'failed' })).toBe('Failed');
   });
 });

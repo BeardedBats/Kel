@@ -50,7 +50,8 @@ export const STATE_LABEL: Record<OfficeState, string> = {
 export const stateLabel = (state: OfficeState | string): string => STATE_LABEL[state as OfficeState] ?? 'Working';
 
 /** LIVE-10: work Kel could not fully check is not work that failed its checks. */
-export const UNCERTAIN_LABEL = 'Couldn’t fully check';
+/** Nick, 2026-09-29: checks that never ran read "Never ran" (never "Failed"). */
+export const UNCERTAIN_LABEL = 'Never ran';
 
 const UNCERTAIN_WORDS = new Set(['not_confirmed', 'uncertain', 'unconfirmed', 'not_checked']);
 
@@ -73,7 +74,7 @@ export const isUndone = (item: Pick<OfficeItem, 'undone'> & { application?: { st
 export const UNDONE_LABEL = 'Undone';
 
 /**
- * The card's state words: "Couldn't fully check" instead of "Failed" when the checks were only
+ * The card's state words: "Never ran" instead of "Failed" when the checks were only
  * unconfirmed (the list's `verdict`), and "Undone" for checked work whose change Nick undid.
  */
 export const cardStateLabel = (
@@ -649,7 +650,7 @@ const openProblems = (view: ReviewView): Array<{ by: string; summary: string }> 
 
 /**
  * D-79 "Review Team": one status — Not started, In progress, Failed or Passed. (LIVE-10 keeps
- * "Couldn’t fully check" for work whose checks could not run: that is not a failure.)
+ * "Never ran" for work whose checks never ran: that is not a failure.)
  */
 export const reviewTeamState = (view: ReviewView): ReviewTeamState => {
   if (passed(view)) return 'Passed';
