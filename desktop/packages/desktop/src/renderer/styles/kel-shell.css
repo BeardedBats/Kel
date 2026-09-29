@@ -1372,6 +1372,26 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-in-chat-frame__nav-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex: none; }
 .kel-v2-shell .kel-in-chat-frame__nav-icon img { display: block; width: 16px; height: 16px; }
 .kel-v2-shell .kel-in-chat-frame__pane { box-sizing: border-box; min-width: 0; min-height: 0; overflow-y: auto; padding: 20px 24px; }
+/* D-87.3: soft scroll edges. A mask on the scroll container itself (not an overlay), so content blends
+   into the glass behind it with no seam. useScrollFade sets --below while there is more to scroll and
+   --above once scrolled; at the very end there is no bottom fade, so the last item stays readable. */
+@property --kel-fade-top { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --kel-fade-bottom { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.kel-scroll-fade {
+  --kel-fade-top: 0px; --kel-fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0, rgb(0 0 0 / .35) calc(var(--kel-fade-top) * .35), #000 var(--kel-fade-top),
+    #000 calc(100% - var(--kel-fade-bottom)), rgb(0 0 0 / .55) calc(100% - var(--kel-fade-bottom) * .45),
+    rgb(0 0 0 / .15) calc(100% - var(--kel-fade-bottom) * .12), transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0, rgb(0 0 0 / .35) calc(var(--kel-fade-top) * .35), #000 var(--kel-fade-top),
+    #000 calc(100% - var(--kel-fade-bottom)), rgb(0 0 0 / .55) calc(100% - var(--kel-fade-bottom) * .45),
+    rgb(0 0 0 / .15) calc(100% - var(--kel-fade-bottom) * .12), transparent 100%);
+  transition: --kel-fade-top .2s ease, --kel-fade-bottom .2s ease;
+}
+.kel-scroll-fade.kel-scroll-fade--above { --kel-fade-top: 28px; }
+.kel-scroll-fade.kel-scroll-fade--below { --kel-fade-bottom: 64px; }
+@media (prefers-reduced-motion: reduce) { .kel-scroll-fade { transition: none; } }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-page { box-sizing: border-box; width: 100%; max-width: none; min-height: 0; margin: 0; padding: 0 !important; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-page__head { min-height: 26px; margin: 0 0 12px; align-items: center; }
 .kel-v2-shell .kel-in-chat-frame__pane :is(#kel-work-main, #kel-projects-main, #kel-autonomy-main, #kel-providers-main, #kel-diagnostics-main, .kel-shell-scheduled) .kel-page__head { margin-bottom: 6px; }

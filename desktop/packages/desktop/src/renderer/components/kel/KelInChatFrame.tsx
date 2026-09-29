@@ -4,6 +4,7 @@ import { activeProjectLabel, useProjects } from './activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ShellWorkspaceLink from './ShellWorkspaceLink';
 import ShellSettingsIcon from './ShellSettingsIcon';
+import { useScrollFade } from './useScrollFade';
 import { configService } from '@/common/config/configService';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import activityIcon from '@renderer/assets/figma/refresh/activity.svg';
@@ -119,6 +120,8 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   // page leaves (120 ms, up 6 px, blur) while the new one enters (220 ms, from 8 px, blur).
   const navRef = useRef<HTMLElement>(null);
   const paneRef = useRef<HTMLDivElement>(null);
+  // D-87.3: the content panel fades softly at its edges while there is more to scroll.
+  useScrollFade(paneRef);
   const shownPath = useRef(pathname);
   const leavingPane = useRef<Snapshot | null>(null);
   if (shownPath.current !== pathname && !leavingPane.current && paneRef.current) leavingPane.current = snapshotGhost(paneRef.current);
