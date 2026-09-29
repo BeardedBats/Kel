@@ -936,3 +936,11 @@ element positions frame by frame (no movement > 1 px after a transition ends).
   "Finished work stays at the top…".
 The same simplification applies to the phone bottom sheet and the in-thread result card where they
 repeat these parts (the button is labelled "Open" everywhere). Engine data stays as is; this is presentation only.
+
+## D-80 — Start the one chat store fresh
+
+**Decided by Nick 2026-09-29** (answers the D-77 chat-store report). Nick has no need for previous
+chats. Nothing is imported from the old (aioncore-only) store: the 4 aioncore-only chats and the 3
+unmatched replies are left behind. When `chat_store` switches to `engine` (at an install point, after the
+automatic backup), every existing chat is archived — moved to Settings → Archived, nothing deleted — so
+Kel starts with an empty sidebar. This removes the reviewed-import step from CP-10a stage 2.
