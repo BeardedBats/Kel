@@ -1007,3 +1007,11 @@ install, not after every edit; live model runs and frame-by-frame captures only 
 user-visible behaviour, not by default; no audits of things about to be redesigned; Nick's own use is a
 valid way to verify polish.
 Refines D-66/D-67 review triggers and D-84 (the Verifier still approves test changes when a Verifier runs).
+
+## D-86 — Kibble only captures
+
+**Decided by Nick 2026-09-29.** Kibble is just for Nick to say "I noticed this while using Kel — fix it":
+capture the moment (screenshot, target, what he said), keep the finding, and prepare the fix prompt.
+"Build an update" is removed — no repository folder, no picking findings, no in-app self-build. Fixing
+happens outside Kel (Nick sends the findings; they're fixed, verified and installed). Supersedes the
+Build Update path of D-46..D-49 (candidate records, promote/review); Kel still never edits its own code.
