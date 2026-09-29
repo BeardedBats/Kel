@@ -898,3 +898,10 @@ unmerged `claude/*` branches remain; release tags were re-pointed. Commit IDs qu
 before this date are pre-rewrite IDs: look them up in `Tools\kel-history-commit-map-D-63.txt`
 (old → new). The complete old history is kept in
 `Tools\kel-history-backup-2026-09-29-before-D-63.bundle` (verified).
+
+## D-78 — Motion language approved (docs/v2/design/MOTION.md)
+
+**Decided by Nick 2026-09-29** after the stage-1 prototype (Tools\motion\kel-motion-prototype.html).
+Build the motion language into Kel's interface: springs keep the tiny overshoot (0.15–1.1%); the
+hand-off line waits ~0.4 s before flying up into its work card; a step's loader turns once when the step
+starts (no looping); reduced motion follows the Windows setting only (no in-app switch).
