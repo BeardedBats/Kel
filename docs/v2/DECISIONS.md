@@ -905,3 +905,9 @@ before this date are pre-rewrite IDs: look them up in `Tools\kel-history-commit-
 Build the motion language into Kel's interface: springs keep the tiny overshoot (0.15–1.1%); the
 hand-off line waits ~0.4 s before flying up into its work card; a step's loader turns once when the step
 starts (no looping); reduced motion follows the Windows setting only (no in-app switch).
+
+**D-78 addition (Nick, 2026-09-29) — settling fade.** Anything that changes state in the same place
+never snaps. When the new state (A) will stay on screen for more than ~5 seconds and (B) is the final
+item of a chain (the resting end state), it fades in with a longer, gentle transition — e.g. Undo /
+"Undone", a card reaching Done, "Done and checked", "You answered … · Kel is continuing". Intermediate
+states and anything gone within 5 s keep the quicker timing. Reduced motion still cross-fades gently.
