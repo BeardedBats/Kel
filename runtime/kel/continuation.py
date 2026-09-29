@@ -314,7 +314,10 @@ class Continuation:
             why, nxt, needs = ("It finished, but it didn't pass its checks" + (': ' + found if found else '.'),
                                'Try it again, or ask for a change.', False)
         elif state == 'CLOSED':
-            why, nxt, needs = ("It finished, but Kel couldn't fully verify the result.",
+            # D-89: "never ran" only when no check was recorded at all; otherwise the checks are incomplete.
+            ran = any(isinstance(c, dict) for m in milestones.values() for c in m.get('checks') or [])
+            why, nxt, needs = (("It finished, but its checks are incomplete." if ran else
+                                "It finished, but its checks never ran."),
                                'Look over the result, then try again or ask for a change.', False)
         elif fenced:
             why = ("Kel's worker stopped unexpectedly (the app restarted) before this step finished. "

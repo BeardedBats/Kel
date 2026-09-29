@@ -128,7 +128,7 @@ class TrustSummaryTests(unittest.TestCase):
         store.assess(job)
         text, published = store.publish(job)
         self.assertTrue(published)
-        self.assertIn('Kel could not fully verify the result', text)
+        self.assertIn('The checks are incomplete', text)
         self.assertIn('What you can do next: ', text)
         self.assertNotIn('• Limitation', text)
         meta = self.published_meta(store, job)

@@ -8,7 +8,8 @@ import type { KelJobRoute } from './kelApi';
 export const VERDICT_TEXT: Record<string, string> = {
   VERIFIED: 'Done and checked',
   FAILED: "Didn't pass its checks",
-  UNCERTAIN: 'Finished — not fully checked',
+  // D-89: a job's verdict alone cannot tell checks that never ran from checks that ran in part.
+  UNCERTAIN: 'Incomplete',
 };
 
 export const ROUTE_REASON_TEXT: Record<string, string> = {
@@ -130,7 +131,7 @@ export const WORK_WORDS = {
   CANCELLED: words('Stopped', 'This work was stopped. Its saved request is kept.', 'stopped', 'finished'),
   VERIFIED: words('Done and checked', 'The result passed its checks.', 'verified', 'finished'),
   WAITING_APPLY: words('Waiting for you to apply it', 'It passed its checks. Choose Apply or Leave it on its card.', 'waiting', 'waiting', true),
-  UNCHECKED: words('Finished — not fully checked', 'Kel finished, but could not fully check the result.', 'uncertain', 'finished'),
+  UNCHECKED: words('Incomplete', 'Kel finished, but its checks are incomplete.', 'uncertain', 'finished'),
   FAILED: words("Didn't pass its checks", 'The result did not pass its checks. Nothing was retried on its own.', 'failed', 'finished'),
   INTERRUPTED: words('Interrupted', 'It stopped part-way. Your work is kept — reply “continue” in its chat to pick it up.', 'waiting', 'waiting', true),
 } as const;

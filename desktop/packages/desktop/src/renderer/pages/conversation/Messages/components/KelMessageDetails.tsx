@@ -12,7 +12,23 @@ export type KelDetailRow = { label: string; lines: string[] };
 const VERDICT_WORDS: Record<string, string> = {
   VERIFIED: 'Passed its checks',
   FAILED: "Didn't pass its checks",
-  UNCERTAIN: 'Not fully checked',
+  UNCERTAIN: 'Incomplete',
+};
+
+/** D-89: check verdicts that mean the check never ran at all. */
+const NEVER_RAN = new Set(['NOT_RUN', 'NEVER_RAN', 'NOT_CHECKED', 'SKIPPED', 'DID_NOT_RUN']);
+
+/**
+ * D-89 (Nick): an unconfirmed result says "Never ran" only when every recorded check never ran, and
+ * "Incomplete" when some ran but not all, or when the record cannot tell. Never "failed".
+ */
+export const resultWords = (meta: Pick<KelMessageMeta, 'verdict' | 'checks'>): string => {
+  const verdict = String(meta.verdict ?? '').toUpperCase();
+  const checks = (meta.checks ?? []).map((check) => String(check?.verdict ?? '').toUpperCase());
+  if (verdict === 'UNCERTAIN' || !VERDICT_WORDS[verdict]) {
+    return checks.length > 0 && checks.every((one) => NEVER_RAN.has(one)) ? 'Never ran' : 'Incomplete';
+  }
+  return VERDICT_WORDS[verdict];
 };
 
 /** Check kinds in plain words (the engine's kinds never reach the person). */
@@ -44,7 +60,10 @@ const checkLines = (checks: KelMessageMeta['checks']): string[] => {
   return [...groups].map(([label, verdicts]) => {
     const passed = verdicts.filter((verdict) => verdict === 'VERIFIED').length;
     if (passed === verdicts.length) return `${label}: passed`;
-    if (verdicts.length === 1) return `${label}: ${verdicts[0] === 'FAILED' ? 'failed' : 'not confirmed'}`;
+    if (verdicts.length === 1) {
+      const one = verdicts[0].toUpperCase();
+      return `${label}: ${one === 'FAILED' ? 'failed' : NEVER_RAN.has(one) ? 'never ran' : 'incomplete'}`;
+    }
     return `${label}: ${passed} of ${verdicts.length} passed`;
   });
 };
@@ -60,7 +79,7 @@ export const kelDetailRows = (meta: KelMessageMeta | null | undefined): KelDetai
     if (kept.length) rows.push({ label, lines: kept });
   };
   if (meta.kind === 'result') {
-    add('Result', [meta.verdict ? (VERDICT_WORDS[meta.verdict] ?? 'Not checked') : '']);
+    add('Result', [meta.verdict ? resultWords(meta) : '']);
     add('Answered by', [names(meta.executed_by).join(', ')]);
     add('Checked by', [names(meta.reviewed_by).join(', ')]);
     add('Checks', checkLines(meta.checks));

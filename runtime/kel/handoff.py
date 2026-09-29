@@ -77,7 +77,7 @@ def _entry(job, titles):
     if state == 'CLOSED':
         summary = ('finished and checked' if verdict == 'VERIFIED' else
                    "finished, but it didn't pass its checks" if verdict == 'FAILED' else
-                   'finished, but not fully verified')
+                   'finished, but its checks are incomplete')
     elif state in ('CANCELLED', 'CANCELLING'):
         summary = 'stopped'
     elif state == 'AWAITING_USER':

@@ -787,7 +787,7 @@ class Store:
                         text=text+'\n\n'+note
             else:
                 text=(explain_failure(job)
-                      or ('I could not verify the complete result.' if job['verdict']=='UNCERTAIN' else 'The result did not pass its checks.'))
+                      or ('Its checks are incomplete.' if job['verdict']=='UNCERTAIN' else 'The result did not pass its checks.'))
                 if file_request:
                     text=text+'\n\nNo file was created in '+str(file_request.get('folder'))+'.'
             # CP-14: who ran it, who reviewed it and what the checks found are details shown on
@@ -1446,7 +1446,7 @@ def explain_failure(job):
                 'Kel ran its verification checks and stopped before applying anything.',
                 'Ask Kel to try again with more detail about what you need.')
         return _explain(
-            'Kel could not fully verify the result.',
+            'The checks are incomplete.',
             why,
             'Kel ran its verification checks and an independent review where one was available.',
             'Look over the result in its work card; ask Kel to try again, or tell it what to check.')

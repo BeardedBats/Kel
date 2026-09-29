@@ -90,8 +90,8 @@ describe('the shared state words', () => {
     expect(workWords({ state: 'INTERRUPTED' }).label).toBe('Interrupted');
     expect(workWords({ state: 'BLOCKED' }).label).toBe('Blocked — needs your OK');
     expect(workWords({ state: 'CLOSED', verdict: 'VERIFIED' }).label).toBe('Done and checked');
-    expect(workWords({ state: 'CLOSED', verdict: 'UNCERTAIN' }).label).toBe('Finished — not fully checked');
-    expect(workWords({ state: 'CLOSED' }).label).toBe('Finished — not fully checked');
+    expect(workWords({ state: 'CLOSED', verdict: 'UNCERTAIN' }).label).toBe('Incomplete');
+    expect(workWords({ state: 'CLOSED' }).label).toBe('Incomplete');
     expect(workWords({ state: 'CLOSED', verdict: 'FAILED' }).label).toBe("Didn't pass its checks");
     expect(workWords({ state: 'CANCELLED' }).label).toBe('Stopped');
     expect(workWords({ state: 'SOMETHING_NEW' }).label).toBe('Something new');
@@ -134,7 +134,7 @@ describe('Activity — each job in exactly one section', () => {
     const words = (id: string) =>
       (document.querySelector(`[data-job-id="${id}"] [data-testid="activity-state"]`) as HTMLElement).textContent;
     expect(words('ok')).toMatch(/^Done and checked — /);
-    expect(words('meh')).toMatch(/^Finished — not fully checked — /);
+    expect(words('meh')).toMatch(/^Incomplete — /);
     expect(words('bad')).toMatch(/^Didn't pass its checks — /);
     expect(words('paused')).toMatch(/^Paused — /);
   });

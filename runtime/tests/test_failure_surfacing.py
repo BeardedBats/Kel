@@ -93,7 +93,7 @@ class FailureSurfacing(unittest.TestCase):
         store.assess(job)
         text, _ = store.publish(job)
         self.assert_explained(text)
-        self.assertIn('Kel could not fully verify the result', text)
+        self.assertIn('The checks are incomplete', text)
         self.assertIn('Independent rubric review not recorded', text)
 
     def test_unexpected_worker_exit_explains_preserved_work(self):

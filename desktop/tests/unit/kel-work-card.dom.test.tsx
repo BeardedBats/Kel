@@ -89,11 +89,11 @@ describe('Kel work card', () => {
     install(async () => ({ ...base, phase: 'needs_look', state: 'CLOSED', verdict: 'UNCERTAIN', can_stop: false,
       why: 'Kel could not fully verify the result.' }));
     renderCard();
-    expect(await screen.findByText('Finished — not fully checked')).toBeTruthy();
+    expect(await screen.findByText('Incomplete')).toBeTruthy();
     expect(screen.getByTestId('kel-work-why').textContent).toBe('Kel could not fully verify the result.');
     expect(screen.queryByText('Done and checked')).toBeNull();
     expect(workHeadline({ phase: 'done', accepted: 1, total: 1, verdict: 'UNCERTAIN' })).toBe(
-      'Finished — not fully checked');
+      'Incomplete');
     expect(workHeadline({ phase: 'done', accepted: 0, total: 1, verdict: 'FAILED' })).toBe("Finished, but didn't pass its checks");
     expect(workHeadline({ phase: 'needs_you', accepted: 0, total: 1, verdict: null })).toBe('Waiting for your OK');
     expect(workHeadline({ phase: 'stopped', accepted: 0, total: 1, verdict: null })).toBe('Stopped');

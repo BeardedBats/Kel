@@ -1355,7 +1355,7 @@ class Service:
                              why=('You stopped this work.' if stopped else
                                   ('Done and verified.' if job.get('verdict')=='VERIFIED'
                                    else "It finished, but it didn't pass its checks." if job.get('verdict')=='FAILED'
-                                   else "It finished, but Kel couldn't fully verify the result.")),
+                                   else "It finished, but its checks are incomplete.")),
                              next=('This work was stopped. Its saved request is kept in this '
                                    'conversation.' if stopped else
                                    'Nothing needed — ask for a new change for more work.'))

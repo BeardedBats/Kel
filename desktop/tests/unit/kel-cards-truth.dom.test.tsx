@@ -277,12 +277,12 @@ describe('the detail says it plainly', () => {
     expect(screen.getByTestId('kel-office-review-problem').textContent).toBe('Sentinel found a password stored in plain text · Builder is fixing it');
   });
 
-  it('labels an uncertain verdict "Never ran", not "Didn’t pass" (LIVE-10)', async () => {
+  it('labels an uncertain verdict "Incomplete", not "Didn’t pass" (LIVE-10)', async () => {
     renderDetail({ ...RECEIPTS_DETAIL, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_confirmed', summary: [] } });
     const dialog = await screen.findByTestId('kel-office-detail');
     await within(dialog).findByTestId('kel-office-review');
-    expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Never ran');
-    expect(within(dialog).getByTestId('kel-office-review-state').textContent).toBe('Never ran');
+    expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Incomplete');
+    expect(within(dialog).getByTestId('kel-office-review-state').textContent).toBe('Incomplete');
     expect(dialog.textContent).not.toContain('Didn’t pass');
     // A caution, not a failure: the uncertain tone replaces the red failed one.
     expect(dialog.className).toContain('is-uncertain');
@@ -330,7 +330,7 @@ describe('D-79: no Files changed section and no change report in the panel', () 
 /* ─── Done card and in-thread line ─────────────────────────────────────────────────────────── */
 
 describe('the in-thread pieces', () => {
-  it('an uncertain done card says "Never ran" and shows commands without backticks', async () => {
+  it('an uncertain done card says "Incomplete" and shows commands without backticks', async () => {
     details = {
       [RECEIPTS.job_id]: {
         ...RECEIPTS_DETAIL,
@@ -342,15 +342,15 @@ describe('the in-thread pieces', () => {
     };
     install();
     render(<KelDoneCard job={RECEIPTS.job_id} />);
-    expect((await screen.findByTestId('kel-done-card-state')).textContent).toBe('Never ran');
+    expect((await screen.findByTestId('kel-done-card-state')).textContent).toBe('Incomplete');
     expect(screen.getByTestId('kel-done-card').textContent).not.toContain('`');
   });
 
-  it('the line says "Never ran" for an uncertain verdict', () => {
+  it('the line says "Incomplete" for an uncertain verdict', () => {
     render(
       <KelWorkLine view={{ job_id: 'job-1', title: 'Add power()', phase: 'done', verdict: 'UNCERTAIN', accepted: 1, total: 1 } as never} />
     );
-    expect(screen.getByTestId('kel-work-line-state').textContent).toBe('Never ran');
+    expect(screen.getByTestId('kel-work-line-state').textContent).toBe('Incomplete');
   });
 });
 

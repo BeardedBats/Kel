@@ -13,6 +13,7 @@ import { KelOfficeDetail } from '@renderer/components/kel/workCards/KelOfficeDet
 import type { OfficeItem, OfficeItemDetail } from '@renderer/components/kel/workCards/officeApi';
 import {
   COMPLETE_LABEL,
+  cardStateLabel,
   ROLE_COLOR_KEYS,
   completedAt,
   panelStateLabel,
@@ -168,14 +169,19 @@ describe('D-79 Review Team', () => {
     expect(reviewTeamState(view as OfficeItemDetail)).toBe(word);
   });
 
-  it('checks that never ran read "Never ran" — never "Failed" (Nick, 2026-09-29)', async () => {
-    const never = { ...base, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_confirmed', summary: [] } } as OfficeItemDetail;
+  it('D-89: checks that never ran read "Never ran"; checks that ran in part read "Incomplete" — never "Failed"', async () => {
+    const never = { ...base, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_run', summary: [] } } as OfficeItemDetail;
+    const partial = { ...base, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_confirmed', summary: [] } } as OfficeItemDetail;
     expect(reviewTeamState(never)).toBe('Never ran');
+    expect(reviewTeamState(partial)).toBe('Incomplete');
+    // A list item carries only its verdict, which cannot tell the two apart: "Incomplete".
+    expect(cardStateLabel({ state: 'failed', verdict: 'uncertain' })).toBe('Incomplete');
+    expect(cardStateLabel({ state: 'failed', verdict: 'uncertain', verification: { result: 'not_run', summary: [] } })).toBe('Never ran');
     renderDetail(never);
     const review = await screen.findByTestId('kel-office-review');
     expect(within(review).getByTestId('kel-office-review-state').textContent).toBe('Never ran');
     expect(screen.getByTestId('kel-office-detail-state').textContent).toBe('Never ran');
-    expect(screen.getByTestId('kel-office-detail').textContent).not.toMatch(/Failed|Didn’t pass|Couldn’t fully check/);
+    expect(screen.getByTestId('kel-office-detail').textContent).not.toMatch(/Failed|Didn’t pass|fully check/);
   });
 
   it('a problem is one line: what it is and who is on it', () => {

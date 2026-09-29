@@ -203,7 +203,7 @@ describe('collectAttention — D7 orphaned runs need a person', () => {
     const review = items.find((item) => item.kind === 'review');
     const failure = items.find((item) => item.kind === 'failure');
     expect(review?.needsYou).toBe(false);
-    expect(review?.detail.startsWith('Finished — not fully checked — ')).toBe(true);
+    expect(review?.detail.startsWith('Incomplete — ')).toBe(true);
     expect(failure?.needsYou).toBe(false);
     expect(failure?.detail.startsWith("Didn't pass its checks — ")).toBe(true);
   });

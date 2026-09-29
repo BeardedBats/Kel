@@ -49,19 +49,35 @@ export const STATE_LABEL: Record<OfficeState, string> = {
 
 export const stateLabel = (state: OfficeState | string): string => STATE_LABEL[state as OfficeState] ?? 'Working';
 
-/** LIVE-10: work Kel could not fully check is not work that failed its checks. */
-/** Nick, 2026-09-29: checks that never ran read "Never ran" (never "Failed"). */
-export const UNCERTAIN_LABEL = 'Never ran';
+/**
+ * D-89 (Nick, 2026-09-29): check wording. Checks that genuinely never ran read "Never ran"; checks that
+ * ran but not all of them, or whose result could not be confirmed, read "Incomplete". Neither is ever
+ * called failed (LIVE-10). When the data cannot tell the two apart, it is "Incomplete".
+ */
+export const NEVER_RAN_LABEL = 'Never ran';
+export const INCOMPLETE_LABEL = 'Incomplete';
+/** The label for unconfirmed checks when nothing more is known (a list item's verdict alone). */
+export const UNCERTAIN_LABEL = INCOMPLETE_LABEL;
 
-const UNCERTAIN_WORDS = new Set(['not_confirmed', 'uncertain', 'unconfirmed', 'not_checked']);
+/** The engine's words for checks that never ran at all. */
+const NEVER_RAN_WORDS = new Set(['not_run', 'never_ran', 'not_checked', 'skipped', 'did_not_run']);
+const UNCERTAIN_WORDS = new Set(['not_confirmed', 'uncertain', 'unconfirmed', ...NEVER_RAN_WORDS]);
 
 /**
- * Finished work whose checks could not be confirmed (the engine's UNCERTAIN verdict). The detail says
- * so through `verification.result` ("not_confirmed") or the review verdict; a list item through its
- * optional `verdict`.
+ * Finished work whose checks could not be confirmed or never ran (the engine's UNCERTAIN verdict). The
+ * detail says so through `verification.result` or the review verdict; a list item through its optional
+ * `verdict`.
  */
 export const isUncertain = (item: Partial<Pick<OfficeItemDetail, 'verification' | 'review'>> & { verdict?: string | null }): boolean =>
   UNCERTAIN_WORDS.has(word(item.verification?.result)) || word(item.review?.verdict) === 'uncertain' || word(item.verdict) === 'uncertain';
+
+/** D-89: the checks genuinely never ran — the engine says so in `verification.result`. */
+export const checksNeverRan = (item: Partial<Pick<OfficeItemDetail, 'verification'>>): boolean =>
+  NEVER_RAN_WORDS.has(word(item.verification?.result));
+
+/** D-89: "Never ran" when the data says the checks never ran; otherwise "Incomplete". */
+export const uncertainLabel = (item: Partial<Pick<OfficeItemDetail, 'verification'>>): string =>
+  checksNeverRan(item) ? NEVER_RAN_LABEL : INCOMPLETE_LABEL;
 
 /** LIVE-10: finished work the list itself marks as unconfirmed (its `verdict`), not failed. */
 export const cardUncertain = (item: Pick<OfficeItem, 'state'> & { verdict?: string | null }): boolean =>
@@ -74,13 +90,13 @@ export const isUndone = (item: Pick<OfficeItem, 'undone'> & { application?: { st
 export const UNDONE_LABEL = 'Undone';
 
 /**
- * The card's state words: "Never ran" instead of "Failed" when the checks were only
- * unconfirmed (the list's `verdict`), and "Undone" for checked work whose change Nick undid.
+ * The card's state words: "Never ran" or "Incomplete" (D-89) instead of "Failed" when the checks were
+ * unconfirmed, and "Undone" for checked work whose change Nick undid.
  */
 export const cardStateLabel = (
-  item: Pick<OfficeItem, 'state'> & { verdict?: string | null; undone?: OfficeItem['undone']; application?: { state?: string | null } | null }
+  item: Pick<OfficeItem, 'state'> & { verdict?: string | null; undone?: OfficeItem['undone']; application?: { state?: string | null } | null; verification?: OfficeItemDetail['verification'] }
 ): string => {
-  if (cardUncertain(item)) return UNCERTAIN_LABEL;
+  if (cardUncertain(item)) return uncertainLabel(item);
   if (item.state === 'done' && isUndone(item)) return UNDONE_LABEL;
   return stateLabel(item.state);
 };
@@ -107,7 +123,7 @@ export const undoneLine = (
 /** The detail header's state: only work whose checks passed may say "checked" (D-53). */
 export const detailStateLabel = (item: Pick<OfficeItemDetail, 'state' | 'verification' | 'review'> & { verdict?: string | null }): string => {
   if (item.state === 'done' && passed(item)) return 'Done and checked';
-  if (item.state === 'failed' && isUncertain(item)) return UNCERTAIN_LABEL;
+  if (item.state === 'failed' && isUncertain(item)) return uncertainLabel(item);
   return stateLabel(item.state);
 };
 
@@ -619,7 +635,7 @@ export const memberTooltip = (member: Pick<OfficeStaff, 'doing' | 'note'> & { pl
   return parts.length ? parts.join('\n') : undefined;
 };
 
-export type ReviewTeamState = 'Not started' | 'In progress' | 'Failed' | 'Passed' | typeof UNCERTAIN_LABEL;
+export type ReviewTeamState = 'Not started' | 'In progress' | 'Failed' | 'Passed' | 'Never ran' | 'Incomplete';
 
 type ReviewView = Pick<OfficeItemDetail, 'state' | 'verification' | 'review' | 'staff'> & {
   verdict?: string | null;
@@ -650,11 +666,11 @@ const openProblems = (view: ReviewView): Array<{ by: string; summary: string }> 
 
 /**
  * D-79 "Review Team": one status — Not started, In progress, Failed or Passed. (LIVE-10 keeps
- * "Never ran" for work whose checks never ran: that is not a failure.)
+ * "Never ran" or "Incomplete" (D-89) for work whose checks never ran or ran only in part: not a failure.)
  */
 export const reviewTeamState = (view: ReviewView): ReviewTeamState => {
   if (passed(view)) return 'Passed';
-  if (isFinished(view.state) && isUncertain(view)) return UNCERTAIN_LABEL;
+  if (isFinished(view.state) && isUncertain(view)) return uncertainLabel(view) as ReviewTeamState;
   if (failedChecks(view) || (isFinished(view.state) && view.state === 'failed')) return 'Failed';
   const started =
     view.state === 'in_review' ||

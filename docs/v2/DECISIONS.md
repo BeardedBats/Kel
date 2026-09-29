@@ -1053,3 +1053,13 @@ Build Update path of D-46..D-49 (candidate records, promote/review); Kel still n
 11. **Designer on HTML pages** only when there's no existing look or Nick asks for design.
 Per D-85, the validation runs (§4, step 12) are deferred: no blind-rating sessions for Nick unless the
 roles visibly underperform in use.
+
+## D-89 — Check wording: Never ran / Incomplete
+
+**Decided by Nick 2026-09-29.** Wherever Kel says checks were not fully done (work cards, the in-thread
+line, the done card, the detail panel and its Review Team, Activity, message details, and the engine's own
+sentences), it says **"Never ran"** only when the checks genuinely never ran, and **"Incomplete"** when some
+checks ran but not all, or their result could not be confirmed. Neither is ever called failed. Each place
+works out which case applies from its data (e.g. `verification.result` "not_run", or no check recorded);
+where the data cannot tell the two apart, it says "Incomplete". Replaces "Couldn't fully check", "not fully
+checked" and "not fully verified".

@@ -55,7 +55,7 @@ def _settled_title(status, verdict):
     if status == 'CLOSED':
         return {'VERIFIED': 'Kel finished — it passed its checks',
                 'FAILED': "Kel finished — it didn't pass its checks"}.get(
-                    verdict, 'Kel finished — not fully verified')
+                    verdict, 'Kel finished — checks incomplete')
     return _plain_state(status)
 
 

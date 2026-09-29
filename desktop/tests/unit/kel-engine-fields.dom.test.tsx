@@ -1,6 +1,6 @@
 /**
  * The renderer on the engine fields from the live audit (06ac92d: LIVE-3, LIVE-8, LIVE-10, LIVE-12,
- * FN-03, FN-06), as behaviour: the row card reads the list's `verdict` ("Never ran", not
+ * FN-03, FN-06), as behaviour: the row card reads the list's `verdict` ("Incomplete", not
  * "Failed") and `undone`; the detail uses the engine's own independence words, the Oracle's conclusion
  * and coverage, and marks an interrupted step; the new needs-you kinds answer "Try again" and open
  * Staff & models without sending anything; the Home brief says each `wait` plainly; Staff & models
@@ -119,12 +119,12 @@ describe('the row card reads the list’s own verdict (LIVE-10)', () => {
     return screen.getByTestId('kel-office-card');
   };
 
-  it('says "Never ran" for unconfirmed work, in the amber caution — never "Failed"', () => {
+  it('says "Incomplete" for unconfirmed work, in the amber caution — never "Failed"', () => {
     const shown = card({ ...BACKUP, finished_at: AT(8, 15), verdict: 'UNCERTAIN' });
-    expect(within(shown).getByTestId('kel-office-card-state').textContent).toBe('Never ran');
+    expect(within(shown).getByTestId('kel-office-card-state').textContent).toBe('Incomplete');
     expect(shown.className).toContain('is-uncertain');
     expect(shown.textContent).not.toContain('Failed');
-    expect(within(shown).getByRole('button', { name: /^Backup check, Never ran/ })).toBeTruthy();
+    expect(within(shown).getByRole('button', { name: /^Backup check, Incomplete/ })).toBeTruthy();
   });
 
   it('still says "Failed" when the checks failed', () => {
@@ -140,7 +140,7 @@ describe('the row card reads the list’s own verdict (LIVE-10)', () => {
     install();
     renderChat();
     const overflow = await screen.findByTestId('kel-office-overflow');
-    expect(overflow.getAttribute('aria-label')).toContain('Backup check (never ran)');
+    expect(overflow.getAttribute('aria-label')).toContain('Backup check (incomplete)');
   });
 });
 
