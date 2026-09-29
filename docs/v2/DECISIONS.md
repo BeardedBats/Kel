@@ -921,7 +921,7 @@ element positions frame by frame (no movement > 1 px after a transition ends).
 ## D-79 — Simplify the work-card detail panel
 
 **Decided by Nick 2026-09-29** (from an annotated screenshot of the panel). Goal: simplify.
-- **Header:** title with an "Open folder" button beside it (opens the project folder on the desktop).
+- **Header:** title with an **"Open"** button beside it (opens the project folder on the desktop).
   "Remove" top right. **No Undo** in the panel (Nick asks Kel instead). "Talk to Kel about this" moves
   to the bottom right.
 - **Status:** "Done and checked" becomes **"Complete"**; no "5 of 5", no finish time. Hovering "Complete"
@@ -935,4 +935,4 @@ element positions frame by frame (no movement > 1 px after a transition ends).
 - **Removed:** the Files changed section (a "View Diff Report" button comes later) and the footer text
   "Finished work stays at the top…".
 The same simplification applies to the phone bottom sheet and the in-thread result card where they
-repeat these parts. Engine data stays as is; this is presentation only.
+repeat these parts (the button is labelled "Open" everywhere). Engine data stays as is; this is presentation only.
