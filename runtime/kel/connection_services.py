@@ -16,7 +16,10 @@ way as one he picks from this list.
 - `to-confirm` — Kel does not know the address; the service tells Nick when it issues the credential.
 """
 
-# `credential` is what Nick has to go and get, in his words, shown before he is asked for a value.
+# `credential` is what Nick has to go and get, in his words.
+# `fields` (D-87) are the values the Connect form asks for, each with the service's own name for it; `name`
+# is the credential field the engine reads (`auth_for` in connections.py). `where` is one short line naming
+# where the value comes from, and `connect_label` the button for an account sign-in.
 KNOWN_SERVICES = (
     {
         'id': 'github',
@@ -29,6 +32,8 @@ KNOWN_SERVICES = (
         'docs_url': 'https://docs.github.com/rest',
         'test_endpoint': 'https://api.github.com/user',
         'credential': 'a personal access token with the scopes you want Kel to have',
+        'fields': ({'name': 'api_key', 'label': 'Personal access token', 'secret': True},),
+        'where': 'GitHub → Settings → Developer settings → Personal access tokens',
         'source': 'documented',
     },
     {
@@ -42,6 +47,8 @@ KNOWN_SERVICES = (
         'docs_url': 'https://docs.stripe.com/api',
         'test_endpoint': 'https://api.stripe.com/v1/account',
         'credential': 'a secret key from your Stripe account',
+        'fields': ({'name': 'api_key', 'label': 'Secret key', 'secret': True},),
+        'where': 'Stripe Dashboard → Developers → API keys',
         'source': 'documented',
     },
     {
@@ -55,6 +62,8 @@ KNOWN_SERVICES = (
         'docs_url': 'https://www.figma.com/developers/api',
         'test_endpoint': 'https://api.figma.com/v1/me',
         'credential': 'a personal access token from your Figma settings',
+        'fields': ({'name': 'api_key', 'label': 'Personal access token', 'secret': True},),
+        'where': 'Figma → Settings → Security → Personal access tokens',
         'source': 'documented',
     },
     {
@@ -68,6 +77,8 @@ KNOWN_SERVICES = (
         'docs_url': 'https://developer.clickup.com',
         'test_endpoint': 'https://api.clickup.com/api/v2/user',
         'credential': 'your personal ClickUp API token',
+        'fields': ({'name': 'api_key', 'label': 'API token', 'secret': True},),
+        'where': 'ClickUp → Settings → Apps → API Token',
         'source': 'documented',
     },
     {
@@ -81,6 +92,8 @@ KNOWN_SERVICES = (
         'docs_url': 'https://discord.com/developers/docs',
         'test_endpoint': 'https://discord.com/api/v10/users/@me',
         'credential': 'the bot token for the Discord bot you want Kel to use',
+        'fields': ({'name': 'token', 'label': 'Bot token', 'secret': True},),
+        'where': 'Discord Developer Portal → your app → Bot → Token',
         'source': 'documented',
     },
     {
@@ -98,6 +111,10 @@ KNOWN_SERVICES = (
         'credential': ('your own Google sign-in app — an OAuth client ID and secret of the "Desktop app" type '
                        'from Google Cloud Console. Then you choose Connect, sign in with Google in your browser, '
                        'and Kel keeps the token'),
+        'fields': ({'name': 'client_id', 'label': 'OAuth client ID', 'secret': False},
+                   {'name': 'client_secret', 'label': 'Client secret', 'secret': True}),
+        'where': 'Google Cloud Console → APIs & Services → Credentials → OAuth client (Desktop app)',
+        'connect_label': 'Connect with Google',
         'source': 'documented',
         'note': ('Kel can see the names and types of your Drive files — never their contents — and changes '
                  'nothing. Before Connect works, save the client ID as a credential named client_id and the '
@@ -116,6 +133,9 @@ KNOWN_SERVICES = (
         'test_endpoint': 'https://pitcherlist.com/wp-json/wp/v2/users/me',
         'credential': ('your Pitcher List username and a WordPress application password from your account, '
                        'saved as two credentials named username and password'),
+        'fields': ({'name': 'username', 'label': 'Username', 'secret': False},
+                   {'name': 'password', 'label': 'Application password', 'secret': True}),
+        'where': 'Your WordPress profile → Application Passwords',
         'source': 'assumed',
         'note': 'Kel assumes the standard WordPress address; change it if Pitcher List gave you a different one.',
     },
@@ -130,6 +150,7 @@ KNOWN_SERVICES = (
         'docs_url': '',
         'test_endpoint': '',
         'credential': 'the API credential from your Raptive account',
+        'fields': ({'name': 'api_key', 'label': 'API key', 'secret': True},),
         'source': 'to-confirm',
         'note': "Raptive's API address comes with your credential — paste it here and Kel will check it.",
     },

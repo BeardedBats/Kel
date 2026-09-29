@@ -374,6 +374,22 @@ class KnownServiceTests(unittest.TestCase):
         self.assertIn('never their contents', drive['note'])
         self.assertIn('changes nothing', drive['note'])
 
+    def test_every_known_service_names_the_fields_the_engine_reads(self):
+        # D-87: the Connect form asks only for these, under the service's own name for each; the field
+        # name must be one `auth_for` actually reads, or the credential would be stored and never sent.
+        for row in catalogue():
+            names = [field['name'] for field in row['fields']]
+            self.assertTrue(all(field['label'].strip() for field in row['fields']), row['id'])
+            if row['auth_method'] == 'basic':
+                self.assertEqual(names, ['username', 'password'], row['id'])
+            elif row['kind'] == 'oauth':
+                self.assertEqual(names, ['client_id', 'client_secret'], row['id'])
+                self.assertTrue(row['connect_label'], row['id'])
+            else:
+                self.assertEqual(len(names), 1, row['id'])
+                self.assertIn(names[0], ('access_token', 'api_key', 'token'), row['id'])
+            self.assertTrue(any(field['secret'] for field in row['fields']), row['id'])
+
     def test_a_known_service_can_be_added_as_a_connection_unchanged(self):
         row = entry('github')
         saved = self.connections.save(**{key: row[key] for key in CATALOGUE_FIELDS if key in row})

@@ -148,7 +148,46 @@ const KNOWN = [
     docs_url: 'https://docs.github.com/rest',
     test_endpoint: 'https://api.github.com/user',
     credential: 'a personal access token with the scopes you want Kel to have',
+    fields: [{ name: 'api_key', label: 'Personal access token', secret: true }],
+    where: 'GitHub → Settings → Developer settings → Personal access tokens',
     source: 'documented',
+  },
+  {
+    id: 'google-drive',
+    name: 'Google Drive',
+    kind: 'oauth',
+    base_url: 'https://www.googleapis.com/drive/v3',
+    auth_method: 'header',
+    auth_header: 'Authorization',
+    auth_prefix: 'Bearer ',
+    docs_url: 'https://developers.google.com/drive/api/reference/rest/v3',
+    test_endpoint: 'https://www.googleapis.com/drive/v3/about?fields=user',
+    credential: 'your own Google sign-in app',
+    fields: [
+      { name: 'client_id', label: 'OAuth client ID', secret: false },
+      { name: 'client_secret', label: 'Client secret', secret: true },
+    ],
+    where: 'Google Cloud Console → APIs & Services → Credentials → OAuth client (Desktop app)',
+    connect_label: 'Connect with Google',
+    source: 'documented',
+    note: 'Kel can see the names and types of your Drive files — never their contents — and changes nothing.',
+  },
+  {
+    id: 'pitcher-list',
+    name: 'Pitcher List',
+    kind: 'api_key',
+    base_url: 'https://pitcherlist.com/wp-json',
+    auth_method: 'basic',
+    auth_header: '',
+    auth_prefix: '',
+    docs_url: 'https://developer.wordpress.org/rest-api/',
+    test_endpoint: 'https://pitcherlist.com/wp-json/wp/v2/users/me',
+    credential: 'your Pitcher List username and a WordPress application password',
+    fields: [
+      { name: 'username', label: 'Username', secret: false },
+      { name: 'password', label: 'Application password', secret: true },
+    ],
+    source: 'assumed',
   },
   {
     id: 'raptive',
@@ -161,6 +200,7 @@ const KNOWN = [
     docs_url: '',
     test_endpoint: '',
     credential: 'the API credential from your Raptive account',
+    fields: [{ name: 'api_key', label: 'API key', secret: true }],
     source: 'to-confirm',
     note: "Raptive's API address comes with your credential — paste it here and Kel will check it.",
   },
@@ -285,6 +325,9 @@ const custody = {
    * V2-02: the shipped contract is "the shell uses the values it holds for one check and returns the
    * record". This stands in for the main process: it hands the engine what it holds, nothing more.
    */
+  /** V2-04b: the browser sign-in runs in the main process; the page only hears the outcome. */
+  oauthConnect: vi.fn(async (connectionId: string) => ({ id: connectionId, state: 'connected' })),
+  oauthRevoke: vi.fn(async (connectionId: string) => ({ id: connectionId, state: 'signed_out' })),
   testConnection: vi.fn(async (connectionId: string) => {
     const prefix = `connection:${connectionId}:`;
     const credentials: Record<string, string> = {};
@@ -320,6 +363,8 @@ beforeEach(() => {
   custody.remove.mockClear();
   custody.testConnection.mockClear();
   custody.runConnection.mockClear();
+  custody.oauthConnect.mockClear();
+  custody.oauthRevoke.mockClear();
   (window as unknown as { kelAPI: unknown }).kelAPI = {
     request: (route: string, body?: Record<string, unknown>) => {
       calls.push({ route, body: body ?? {} });
@@ -360,13 +405,30 @@ describe('Connections — the central management surface', () => {
     // ST-07: the row states the recorded check, so an untested credential says so.
     expect(screen.getByText('Ready — not tested')).toBeTruthy();
     expect(screen.getByText(/Needs a credential/)).toBeTruthy();
-    expect(screen.getByText('1 ready · 1 needing a credential')).toBeTruthy();
   });
 
-  it('starts empty and says what a connection buys you', async () => {
+  it('D-87: starts with one Connect button per known service and a quiet Other service', async () => {
     renderPage();
-    expect(await screen.findByText('No connections yet.')).toBeTruthy();
-    expect(screen.getByText(/Kel can work with it directly/)).toBeTruthy();
+    const grid = (await screen.findByRole('button', { name: 'GitHub' })).closest('.kel-connect-grid');
+    expect(grid).toBeTruthy();
+    expect(Array.from(grid!.querySelectorAll('button')).map((button) => button.textContent)).toEqual([
+      'GitHub',
+      'Google Drive',
+      'Pitcher List',
+      'Raptive',
+    ]);
+    expect(screen.getByRole('button', { name: 'Other service' })).toBeTruthy();
+    // The old expanding list and its explanations are gone.
+    expect(screen.queryByText('Start with a known service')).toBeNull();
+    expect(screen.queryByText('No connections yet.')).toBeNull();
+  });
+
+  it('D-87: a connected known service leaves the Connect buttons', async () => {
+    rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready' })];
+    renderPage();
+    expect(await screen.findByText('Connect another service')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'GitHub' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Raptive' })).toBeTruthy();
   });
 
   it('says so when this computer holds a credential the engine has no record of', async () => {
@@ -381,8 +443,7 @@ describe('Connections — the central management surface', () => {
 
   it('adds a service through the form', async () => {
     renderPage();
-    // The empty state offers the same action as the card header, so take the first of the two.
-    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.click(await screen.findByText('Other service'));
     fireEvent.change(screen.getByLabelText('Service name'), { target: { value: 'Figma' } });
     fireEvent.change(screen.getByLabelText('API address'), {
       target: { value: 'https://api.figma.com' },
@@ -397,7 +458,7 @@ describe('Connections — the central management surface', () => {
 
   it('repeats the engine sentence when it refuses a connection', async () => {
     renderPage();
-    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.click(await screen.findByText('Other service'));
     fireEvent.change(screen.getByLabelText('Service name'), { target: { value: 'Figma' } });
     fireEvent.change(screen.getByLabelText('API address'), { target: { value: 'api.figma.com' } });
     fireEvent.click(screen.getByText('Add connection'));
@@ -409,7 +470,7 @@ describe('Connections — the central management surface', () => {
 
   it('will not even ask the engine to save an unnamed service', async () => {
     renderPage();
-    fireEvent.click((await screen.findAllByText('Add a service'))[0]);
+    fireEvent.click(await screen.findByText('Other service'));
     fireEvent.change(screen.getByLabelText('Service name'), { target: { value: '  ' } });
     expect((screen.getByText('Add connection') as HTMLButtonElement).disabled).toBe(true);
     expect(calls.some((call) => call.body.action === 'save')).toBe(false);
@@ -418,7 +479,7 @@ describe('Connections — the central management surface', () => {
   it('stores a credential in the OS store and never shows the value again', async () => {
     rows = [row('stripe', 'Stripe')];
     renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(await screen.findByText('Add credential'));
     const field = (await screen.findByLabelText('Header name')) as HTMLInputElement;
     expect(field.value).toBe('Authorization');
     expect(field.closest('.kel-connection-configured-row')).toBeTruthy();
@@ -430,9 +491,7 @@ describe('Connections — the central management surface', () => {
     expect(stored).toEqual(['connection:stripe:api_key=sk_live_4242']);
     expect(calls.every((call) => call.route === '/api/connections')).toBe(true);
     expect(JSON.stringify(calls)).not.toContain('sk_live_4242');
-    expect(
-      await screen.findByText(/is ready — the credential is in this computer's secure store/)
-    ).toBeTruthy();
+    expect(await screen.findByText('Stripe is connected.')).toBeTruthy();
     // The proof that matters: it is not in the page any more, in state or in the DOM.
     expect(document.body.innerHTML).not.toContain('sk_live_4242');
     expect(document.querySelectorAll('input[type="password"]').length).toBe(0);
@@ -442,18 +501,18 @@ describe('Connections — the central management surface', () => {
     rows = [row('stripe', 'Stripe')];
     syncFails = true; // the metadata write does not land; the value is still in the OS store
     renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(await screen.findByText('Add credential'));
     fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
     fireEvent.click(screen.getByText('Save credential'));
     await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));
     expect(await screen.findByText(/Kel did not record it back/)).toBeTruthy();
-    expect(screen.queryByText(/Kel has recorded it/)).toBeNull();
+    expect(screen.queryByText('Stripe is connected.')).toBeNull();
   });
 
   it('keeps the fixed Authorization header read-only for bearer credentials', async () => {
     rows = [row('notion', 'Notion', { auth_method: 'bearer', auth_header: '' })];
     renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(await screen.findByText('Add credential'));
     const header = screen.getByLabelText('Header name') as HTMLInputElement;
     expect(header.value).toBe('Authorization');
     expect(header.readOnly).toBe(true);
@@ -463,37 +522,20 @@ describe('Connections — the central management surface', () => {
     expect(calls.some((call) => call.body.action === 'save')).toBe(false);
   });
 
-  it('removes a stored credential and clears the engine record with it', async () => {
+  it('asks before disconnecting, then removes the value and the record', async () => {
     rows = [
       row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
     ];
     renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
-    fireEvent.click(screen.getByText('More actions'));
-    fireEvent.click(screen.getByText('Remove credential'));
-    await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
-    expect(
-      calls.filter((call) => call.body.action === 'delete_credential' && call.body.id === 'stripe')
-    ).toHaveLength(1); // the shell routes the metadata once; the page does not double-post it
-    expect(await screen.findByText(/The stored credential for Stripe is gone/)).toBeTruthy();
-    expect(await screen.findByText(/Needs a credential/)).toBeTruthy();
-  });
-
-  it('asks before removing a connection, then removes the value and the record', async () => {
-    rows = [
-      row('stripe', 'Stripe', { has_credentials: true, state: 'ready', credential_fields: ['api_key'] }),
-    ];
-    renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
-    fireEvent.click(screen.getByText('Remove service'));
-    expect(await screen.findByText('Confirm remove')).toBeTruthy();
-    fireEvent.click(screen.getByText('Confirm remove'));
+    fireEvent.click(await screen.findByText('Disconnect'));
+    expect(custody.remove).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByText('Confirm disconnect'));
     await waitFor(() => expect(custody.remove).toHaveBeenCalledWith('connection:stripe'));
     await waitFor(() =>
       expect(calls.some((call) => call.body.action === 'remove' && call.body.id === 'stripe')).toBe(true)
     );
-    expect(await screen.findByText(/Stripe is removed\./)).toBeTruthy();
-    expect(await screen.findByText('No connections yet.')).toBeTruthy();
+    expect(await screen.findByText('Stripe is disconnected.')).toBeTruthy();
+    expect(await screen.findByText('Connect a service')).toBeTruthy();
   });
 
   it('checks a connection with the stored credential and reports what came back', async () => {
@@ -514,8 +556,10 @@ describe('Connections — the central management surface', () => {
     // page only ever sees the record, and it says what happened in words.
     const check = calls.find((call) => call.body.action === 'test');
     expect(check?.body.credentials).toEqual({ api_key: 'sk_live_4242' });
-    expect(await screen.findByText(/Working — checked/)).toBeTruthy();
-    expect(await screen.findByText(/The service answered 200\./)).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId('connection-row-status').textContent).toBe('Working'));
+    expect(screen.getByTestId('connection-row-status').getAttribute('title')).toMatch(
+      /Working — checked .*The service answered 200\./
+    );
     expect(document.body.innerHTML).not.toContain('sk_live_4242');
   });
 
@@ -542,59 +586,120 @@ describe('Connections — the central management surface', () => {
   it('asks for the credential field the framework names for that kind', async () => {
     rows = [row('figma', 'Figma', { kind: 'oauth', has_credentials: false })];
     renderPage();
-    fireEvent.click(await screen.findByText('Add a service'));
-    // The kind a person picks, and the words for it, come from the engine's templates rather than from a
-    // copy kept in the renderer — so the two cannot drift apart.
-    const select = screen.getByLabelText('How Kel signs in') as HTMLSelectElement;
+    fireEvent.click(await screen.findByText('Other service'));
+    // The kind a person picks comes from the engine's templates rather than from a copy kept in the
+    // renderer — so the two cannot drift apart.
+    const select = screen.getByLabelText('Credential type') as HTMLSelectElement;
     expect(Array.from(select.options).map((option) => option.textContent)).toEqual([
-      'API key — a key Kel sends with its requests',
-      'Account authorization — you sign in and Kel keeps the token',
-      'Bot or webhook — a bot token or a webhook address',
+      'API key',
+      'Account authorization',
+      'Bot or webhook',
     ]);
   });
 
-  it('sets up a known service in one step', async () => {
+  it('D-87: Connect to GitHub fills in what Kel knows and asks only for the token', async () => {
     renderPage();
-    fireEvent.click(await screen.findByText('Add a service'));
-    fireEvent.click(await screen.findByText('Set up GitHub'));
-    // The form arrives filled in: the address, the header, and how GitHub wants the token presented.
-    expect((screen.getByLabelText('Service name') as HTMLInputElement).value).toBe('GitHub');
-    expect((screen.getByLabelText('API address') as HTMLInputElement).value).toBe(
-      'https://api.github.com'
+    fireEvent.click(await screen.findByRole('button', { name: 'GitHub' }));
+    expect(await screen.findByText('Connect to GitHub')).toBeTruthy();
+    // Only the value Nick supplies, under GitHub's own name for it — no address, header or test fields.
+    const token = screen.getByLabelText('Personal access token') as HTMLInputElement;
+    expect(token.type).toBe('password');
+    expect(screen.queryByLabelText('Service name')).toBeNull();
+    expect(screen.queryByLabelText('API address')).toBeNull();
+    expect(screen.queryByLabelText('Header name')).toBeNull();
+    expect(screen.getByTestId('connect-where').textContent).toBe(
+      'GitHub → Settings → Developer settings → Personal access tokens'
     );
-    expect((screen.getByLabelText('Header name') as HTMLInputElement).value).toBe('Authorization');
-    expect(
-      (screen.getByLabelText('How the credential is presented') as HTMLSelectElement).value
-    ).toBe('custom');
-    expect((screen.getByLabelText('The word before the credential') as HTMLInputElement).value).toBe(
-      'Bearer '
-    );
-    fireEvent.click(screen.getByText('Add connection'));
-    await waitFor(() => expect(calls.some((call) => call.body.action === 'save')).toBe(true));
+    const connect = screen.getByRole('button', { name: 'Connect' }) as HTMLButtonElement;
+    expect(connect.disabled).toBe(true);
+    fireEvent.change(token, { target: { value: 'ghp_synthetic' } });
+    fireEvent.click(connect);
+    await waitFor(() => expect(custody.set).toHaveBeenCalledWith('connection:github', 'api_key', 'ghp_synthetic'));
+    // The catalogue's row is what gets saved: address, header, presentation, test address, docs.
     expect(calls.find((call) => call.body.action === 'save')?.body).toMatchObject({
       name: 'GitHub',
+      kind: 'api_key',
       base_url: 'https://api.github.com',
+      auth_method: 'header',
       auth_header: 'Authorization',
       auth_prefix: 'Bearer ',
+      test_endpoint: 'https://api.github.com/user',
+      docs_url: 'https://docs.github.com/rest',
     });
+    expect(await screen.findByText('GitHub is connected.')).toBeTruthy();
+    // The value went to custody only — never to the engine, never back into the page.
+    expect(JSON.stringify(calls)).not.toContain('ghp_synthetic');
+    expect(document.body.innerHTML).not.toContain('ghp_synthetic');
+    expect(document.querySelectorAll('input[type="password"]').length).toBe(0);
   });
 
-  it('says what to fetch and how sure Kel is about the address', async () => {
+  it('D-87: Google Drive asks for the OAuth client ID and secret, then connects with Google', async () => {
     renderPage();
-    fireEvent.click(await screen.findByText('Add a service'));
-    expect(await screen.findByText(/Kel needs a personal access token/)).toBeTruthy();
-    expect(
-      await screen.findByText(/Kel knows this address from the service’s own documentation\./)
-    ).toBeTruthy();
-    // Raptive publishes no API address: Kel says so instead of inventing one.
-    expect(await screen.findByText(/Kel does not know this address/)).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Google Drive' }));
+    const clientId = (await screen.findByLabelText('OAuth client ID')) as HTMLInputElement;
+    const secret = screen.getByLabelText('Client secret') as HTMLInputElement;
+    expect(clientId.type).toBe('text');
+    expect(secret.type).toBe('password');
+    fireEvent.change(clientId, { target: { value: 'synthetic-id' } });
+    fireEvent.change(secret, { target: { value: 'synthetic-secret' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect with Google' }));
+    await waitFor(() => expect(custody.oauthConnect).toHaveBeenCalledWith('google-drive'));
+    expect(custody.set).toHaveBeenCalledWith('connection:google-drive', 'client_id', 'synthetic-id');
+    expect(custody.set).toHaveBeenCalledWith('connection:google-drive', 'client_secret', 'synthetic-secret');
+    expect(await screen.findByText('Google Drive is connected.')).toBeTruthy();
+    // The service's own explanation of what Kel can see is not repeated on the page.
+    expect(screen.queryByText(/never their contents/)).toBeNull();
   });
 
-  it('shows a known service’s own note beside what it needs', async () => {
-    rows = [row('github', 'GitHub', { has_credentials: true, state: 'ready', can_test: true })];
+  it('D-87: Pitcher List asks for a username and an application password', async () => {
     renderPage();
-    const note = await screen.findByText(/Raptive's API address comes with your credential/);
-    expect(note.closest('.kel-connections-available')).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Pitcher List' }));
+    expect(((await screen.findByLabelText('Username')) as HTMLInputElement).type).toBe('text');
+    expect((screen.getByLabelText('Application password') as HTMLInputElement).type).toBe('password');
+    expect(screen.queryByTestId('connect-where')).toBeNull();
+  });
+
+  it('D-87: Raptive has no known address, so the address is a field', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Raptive' }));
+    const address = (await screen.findByLabelText('API address')) as HTMLInputElement;
+    fireEvent.change(screen.getByLabelText('API key'), { target: { value: 'synthetic-key' } });
+    const connect = screen.getByRole('button', { name: 'Connect' }) as HTMLButtonElement;
+    expect(connect.disabled).toBe(true);
+    fireEvent.change(address, { target: { value: 'https://api.raptive.example' } });
+    fireEvent.click(connect);
+    await waitFor(() =>
+      expect(calls.find((call) => call.body.action === 'save')?.body).toMatchObject({
+        name: 'Raptive',
+        base_url: 'https://api.raptive.example',
+      })
+    );
+  });
+
+  it('D-87: a known service without its credential reopens its Connect form', async () => {
+    rows = [row('github', 'GitHub')];
+    renderPage();
+    fireEvent.click(await screen.findByText('Add credential'));
+    expect(await screen.findByText('Connect to GitHub')).toBeTruthy();
+    expect(screen.getByLabelText('Personal access token')).toBeTruthy();
+  });
+
+  it('D-87: says nothing about how Kel uses a service', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Raptive' }));
+    await screen.findByText('Connect to Raptive');
+    const text = document.body.textContent ?? '';
+    for (const meta of [
+      'what Kel needs to reach the service',
+      'Kel calls this to check the credential',
+      'The services Kel can use. You keep the credential.',
+      'Kel knows this address',
+      'Kel does not know this address',
+      'Kel needs',
+      "Raptive's API address comes with your credential",
+    ]) {
+      expect(text).not.toContain(meta);
+    }
   });
 
   it('does one thing with a service when Nick asks', async () => {
@@ -618,7 +723,8 @@ describe('Connections — the central management surface', () => {
     fireEvent.click((await screen.findAllByText('Run'))[1]);
     // Nothing is sent yet: the question comes first.
     expect(custody.runConnection).not.toHaveBeenCalled();
-    expect(screen.getByText(/This changes something in GitHub\. Kel asks before it changes anything\./)).toBeTruthy();
+    expect(screen.getByText(/This changes something in GitHub\./)).toBeTruthy();
+    expect(screen.queryByText(/Kel asks before it changes anything/)).toBeNull();
     fireEvent.click(screen.getByText('Yes, run it'));
     await waitFor(() =>
       expect(custody.runConnection).toHaveBeenCalledWith('github', 'github-comment', {}, true)
@@ -628,7 +734,7 @@ describe('Connections — the central management surface', () => {
   it('never talks to the model-provider route', async () => {
     rows = [row('stripe', 'Stripe')];
     renderPage();
-    fireEvent.click(await screen.findByText('Edit'));
+    fireEvent.click(await screen.findByText('Add credential'));
     fireEvent.change(await screen.findByLabelText('Credential'), { target: { value: 'sk_live_4242' } });
     fireEvent.click(screen.getByText('Save credential'));
     await waitFor(() => expect(custody.set).toHaveBeenCalledTimes(1));

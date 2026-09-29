@@ -52,14 +52,12 @@ import SettingsCreateMenu from '@renderer/components/base/SettingsCreateMenu';
 import JsonImportModal from '@renderer/pages/settings/components/JsonImportModal';
 import { KelDataCard, BACKUP_EXCLUDES } from '@renderer/components/kel/KelDataCard';
 import {
+  connectFields,
   connectionRowStatus,
-  draftFromKnownService,
-  knownServiceCredentialText,
-  purposePlaceholder,
 } from '@renderer/pages/kel/connections';
 import { plainFailureToast } from '@renderer/hooks/mcp/useMcpConnection';
 import type { IMcpServer } from '@/common/config/storage';
-import type { KelKnownService } from '@renderer/components/kel/kelApi';
+import { knownServiceDraft, type KelKnownService } from '@renderer/components/kel/kelApi';
 
 afterEach(() => {
   cleanup();
@@ -180,23 +178,27 @@ const drive: KelKnownService = {
   note: 'Kel can see the names and types of your Drive files — never their contents — and changes nothing. Before Connect works, save the client ID as a credential named client_id and the secret as one named client_secret.',
 };
 
-describe('Connections (ST-07, ST-10, ST-11, ST-12)', () => {
-  it('ST-10: Google Drive says plainly what it needs, in the engine’s words', () => {
-    expect(knownServiceCredentialText(drive)).toBe(drive.credential);
-    expect(knownServiceCredentialText(drive)).toMatch(/OAuth client ID and secret/);
-    expect(knownServiceCredentialText({ credential: 'a key from your account.' })).toBe('a key from your account');
+describe('Connections (ST-07, ST-10, ST-11)', () => {
+  it('ST-10 / D-87: Google Drive asks for its client ID and secret, under those names', () => {
+    const fields = [
+      { name: 'client_id', label: 'OAuth client ID', secret: false },
+      { name: 'client_secret', label: 'Client secret', secret: true },
+    ];
+    expect(connectFields({ ...drive, fields }, null)).toEqual(fields);
   });
 
-  it('ST-11: a template note never lands in the purpose field', () => {
-    const draft = draftFromKnownService(drive);
-    expect(draft.notes).toBe('');
-    expect(draft.service_hint).toBe(drive.note);
-    expect(draft.service_hint).toMatch(/never their contents/);
+  it('ST-11 / D-87: a known service fills the form but never writes its note as the purpose', () => {
+    expect(knownServiceDraft(drive).notes).toBe('');
   });
 
-  it('ST-12: the purpose placeholder fits the service', () => {
-    expect(purposePlaceholder('google-drive')).toBe('e.g. see which files are in my Drive');
-    expect(purposePlaceholder(undefined)).toMatch(/^e\.g\./);
+  it('D-87: an older catalogue without field rows still gets labelled fields', () => {
+    expect(connectFields({ ...drive, kind: 'api_key', auth_method: 'basic' }, null).map((field) => field.label)).toEqual([
+      'Username',
+      'Password',
+    ]);
+    expect(
+      connectFields({ ...drive, kind: 'bot' }, { templates: [{ id: 'bot', label: 'Bot or webhook', hint: '', credential_field: 'token', credential_label: 'Bot token', check: '' }] })
+    ).toEqual([{ name: 'token', label: 'Bot token', secret: true }]);
   });
 
   it('ST-07: the row shows the recorded check result', () => {

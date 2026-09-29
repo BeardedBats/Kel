@@ -8,26 +8,18 @@ import connectionIcon from '@renderer/assets/figma/nav-connections.svg';
  * a credential value is shown after it is saved — the value goes to the OS-backed store in the main
  * process, and the engine only ever records that one exists.
  *
- * V2-02 adds Test connection: the shell decrypts the value, the engine makes one request, and this
- * page shows what came back — working, refused, nothing there, not reachable, no answer.
- *
- * V2-03 adds the known services: the eight services Nick uses come with their address, the header the
- * credential goes in, where the documentation is, and what he has to go and fetch. Picking one fills
- * the form in; adding it by hand works exactly the same way.
+ * D-87: the page is "Connect to X". One button per known service; choosing one fills in everything the
+ * catalogue (`connection_services.py`) knows and asks only for the values Nick has to supply, under the
+ * service's own name for each. The generic form for any other API sits behind a quiet "Other service".
+ * Connected services are simple rows: name, state, Test, Disconnect.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  KelButton,
-  KelCard,
-  KelEmpty,
-  KelLoading,
-  formatWhen,
-} from '@renderer/components/kel/KelPrimitives';
+import { Baseball, Figma, Github, Google } from '@icon-park/react';
+import { KelButton, KelCard, KelLoading, formatWhen } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import {
   CONNECTION_CHECK_LABELS,
-  KNOWN_SERVICE_SOURCE_LABELS,
   connectionAnswerText,
   connectionCheckSentence,
   connectionCredentialField,
@@ -40,10 +32,10 @@ import {
   type KelConnectionList,
   type KelConnectionRun,
   type KelKnownService,
+  type KelKnownServiceField,
 } from '@renderer/components/kel/kelApi';
 
 interface Draft {
-  id?: string;
   name: string;
   kind: KelConnection['kind'];
   base_url: string;
@@ -54,10 +46,6 @@ interface Draft {
   docs_url: string;
   test_endpoint: string;
   notes: string;
-  /** The known service this draft started from (UI only — picks the purpose placeholder and hint). */
-  service_id?: string;
-  /** The service's own note, shown as a hint instead of being written into the purpose field. */
-  service_hint?: string;
 }
 
 const EMPTY_DRAFT: Draft = {
@@ -72,7 +60,7 @@ const EMPTY_DRAFT: Draft = {
   notes: '',
 };
 
-const draftFor = (connection: KelConnection): Draft => ({
+const draftFor = (connection: KelConnection): Draft & { id: string } => ({
   id: connection.id,
   name: connection.name,
   kind: connection.kind,
@@ -96,43 +84,41 @@ const credentialDraftFor = (connection: KelConnection, list: KelConnectionList) 
 });
 
 /**
- * ST-10: what the person has to go and get, in the engine's own words (`connection_services.py`), so
- * the page and the catalogue cannot disagree. For Google Drive that is the person's own Google
- * sign-in app (client ID and secret) before Connect works — said plainly, not "you just sign in".
+ * D-87: the values Nick supplies for a known service, in the catalogue's words. A catalogue without
+ * field rows (an older engine) still gets a labelled field from the framework's template.
  */
-export const knownServiceCredentialText = (service: Pick<KelKnownService, 'credential'>): string =>
-  service.credential.trim().replace(/\.$/, '');
-
-const knownServiceHint = (service: KelKnownService): string | undefined => service.note || undefined;
-
-/** ST-11: a known service fills the form, but its note is a hint — never the purpose the person writes. */
-export const draftFromKnownService = (service: KelKnownService): Draft => ({
-  ...knownServiceDraft(service),
-  notes: '',
-  service_id: service.id,
-  service_hint: knownServiceHint(service),
-});
-
-/** ST-12: the purpose field's example matches the service being set up. */
-const PURPOSE_PLACEHOLDERS: Record<string, string> = {
-  // Examples of limits a person might set, drawn from what Kel can actually do there (reads only).
-  'google-drive': 'e.g. see which files are in my Drive',
-  stripe: 'e.g. look up customers only',
-  github: 'e.g. read my notifications',
-  discord: 'e.g. check which bot Kel uses',
-  clickup: 'e.g. check which account Kel uses',
-  figma: 'e.g. check which account Kel uses',
-  'pitcher-list': 'e.g. read the latest posts',
-  raptive: 'e.g. read ad earnings only',
+export const connectFields = (
+  service: KelKnownService,
+  list: Pick<KelConnectionList, 'templates'> | null
+): KelKnownServiceField[] => {
+  if (service.fields?.length) return service.fields;
+  if (service.auth_method === 'basic') {
+    return [
+      { name: 'username', label: 'Username', secret: false },
+      { name: 'password', label: 'Password', secret: true },
+    ];
+  }
+  return [
+    {
+      name: connectionCredentialField(list, service.kind),
+      label: connectionTemplate(list, service.kind)?.credential_label || 'Credential',
+      secret: true,
+    },
+  ];
 };
-export const purposePlaceholder = (serviceId?: string): string =>
-  (serviceId && PURPOSE_PLACEHOLDERS[serviceId]) || 'e.g. what Kel may do with this service';
 
 /** ST-07: the row states the recorded check, not just that a credential exists. */
 export const connectionRowStatus = (
-  connection: Pick<KelConnection, 'has_credentials' | 'last_test_state' | 'last_test_at'>
+  connection: Pick<KelConnection, 'has_credentials' | 'last_test_state' | 'last_test_at'> &
+    Partial<Pick<KelConnection, 'kind' | 'auth_state'>>
 ): { label: string; state: string } => {
   if (!connection.has_credentials) return { label: 'Needs a credential', state: 'needs-credential' };
+  if (connection.kind === 'oauth' && connection.auth_state && connection.auth_state !== 'connected') {
+    return {
+      label: connection.auth_state === 'needs_reconnect' ? 'Sign-in expired' : 'Not signed in',
+      state: 'needs-credential',
+    };
+  }
   if (connection.last_test_at && connection.last_test_state) {
     return {
       label: CONNECTION_CHECK_LABELS[connection.last_test_state] ?? 'Checked',
@@ -140,6 +126,25 @@ export const connectionRowStatus = (
     };
   }
   return { label: 'Ready — not tested', state: 'ready' };
+};
+
+/** Service icons the app already ships (IconPark, monochrome); anything else gets the neutral glyph. */
+const SERVICE_ICONS: Record<string, React.ComponentType<Record<string, unknown>>> = {
+  github: Github,
+  figma: Figma,
+  'google-drive': Google,
+  'pitcher-list': Baseball,
+};
+
+const ServiceGlyph: React.FC<{ id: string }> = ({ id }) => {
+  const Icon = SERVICE_ICONS[id];
+  return Icon ? (
+    <span className="kel-connect-glyph" aria-hidden="true">
+      <Icon theme="outline" size={16} fill="currentColor" strokeWidth={3} />
+    </span>
+  ) : (
+    <img className="kel-connect-glyph" src={connectionIcon} alt="" />
+  );
 };
 
 /** The three things a person can mean by "how the credential is presented". */
@@ -153,13 +158,11 @@ const AUTH_METHODS: Array<{ id: KelConnection['auth_method']; label: string }> =
   { id: 'basic', label: 'Username and password' },
 ];
 
-/** How a person reads this connection's state — derived, never stored. */
-const stateSentence = (connection: KelConnection): string => {
-  if (!connection.has_credentials) return 'Needs a credential';
-  if (connection.last_test_state === 'ok') return 'Ready — checked and working';
-  if (connection.last_test_state === 'refused') return 'Ready, but the check was refused';
-  return 'Ready — Kel has a credential';
-};
+interface Connecting {
+  service: KelKnownService;
+  values: Record<string, string>;
+  address: string;
+}
 
 const Connections: React.FC = () => {
   const [list, setList] = useState<KelConnectionList | null>(null);
@@ -167,6 +170,7 @@ const Connections: React.FC = () => {
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState<Connecting | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [credentialDraft, setCredentialDraft] = useState<{
     id: string;
@@ -177,7 +181,7 @@ const Connections: React.FC = () => {
     headerEditable: boolean;
     value: string;
   } | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [confirmDisconnect, setConfirmDisconnect] = useState<string | null>(null);
   const [known, setKnown] = useState<KelKnownService[]>([]);
   const [actionsByConnection, setActionsByConnection] = useState<Record<string, KelConnectionAction[]>>(
     {}
@@ -201,12 +205,10 @@ const Connections: React.FC = () => {
     // engine's truth, it just cannot reconcile a disagreement.
     const shell = await window.kelAPI?.credentials?.connectionStatus?.().catch((): undefined => undefined);
     setHeldByShell(shell ?? null);
-    // The services Kel already knows how to talk to. Best effort too: without them Nick types the
-    // addresses himself, which is exactly what an unknown service needs anyway.
+    // The services Kel already knows. Best effort: without them "Other service" still works.
     const services = await kelConnections.knownServices().catch((): null => null);
     setKnown(services?.services ?? []);
-    // V2-04: what Kel can do with the services that are actually usable. Best effort again — a connection
-    // without a credential has nothing Kel can do yet, and the page still works without this.
+    // V2-04: what Kel can do with the services that are actually usable. Best effort again.
     const usable = current.filter((item) => item.has_credentials);
     const found = await Promise.all(
       usable.map(async (item) => {
@@ -226,46 +228,94 @@ const Connections: React.FC = () => {
     if (draftOpen) document.getElementById('kel-connection-name')?.focus();
   }, [draftOpen]);
 
-  const connections = useMemo(() => list?.connections ?? [], [list]);
+  const connectingId = connecting?.service.id;
+  useEffect(() => {
+    if (connectingId) document.querySelector<HTMLInputElement>('.kel-connect-form input')?.focus();
+  }, [connectingId]);
 
-  /** The connections Kel could actually use: the ones with a credential the shell holds. */
-  const usable = useMemo(
-    () => connections.filter((connection) => connection.has_credentials),
-    [connections]
-  );
+  const connections = useMemo(() => list?.connections ?? [], [list]);
 
   /** The ones with something Kel can actually do, so the card never lists an empty service. */
   const doable = useMemo(
-    () => usable.filter((connection) => (actionsByConnection[connection.id] ?? []).length > 0),
-    [usable, actionsByConnection]
+    () =>
+      connections.filter(
+        (connection) => connection.has_credentials && (actionsByConnection[connection.id] ?? []).length > 0
+      ),
+    [connections, actionsByConnection]
   );
 
-  /** The known services Kel can add with one click — the ones not already connected. */
+  /** The known services still to connect — the ones with no connection row yet. */
   const addable = useMemo(
     () => known.filter((service) => !connections.some((connection) => connection.id === service.id)),
     [known, connections]
   );
+
+  const knownById = useMemo(() => new Map(known.map((service) => [service.id, service])), [known]);
+
+  const startConnect = useCallback((service: KelKnownService) => {
+    setDraft(null);
+    setNote(null);
+    setConnecting({ service, values: {}, address: '' });
+  }, []);
+
+  /**
+   * D-87: connect a known service. Save the catalogue's row, hand each value to the shell's custody (the
+   * value never goes to the engine), then — for an account sign-in — start the browser sign-in.
+   */
+  const connectService = useCallback(async () => {
+    const pending = connecting;
+    if (!pending) return;
+    const { service, values, address } = pending;
+    setBusy(true);
+    setNote(null);
+    try {
+      const custody = window.kelAPI?.credentials;
+      if (!custody) throw new Error('Storing credentials is only available in the Kel app.');
+      const existing = connections.find((item) => item.id === service.id);
+      const base = knownServiceDraft(service);
+      const saved = await kelConnections.save({
+        ...base,
+        ...(existing ? { id: existing.id } : {}),
+        base_url: service.base_url || address.trim(),
+      });
+      for (const field of connectFields(service, list)) {
+        await custody.set(connectionCustodyKey(saved.id), field.name, values[field.name] ?? '');
+      }
+      setConnecting(null);
+      if (service.kind === 'oauth' && custody.oauthConnect) {
+        const outcome = await custody.oauthConnect(saved.id);
+        await load();
+        setNote(
+          outcome?.state === 'connected'
+            ? `${service.name} is connected.`
+            : String(outcome?.note ?? 'The sign-in did not finish.')
+        );
+        return;
+      }
+      await load();
+      const listed = await kelConnections.list().catch((): null => null);
+      const recorded = Boolean(listed?.connections?.find((item) => item.id === saved.id)?.has_credentials);
+      setNote(
+        recorded
+          ? `${service.name} is connected.`
+          : 'The credential is stored, but Kel did not record it back — connect again before relying on it.'
+      );
+    } catch (err) {
+      setNote(failureSentence(err, 'That did not go through — check the details and try again.'));
+    } finally {
+      setBusy(false);
+    }
+  }, [connecting, connections, list, load]);
 
   const saveConnection = useCallback(async () => {
     if (!draft) return;
     setBusy(true);
     setNote(null);
     try {
-      const saved = await kelConnections.save({
-        id: draft.id,
-        name: draft.name,
-        kind: draft.kind,
-        base_url: draft.base_url,
-        auth_method: draft.auth_method,
-        auth_header: draft.auth_header,
-        auth_prefix: draft.auth_prefix,
-        docs_url: draft.docs_url,
-        test_endpoint: draft.test_endpoint,
-        notes: draft.notes,
-      });
+      const saved = await kelConnections.save({ ...draft });
       setDraft(null);
       await load();
-      setNote(`${saved.name} is saved. Add its credential and Kel can start using it.`);
+      setNote(`${saved.name} is saved.`);
     } catch (err) {
       setNote(failureSentence(err, 'That did not go through — check the details and try again.'));
     } finally {
@@ -294,8 +344,8 @@ const Connections: React.FC = () => {
       const recorded = Boolean(listed?.connections?.find((item) => item.id === pending.id)?.has_credentials);
       setNote(
         recorded
-          ? `${pending.name} is ready — the credential is in this computer's secure store and Kel has recorded it.`
-          : `The credential is stored, but Kel did not record it back — save it again before relying on it.`
+          ? `${pending.name} is connected.`
+          : 'The credential is stored, but Kel did not record it back — save it again before relying on it.'
       );
     } catch (err) {
       setNote(failureSentence(err, 'Kel could not store that credential — try again.'));
@@ -303,35 +353,6 @@ const Connections: React.FC = () => {
       setBusy(false);
     }
   }, [credentialDraft, list, load]);
-
-  const forgetCredential = useCallback(
-    async (connection: KelConnection) => {
-      setBusy(true);
-      setNote(null);
-      try {
-        const custody = window.kelAPI?.credentials;
-        if (!custody) throw new Error('Storing credentials is only available in the Kel app.');
-        await custody.remove(connectionCustodyKey(connection.id));
-        await load();
-        // Honest verification: the custody delete also clears the engine's record of the credential.
-        // If that did not land, say so instead of claiming the connection is clean.
-        const listed = await kelConnections.list().catch((): null => null);
-        const stillRecorded = Boolean(
-          listed?.connections?.find((item) => item.id === connection.id)?.has_credentials
-        );
-        setNote(
-          stillRecorded
-            ? `The value is gone from this computer, but Kel still has a record of it — save the credential again or tell Kel to check.`
-            : `The stored credential for ${connection.name} is gone. Kel will ask again before using it.`
-        );
-      } catch (err) {
-        setNote(failureSentence(err, 'Kel could not remove that credential — try again.'));
-      } finally {
-        setBusy(false);
-      }
-    },
-    [load]
-  );
 
   /**
    * V2-02 Test Connection. The shell decrypts the credential, the engine makes one request, and what
@@ -343,11 +364,9 @@ const Connections: React.FC = () => {
       setNote(null);
       try {
         const custody = window.kelAPI?.credentials;
-        if (!custody?.testConnection)
-          throw new Error('Checking a connection is only available in the Kel app.');
+        if (!custody?.testConnection) throw new Error('Checking a connection is only available in the Kel app.');
         const checked = await custody.testConnection(connection.id);
         await load();
-        // The row carries the detail sentence the engine recorded; the note is just the confirmation.
         setNote(`Checked ${checked.name}.`);
       } catch (err) {
         setNote(failureSentence(err, 'Kel could not check that connection — try again.'));
@@ -358,27 +377,14 @@ const Connections: React.FC = () => {
     [load]
   );
 
-  /**
-   * V2-04b: the account sign-in. Only the Kel app can finish it — the main process opens the system
-   * browser, claims the finished sign-in into the OS-backed custody, and hands this page the
-   * outcome. A signed-in connection signs out here too.
-   */
+  /** V2-04b: the account sign-in runs in the main process; this page only asks and shows the outcome. */
   const signInConnection = useCallback(
     async (connection: KelConnection) => {
       setBusy(true);
       setNote(null);
       try {
         const custody = window.kelAPI?.credentials;
-        if (connection.auth_state === 'connected') {
-          if (!custody?.oauthRevoke)
-            throw new Error('Signing out of a service is only available in the Kel app.');
-          const done = await custody.oauthRevoke(connection.id);
-          await load();
-          setNote(String(done?.note ?? `${connection.name} is signed out.`));
-          return;
-        }
-        if (!custody?.oauthConnect)
-          throw new Error('Signing in is only available in the Kel app, where the credential lives.');
+        if (!custody?.oauthConnect) throw new Error('Signing in is only available in the Kel app.');
         const outcome = await custody.oauthConnect(connection.id);
         await load();
         setNote(
@@ -395,11 +401,7 @@ const Connections: React.FC = () => {
     [load]
   );
 
-  /**
-   * V2-04: do one thing with a service. The shell decrypts the credential, the engine makes the request
-   * and records that it happened, and the service's answer comes back here — where it is shown and
-   * nowhere else.
-   */
+  /** V2-04: do one thing with a service; the answer is shown here and nowhere else. */
   const doAction = useCallback(
     async (connection: KelConnection, action: KelConnectionAction, confirmed = false) => {
       setBusy(true);
@@ -408,17 +410,10 @@ const Connections: React.FC = () => {
         const custody = window.kelAPI?.credentials;
         if (!custody?.runConnection)
           throw new Error('Doing something with a connection is only available in the Kel app.');
-        const done = (await custody.runConnection(
-          connection.id,
-          action.id,
-          {},
-          confirmed
-        )) as KelConnectionRun;
+        const done = (await custody.runConnection(connection.id, action.id, {}, confirmed)) as KelConnectionRun;
         setAnswers((current) => ({ ...current, [action.id]: done }));
         setConfirmAction(null);
-        setNote(
-          done.state === 'ok' ? `${action.name} — done.` : `${action.name} — ${done.note}`
-        );
+        setNote(done.state === 'ok' ? `${action.name} — done.` : `${action.name} — ${done.note}`);
       } catch (err) {
         setNote(failureSentence(err, 'Kel could not do that — try again.'));
       } finally {
@@ -428,20 +423,24 @@ const Connections: React.FC = () => {
     []
   );
 
-  const removeConnection = useCallback(
+  /** Disconnect: sign out if signed in, then the value (only the main process can reach it), then the record. */
+  const disconnect = useCallback(
     async (connection: KelConnection) => {
       setBusy(true);
       setNote(null);
       try {
-        // The value first (only the main process can reach it), then the record.
-        await window.kelAPI?.credentials?.remove(connectionCustodyKey(connection.id));
+        const custody = window.kelAPI?.credentials;
+        if (connection.kind === 'oauth' && connection.auth_state === 'connected') {
+          await custody?.oauthRevoke?.(connection.id).catch((): undefined => undefined);
+        }
+        await custody?.remove(connectionCustodyKey(connection.id));
         await kelConnections.remove(connection.id);
         setCredentialDraft(null);
-        setConfirmRemove(null);
+        setConfirmDisconnect(null);
         await load();
-        setNote(`${connection.name} is removed. Kel will not use it any more.`);
+        setNote(`${connection.name} is disconnected.`);
       } catch (err) {
-        setNote(failureSentence(err, 'Kel could not remove that connection — try again.'));
+        setNote(failureSentence(err, 'Kel could not disconnect that service — try again.'));
       } finally {
         setBusy(false);
       }
@@ -459,94 +458,76 @@ const Connections: React.FC = () => {
 
   if (list === null) return <KelLoading />;
 
-  const ready = list.counts.ready;
-  const needing = list.counts.needs_credentials;
-  const pendingAction = doable.flatMap((connection) =>
-    (actionsByConnection[connection.id] ?? []).map((action) => ({ connection, action }))
-  ).find(({ action }) => action.id === confirmAction);
+  const pendingAction = doable
+    .flatMap((connection) => (actionsByConnection[connection.id] ?? []).map((action) => ({ connection, action })))
+    .find(({ action }) => action.id === confirmAction);
+
+  const connectingFields = connecting ? connectFields(connecting.service, list) : [];
+  const connectReady =
+    connecting !== null &&
+    (Boolean(connecting.service.base_url) || Boolean(connecting.address.trim())) &&
+    connectingFields.every((field) => Boolean(connecting.values[field.name]));
 
   return (
     <div className="kel-page kel-connections-page">
       <div className="kel-page__head">
         <div><ShellWorkspaceLink /><h1 className="kel-h1">Connections</h1></div>
-        {connections.length > 0 && !draft && <KelButton variant="primary" onClick={() => setDraft({ ...EMPTY_DRAFT })} disabled={busy}>
-          Add a service
-        </KelButton>}
       </div>
 
       {note && <p className="kel-meta">{note}</p>}
 
-      <KelCard
-        className={`kel-connections-services${connections.length === 0 ? ' kel-connections-empty' : ''}`}
-        title="Services"
-        chip={
-          <span className="kel-meta">
-            {connections.length === 0
-              ? 'none yet'
-              : `${ready} ready · ${needing} needing a credential`}
-          </span>
-        }
-      >
-        {connections.length === 0 && <p className="kel-connections-caption">The services Kel can use. You keep the credential.</p>}
-        {connections.length === 0 ? (
-          <div className="kel-connections-empty-body"><img src={connectionIcon} alt="" width={20} height={20} /><KelEmpty
-            title="No connections yet."
-            why="Add a service and its credential. Then Kel can work with it directly."
-            actionLabel={draft ? undefined : 'Add a service'}
-            onAction={draft ? undefined : () => setDraft({ ...EMPTY_DRAFT })}
-          /></div>
-        ) : (
-          connections.map((connection) => {
+      {connections.length > 0 && (
+        <KelCard className="kel-connections-services" title="Connected">
+          {connections.map((connection) => {
             const shellFields = heldByShell?.[connection.id] ?? [];
             const disagree = shellFields.length > 0 && !connection.has_credentials;
+            const status = connectionRowStatus(connection);
+            const service = knownById.get(connection.id);
+            const failedCheck =
+              connection.last_test_at && connection.last_test_state && connection.last_test_state !== 'ok'
+                ? connectionCheckSentence(connection, formatWhen(connection.last_test_at))
+                : null;
+            const needsSignIn =
+              connection.kind === 'oauth' && connection.has_credentials && connection.auth_state !== 'connected';
             return (
               <div className="kel-row kel-connection-row kel-connection-configured-row" key={connection.id}>
-                <img className="kel-connection-row-icon" src={connectionIcon} alt="" />
+                <ServiceGlyph id={connection.id} />
                 <div className="kel-attention__text">
                   <strong>{connection.name}</strong>
-                  <span className="kel-meta">
-                    {[connection.kind_label, connection.base_url]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
                   {disagree && (
-                    <span className="kel-meta">
+                    <span className="kel-meta kel-connection-warning">
                       This computer still holds a credential for it that Kel has no record of — save it
                       again to restore the link.
                     </span>
                   )}
-                  {connection.last_test_at ? (
-                    <span className="kel-meta">
-                      {connectionCheckSentence(connection, formatWhen(connection.last_test_at))}
-                    </span>
-                  ) : null}
-                  {connection.docs_url && (
-                    <span className="kel-meta">
-                      Docs: {connection.docs_url}
-                    </span>
-                  )}
-                  {connection.notes && <span className="kel-meta">{connection.notes}</span>}
-                  <span className="kel-meta">
-                    {connection.has_credentials
-                      ? `Credential fields: ${connection.credential_fields.join(', ')} · updated ${formatWhen(connection.updated)}`
-                      : `Added ${formatWhen(connection.created)}`}
-                  </span>
-                  {connection.kind === 'oauth' && (
-                    <span className="kel-meta">
-                      {connection.auth_state === 'connected'
-                        ? `Signed in${connection.auth_scopes.length ? ` · ${connection.auth_scopes.length} permission${connection.auth_scopes.length === 1 ? '' : 's'}` : ''}`
-                        : connection.auth_state === 'needs_reconnect'
-                          ? 'The sign-in no longer works — connect again'
-                          : connection.auth_state === 'pending'
-                            ? 'Sign-in started in your browser'
-                            : 'Not signed in'}
-                    </span>
-                  )}
+                  {failedCheck && <span className="kel-meta kel-connection-warning">{failedCheck}</span>}
                 </div>
-                <span className="kel-connection-status" title={stateSentence(connection)} data-state={connectionRowStatus(connection).state} data-testid="connection-row-status">
-                  {connectionRowStatus(connection).label}
+                <span
+                  className="kel-connection-status"
+                  title={
+                    connection.last_test_at ? connectionCheckSentence(connection, formatWhen(connection.last_test_at)) ?? undefined : undefined
+                  }
+                  data-state={status.state}
+                  data-testid="connection-row-status"
+                >
+                  {status.label}
                 </span>
-                <span className="kel-grow" />
+                {needsSignIn && (
+                  <KelButton variant="primary" disabled={busy} onClick={() => void signInConnection(connection)}>
+                    {service?.connect_label ?? 'Connect'}
+                  </KelButton>
+                )}
+                {!connection.has_credentials && (
+                  <KelButton
+                    variant="primary"
+                    disabled={busy}
+                    onClick={() =>
+                      service ? startConnect(service) : setCredentialDraft(credentialDraftFor(connection, list))
+                    }
+                  >
+                    Add credential
+                  </KelButton>
+                )}
                 {connection.can_test && (
                   <KelButton
                     variant="quiet"
@@ -556,159 +537,143 @@ const Connections: React.FC = () => {
                     Test
                   </KelButton>
                 )}
-                <KelButton variant="primary" disabled={busy} onClick={() => setCredentialDraft(credentialDraftFor(connection, list))}>
-                  Edit
-                </KelButton>
-                <details className="kel-connection-more"><summary>More actions</summary>
-                <KelButton variant="quiet" disabled={busy} onClick={() => setDraft(draftFor(connection))}>
-                  Edit service details
-                </KelButton>
-                {connection.kind === 'oauth' && (
-                  <KelButton
-                    variant={connection.auth_state === 'connected' ? 'quiet' : 'primary'}
-                    disabled={busy}
-                    onClick={() => void signInConnection(connection)}
-                  >
-                    {connection.auth_state === 'connected'
-                      ? 'Sign out'
-                      : connection.auth_state === 'needs_reconnect'
-                        ? 'Reconnect'
-                        : 'Connect'}
+                {confirmDisconnect === connection.id ? (
+                  <>
+                    <KelButton variant="danger" disabled={busy} onClick={() => void disconnect(connection)}>
+                      Confirm disconnect
+                    </KelButton>
+                    <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmDisconnect(null)}>
+                      Keep
+                    </KelButton>
+                  </>
+                ) : (
+                  <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmDisconnect(connection.id)}>
+                    Disconnect
                   </KelButton>
                 )}
-                <KelButton
-                  variant={connection.has_credentials ? 'quiet' : 'primary'}
-                  disabled={busy}
-                  onClick={() => setCredentialDraft(credentialDraftFor(connection, list))}
-                >
-                  {connection.has_credentials ? 'Replace credential' : 'Add credential'}
-                </KelButton>
-                {connection.has_credentials && (
-                  <KelButton variant="quiet" disabled={busy} onClick={() => void forgetCredential(connection)}>
-                    Remove credential
-                  </KelButton>
-                )}
-                </details>
                 {credentialDraft?.id === connection.id && (
                   <div className="kel-connection-inline-credential">
                     <div className="kel-connection-credential-fields">
-                      <label className="kel-meta" htmlFor="kel-connection-field">{credentialDraft.usesHeader ? 'Header name' : 'Credential field'}
-                        <input id="kel-connection-field" className="kel-input"
+                      <label className="kel-meta" htmlFor="kel-connection-field">
+                        {credentialDraft.usesHeader ? 'Header name' : 'Credential field'}
+                        <input
+                          id="kel-connection-field"
+                          className="kel-input"
                           value={credentialDraft.usesHeader ? credentialDraft.header : credentialDraft.field}
                           readOnly={credentialDraft.usesHeader && !credentialDraft.headerEditable}
-                          onChange={(event) => setCredentialDraft({ ...credentialDraft,
-                            [credentialDraft.usesHeader ? 'header' : 'field']: event.target.value })} />
+                          onChange={(event) =>
+                            setCredentialDraft({
+                              ...credentialDraft,
+                              [credentialDraft.usesHeader ? 'header' : 'field']: event.target.value,
+                            })
+                          }
+                        />
                       </label>
-                      <label className="kel-meta" htmlFor="kel-connection-value">Credential
-                        <input id="kel-connection-value" className="kel-input" type="password" autoComplete="off"
-                          placeholder="••••••••••••••••••••" value={credentialDraft.value}
-                          onChange={(event) => setCredentialDraft({ ...credentialDraft, value: event.target.value })} />
+                      <label className="kel-meta" htmlFor="kel-connection-value">
+                        Credential
+                        <input
+                          id="kel-connection-value"
+                          className="kel-input"
+                          type="password"
+                          autoComplete="off"
+                          value={credentialDraft.value}
+                          onChange={(event) => setCredentialDraft({ ...credentialDraft, value: event.target.value })}
+                        />
                       </label>
                     </div>
                     <div className="kel-connection-credential-actions">
-                      {confirmRemove === connection.id ? <>
-                        <KelButton variant="quiet" disabled={busy} onClick={() => void removeConnection(connection)}>Confirm remove</KelButton>
-                        <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(null)}>Keep service</KelButton>
-                      </> : <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmRemove(connection.id)}>Remove service</KelButton>}
                       <span className="kel-grow" />
-                      <KelButton variant="quiet" disabled={busy} onClick={() => setCredentialDraft(null)}>Cancel</KelButton>
-                      <KelButton variant="primary" disabled={busy || !credentialDraft.value || !credentialDraft.field || (credentialDraft.usesHeader && !credentialDraft.header)}
-                        onClick={() => void saveCredential()}>Save credential</KelButton>
+                      <KelButton variant="quiet" disabled={busy} onClick={() => setCredentialDraft(null)}>
+                        Cancel
+                      </KelButton>
+                      <KelButton
+                        variant="primary"
+                        disabled={
+                          busy ||
+                          !credentialDraft.value ||
+                          !credentialDraft.field ||
+                          (credentialDraft.usesHeader && !credentialDraft.header)
+                        }
+                        onClick={() => void saveCredential()}
+                      >
+                        Save credential
+                      </KelButton>
                     </div>
-                    <p className="kel-meta kel-connection-custody-note">Kel stores the value in this computer's secure store.</p>
                   </div>
                 )}
               </div>
             );
-          })
-        )}
-      </KelCard>
-
-      {connections.length > 0 && addable.length > 0 && <KelCard title="Available services" className="kel-connections-available">
-        <p className="kel-connections-caption">Known services you can set up when you need them.</p>
-        <div className="kel-connections-available-list">{addable.map((service) => <div className="kel-row kel-connection-row kel-connection-available-row" key={service.id}>
-          <div className="kel-attention__text">
-            <strong>{service.name}</strong>
-            <span className="kel-meta">
-              {[connectionTemplate(list, service.kind)?.label,
-                service.base_url || 'address comes with your credential'].filter(Boolean).join(' · ')}
-            </span>
-            <span className="kel-connection-extra">Kel needs {knownServiceCredentialText(service)}.</span>
-            {service.note && <span className="kel-connection-extra">{service.note}</span>}
-            <span className="kel-connection-extra">{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
-          </div>
-          <span className="kel-grow" />
-          <KelButton variant="primary" disabled={busy}
-            onClick={() => setDraft(draftFromKnownService(service))}>Set up {service.name}</KelButton>
-        </div>)}</div>
-      </KelCard>}
-
-      {doable.length > 0 && (
-        <KelCard
-          title="What Kel can do"
-          className="kel-connections-actions"
-        >
-          <p className="kel-connections-caption">Kel runs these only when you ask.</p>
-          {doable.map((connection) => {
-            const actions = actionsByConnection[connection.id] ?? [];
-            return actions.map((action) => {
-              const answer = answers[action.id];
-              return (
-                <div className="kel-row kel-connection-action-row" key={action.id}>
-                  <div className="kel-attention__text" title={action.description}>
-                    <strong>{action.name}</strong>
-                    <span className="kel-meta">{connection.name}</span>
-                    {answer && (
-                      <span className="kel-meta">
-                        {CONNECTION_CHECK_LABELS[answer.state] ?? 'Done'} — {answer.note}
-                      </span>
-                    )}
-                    {answer && connectionAnswerText(answer.result) && (
-                      <pre className="kel-meta">{connectionAnswerText(answer.result)}</pre>
-                    )}
-                  </div>
-                  <span className="kel-grow" />
-                  <span className="kel-connection-action-status" data-mutating={action.mutating}>
-                    {action.mutating ? 'Asks first' : 'Reads only'}
-                  </span>
-                  <KelButton variant="primary" disabled={busy}
-                    onClick={() => action.mutating ? setConfirmAction(action.id) : void doAction(connection, action)}>
-                    Run
-                  </KelButton>
-                </div>
-              );
-            });
           })}
-          {pendingAction && <div className="kel-connection-action-confirmation">
-            <p>⚠ This changes something in {pendingAction.connection.name}. Kel asks before it changes anything.</p>
-            <div className="kel-row">
-              <span className="kel-grow" />
-              <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmAction(null)}>Cancel</KelButton>
-              <KelButton variant="primary" disabled={busy}
-                onClick={() => void doAction(pendingAction.connection, pendingAction.action, true)}>Yes, run it</KelButton>
-            </div>
-          </div>}
         </KelCard>
       )}
 
-      {draft && (
+      {connecting ? (
         <KelCard
-          title={draft.id ? `Edit ${draft.name || 'connection'}` : 'Add a service'}
-          className={`kel-connection-form${showAdvancedConnectionFields ? ' kel-connection-form--advanced' : ''}`}
-          chip={<span className="kel-meta">what Kel needs to reach the service</span>}
+          title={`Connect to ${connecting.service.name}`}
+          className="kel-connection-form kel-connect-form"
         >
-          {!draft.id && addable.length > 0 && <details className="kel-connection-templates">
-            <summary>Start with a known service</summary>
-            <div>{addable.map((service) => <div key={service.id}>
-              <button type="button" onClick={() => setDraft(draftFromKnownService(service))}>Set up {service.name}</button>
-              <span>Kel needs {knownServiceCredentialText(service)}.</span>
-              <span>{KNOWN_SERVICE_SOURCE_LABELS[service.source]}</span>
-            </div>)}</div>
-          </details>}
-          {draft.service_hint && <p className="kel-meta kel-connection-service-hint" data-testid="connection-service-hint">{draft.service_hint}</p>}
-          <button type="button" className="kel-connection-advanced-toggle"
+          {!connecting.service.base_url && (
+            <div className="kel-row">
+              <label className="kel-meta" htmlFor="kel-connect-address">
+                API address
+              </label>
+              <input
+                id="kel-connect-address"
+                className="kel-input"
+                autoComplete="off"
+                value={connecting.address}
+                onChange={(event) => setConnecting({ ...connecting, address: event.target.value })}
+              />
+            </div>
+          )}
+          {connectingFields.map((field) => (
+            <div className="kel-row" key={field.name}>
+              <label className="kel-meta" htmlFor={`kel-connect-${field.name}`}>
+                {field.label}
+              </label>
+              <input
+                id={`kel-connect-${field.name}`}
+                className="kel-input"
+                type={field.secret ? 'password' : 'text'}
+                autoComplete="off"
+                spellCheck={false}
+                value={connecting.values[field.name] ?? ''}
+                onChange={(event) =>
+                  setConnecting({
+                    ...connecting,
+                    values: { ...connecting.values, [field.name]: event.target.value },
+                  })
+                }
+              />
+            </div>
+          ))}
+          {connecting.service.where && (
+            <p className="kel-meta kel-connect-where" data-testid="connect-where">
+              {connecting.service.where}
+            </p>
+          )}
+          <div className="kel-row kel-connection-form__actions">
+            <KelButton variant="quiet" disabled={busy} onClick={() => setConnecting(null)}>
+              Cancel
+            </KelButton>
+            <KelButton variant="confirm" disabled={busy || !connectReady} onClick={() => void connectService()}>
+              {connecting.service.connect_label ?? 'Connect'}
+            </KelButton>
+          </div>
+        </KelCard>
+      ) : draft ? (
+        <KelCard
+          title="Other service"
+          className={`kel-connection-form${showAdvancedConnectionFields ? ' kel-connection-form--advanced' : ''}`}
+        >
+          <button
+            type="button"
+            className="kel-connection-advanced-toggle"
             aria-expanded={showAdvancedConnectionFields}
-            onClick={() => setShowAdvancedConnectionFields((open) => !open)}>Advanced options</button>
+            onClick={() => setShowAdvancedConnectionFields((open) => !open)}
+          >
+            Advanced options
+          </button>
           <div className="kel-row">
             <label className="kel-meta" htmlFor="kel-connection-name">
               Service name
@@ -716,26 +681,23 @@ const Connections: React.FC = () => {
             <input
               id="kel-connection-name"
               className="kel-input"
-              placeholder="Stripe"
               value={draft.name}
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
             />
           </div>
           <div className="kel-row kel-connection-advanced-field">
             <label className="kel-meta" htmlFor="kel-connection-kind">
-              How Kel signs in
+              Credential type
             </label>
             <select
               id="kel-connection-kind"
               className="kel-input"
               value={draft.kind}
-              onChange={(event) =>
-                setDraft({ ...draft, kind: event.target.value as KelConnection['kind'] })
-              }
+              onChange={(event) => setDraft({ ...draft, kind: event.target.value as KelConnection['kind'] })}
             >
               {(list?.templates ?? []).map((option) => (
                 <option key={option.id} value={option.id}>
-                  {option.label} — {option.hint}
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -785,8 +747,7 @@ const Connections: React.FC = () => {
                     const mode = event.target.value;
                     setDraft({
                       ...draft,
-                      auth_prefix:
-                        mode === 'auto' ? null : mode === 'raw' ? '' : (draft.auth_prefix || 'Bearer '),
+                      auth_prefix: mode === 'auto' ? null : mode === 'raw' ? '' : draft.auth_prefix || 'Bearer ',
                     });
                   }}
                 >
@@ -809,10 +770,6 @@ const Connections: React.FC = () => {
                   />
                 </div>
               ) : null}
-              <span className="kel-meta kel-connection-advanced-field">
-                Services expect this differently: GitHub and Stripe want “Bearer ”, Discord wants “Bot ”,
-                Figma and ClickUp want the value exactly as it is.
-              </span>
             </>
           ) : null}
           <div className="kel-row">
@@ -851,7 +808,6 @@ const Connections: React.FC = () => {
               onChange={(event) => setDraft({ ...draft, test_endpoint: event.target.value })}
             />
           </div>
-          <p className="kel-meta">Kel calls this to check the credential.</p>
           <div className="kel-row kel-connection-advanced-field">
             <label className="kel-meta" htmlFor="kel-connection-notes">
               What Kel should use it for
@@ -859,20 +815,103 @@ const Connections: React.FC = () => {
             <input
               id="kel-connection-notes"
               className="kel-input"
-              placeholder={purposePlaceholder(draft.service_id)}
               value={draft.notes}
               onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
             />
           </div>
-          {/* Figma 269:501: Cancel (Link) then the green Confirm button, right-aligned. */}
           <div className="kel-row kel-connection-form__actions">
             <KelButton variant="quiet" disabled={busy} onClick={() => setDraft(null)}>
               Cancel
             </KelButton>
             <KelButton variant="confirm" disabled={busy || !draft.name.trim()} onClick={() => void saveConnection()}>
-              {draft.id ? 'Save changes' : 'Add connection'}
+              Add connection
             </KelButton>
           </div>
+        </KelCard>
+      ) : (
+        <KelCard className="kel-connections-connect" title={connections.length ? 'Connect another service' : 'Connect a service'}>
+          {addable.length > 0 && (
+            <div className="kel-connect-grid">
+              {addable.map((service) => (
+                <button
+                  type="button"
+                  key={service.id}
+                  className="kel-connect-service"
+                  disabled={busy}
+                  onClick={() => startConnect(service)}
+                >
+                  <ServiceGlyph id={service.id} />
+                  <span>{service.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            className="kel-connect-other"
+            disabled={busy}
+            onClick={() => {
+              setNote(null);
+              setDraft({ ...EMPTY_DRAFT });
+            }}
+          >
+            Other service
+          </button>
+        </KelCard>
+      )}
+
+      {doable.length > 0 && (
+        <KelCard title="What Kel can do" className="kel-connections-actions">
+          {doable.map((connection) =>
+            (actionsByConnection[connection.id] ?? []).map((action) => {
+              const answer = answers[action.id];
+              return (
+                <div className="kel-row kel-connection-action-row" key={action.id}>
+                  <div className="kel-attention__text" title={action.description}>
+                    <strong>{action.name}</strong>
+                    <span className="kel-meta">{connection.name}</span>
+                    {answer && (
+                      <span className="kel-meta">
+                        {CONNECTION_CHECK_LABELS[answer.state] ?? 'Done'} — {answer.note}
+                      </span>
+                    )}
+                    {answer && connectionAnswerText(answer.result) && (
+                      <pre className="kel-meta">{connectionAnswerText(answer.result)}</pre>
+                    )}
+                  </div>
+                  <span className="kel-grow" />
+                  <span className="kel-connection-action-status" data-mutating={action.mutating}>
+                    {action.mutating ? 'Asks first' : 'Reads only'}
+                  </span>
+                  <KelButton
+                    variant="primary"
+                    disabled={busy}
+                    onClick={() => (action.mutating ? setConfirmAction(action.id) : void doAction(connection, action))}
+                  >
+                    Run
+                  </KelButton>
+                </div>
+              );
+            })
+          )}
+          {pendingAction && (
+            <div className="kel-connection-action-confirmation">
+              <p>⚠ This changes something in {pendingAction.connection.name}.</p>
+              <div className="kel-row">
+                <span className="kel-grow" />
+                <KelButton variant="quiet" disabled={busy} onClick={() => setConfirmAction(null)}>
+                  Cancel
+                </KelButton>
+                <KelButton
+                  variant="primary"
+                  disabled={busy}
+                  onClick={() => void doAction(pendingAction.connection, pendingAction.action, true)}
+                >
+                  Yes, run it
+                </KelButton>
+              </div>
+            </div>
+          )}
         </KelCard>
       )}
     </div>
