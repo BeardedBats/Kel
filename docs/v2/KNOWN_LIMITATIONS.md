@@ -679,7 +679,10 @@ no boundaries.
 - **No updater infrastructure** (by directive): upgrades are manual — stop, back up, replace, start;
   the inventory is the check before and after.
 
-## Kibble Build Update: the honest edges (2026-09-21)
+## Kibble Build Update: the honest edges (2026-09-21; removed by D-86)
+
+**Removed 2026-09-29 by D-86 (Kibble only captures).** These edges no longer apply: Kibble has no Build Update. Old
+databases keep the unused `build_missions`/`build_candidates` tables.
 
 - **The candidate is a record, not an installer.** Nothing in Build Update installs, promotes or
   touches the running app; `promote()` refuses by design and installation remains future work behind

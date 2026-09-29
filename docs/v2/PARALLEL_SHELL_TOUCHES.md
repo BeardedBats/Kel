@@ -41,6 +41,8 @@ the capability and the source fact deliberately when it lands.
 
 ## Kibble Build Update — the future UI contract (2026-09-21, `dev/v2` @ the Build Update commit)
 
+**Removed 2026-09-29 by D-86 (Kibble only captures).** There is no Build Update surface or API any more.
+
 Kibble is the user-facing name for Fix Capture / Dogfood; the backend contract is BUILT (D-46).
 Nothing here asks the Shell to change today — it is the contract a Build Update surface will read and
 write when the Ramble/Kibble presentation lands.

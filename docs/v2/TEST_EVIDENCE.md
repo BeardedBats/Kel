@@ -695,6 +695,9 @@ Evidence: `docs/v2/evidence/v2-05/README.md` + `findings-A|B|C|D|E|F.json` + the
 
 ### Kibble Build Update — the backend contract (2026-09-21)
 
+**Removed 2026-09-29 by D-86 (Kibble only captures).** `tests/test_v2_build_update.py` and the J-SEC/J-KBU/J-KBU-NEG
+journeys were deleted with the feature; the entries below are history.
+
 - Definition correction first (D-46): Kibble is the user-facing name for Fix Capture / Dogfood
   behavior (the definition lived in Nick's handoff, not the repo); the workflow and the measured
   reuse map are recorded in `docs/v2/evidence/kibble-build-update/README.md`.

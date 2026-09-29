@@ -41,7 +41,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 DEFAULT_ROOT = r'C:\Users\Nick\KelV2Runs\prepared\engine'
 DEFAULT_FIXTURES = r'C:\Users\Nick\KelV2Runs\prepared\acceptance'
-PROTECTED_APP = r'C:\Users\Nick\KelDogfoodCandidate'
 
 
 # --------------------------------------------------------------------------------------- shell helpers
@@ -238,7 +237,7 @@ def journey_upgrade(client, ctx):
     tables = inventory.get('tables') or {}
     expected = ('connections', 'oauth_flows', 'connection_events', 'routing_outcomes', 'model_prefs',
                 'network_policy', 'network_events', 'memories', 'projects', 'conversations',
-                'dogfood_fixes', 'build_missions', 'build_candidates', 'schema_migrations')
+                'dogfood_fixes', 'schema_migrations')
     missing = [name for name in expected if name not in tables]
     journey['detail'] = {'tables': len(tables), 'migrations': len(inventory.get('migrations') or []),
                          'missing': missing,
@@ -246,336 +245,6 @@ def journey_upgrade(client, ctx):
     journey['status'] = 'PASSED' if not missing else 'FAILED'
     if missing:
         journey['problem'] = 'the inventory no longer covers: %s' % ', '.join(missing)
-    return journey
-
-
-def journey_security(client, ctx):
-    """§27 Security — real execution boundaries refuse protected and non-repository roots."""
-    journey = {'id': 'J-SEC', 'name': 'Execution boundaries refuse protected sources',
-               'shell_required': False,
-               'requirements': ['Security: execution boundaries', 'Security: authority narrowing'],
-               'detail': {}}
-    # A real, open finding, so the ONLY thing that can refuse these starts is the source root
-    # itself (an unrelated refusal would prove nothing).
-    seed = client.call('/api/dogfood', {'action': 'save',
-                                        'transcript': 'V2-18 synthetic finding for the boundary '
-                                                      'journey: the source root must be refused.',
-                                        'route': '/work', 'page_title': 'Work',
-                                        'version': client.version})
-    finding = seed['id']
-    # 1. Kel's own data root — refused by rule, whatever the environment says.
-    sensitive = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                                'findings': [finding],
-                                                'source_root': str(client.root),
-                                                'tests': ['python', '-m', 'unittest']})
-    # 2. The stable dogfood app — refused through KEL_PROTECTED_PATHS, which the desktop sets.
-    protected = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                                'findings': [finding],
-                                                'source_root': PROTECTED_APP,
-                                                'tests': ['python', '-m', 'unittest']})
-    # 3. A real folder that is not a repository — Kel's own sentence, never a raw git message.
-    not_a_repo = Path(ctx['fixtures']) / 'not-a-repo'
-    not_a_repo.mkdir(parents=True, exist_ok=True)
-    (not_a_repo / 'notes.txt').write_text('not a repository\n', encoding='utf-8')
-    plain = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                            'findings': [finding],
-                                            'source_root': str(not_a_repo),
-                                            'tests': ['python', '-m', 'unittest']})
-    journey['detail'] = {'finding': finding, 'sensitive_root': str(client.root),
-                         'sensitive_refusal': sensitive, 'protected_root': PROTECTED_APP,
-                         'protected_refusal': protected, 'non_repository_refusal': plain,
-                         'fixture': 'a real folder that is not a repository (synthetic content)'}
-    # The sentences must name the REAL reason. Measured first: an earlier version of this journey
-    # "passed" on an unknown-finding refusal and on a leaked git message — it had proved nothing.
-    sensitive_ok = (sensitive.get('refused')
-                    and 'will not use' in sensitive.get('sentence', ''))
-    protected_ok = (protected.get('refused')
-                    and 'will not use' in protected.get('sentence', ''))
-    plain_sentence = plain.get('sentence', '')
-    # Kel's own sentence leads; git's detail may follow in parentheses (that is the fix), so the
-    # check is that the raw message is not what the person reads first.
-    plain_body = plain_sentence.split('->')[-1].strip()
-    plain_ok = (plain.get('refused')
-                and plain_body.startswith('That folder is not a Git repository')
-                and not plain_body.lower().startswith('fatal:'))
-    if sensitive_ok and protected_ok and plain_ok:
-        journey['status'] = 'PASSED'
-    elif sensitive_ok and plain_ok and not protected_ok:
-        # Honest labelling: without the desktop's KEL_PROTECTED_PATHS the stable-app rule is not
-        # loaded in this engine, so the check cannot be claimed at all.
-        journey['status'] = 'PENDING'
-        journey['problem'] = ('the stable-app root was not refused: this engine was started without '
-                              'KEL_PROTECTED_PATHS (the desktop sets it at spawn)')
-    else:
-        journey['status'] = 'FAILED'
-        journey['problem'] = ('the sensitive root was not refused in plain words' if not sensitive_ok
-                              else 'a non-repository source did not get Kel\'s own sentence')
-    return journey
-
-
-def journey_kibble(client, ctx, dispatch=True, wait=900, poll=10):
-    """The complete Kibble Build Update journey, with its claims kept separate."""
-    journey = {'id': 'J-KBU', 'name': 'Kibble Build Update — separate claims', 'shell_required': False,
-               'requirements': ['Fix Capture: real friction capture', 'Work: real autonomous execution',
-                                'Recovery: failures without lost work',
-                                'Security: execution boundaries'],
-               'claims': {}, 'detail': {}}
-    fixture = ensure_fixture(Path(ctx['fixtures']) / 'kibble-repo')
-    ctx['fixture'] = fixture
-    detail = journey['detail']
-    detail['fixture'] = fixture
-
-    findings = []
-    for text in ('V2-18 synthetic finding A: add() returns the difference, not the sum.',
-                 'V2-18 synthetic finding B: the failing unit test is the acceptance signal.'):
-        saved = client.call('/api/dogfood', {'action': 'save', 'transcript': text,
-                                             'route': '/work', 'page_title': 'Work',
-                                             'version': client.version})
-        findings.append(saved['id'])
-    detail['findings'] = findings
-
-    started = client.call('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                           'findings': findings,
-                                           'source_root': fixture['root'],
-                                           'tests': ['python', '-m', 'unittest', '-v'],
-                                           'scope': ['calc.py'],
-                                           'conversation': 'main'})
-    mission, job_id = started['mission'], started['job']
-    detail['mission'] = {'id': mission['id'], 'job': job_id,
-                         'baseline_revision': mission['baseline_revision'],
-                         'source_root': mission['source_root'],
-                         'job_kind': (started.get('contract') or {}).get('kind'),
-                         'test_command': (started.get('contract') or {}).get('test_command')}
-
-    # Claim 1 — mission creation: the record, the verified baseline, the untouched checkout.
-    source_untouched = (git(fixture['root'], 'status', '--porcelain') == ''
-                        and git(fixture['root'], 'rev-parse', 'HEAD') == fixture['revision'])
-    journey['claims']['mission_created'] = {
-        'status': 'PASSED' if (mission['baseline_revision'] == fixture['revision']
-                               and mission['source_root'].replace('\\', '/').lower()
-                               == fixture['root'].replace('\\', '/').lower()
-                               and (started.get('contract') or {}).get('kind') == 'coding'
-                               and source_untouched
-                               and mission['findings'][0]['id'] == findings[0]) else 'FAILED',
-        'detail': {'baseline_matches_fixture_head': mission['baseline_revision'] == fixture['revision'],
-                   'job_is_a_coding_contract': (started.get('contract') or {}).get('kind') == 'coding',
-                   'source_checkout_untouched': source_untouched,
-                   'finding_context_recorded': mission['findings'][0]}}
-
-    # Claim 1b — promotion refuses before anything exists.
-    fresh = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'promote'})
-    journey['claims']['promotion_refused_at_start'] = {
-        'status': 'PASSED' if fresh.get('refused') else 'FAILED', 'detail': fresh}
-
-    # Claim 2a — nothing is created before the mission settles.
-    before = client.call('/api/dogfood', {'action': 'build_update', 'op': 'candidate',
-                                          'mission': mission['id']})
-    detail['candidate_before_settle'] = {'state': before.get('state'),
-                                         'created': before.get('candidate') is not None}
-    journey['claims']['candidate_gated_while_building'] = {
-        'status': 'PASSED' if (before.get('state') == 'BUILDING'
-                               and before.get('candidate') is None) else 'FAILED',
-        'detail': detail['candidate_before_settle']}
-
-    # The real dispatch: the engine claims the coding job and the isolated runtime repairs the copy.
-    route = None
-    if dispatch:
-        deadline = time.time() + wait
-        last = None
-        while time.time() < deadline:
-            state = client.call('/api/dogfood', {'action': 'build_update', 'op': 'status',
-                                                 'mission': mission['id']})
-            last = state['job']
-            if last and last.get('state') in ('CLOSED', 'CANCELLED', 'FAILED'):
-                break
-            try:
-                routes = client.call('/api/state').get('routes') or {}
-                route = routes.get(job_id) or route
-            except Exception:
-                pass
-            time.sleep(poll)
-        detail['job_after_dispatch'] = last
-        detail['route'] = route
-    else:
-        detail['job_after_dispatch'] = 'not dispatched (--no-runtime)'
-
-    settled = detail['job_after_dispatch']
-    closed = isinstance(settled, dict) and settled.get('state') == 'CLOSED'
-
-    candidate = client.call('/api/dogfood', {'action': 'build_update', 'op': 'candidate',
-                                             'mission': mission['id']})
-    detail['candidate'] = {key: candidate.get('candidate', {}).get(key)
-                           for key in ('id', 'review_state', 'revision', 'artifact_location',
-                                       'fixed_findings', 'unresolved_findings')}
-    detail['candidate_evidence'] = (candidate.get('candidate') or {}).get('evidence')
-
-    # Claim 2b — the candidate record exists, outside the source checkout.
-    record = candidate.get('candidate') or {}
-    artifact = str(record.get('artifact_location') or '')
-    inside_source = artifact and Path(artifact) == Path(fixture['root'])
-    journey['claims']['candidate_record_created'] = {
-        'status': 'PASSED' if (candidate.get('state') in ('READY_FOR_REVIEW', 'APPROVED', 'REJECTED')
-                               and artifact and not inside_source) else 'FAILED',
-        'detail': {'state': candidate.get('state'), 'artifact_location': artifact,
-                   'inside_source_checkout': bool(inside_source)}}
-
-    # Claim 3 — a verified artifact with real source provenance (only if the run really produced one).
-    evidence = (record.get('evidence') or {})
-    provenance = None
-    if evidence.get('workspace'):
-        workspace = evidence['workspace']
-        provenance = {'workspace': workspace,
-                      'workspace_under_data_root': str(Path(ctx['root']).resolve()).lower()
-                                                   in str(Path(workspace).resolve()).lower(),
-                      'baseline_is_ancestor': git_ok(workspace, 'merge-base', '--is-ancestor',
-                                                     mission['baseline_revision'], 'HEAD'),
-                      'workspace_head': git(workspace, 'rev-parse', 'HEAD') if git_ok(
-                          workspace, 'rev-parse', 'HEAD') else None,
-                      'patch_digest': evidence.get('patch_digest'),
-                      'build_report': (Path(artifact) / 'build-report.json').is_file()}
-    detail['provenance'] = provenance
-    journey['claims']['artifact_verified_with_provenance'] = {
-        'status': 'PASSED' if (evidence.get('verified') is True and provenance
-                               and provenance['workspace_under_data_root']
-                               and provenance['baseline_is_ancestor']
-                               and provenance['build_report']
-                               and record.get('fixed_findings') == findings
-                               and not record.get('unresolved_findings')) else
-                  ('PENDING' if not closed else 'FAILED'),
-        'detail': {'verified_flag': evidence.get('verified'), 'provenance': provenance,
-                   'fixed_findings': record.get('fixed_findings'),
-                   'unresolved_findings': record.get('unresolved_findings'),
-                   'job_closed': closed}}
-
-    # Claim 4 — the complete journey: repair reached the candidate, a person reviews, nothing installs.
-    review = None
-    second_review = None
-    promote_after = None
-    if record.get('id'):
-        review = client.call('/api/dogfood', {'action': 'build_update', 'op': 'review',
-                                              'candidate': record['id'], 'decision': 'approve',
-                                              'note': 'V2-18 synthetic acceptance review'})
-        second_review = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'review',
-                                                        'candidate': record['id'],
-                                                        'decision': 'reject'})
-        promote_after = client.refusal('/api/dogfood', {'action': 'build_update', 'op': 'promote',
-                                                        'candidate': record['id']})
-    statuses_after = {fix_id: client.call('/api/dogfood', {'action': 'get', 'id': fix_id}).get('status')
-                      for fix_id in findings}
-    detail['review'] = review
-    detail['second_review'] = second_review
-    detail['promote_after_approval'] = promote_after
-    detail['finding_statuses_after'] = statuses_after
-    source_still_untouched = (git(fixture['root'], 'status', '--porcelain') == ''
-                              and git(fixture['root'], 'rev-parse', 'HEAD') == fixture['revision'])
-    detail['source_checkout_untouched_at_end'] = source_still_untouched
-    complete = (journey['claims']['mission_created']['status'] == 'PASSED'
-                and journey['claims']['candidate_record_created']['status'] == 'PASSED'
-                and journey['claims']['artifact_verified_with_provenance']['status'] == 'PASSED'
-                and (review or {}).get('review_state') == 'APPROVED'
-                and second_review and second_review.get('refused')
-                and promote_after and promote_after.get('refused')
-                and all(value == 'OPEN' for value in statuses_after.values())
-                and source_still_untouched)
-    journey['claims']['complete_journey'] = {
-        'status': 'PASSED' if complete else ('PENDING' if not closed else 'FAILED'),
-        'detail': {'review_state': (review or {}).get('review_state'),
-                   'second_review_refused': bool(second_review and second_review.get('refused')),
-                   'promote_refused_after_approval': bool(promote_after and promote_after.get('refused')),
-                   'fix_capture_statuses_unchanged': statuses_after,
-                   'source_checkout_untouched': source_still_untouched}}
-
-    # Claim 5 — nothing installs: the refusal is a sentence, and no installed path was written.
-    journey['claims']['no_install_path'] = {
-        'status': 'PASSED' if (fresh.get('refused') and promote_after
-                               and promote_after.get('refused')) else 'FAILED',
-        'detail': {'promote_before': fresh, 'promote_after_approval': promote_after}}
-
-    statuses = [claim.get('status') for claim in journey['claims'].values()]
-    journey['status'] = ('PASSED' if all(value == 'PASSED' for value in statuses)
-                         else 'PENDING' if 'PENDING' in statuses else 'FAILED')
-    return journey
-
-
-def journey_kibble_negatives(client, ctx, dispatch=False, wait=900, poll=10):
-    """A cancelled mission and a plain failing test command must never yield a ready claim."""
-    journey = {'id': 'J-KBU-NEG', 'name': 'Kibble negatives — no false ready claim',
-               'shell_required': False,
-               'requirements': ['Recovery: failures without lost work', 'Work: real autonomous execution'],
-               'claims': {}, 'detail': {}}
-    fixture = ensure_fixture(Path(ctx['fixtures']) / 'kibble-negatives')
-    saved = client.call('/api/dogfood', {'action': 'save',
-                                         'transcript': 'V2-18 synthetic negative: the mission will be '
-                                                       'cancelled before it can produce an artifact.',
-                                         'route': '/work', 'page_title': 'Work',
-                                         'version': client.version})
-    fix_id = saved['id']
-    started = client.call('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                           'findings': [fix_id],
-                                           'source_root': fixture['root'],
-                                           'tests': ['python', '-m', 'unittest', '-v'],
-                                           'scope': ['calc.py']})
-    mission, job_id = started['mission'], started['job']
-    client.call('/api/control', {'action': 'cancel', 'job': job_id})
-    settled = None
-    deadline = time.time() + 120
-    while time.time() < deadline:
-        state = client.call('/api/dogfood', {'action': 'build_update', 'op': 'status',
-                                             'mission': mission['id']})
-        settled = state
-        if state['job'] and state['job'].get('state') in ('CLOSED', 'CANCELLED', 'FAILED'):
-            break
-        time.sleep(poll)
-    candidate = client.call('/api/dogfood', {'action': 'build_update', 'op': 'candidate',
-                                             'mission': mission['id']})
-    record = candidate.get('candidate') or {}
-    journey['claims']['cancelled_mission_claims_nothing'] = {
-        'status': 'PASSED' if not (record.get('evidence') or {}).get('verified') else 'FAILED',
-        'detail': {'job_state': (settled or {}).get('job', {}).get('state'),
-                   'candidate_state': candidate.get('state'),
-                   'evidence': record.get('evidence') or None}}
-
-    if dispatch:
-        failed = client.call('/api/dogfood', {'action': 'save',
-                                              'transcript': 'V2-18 synthetic negative: the test command '
-                                                            'itself fails, so nothing can be verified.',
-                                              'route': '/work', 'page_title': 'Work',
-                                              'version': client.version})
-        second = client.call('/api/dogfood', {'action': 'build_update', 'op': 'start',
-                                              'findings': [failed['id']],
-                                              'source_root': fixture['root'],
-                                              'tests': ['python', '-c', 'import sys; sys.exit(1)'],
-                                              'scope': ['calc.py']})
-        deadline = time.time() + wait
-        state = None
-        while time.time() < deadline:
-            state = client.call('/api/dogfood', {'action': 'build_update', 'op': 'status',
-                                                 'mission': second['mission']['id']})
-            if state['job'] and state['job'].get('state') in ('CLOSED', 'CANCELLED', 'FAILED'):
-                break
-            time.sleep(poll)
-        assembled = client.call('/api/dogfood', {'action': 'build_update', 'op': 'candidate',
-                                                 'mission': second['mission']['id']})
-        record = assembled.get('candidate') or {}
-        evidence = record.get('evidence') or {}
-        still_open = client.call('/api/dogfood', {'action': 'get', 'id': failed['id']}).get('status')
-        journey['claims']['failed_tests_never_verified'] = {
-            'status': 'PASSED' if (evidence.get('verified') in (False, None)
-                                   and not record.get('fixed_findings')
-                                   and still_open == 'OPEN') else 'FAILED',
-            'detail': {'job_state': (state or {}).get('job', {}).get('state'),
-                       'verified': evidence.get('verified'),
-                       'fixed_findings': record.get('fixed_findings'),
-                       'unresolved_findings': record.get('unresolved_findings'),
-                       'finding_status': still_open}}
-    else:
-        journey['claims']['failed_tests_never_verified'] = {
-            'status': 'PENDING', 'detail': 'run with --runtime-negatives to dispatch a really failing '
-                                           'test command'}
-
-    statuses = [claim.get('status') for claim in journey['claims'].values()]
-    journey['status'] = ('PASSED' if all(value == 'PASSED' for value in statuses)
-                         else 'PENDING' if 'PENDING' in statuses else 'FAILED')
     return journey
 
 
@@ -1370,9 +1039,9 @@ def journey_remote(client, ctx, gateway=None):
     return journey
 
 
+# J-SEC, J-KBU and J-KBU-NEG exercised Kibble Build Update, removed by D-86 (Kibble only captures).
 JOURNEYS = {'J-FIX': journey_fix_capture, 'J-UPGRADE': journey_upgrade,
-            'J-SEC': journey_security, 'J-KBU': journey_kibble,
-            'J-KBU-NEG': journey_kibble_negatives, 'J-MODEL': journey_model,
+            'J-MODEL': journey_model,
             'J-CONV': journey_conversation, 'J-PROJ': journey_projects,
             'J-MEM': journey_memory, 'J-RECIPE': journey_recipes,
             'J-NET': journey_network, 'J-CONN': journey_connections,
@@ -1388,15 +1057,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='V2-18 synthetic acceptance journeys')
     parser.add_argument('--root', default=DEFAULT_ROOT, help='the engine data root to attach to')
     parser.add_argument('--fixtures', default=DEFAULT_FIXTURES, help='where synthetic repositories live')
-    parser.add_argument('--journeys', default='J-FIX,J-UPGRADE,J-SEC,J-KBU',
+    parser.add_argument('--journeys', default='J-FIX,J-UPGRADE',
                         help='comma-separated journey ids (or ALL)')
     parser.add_argument('--out', default=None, help='evidence JSON path')
     parser.add_argument('--wait', type=int, default=900, help='seconds a dispatched mission may take')
     parser.add_argument('--poll', type=int, default=10)
-    parser.add_argument('--no-runtime', action='store_true',
-                        help='do not let the real runtime dispatch (claims become PENDING)')
-    parser.add_argument('--runtime-negatives', action='store_true',
-                        help='also dispatch a mission whose test command really fails')
     parser.add_argument('--gateway', default=None,
                         help='the web-host gateway URL for J-REMOTE (default: the one listening now)')
     args = parser.parse_args(argv)
@@ -1421,13 +1086,7 @@ def main(argv=None):
     for name in wanted:
         started = time.time()
         try:
-            if name == 'J-KBU':
-                result = journey_kibble(client, ctx, dispatch=not args.no_runtime, wait=args.wait,
-                                        poll=args.poll)
-            elif name == 'J-KBU-NEG':
-                result = journey_kibble_negatives(client, ctx, dispatch=args.runtime_negatives,
-                                                  wait=args.wait, poll=args.poll)
-            elif name == 'J-WORK':
+            if name == 'J-WORK':
                 result = journey_work(client, ctx, wait=args.wait, poll=args.poll)
             elif name == 'J-MODEL':
                 result = journey_model(client, ctx, wait=args.wait, poll=args.poll)

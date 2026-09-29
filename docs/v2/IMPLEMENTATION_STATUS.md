@@ -533,7 +533,10 @@ survives the restore; and re-opening with every V2 module ensuring its schema ch
 ledger row. Live on the real V2 root: 107 tables, ledger = 24 migrations, and the backup copy's V2
 counts matched the live inventory exactly. No updater infrastructure (by directive). D-45.
 
-## Kibble Build Update — the backend contract (BUILT, 2026-09-21)
+## Kibble Build Update — the backend contract (BUILT, 2026-09-21; REMOVED 2026-09-29 by D-86)
+
+**Removed 2026-09-29 by D-86 (Kibble only captures).** `kel/build_update.py`, its API ops, the Kibble panel and
+its tests are gone. The section below is history.
 
 Definition first (D-46): Kibble is the user-facing name for Fix Capture / Dogfood behavior; the
 workflow is capture → select findings → Build Update → isolated development mission → a coding runtime

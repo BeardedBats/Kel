@@ -12,6 +12,9 @@ An earlier unit suite never counts as verification of current integrated behavio
 journey never closes a broader product phase. Re-established 2026-09-22 against `dev/v2` @ the HEAD
 below; corrected whenever a run proves otherwise.
 
+D-86 (2026-09-29) removed Kibble Build Update and its journeys J-SEC, J-KBU and J-KBU-NEG; rows that
+cite them record past runs, and those journeys can no longer be re-run.
+
 | # | Requirement | Owner | State | Evidence | Dependency / next action |
 |---|---|---|---|---|---|
 | S1 | §27 Conversation: discussion, long-running, continuation | backend | **IU** | `test_v13_continuation*`; V2-05 Journey H (phone round trip) | J-CONV journey: two real turns on the real root, continuation asserted from the store |

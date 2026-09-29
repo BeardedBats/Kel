@@ -18,7 +18,7 @@ from kel.core import Store  # noqa: E402
 MODULES = ('memory', 'projectmap', 'continuation', 'recipes', 'solution', 'team', 'providers',
            'autonomy', 'diagnostics', 'authorize', 'vetting', 'transcription', 'model_prefs',
            'capabilities', 'workforce', 'delegation', 'parallel', 'chat_approvals', 'assignment',
-           'dogfood', 'connections', 'build_update', 'handoff', 'projects', 'schedules', 'authority')
+           'dogfood', 'connections', 'handoff', 'projects', 'schedules', 'authority')
 EXPECTED_MAX = 35
 
 
@@ -111,3 +111,6 @@ class MigrationSetTests(unittest.TestCase):
         self.assertEqual(claimed[32], 'projects')
         self.assertEqual(claimed[31], 'handoff')
         self.assertEqual(claimed[30], 'recipes')
+        # 29 was Kibble Build Update's marker (removed by D-86). Old databases keep the row and
+        # their unused tables; the number is retired, never reused.
+        self.assertNotIn(29, claimed)

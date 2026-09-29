@@ -9,7 +9,7 @@ single audit list at the bottom and is deliberately **not run yet**.
 | --- | --- |
 | Expired session routes to sign-in | `httpBridge` signals session-expired after the one silent refresh; `AuthProvider` flips to signed-out; the router's sign-in gate takes over **and remembers the destination** |
 | Unknown conversation is honest | the conversation route keeps the visitor where they are with an Arco `Result` + the id, instead of a toast and a silent bounce home |
-| Build Update surface | Kibble: pick findings → repository folder → mission → milestones with attempts → candidate evidence → Approve/Reject with a note. Fix Capture statuses untouched; installing not offered |
+| Build Update surface (**removed by D-86**) | Kibble: pick findings → repository folder → mission → milestones with attempts → candidate evidence → Approve/Reject with a note. Fix Capture statuses untouched; installing not offered |
 | Recipe runs reopened | `history` + `last_result` through the engine's own job records, with a link to the run on the Work page |
 | Attention actions | `/api/work` rows carry the id their one action needs; the Work page renders answer / resume / stop / retry per row |
 

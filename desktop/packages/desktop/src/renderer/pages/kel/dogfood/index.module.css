@@ -1,23 +1,6 @@
 /**
  * Dogfood Fixes — a quiet list, not a board. Neutral full-perimeter borders, Kel tokens, compact rows.
  */
-/* Kibble Build Update: the mission/candidate read-out under the pick list. */
-.buildState {
-  display: flex;
-  flex-direction: column;
-  gap: var(--kel-space-2);
-  margin-top: var(--kel-space-3);
-}
-
-.buildList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--kel-space-1);
-}
-
 .pickList {
   list-style: none;
   margin: 0;
@@ -146,7 +129,8 @@
 }
 
 /* Current desktop Kibble frame 272:1087. Runtime state may grow these panels. */
-.desktop .topPanels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+/* One panel since D-86 (Kibble only captures): the Build Update panel beside it is gone. */
+.desktop .topPanels { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .desktop .actionPanel, .desktop .fixesPanel { min-width: 0; padding: 18px 20px; border: 1px solid var(--kel-figma-color-glass-edge-lit, var(--kel-border)); border-radius: 16px; background: var(--kel-shell-card-fill, var(--kel-surface-1)); }
 .desktop .actionPanel { display: flex; flex-direction: column; gap: 12px; min-height: 280px; }
 .desktop .actionPanel :global(.kel-row) { flex-wrap: wrap; }
@@ -190,13 +174,4 @@
 
 .mobileContents { display: contents; }
 
-.buildSummary { display: flex; align-items: center; gap: 10px; color: var(--kel-text-1); font: 400 13px/18px var(--kel-font); }
-.buildSummary strong { margin-left: auto; color: var(--kel-text-2); font-size: 13px; }
-.buildSpinner { width: 14px; height: 14px; flex-shrink: 0; animation: kibble-spin 1s linear infinite; }
-@keyframes kibble-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .buildSpinner { animation: none; } }
-
 .desktop .explanation { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.buildDetails { color: var(--kel-text-2); font-size: 12px; overflow-wrap: anywhere; }
-.buildDetails summary { cursor: pointer; }
-.buildDetails[open] > summary { margin-bottom: 8px; }

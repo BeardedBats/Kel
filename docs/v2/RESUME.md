@@ -463,7 +463,8 @@ dev engine and the candidate app are stopped unless the checkpoint that follows 
    and assert the sentence matches the stored decision), then in order J-WORK, J-MEM, J-RECIPE,
    J-ATTN, J-RECOV, J-NET, then the labelled fixtures J-CONN and J-TRANS. Phone/renderer journeys stay
    PENDING for Shell integration. Read `ROADMAP.md`'s V2-18 line and the directive before designing;
-   do not build Astra-owned presentation. **Kibble Build Update is BUILT**
+   do not build Astra-owned presentation. **Kibble Build Update was BUILT, then removed by D-86
+   (2026-09-29: Kibble only captures)**
 
    (D-46 corrected D-44; D-47; `docs/v2/evidence/kibble-build-update/README.md`): the mission and
    candidate contract on the existing machinery, `promote()` always refusing, the UI contract recorded

@@ -137,7 +137,7 @@ Feature → state → evidence. "State" is what is actually true on disk right n
 describe what the V2 line inherits from `dev/daily-driver` at `a471e17` (evidence lives in that line's
 `docs/daily-driver/` and `docs/transcription/`), and the V2 rows are added as phases land.
 
-Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historical phase rows retain their original evidence. V2-18's cancelled Build Update and no-job submission defects are fixed and packaged. Kibble reads candidate verification and report location from the engine's returned fields. The full engine regression passed 1,289 tests and 14 subtests; desktop passed 396. Canonical Tools and enabled WebUI evidence is in `evidence/figma-full-audit/`. Exact UI parity and live acceptance remain open.
+Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historical phase rows retain their original evidence. V2-18's cancelled Build Update and no-job submission defects are fixed and packaged. Kibble Build Update was later removed by D-86 (Kibble only captures). The full engine regression passed 1,289 tests and 14 subtests; desktop passed 396. Canonical Tools and enabled WebUI evidence is in `evidence/figma-full-audit/`. Exact UI parity and live acceptance remain open.
 
 ## Baseline inherited by V2 (verified on `dev/daily-driver` @ a471e17)
 
@@ -179,6 +179,11 @@ Current source is canonical `main` at `C:\Users\Nick\Desktop\Kel\Kel`. Historica
 
 Removed from the intended V2 connection list by the directive: **Gmail** and **Slack** (they are not
 V2 scope; do not re-add them without a recorded decision).
+
+**Removed 2026-09-29 by D-86 (Kibble only captures).** The Build Update engine path (`kel/build_update.py`, its `/api/dogfood build_update` ops, candidate
+records, promote/review), its Kibble panel and its journeys (J-SEC, J-KBU, J-KBU-NEG) are gone; Kibble
+captures findings, lists them and prepares the fix prompt. Old databases keep the unused
+`build_missions`/`build_candidates` tables and migration marker 29. The history below is kept as it was.
 
 **Kibble Build Update (queue Priority 9) — corrected and active (D-46).** Kibble is the user-facing
 name for **Fix Capture / Dogfood behavior** (the authoritative definition arrived in Nick's session

@@ -50,8 +50,6 @@ export type ConfigKeyMap = {
   'kel.onboardingCompleted_v1': boolean | undefined;
   /** Desktop Setup folder draft; this does not change the global workspace default. */
   'kel.setupWorkspace_v1': string | undefined;
-  /** Desktop Kibble resume pointer; engine records remain authoritative. */
-  'kel.kibbleLastMission': string | undefined;
 };
 
 export type ConfigKey = keyof ConfigKeyMap;

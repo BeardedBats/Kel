@@ -1274,66 +1274,7 @@ export const kelDogfood = {
       return null;
     }
   },
-  /**
-   * Kibble Build Update (D-46/D-47): turn selected findings into a development mission and a
-   * reviewable candidate. Fix Capture statuses are never touched by any of it, and `promote` is
-   * exposed so the surface can show the engine's own refusal — installing is a separate decision.
-   */
-  buildUpdate: {
-    start: (findings: string[], sourceRoot: string, tests: string[] = []) =>
-      call<{ mission: KelBuildMission; job: string; contract: Record<string, unknown> }>(
-        '/api/dogfood',
-        { action: 'build_update', op: 'start', findings, source_root: sourceRoot, tests }
-      ),
-    status: (mission: string) =>
-      call<{
-        mission: KelBuildMission;
-        job: { id: string; state?: string; verdict?: string; milestones?: Record<string, { state?: string; attempts?: number }> } | null;
-        candidate: KelBuildCandidate | null;
-      }>('/api/dogfood', { action: 'build_update', op: 'status', mission }),
-    candidate: (mission: string) =>
-      call<{ state: string; candidate: KelBuildCandidate | null; job_state?: string }>(
-        '/api/dogfood',
-        { action: 'build_update', op: 'candidate', mission }
-      ),
-    review: (candidate: string, decision: 'approve' | 'reject', note = '') =>
-      call<KelBuildCandidate>('/api/dogfood', {
-        action: 'build_update',
-        op: 'review',
-        candidate,
-        decision,
-        note,
-      }),
-    promote: (candidate: string) =>
-      call<Record<string, unknown>>('/api/dogfood', {
-        action: 'build_update',
-        op: 'promote',
-        candidate,
-      }),
-  },
 };
-
-export interface KelBuildMission {
-  id: string;
-  job_id?: string | null;
-  stage?: string;
-  source_root?: string;
-  baseline_revision?: string | null;
-  findings?: string[];
-}
-
-export interface KelBuildCandidate {
-  id: string;
-  mission_id?: string;
-  review_state?: string;
-  revision?: string | null;
-  artifact_location?: string | null;
-  evidence?: { verified?: boolean; [key: string]: unknown };
-  fixed_findings?: string[];
-  unresolved_findings?: string[];
-  limitations?: string[];
-  note?: string | null;
-}
 
 export const kelAutonomy = {
   leases: (jobId?: string) =>
