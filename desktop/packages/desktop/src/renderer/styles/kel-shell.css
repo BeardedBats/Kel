@@ -318,6 +318,8 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
 .kel-v2-shell .kel-shell-composer:focus-within, .kel-v2-shell .sendbox-panel:focus-within { border-color: var(--kel-figma-color-control-focus) !important; }
 .kel-v2-shell .kel-shell-composer textarea, .kel-v2-shell .sendbox-panel textarea { font: 400 16px/25px var(--kel-shell-body) !important; color: var(--kel-text-1); }
 .kel-v2-shell .kel-shell-composer textarea::placeholder { color: var(--kel-figma-color-text-muted) !important; }
+/* FIX-0018 (Nick): the hint leaves as soon as the composer is focused. */
+.kel-v2-shell :is(.kel-shell-composer, .sendbox-panel) textarea:focus::placeholder { color: transparent !important; -webkit-text-fill-color: transparent !important; }
 .kel-v2-shell .kel-shell-composer-spacer { height: 12px; }
 .kel-v2-shell .send-button-custom { background: transparent !important; border: 0 !important; border-radius: 10px !important; box-shadow: none !important; color: var(--kel-text-1) !important; }
 .kel-v2-shell .send-button-custom:disabled { opacity: .4 !important; }
@@ -4124,15 +4126,15 @@ html[data-theme='light'] body .kel-tools-menu :is(.arco-dropdown-menu-group-titl
 html[data-theme='light'] body .kel-tools-menu .arco-dropdown-menu-item:not(.arco-dropdown-menu-item-disabled):hover, html[data-theme='light'] body .kel-tools-menu .kel-tools-menu__current { background: rgba(47,111,159,.1) !important; }
 
 /* Sidebar geometry (Home 185:2658): New Chat y65, section label 42px (text at +18), rows 28 on a 32 pitch,
-   no divider above Recent. Sticky labels carry the sidebar paint so rows never show through (VS-5). */
+   no divider above Recent. Nick 2026-09-29: the Pinned / Recent labels are plain headings on the sidebar
+   surface — no band behind them — so they scroll with their rows instead of sticking (VS-5 superseded). */
 @media (min-width: 768px) {
   .kel-v2-shell .layout-sider-header { box-sizing: border-box; height: 65px !important; min-height: 65px; padding: 16px 8px 14px 12px !important; align-items: center; }
   .kel-v2-shell .sider-section-label { box-sizing: border-box; height: 42px !important; min-height: 42px; margin: 2px 0 4px !important; padding: 18px 6px 8px !important; align-items: flex-start !important; }
   .kel-v2-shell .kel-shell-recent-section { margin-top: 0 !important; padding-top: 0 !important; }
   .kel-v2-shell .kel-shell-recent-section .sider-section-label { margin-top: 0 !important; }
   .kel-v2-shell .kel-shell-recent-section::before { display: none !important; }
-  html[data-theme='dark'] body .kel-v2-shell .sider-section-label { background: rgba(27,34,59,.94) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-  html[data-theme='light'] body .kel-v2-shell .sider-section-label { background: var(--bg-base, #fafafb) !important; }
+  body .kel-v2-shell .sider-section-label { position: static !important; background: transparent !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
 /* Conversation rows (273:8692): selected = tint only (no outline), status dot stays, the ⋮ trigger is a bare
@@ -4152,6 +4154,17 @@ html[data-theme='light'] body .kel-v2-shell .conversation-item:not(.settings-sid
 
 /* Titlebar controls in the sidebar logo row (FIX-0012). */
 .layout-sider-header > .app-titlebar__menu--sider { display: flex; align-items: center; gap: 2px; margin-left: auto; -webkit-app-region: no-drag; }
+/* Nick 2026-09-29: the Kel mark + wordmark are one button home (#/guid). */
+.kel-brand-home {
+  display: flex; align-items: center; gap: 12px; margin: 0; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: inherit; font: inherit; cursor: pointer; -webkit-app-region: no-drag;
+}
+.kel-brand-home:focus-visible { outline: 2px solid #9fdaff; outline-offset: 3px; }
+/* Nick 2026-09-29: a thin title-bar strip along the whole top edge moves the window (double-click
+   maximises / restores). Controls that reach into it opt out with no-drag. */
+.kel-window-drag-strip { position: fixed; top: 0; left: 0; right: 0; height: 10px; z-index: 0; -webkit-app-region: drag; }
+.kel-v2-shell :is(.kel-brand-home, .layout-sider-header button, .app-titlebar__button, .app-titlebar__toolbar button,
+  .kel-shell-workspace-link, .kel-skip, .kel-desktop-picker) { -webkit-app-region: no-drag; }
 [data-testid='ramble-navigation'] .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; }
 [data-testid='ramble-navigation'] .app-titlebar__button svg { width: 16px; height: 16px; }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; color: var(--kel-text-2, #c4d4e8); }

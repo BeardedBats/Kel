@@ -9,14 +9,14 @@ import { ipcBridge } from '@/common';
 import { TEAM_MODE_ENABLED } from '@/common/config/constants';
 import PwaPullToRefresh from '@/renderer/components/layout/PwaPullToRefresh';
 import Titlebar from '@/renderer/components/layout/Titlebar';
-import { Layout as ArcoLayout, Tooltip } from '@arco-design/web-react';
+import { Layout as ArcoLayout } from '@arco-design/web-react';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useMotionScene } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
-import brandMark from '@renderer/assets/figma/kel-mark.png';
+import { KelBrandHome, KelWindowDragStrip } from '@renderer/components/layout/KelBrandHome';
 import KelCommandPalette from '@renderer/components/kel/KelCommandPalette';
 import KelInChatFrame from '@renderer/components/kel/KelInChatFrame';
 import KelMobileTabs from '@renderer/components/kel/KelMobileTabs';
@@ -195,26 +195,6 @@ const Layout: React.FC<{
     return () => setGlobalNavigate(null);
   }, [navigate]);
   const { t } = useTranslation();
-  // The "AionUi" wordmark acts as Home / Back-to-Chat, but only from settings routes.
-  // In non-settings routes the user is already "home", so it is a no-op (and not actionable).
-  const isSettingsRoute = location.pathname.startsWith('/settings');
-  // Only wired to the wordmark in the isSettingsRoute branch below, so the
-  // "no-op outside settings" contract is enforced structurally — no internal
-  // route guard needed (the chat-route wordmark is a plain, inert div).
-  const handleBrandHome = useCallback(() => {
-    // Mirror Titlebar's handleBackToChat convention: return to the last non-settings path.
-    let target: string | null = null;
-    try {
-      target = sessionStorage.getItem('aion:last-non-settings-path');
-    } catch {
-      // ignore
-    }
-    if (target && !target.startsWith('/settings')) {
-      void navigate(target);
-      return;
-    }
-    void navigate('/guid');
-  }, [navigate]);
   // Close preview whenever the user leaves the conversation route entirely
   // (e.g. switches to a team, /guid, or settings). Within /conversation/:id
   // the finer-grained closePreviewIfScopeChanged in conversation/index.tsx
@@ -421,6 +401,9 @@ const Layout: React.FC<{
     <LayoutContext.Provider value={{ isMobile, siderCollapsed: collapsed, setSiderCollapsed: setCollapsed, titlebarMenuHost, setTitlebarMenuHost }}>
       <NavigationHistoryProvider>
         <div className='app-shell kel-v2-shell flex flex-col size-full min-h-0' data-surface={location.pathname}>
+          {/* Nick 2026-09-29: drag the window from anywhere along its top edge. First in the shell, so every
+              later control marked no-drag stays clickable. */}
+          {isElectronDesktop() && !isMobile && <KelWindowDragStrip />}
           {/* Kel V1.4: the shell's first tab stop — jumps past the sider to the routed content. */}
           <a className='kel-skip' href='#kel-shell-content'>
             Skip to main content
@@ -454,37 +437,8 @@ const Layout: React.FC<{
                   }
                 )}
               >
-                <div
-                  className={classNames('shrink-0 size-32px relative rd-0.5rem overflow-hidden', {
-                    '!size-24px': collapsed,
-                  })}
-                  onClick={onClick}
-                >
-                  {/* Canonical Kel mark — the same asset the About page loads. Never redrawn or
-                      replaced with a text glyph. */}
-                  <img src={brandMark} alt='' className='absolute inset-0 size-full object-contain' draggable={false} />
-                </div>
-                {isSettingsRoute ? (
-                  <Tooltip content={t('common.back', { defaultValue: 'Back to Chat' })} position='bottom'>
-                    <div
-                      className='text-16px text-t-primary collapsed-hidden font-semibold cursor-pointer'
-                      role='button'
-                      tabIndex={0}
-                      aria-label={t('common.back', { defaultValue: 'Back to Chat' })}
-                      onClick={handleBrandHome}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          handleBrandHome();
-                        }
-                      }}
-                    >
-                      Kel
-                    </div>
-                  </Tooltip>
-                ) : (
-                  <div className='text-16px text-t-primary collapsed-hidden font-semibold'>Kel</div>
-                )}
+                {/* Nick 2026-09-29: the Kel mark and wordmark are one button to the start page (#/guid). */}
+                <KelBrandHome collapsed={collapsed} onPress={onClick} />
                 {isMobile && !collapsed && (
                   <button
                     type='button'
