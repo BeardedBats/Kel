@@ -1031,3 +1031,25 @@ Build Update path of D-46..D-49 (candidate records, promote/review); Kel still n
 3. **Soft scroll edges.** Scrolling panels (starting with Settings content) fade content out at the bottom
    edge with a smooth transparency blend — no visible seam — so it's clear there is more below and text
    never sits hard against a border.
+
+## D-88 — Writer and Animator roles (answers to WRITER_ANIMATOR_ROLES.md §6)
+
+**Decided by Nick 2026-09-29: "Go with rec on all 11 questions", voice samples skipped for now.**
+1. **Writer is a new role** and takes all writing now staffed as Builder (supersedes D-69.4), except code
+   comments, commit messages and the Discovery research synthesis. It starts in shadow.
+2. **Writer model:** Fable 5.1; validation decides whether it stays.
+3. **Voice samples: skipped for now.** The Writer runs without a voice folder; `Memory\Taste\Writing\` is
+   created empty and Kel doesn't ask for samples until Nick brings it up.
+4. **The Editor blocks only** on unsupported facts, missing content, slop over the threshold, or the wrong
+   reader or purpose. Style notes are advisory; the Writer answers each once.
+5. **Animator:** Opus 5.5 builds, Astra reviews.
+6. **Taste library:** motion only now, writing voice as a small sibling; visual/layout taste later.
+7. **Capture:** "tell Kel" and the inbox folder now; the Ctrl+Shift+M hotkey is phase 2.
+8. **Rule changes:** rules quoted straight from Nick's notes are added automatically; Kel asks only when a
+   rule changes or contradicts another.
+9. **Privacy:** reference clips and frames may go to Anthropic/OpenAI as examples unless marked private;
+   screen captures default to private.
+10. **Seed the motion library** with Kel's 15 approved moments as "loved" references.
+11. **Designer on HTML pages** only when there's no existing look or Nick asks for design.
+Per D-85, the validation runs (§4, step 12) are deferred: no blind-rating sessions for Nick unless the
+roles visibly underperform in use.
