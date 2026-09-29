@@ -1,12 +1,14 @@
-// FN-01: Claude Code PreToolUse hook that keeps a Kel worker out of protected places.
+// FN-01 / D-81: Claude Code PreToolUse hook that keeps a Kel worker inside Kel's Memory folder.
 //
 // Claude Code runs this before every tool call, in every permission mode — bypassPermissions
 // auto-approves tool calls "except explicit deny rules", and a PreToolUse hook is the documented
 // way to gate every call (Claude Code 2.1.283). The policy is a JSON file Kel writes per run
-// (KEL_GUARD_POLICY): the run's working copy (the only place file tools may write), a few files
-// the worker may read, and the protected roots (Kel's own data, the installed app, credential
-// folders, KEL_PROTECTED_PATHS) that no tool may read or write. Fails closed: if the check itself
-// breaks, the tool call is denied.
+// (KEL_GUARD_POLICY). It is an ALLOW-LIST (D-81):
+//   * read + write: the run's working copy, the Memory folder (every project in it), the run's temp;
+//   * read only:    Memory\Kel (Kel's mirror of its settings, chats and notes), a few named files,
+//                   and the system and tool folders the CLIs need (Windows, Program Files, PATH);
+//   * everything else is refused: "That's outside Kel's Memory folder, so I can't touch it."
+// Fails closed: if the check itself breaks, the tool call is denied.
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -16,6 +18,9 @@ const FILE_TOOLS = new Set(['Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit'
 const WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 const SHELL_TOOLS = new Set(['Bash', 'PowerShell']);
 const win = process.platform === 'win32';
+// Git for Windows mounts these inside its own install folder: system paths, read-only for work.
+const POSIX_SYSTEM = ['/usr', '/bin', '/etc', '/mingw64', '/mingw32', '/dev', '/proc', '/tmp', '/opt', '/lib'];
+const REFUSAL = "That's outside Kel's Memory folder, so I can't touch it.";
 
 function norm(p) {
   let text = path.resolve(p);
@@ -29,6 +34,7 @@ function norm(p) {
     }
   }
   text = path.join(head, ...tail).replace(/[\\/]+$/, '');
+  if (/^[A-Za-z]:$/.test(text)) text += path.sep;
   return win ? text.toLowerCase() : text;
 }
 
@@ -38,16 +44,35 @@ function inside(target, root) {
   return target === root || target.startsWith(root.endsWith(sep) ? root : root + sep);
 }
 
+function vars() {
+  const home = process.env.USERPROFILE || os.homedir();
+  return { HOME: home, USERPROFILE: home, APPDATA: process.env.APPDATA, LOCALAPPDATA: process.env.LOCALAPPDATA,
+    TEMP: process.env.TEMP, TMP: process.env.TMP, KEL_DATA_DIR: process.env.KEL_DATA_DIR };
+}
+
+function expandText(text) {
+  const v = vars();
+  let t = String(text || '');
+  t = t.replace(/\$env:([A-Za-z_][A-Za-z0-9_]*)/gi, (m, n) => v[n.toUpperCase()] ?? process.env[n] ?? m);
+  t = t.replace(/%([A-Za-z_][A-Za-z0-9_()]*)%/g, (m, n) => v[n.toUpperCase()] ?? process.env[n] ?? m);
+  t = t.replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, (m, n) => v[n.toUpperCase()] ?? process.env[n] ?? m);
+  return t;
+}
+
+// A POSIX-rooted Git Bash system path (/usr/bin/env, /dev/null, /tmp/x), or a Windows switch (/c, /s).
+function systemToken(t) {
+  if (!win || !t.startsWith('/') || t.startsWith('//')) return false;
+  if (POSIX_SYSTEM.some(p => t === p || t.startsWith(p + '/'))) return true;
+  return /^\/[A-Za-z?]{1,3}$/.test(t);  // a switch: cmd /c, dir /s /b, findstr /i
+}
+
 function expand(token, cwd) {
   let t = String(token || '').trim().replace(/^['"`]+|['"`;,)]+$/g, '');
   t = t.replace(/^(\d?>>?|<|&>)/, '');
   if (!t) return null;
-  const home = process.env.USERPROFILE || os.homedir();
-  const vars = { HOME: home, USERPROFILE: home, APPDATA: process.env.APPDATA, LOCALAPPDATA: process.env.LOCALAPPDATA,
-    TEMP: process.env.TEMP, TMP: process.env.TMP, KEL_DATA_DIR: process.env.KEL_DATA_DIR };
-  t = t.replace(/\$env:([A-Za-z_][A-Za-z0-9_]*)/gi, (m, v) => vars[v.toUpperCase()] ?? process.env[v] ?? m);
-  t = t.replace(/%([A-Za-z_][A-Za-z0-9_]*)%/g, (m, v) => vars[v.toUpperCase()] ?? process.env[v] ?? m);
-  t = t.replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, (m, v) => vars[v.toUpperCase()] ?? process.env[v] ?? m);
+  t = expandText(t);
+  if (systemToken(t)) return null;
+  const home = vars().HOME;
   if (t === '~' || t.startsWith('~/') || t.startsWith('~\\')) t = home + t.slice(1);
   if (win) {
     const bash = /^\/([a-zA-Z])(\/|$)(.*)$/.exec(t);  // Git Bash /c/Users/...
@@ -68,66 +93,78 @@ function load(policyFile) {
   return {
     raw: policy,
     workspace: norm(policy.workspace),
+    memory: policy.memory ? norm(policy.memory) : null,
+    mirror: policy.mirror ? norm(policy.mirror) : null,
     writable: (policy.writable || []).map(norm),
     readable: (policy.readable || []).map(norm),
+    system: (policy.system || []).map(norm),
     protected: (policy.protected || []).map(p => ({ path: norm(p.path), label: p.label, shown: p.path })),
     log: policy.log || null,
   };
+}
+
+function outside(target, label) {
+  return `Kel blocked this: ${target} is outside Kel's Memory folder${label ? ` (it is ${label})` : ''}. ` +
+    'Every AI tool Kel runs works only inside the Memory folder and the working copy. Do not try another way. ' +
+    `Finish the rest of the request; that part was not done, so say plainly in your answer: "${REFUSAL}"`;
 }
 
 // null when the access is fine; a plain sentence when it is not.
 function check(policy, target, write, fileTool) {
   const t = norm(target);
   if (inside(t, policy.workspace)) return null;
+  if (policy.mirror && inside(t, policy.mirror)) {
+    if (write && fileTool) {
+      return `Kel blocked this: ${target} is in Memory\\Kel, Kel's own read-only copy of its settings, chats and ` +
+        'notes. Read it freely, but never change it; agents never change Kel\'s settings. Say so plainly if the request asked for it.';
+    }
+    return null;
+  }
+  if (policy.memory && inside(t, policy.memory)) return null;
+  if (policy.writable.some(r => inside(t, r))) return null;
   if (!write && policy.readable.some(r => t === r)) return null;
   for (const root of policy.protected) {
-    if (inside(t, root.path)) {
-      return `Kel blocked this: ${target} is in ${root.label}, which Kel never ${fileTool ? (write ? 'changes' : 'opens') : 'touches'} for work. ` +
-        'Do not try another way. Finish the rest of the request, and say plainly in your answer that this part was not done ' +
-        'because that folder is off-limits (offer to save it in the project instead).';
-    }
+    if (inside(t, root.path)) return outside(target, root.label);
   }
-  if (write && fileTool && !policy.writable.some(r => inside(t, r))) {
-    return `Kel blocked this: ${target} is outside the working copy. Make every file change inside the working copy ` +
-      `(${policy.raw.workspace}); Kel applies the checked change to the project itself.`;
+  if (policy.system.some(r => inside(t, r))) {
+    if (write && fileTool) return outside(target, 'a system or program folder');
+    return null;
   }
-  return null;
+  return outside(target, null);
 }
 
-function shellTargets(command, cwd) {
+// Shell words, quote-aware: a quoted string is one word (so "C:\Program Files\Git\bin\bash.exe" stays whole).
+function words(command) {
   const out = [];
-  const tokens = String(command || '').split(/[\s|&;()<>]+/);
-  for (const raw of tokens) {
-    for (const piece of raw.split(/=(?=.)/)) {
-      const clean = piece.replace(/^['"`]+|['"`]+$/g, '');
-      if (!clean || !pathish(clean)) continue;
-      const target = expand(clean, cwd);
-      if (target) out.push(target);
-    }
+  const re = /"([^"]*)"|'([^']*)'|`([^`]*)`|([^\s|&;<>()"'`]+)/g;
+  let m;
+  while ((m = re.exec(String(command || '')))) {
+    if (m[4] !== undefined) for (const piece of m[4].split(/=(?=.)/)) out.push(piece);
+    else out.push(m[1] ?? m[2] ?? m[3]);
   }
   return out;
 }
 
-function textHit(policy, command) {
-  const text = String(command || '').replace(/["'`]/g, '').toLowerCase();
-  const variants = [text, text.replace(/\\\\/g, '\\'), text.replace(/\//g, '\\'), text.replace(/\\/g, '/')];
-  for (const root of policy.protected) {
-    const r = root.path.toLowerCase();
-    const forms = [r, r.replace(/\\/g, '/'), win ? '/' + r[0] + r.slice(2).replace(/\\/g, '/') : r];
-    if (forms.some(f => variants.some(v => {
-      let i = v.indexOf(f);
-      while (i >= 0) {
-        // A mention of the working copy (which may sit inside Kel's data) is the work itself.
-        const rest = v.slice(i);
-        const ws = policy.workspace.toLowerCase();
-        const wsForms = [ws, ws.replace(/\\/g, '/'), win ? '/' + ws[0] + ws.slice(2).replace(/\\/g, '/') : ws];
-        if (!wsForms.some(w => rest.startsWith(w))) return true;
-        i = v.indexOf(f, i + 1);
-      }
-      return false;
-    }))) return root;
+function shellTargets(command, cwd) {
+  const out = [];
+  for (const word of words(command)) {
+    const clean = word.trim();
+    if (!clean || !pathish(clean)) continue;
+    const target = expand(clean, cwd);
+    if (target) out.push(target);
   }
-  return null;
+  return out;
+}
+
+// Drive-letter paths anywhere in the command (also inside code: node -e "fs.readFileSync('C:/...')").
+// Each comes as [the path up to the first space, the path up to the next quote or separator].
+function embeddedPaths(command) {
+  const text = expandText(command);
+  const out = [];
+  const re = /(?<![A-Za-z0-9])([A-Za-z]:[\\/][^\s'"`;|&<>()*?]*)(?=([^'"`;|&<>()*?\r\n]*))/g;
+  let m;
+  while ((m = re.exec(text))) out.push([m[1], (m[1] + m[2]).trimEnd()]);
+  return out;
 }
 
 function decide(policy, input) {
@@ -154,13 +191,19 @@ function decide(policy, input) {
   }
   if (SHELL_TOOLS.has(tool)) {
     const command = String(args.command || '');
+    const here = check(policy, cwd, false, false);
+    if (here) return here;
     for (const target of shellTargets(command, cwd)) {
       const reason = check(policy, target, true, false);
       if (reason) return reason;
     }
-    const root = textHit(policy, command);
-    if (root) return check(policy, root.shown, true, false) ||
-      `Kel blocked this: the command names ${root.label}, which Kel never touches for work.`;
+    for (const [short, long] of embeddedPaths(command)) {
+      const reason = check(policy, short, true, false);
+      if (!reason) continue;
+      // "C:\Program Files\..." splits at its space: the longer form counts only when it has no "..".
+      if (long !== short && !/(^|[\\/])\.\.([\\/]|$)/.test(long) && !check(policy, long, true, false)) continue;
+      return reason;
+    }
     return null;
   }
   return null;
@@ -180,7 +223,7 @@ function deny(reason) {
   process.exit(0);
 }
 
-export { decide, load, check, shellTargets };
+export { decide, load, check, shellTargets, embeddedPaths, words, REFUSAL };
 
 const main = Boolean(process.argv[1]) && path.resolve(process.argv[1]).toLowerCase() === fileURLToPath(import.meta.url).toLowerCase();
 if (main) {
