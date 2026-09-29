@@ -262,6 +262,11 @@ class Engine:
                         continue
                 for mid, m in job['milestones'].items():
                     if m['state'] == 'CHECKING':
+                        # D-88: an Animator's step is captured on its own thread first (never inside
+                        # the verify transaction); it is verified on a later pass once the capture is in.
+                        from .motion_capture import capture_pending
+                        if capture_pending(self.store, job, mid):
+                            continue
                         self.store.verify(job['id'], mid)
                         current=self.store.get(job['id'])['milestones'][mid]
                     current_job=self.store.get(job['id']);current=current_job['milestones'][mid]

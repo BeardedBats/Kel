@@ -115,7 +115,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(staff._role_for_step('writing', milestone, 'D1', False, 'plain text', None, 'design'),
                          'designer')
         self.assertEqual(staff._role_for_step('writing', milestone, 'D1', True, 'a new screen layout', None,
-                                              'writing'), 'builder', "the model's class outranks the word list")
+                                              'writing'), 'writer', "the model's class outranks the word list (D-88)")
         self.assertEqual(staff._role_for_step('writing', milestone, 'D1', False, 'plain text', None, 'utility'),
                          'utility')
 

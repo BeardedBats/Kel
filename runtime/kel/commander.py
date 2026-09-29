@@ -474,9 +474,18 @@ class Commander:
         lenses=lenses_for(job,milestone_id)
         if lenses:
             prompt+=lens_prompt(lenses)
-            # D-88: the Editor judges slop only against Kel's deterministic scan of this draft.
-            prompt+=''.join("\nKel's slop scan: "+str((c.get('findings') or [''])[0])
-                            for c in m.get('checks') or [] if c.get('kind')=='slop')
+            # D-88: the Editor judges slop only against Kel's deterministic scan of this draft, and the
+            # motion lens judges timing only by Kel's captured numbers.
+            prompt+=''.join("\nKel's %s: "%('slop scan' if c.get('kind')=='slop' else 'motion capture')+
+                            str((c.get('findings') or [''])[0])
+                            for c in m.get('checks') or [] if c.get('kind') in ('slop','motion'))
+            if 'motion' in lenses:
+                # D-88 §3.5: the motion lens sees the output strips next to the reference strips.
+                from .motion_capture import review_images
+                shown,note=review_images(store,job,milestone_id)
+                if shown:
+                    kwargs['images']=list(kwargs.get('images') or [])+shown
+                    prompt+='\n'+note
         code_run=m['artifact'].get('run_id') if job['contract'].get('kind')=='coding' and spec.get('kind')!='text' else None
         if code_run:
             # D-84: the Verifier rules on every existing test the Builder changed or removed.

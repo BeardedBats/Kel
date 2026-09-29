@@ -602,13 +602,15 @@ class Store:
                 if job['contract'].get('kind')=='coding' and spec.get('kind')!='text':  # D-88: a page's copy is text
                     from .coding import repository_check
                     checks.append(repository_check(self,m['artifact']['run_id']))
-                # D-88: a Writer's draft gets the deterministic slop scan; a page's build keeps the copy locked.
+                # D-88: a Writer's draft gets the deterministic slop scan; a page's build keeps the copy
+                # locked; an Animator's motion is captured (before this, on its own thread) and checked.
+                from .motion_capture import check as motion_check
                 from .pages import copy_check
                 from .slop import check as slop_check
-                for extra in (slop_check(self, job, milestone_id, text), copy_check(self, job, milestone_id)
-                              if job['contract'].get('kind')=='coding' and spec.get('kind')!='text' else None):
-                    if extra:
-                        checks.append(extra)
+                extras = [slop_check(self, job, milestone_id, text)]
+                if job['contract'].get('kind')=='coding' and spec.get('kind')!='text':
+                    extras += [copy_check(self, job, milestone_id), motion_check(self, job, milestone_id)]
+                checks.extend(extra for extra in extras if extra)
                 if m['provider']=='research' or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])):
                     from .research import check_research_evidence
                     checks.append(dict(kind='research_evidence',verdict='VERIFIED' if check_research_evidence(self,m['artifact']['run_id'],text) else 'UNCERTAIN'))
@@ -643,10 +645,10 @@ class Store:
                 m['gate_failures'] = m.get('gate_failures', 0) + 1
                 if m['gate_failures'] >= 2 and m['state'] == 'NEEDS_REPAIR':
                     m['state'] = 'EXHAUSTED'
-            if old_state == 'CHECKING' and any(c.get('failure') == 'slop' for c in checks):
-                # D-88: at most two revision rounds on slop; the third draft over the limit stops the step.
-                m['slop_failures'] = m.get('slop_failures', 0) + 1
-                if m['slop_failures'] >= 3 and m['state'] == 'NEEDS_REPAIR':
+            if old_state == 'CHECKING' and any(c.get('failure') in ('slop', 'motion') for c in checks):
+                # D-88: at most two revision rounds on slop or failed motion checks; the third stops the step.
+                m['revision_failures'] = m.get('revision_failures', 0) + 1
+                if m['revision_failures'] >= 3 and m['state'] == 'NEEDS_REPAIR':
                     m['state'] = 'EXHAUSTED'
             if old_state == 'CHECKING':
                 job['spent'] += 1
@@ -1509,6 +1511,8 @@ def plain_check(check):
         return 'the writing still read as machine-written after its revisions.'
     if kind == 'copy_lock':  # D-88
         return "the page's words did not match the Writer's copy."
+    if kind == 'motion':  # D-88
+        return 'the motion still failed its checks after its revisions.'
     if kind in ('artifact_digest', 'artifact_integrity'):
         return 'the saved result could not be read back intact.'
     return 'a required check did not pass.'

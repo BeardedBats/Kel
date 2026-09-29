@@ -83,6 +83,7 @@ class RoutingTests(Base):
         self.assertEqual(pages.floor_class('build me a landing page for my podcast', 'coding'), 'page')
         self.assertEqual(pages.floor_class('make an html file of my top pitchers', 'writing'), 'page')
         self.assertEqual(pages.floor_class('export this table as html', 'writing'), 'writing')
+        self.assertEqual(pages.floor_class('Make my about page feel warmer', 'design'), 'design')
         self.assertEqual(pages.floor_class('animate the sidebar', 'coding'), 'motion')
         self.assertEqual(pages.floor_class('fix the state transitions bug', 'coding'), 'coding')
         self.assertEqual(pages.floor_class('research landing page best practices', 'research'), 'research')

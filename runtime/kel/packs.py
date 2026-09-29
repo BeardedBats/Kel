@@ -74,8 +74,11 @@ For each moment:
 3. Follow the references below by their measured numbers, never by how a clip looks.
 4. Final states that stay on screen settle with a soft fade (about 520 ms, eased out); intermediate states take
    no more than 220 ms; nothing moves or re-words after it settles; a whole moment takes no more than about 650 ms.
-5. Expose a seekable clock for standalone pages (`window.__motion` with `manual(bool)` and `advance(ms)`) so Kel
-   can capture exact frames.
+5. On a standalone page, build on the house spring core (the kit named below: copy it into the page as
+   kel-motion.js) and register every moment so Kel can capture exact frames on a stepped clock:
+   `window.__motion.moments['<name>'] = {run: () => ..., targets: ['<css selector>', ...]}`. Kel runs each moment,
+   measures it, and checks it (no layout shift after settling, no instant swaps, overshoot, total time, reduced
+   motion, allowed properties, no loops); failures come back to you with the numbers.
 Write motion/plan.md (per moment: purpose, values, the references it follows) and motion/metrics.json (per
 moment: duration_ms, settle_ms, overshoot_pct, properties, reduced_motion) in the project.
 Precedence: for Kel's own interface MOTION.md > Nick's motion rules > generic skills; elsewhere Nick's motion

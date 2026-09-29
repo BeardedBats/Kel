@@ -27,3 +27,7 @@ os.environ.setdefault('KEL_MEMORY_MIRROR', '0')
 # D-74.1: research routes through the installed Claude Code / Codex web search. The suite never
 # sends a real web search from a background job; tests of that route turn it on themselves.
 os.environ.setdefault('KEL_CLI_WEB', '0')
+
+# D-88: the service never scaffolds a taste library (Memory\Taste) from a test; the taste tests
+# point KEL_MEMORY_ROOT at a scratch folder and call it directly.
+os.environ.setdefault('KEL_TASTE', '0')

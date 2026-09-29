@@ -319,9 +319,9 @@ class EngineLevelTests(unittest.TestCase):
         self.assertEqual(final['verdict'], 'VERIFIED')
         self.assertEqual(peak, 3, 'independent parts ran together (up to three at once for D3)')
         calls = staff.calls(self.store, job)
-        builders = [c for c in calls if c['kind'] == 'work' and c['role'] == 'builder']
-        self.assertEqual(len(builders), 3)
-        self.assertEqual(sorted(c['instance'] for c in builders), [1, 2, 3])
+        writers = [c for c in calls if c['kind'] == 'work' and c['role'] == 'writer']  # D-88: writing is the Writer's
+        self.assertEqual(len(writers), 3)
+        self.assertEqual(sorted(c['instance'] for c in writers), [1, 2, 3])
         self.assertEqual([c['role'] for c in calls if c['milestone_id'] == 'combined' and c['kind'] == 'work'], ['kel'])
         self.assertEqual(len([c for c in calls if c['kind'] == 'check']), 4)
         self.assertTrue(all('This is a pod review' in p for p in reviews['codex'].prompts + reviews['claude'].prompts

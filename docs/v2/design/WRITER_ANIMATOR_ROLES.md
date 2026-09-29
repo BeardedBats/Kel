@@ -1,7 +1,21 @@
 # Writer and Animator — two new staff roles, the HTML-page pattern, and Nick's motion taste library
 
-Status: **design for Nick's approval, 2026-09-29.** No code has changed. Nothing here is decided until
-Nick records it (proposed as D-84).
+Status: **decided as D-88 (2026-09-29) and built** (steps 2-11; step 12, the blind-rated validation,
+and step 13, the capture hotkey, are deferred per D-88). Where the build differs from this design:
+- The Editor runs whenever the Verifier reviews a Writer's step; under D-85 a short draft (D0/D1) gets
+  only the deterministic slop scan, not an independent review. A page's copy is always reviewed.
+- The copy-fidelity check reads the built HTML's visible text (title, meta, alt and labels included)
+  with an HTML parser, not a headless render. A `copy_request` is written to `copy_requests.md` for the
+  Writer; routing it back to the Writer automatically is not built yet.
+- Clip measurement is whole-frame (frame differences through ffmpeg): duration and settle are measured,
+  overshoot and stagger are left empty for clips (they need an element to track). Page captures measure
+  all of them per element.
+- H8 (frame rate) and H9 (replay on re-render) are reported as "not measured" on the stepped clock. Kel UI
+  moments keep using `Tools\motion\capture-app.ts`; the engine captures standalone pages only.
+- Rule proposals that wait for Nick are files in `Motion\proposals\`, named in the next save reply; there
+  is no Needs-you card for them yet. Reactions to Animator output (route 4) are not captured yet.
+
+Original status: design for Nick's approval, 2026-09-29 (proposed as D-84).
 
 Nick asked for three things:
 1. "Writing work: research an agent specifically for prose. I don't think Builder and Writer overlap."

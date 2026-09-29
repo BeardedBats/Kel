@@ -60,11 +60,12 @@ MOTION_FLOOR = re.compile(r"\banimat\w*|\bmicro-?interactions?\b|\bfeel alive\b|
 
 
 def floor_class(text, task_class):
-    """The class after the D-88 floors: `page` for a page request read as coding, design or writing;
-    `motion` for animation work read as coding or design. Never changes research or utility."""
+    """The class after the D-88 floors: `page` for a page request read as coding or writing (or not
+    read at all); `motion` for animation work read as coding or design. Never changes research or
+    utility, and a design reading ("make my about page feel warmer") stays design."""
     if task_class in ('research', 'utility', 'page'):
         return task_class
-    if task_class in ('coding', 'design', 'writing', None) and is_page(text):
+    if task_class in ('coding', 'writing', None) and is_page(text):
         return 'page'
     if task_class in ('coding', 'design') and MOTION_FLOOR.search(str(text or '')):
         return 'motion'

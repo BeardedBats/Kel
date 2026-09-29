@@ -224,6 +224,13 @@ class Service:
                         from .telemetry import refresh_codex
                         refresh_codex(self.store)
                 except Exception:pass  # A missing observation is not a zero quota or a free price.
+                try:
+                    # D-88: the taste library exists (Kel's 15 moments seeded, Writing\ empty) and anything
+                    # Nick dropped into Memory\Taste\Motion\inbox is filed, once a minute.
+                    if os.environ.get('KEL_TASTE','1')!='0':
+                        from .taste import ensure as ensure_taste,scan_inbox
+                        ensure_taste(self.store.root);scan_inbox(self.store.root)
+                except Exception:pass  # the library is additive; it never stops Kel
                 self.stop.wait(60)
         self.telemetry=threading.Thread(target=telemetry,daemon=True);self.telemetry.start()
         # D-81: Memory\Kel, the agents' read-only mirror of Kel's settings, chats and notes (debounced).
@@ -722,6 +729,9 @@ class Service:
                 jobs=[j for j in self.store.list_jobs() if j['conversation']==cid and j['state'] not in ('CLOSED','CANCELLED')]
                 answer='No work is running.' if not jobs else '\n'.join(j['contract']['request']+' — '+j['state'].lower().replace('_',' ') for j in jobs)
                 self._say(sid,cid,answer)
+            elif (taste_reply:=self._taste_intent(text,packet)):
+                # D-88: "Save to motion taste: …" / "Save to my writing voice: …" files it; one line back.
+                self._say(sid,cid,taste_reply)
             elif kind=='recipe' or packet.get('recipe_invocation'):
                 jid=self._recipe_run(sid,cid,text,packet)
             elif kind=='continue' or explicit_job or continue_verb:
@@ -825,6 +835,14 @@ class Service:
             self.drafts.pop(sid,None)
             self.wake.set()
         return None
+
+    def _taste_intent(self,text,packet):
+        """D-88: a taste-library intent answered in one line (None for anything else; never blocks)."""
+        try:
+            from .taste import chat_intent
+            return chat_intent(self.store.root,text,packet)
+        except Exception:
+            return None
 
     def _draft(self,sid,words):
         """D-75.1: the words of a direct reply so far, while its submission is still being answered."""
@@ -1061,7 +1079,7 @@ class Service:
             contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
             from .pages import is_page,page_contract
-            if classified=='page' or (classified in ('coding','design','writing',None) and is_page(text)):
+            if classified=='page' or (classified in ('coding','writing',None) and is_page(text)):
                 # D-88: a page is the Writer's copy, then the Builder's code with the copy locked.
                 contract=dict(page_contract(contract,text,task_class=classified),planner=contract['planner'])
             elif not greenfield:
