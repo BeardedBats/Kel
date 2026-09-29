@@ -1015,3 +1015,19 @@ capture the moment (screenshot, target, what he said), keep the finding, and pre
 "Build an update" is removed — no repository folder, no picking findings, no in-app self-build. Fixing
 happens outside Kel (Nick sends the findings; they're fixed, verified and installed). Supersedes the
 Build Update path of D-46..D-49 (candidate records, promote/review); Kel still never edits its own code.
+
+## D-87 — Simple Connections, no meta text, soft scroll edges
+
+**Decided by Nick 2026-09-29.**
+1. **Connections = "Connect to X".** One clear button per major service — GitHub, Stripe, Figma, ClickUp,
+   Discord, Google Drive, Pitcher List, Raptive. Choosing one fills in everything Kel already knows and
+   shows only the clearly labelled fields Nick must supply (e.g. "Personal access token"). The generic
+   custom form (service name, API address, header, test address…) moves behind a quiet "Other service"
+   option. The expanding "Start with a known service" list is removed.
+2. **No meta descriptions, anywhere.** Remove text that explains how Kel uses things or restates the
+   obvious — e.g. "what Kel needs to reach the service", "Kel calls this to check the credential", "The
+   services Kel can use. You keep the credential." Keep only labels, values, real states and real errors.
+   Applies across the whole app, not just Connections.
+3. **Soft scroll edges.** Scrolling panels (starting with Settings content) fade content out at the bottom
+   edge with a smooth transparency blend — no visible seam — so it's clear there is more below and text
+   never sits hard against a border.
