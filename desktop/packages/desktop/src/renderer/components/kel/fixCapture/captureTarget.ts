@@ -124,6 +124,29 @@ export function imageRect(rect: Rect, content: { width: number; height: number }
 }
 
 /**
+ * What a saved fix records about where it was: the target box in the screenshot's own pixels, and the
+ * screenshot's size as the "window". The DOM rect is in CSS pixels of the viewport; at a Kel zoom other
+ * than 100% those are not the window's device-independent size the main process reports, so the
+ * viewport (window.innerWidth/innerHeight) is what the rect is mapped from. `scale` is image pixels per
+ * CSS pixel (zoom x display scale). Kibble's outline and the fix prompt read both as image pixels.
+ */
+export function savedGeometry(
+  target: CapturedElement | null,
+  image: { width: number; height: number },
+  viewport: { width: number; height: number }
+): { element: CapturedElement | null; window: { width: number; height: number; scale: number } } {
+  const element = target ? { ...target, rect: imageRect(target.rect, viewport, image) } : null;
+  return {
+    element,
+    window: {
+      width: image.width,
+      height: image.height,
+      scale: Math.round((image.width / Math.max(1, viewport.width)) * 1000) / 1000,
+    },
+  };
+}
+
+/**
  * Where the floating panel goes: beside the target, never on top of it when there is room.
  * `gap` keeps a little air between the panel and the highlighted area.
  */

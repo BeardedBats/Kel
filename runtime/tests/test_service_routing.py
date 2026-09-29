@@ -89,8 +89,10 @@ class RoutingTests(unittest.TestCase):
         # Measured: "Create a file named hello.txt containing hi in <folder>" became a document job,
         # was reported VERIFIED, and no file existed. Outside a saved project it is still work, but
         # its contract records the file request so publication says no file was created.
-        folder = Path(self.tmp.name) / 'target'
-        folder.mkdir()
+        # D-81: a folder inside the Memory folder (a folder outside it is refused up front).
+        from kel.memory_folder import memory_root
+        folder = memory_root(self.service.store.root) / ('target-%s' % Path(self.tmp.name).name)
+        folder.mkdir(parents=True)
         self.service.engine.adapters = {}
         sid = self.service.submit({'text': 'Create a file named hello.txt containing hi in ' + str(folder),
                                    'conversation': 'main'})

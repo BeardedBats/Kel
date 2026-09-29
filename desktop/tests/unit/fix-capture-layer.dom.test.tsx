@@ -311,7 +311,8 @@ describe('Fix Capture — the capture itself', () => {
     expect(payload.route).toBe('/guid');
     expect(payload.conversation).toBeNull();
     expect(payload.element).toMatchObject({ tag: 'button' });
-    expect(payload.window).toMatchObject({ width: 1280, height: 800, scale: 2 });
+    // Saved in the screenshot's own pixels: jsdom's viewport is 1024 CSS px wide, the image 2560.
+    expect(payload.window).toMatchObject({ width: 2560, height: 1600, scale: 2.5 });
     expect(calls.filter((entry) => entry.body?.action === 'save').length).toBe(1);
     // A saved fix's screenshot was moved under its id: cancelling afterwards can never delete it.
     expect(findCall('discard')).toBeUndefined();
