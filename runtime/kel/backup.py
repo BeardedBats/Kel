@@ -63,7 +63,8 @@ NEVER_BACKUP = ('kel-credentials.json',)
 # never part of a backup.
 VOLATILE_ENTRIES = ('logs', 'desktop.log', 'desktop-link.log', 'desktop-session.json',
                     'controller.lock', 'broker-locks', 'transport-locks', 'broker-logs',
-                    'native-logs', 'sessions', 'backups')
+                    'native-logs', 'sessions', 'backups',
+                    'chat-store-migration')  # D-80's safety copy holds the app database with its keys
 STORE_VOLATILE = ('runtime',)  # downloaded runtimes the app provisions again by itself
 # Everything under `host` is Chromium's user-data tree - caches, storage and locks the running
 # app holds open - except Kel's own settings/skills/assistants in `config` (and the desktop

@@ -2041,6 +2041,14 @@ class Service:
         if path=='/api/chat-link':
             # CP-10a (D-77): the one link between an app chat and its conversation, and the switch.
             return self.projects.links.apply(data)
+        if path=='/api/chat-state':
+            # CP-10a stage 3 (D-77): rename, pin, archive, delete are written here first.
+            from .chat_state import ChatState
+            return ChatState(self.store).apply(data)
+        if path=='/api/chat-store':
+            # D-80: the one-time switch to the one chat store (backup, freeze, complete); main process only.
+            from .chat_state import ChatState
+            return ChatState(self.store).store_action(data)
         if path=='/api/conversation-title':
             return self.rename_conversation(self._required(data,'conversation','Pick a chat to rename first.'),
                                             data.get('title'))

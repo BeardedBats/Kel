@@ -212,7 +212,11 @@ def chats(engine_root):
 
     Both chat stores are read (D-77): the app's chats (with their titles and archived flag) with the
     words Kel's engine holds for them (and the app's own rows for words only it has), then every Kel
-    conversation no app chat points at."""
+    conversation no app chat points at. With the one chat store (`chat_store = engine`, D-80) a chat's
+    conversation is its `chat_links` row, a chat archived at the switch (or since) is archived, and a
+    chat deleted in the app (its link names a chat that is gone, or `chat_state` says deleted) is
+    left out."""
+    from . import chat_links, chat_state
     engine_db, donor, _config = _data_paths(engine_root)
     if not engine_db.exists():
         return []
@@ -223,6 +227,10 @@ def chats(engine_root):
         messages = {}
         for row in db.execute('SELECT conversation_id,role,text,at FROM messages WHERE ' + visible + ' ORDER BY seq'):
             messages.setdefault(row['conversation_id'], []).append({'role': row['role'], 'text': row['text'] or ''})
+        one_store = chat_links.mode_of(engine_db.parent, db) == 'engine'
+        links = chat_links.live_links(db) if one_store else None
+        ever_linked = chat_links.linked_conversations(db) if one_store else set()
+        states = chat_state.read_states(db)
 
     def project_name(pid):
         if not pid:
@@ -231,10 +239,11 @@ def chats(engine_root):
         return project['name'] if project else NO_PROJECT
 
     out, linked = [], set()
+    deleted = {s['conversation_id'] for s in states.values() if s.get('deleted_at') and s.get('conversation_id')}
     if donor is not None:
         from .chatstore import inventory
         try:
-            report = inventory(engine_db.parent, donor, show_text=True)
+            report = inventory(engine_db.parent, donor, show_text=True, effective_links=links)
         except (SystemExit, sqlite3.Error):
             report = {'chats': []}
         for chat in report['chats']:
@@ -242,15 +251,21 @@ def chats(engine_root):
             cid = effective.get('conversation')
             if cid:
                 linked.add(cid)
+            state = states.get(chat.get('donor_id')) or {}
+            if state.get('deleted_at'):
+                continue
             pid = chat['links'].get('project_binding') or (conversations.get(cid) or {}).get('project_id')
             words = [{'role': item['role'], 'text': item['text']} for item in chat['plan']
                      if 'text' in item and item.get('role') in ('user', 'assistant')]
-            out.append({'project': project_name(pid), 'title': chat.get('title') or 'Untitled chat',
-                        'created': _parse(chat.get('created')), 'archived': bool(chat.get('archived')),
+            out.append({'project': project_name(pid), 'title': chat.get('title') or state.get('title') or 'Untitled chat',
+                        'created': _parse(chat.get('created')),
+                        'archived': bool(chat.get('archived')) or bool(state.get('archived_at')),
                         'messages': words})
     for cid, conv in conversations.items():
-        if cid in linked or not messages.get(cid):
+        if cid in linked or cid in deleted or not messages.get(cid):
             continue  # an empty Kel conversation no chat points at is not a chat anyone sees
+        if donor is not None and cid in ever_linked:
+            continue  # its app chat was deleted: not a chat any more
         out.append({'project': project_name(conv.get('project_id')), 'title': conv.get('title') or 'Untitled chat',
                     'created': _when(conv.get('created')), 'archived': False, 'messages': messages[cid]})
     return out

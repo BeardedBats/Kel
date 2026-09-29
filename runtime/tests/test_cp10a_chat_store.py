@@ -146,10 +146,12 @@ class LinkTableTests(_Base):
 
 
 class SwitchTests(_Base):
-    def test_legacy_is_the_default_and_reads_the_files(self):
+    def test_engine_is_the_default_and_legacy_reads_the_files(self):
         cid = self.conversation(messages=1)
         _record(self.engine_root, 'chat', cid)
         links = ChatLinks(self.store)
+        self.assertEqual(links.mode(), 'engine', 'D-80: the one chat store is the default')
+        links.set_mode('legacy')
         self.assertEqual(links.mode(), 'legacy')
         self.assertEqual(links.resolve_donor('chat'), cid)
         self.assertEqual(links.resolve_conversation(cid), 'chat')
@@ -172,8 +174,9 @@ class SwitchTests(_Base):
         talked = self.conversation(messages=2)
         _record(self.engine_root, 'chat', str(uuid.uuid4()))  # D names a conversation that is gone
         (self.engine_root / 'aion-conversations.json').write_text(json.dumps({'chat': talked}))
-        before = _digest(self.engine_root)
         links = ChatLinks(self.store)
+        links.set_mode('legacy')
+        before = _digest(self.engine_root)
         legacy_answer = links.resolve_donor('chat')
         links.set_mode('engine')
         self.assertEqual(links.resolve_donor('chat'), talked, 'engine: the side with messages wins')
@@ -187,6 +190,7 @@ class SwitchTests(_Base):
         _record(self.engine_root, 'chat', 'gone')
         projects = Projects(self.store)
         ChatLinks(self.store).import_links({'chat': talked})
+        ChatLinks(self.store).set_mode('legacy')
         self.assertEqual(projects.conversation_for_donor('chat'), 'gone', 'legacy: the session record')
         ChatLinks(self.store).set_mode('engine')
         self.assertEqual(projects.conversation_for_donor('chat'), talked)
@@ -207,7 +211,8 @@ class RouteTests(_Base):
 
     def test_the_route_imports_links_and_answers_lookups(self):
         act = self.service.action
-        self.assertEqual(act('/api/chat-link', {'action': 'mode'})['mode'], 'legacy')
+        self.assertEqual(act('/api/chat-link', {'action': 'mode'})['mode'], 'engine', 'D-80: the default')
+        self.assertEqual(act('/api/chat-link', {'action': 'mode', 'override': 'legacy'})['mode'], 'legacy')
         self.assertEqual(act('/api/chat-link', {'action': 'mode', 'override': 'engine'})['mode'], 'engine')
         created = act('/api/conversation', {})['id']
         result = act('/api/chat-link', {'action': 'import', 'links': {'donor-a': created}})
@@ -219,7 +224,7 @@ class RouteTests(_Base):
         self.assertEqual(self.service.projects.links.view(conversation=fresh)['donor'], 'donor-b')
         act('/api/chat-link', {'action': 'retire', 'donor': 'donor-b'})
         self.assertNotIn('donor-b', act('/api/chat-link', {})['links'])
-        self.assertEqual(act('/api/chat-link', {'action': 'mode', 'override': None})['mode'], 'legacy')
+        self.assertEqual(act('/api/chat-link', {'action': 'mode', 'override': None})['mode'], 'engine')
 
 
 class InventoryTests(_Base):
@@ -369,6 +374,7 @@ class HostTests(_Base):
         _record(self.engine_root, 'chat', stale)
         host = self.host([talked])
         ChatLinks(self.store).import_links({'chat': talked})
+        ChatLinks(self.store).set_mode('legacy')
         with patch.dict(os.environ, {'AIONUI_CONVERSATION_ID': 'chat'}):
             self.assertEqual(host.dispatch('session/new', {'cwd': str(self.data)}), {'sessionId': 'kel:' + stale})
 

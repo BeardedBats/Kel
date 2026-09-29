@@ -10,7 +10,7 @@ owned by the bundled aioncore host) belongs to:
 The ACP host let D win, the desktop let E win (B-9), so one chat could answer in one conversation and
 show the history of another. `chat_links` is the one answer, written only by the engine.
 
-The switch: the engine setting `chat_store` (`legacy` | `engine`, default `legacy`), overridden by
+The switch: the engine setting `chat_store` (`legacy` | `engine`, default `engine` since D-80), overridden by
 the env `KEL_CHAT_STORE` or, for this engine process only, by the desktop (`override`). In `legacy`
 every reader uses the files exactly as before. In `engine` every reader uses the table. The files
 are never rewritten or deleted here: switching back to `legacy` gives today's behaviour.
@@ -32,7 +32,7 @@ import time
 
 
 MODES = ('legacy', 'engine')
-DEFAULT_MODE = 'legacy'
+DEFAULT_MODE = 'engine'  # D-80: the one chat store is the default; `legacy` rolls back
 ENV = 'KEL_CHAT_STORE'
 SESSION_MAP = 'aion-session-map'
 LEGACY_MAP = 'aion-conversations.json'
@@ -153,6 +153,42 @@ def resolve(candidates, weigh):
     if with_messages:
         return with_messages[0], 'has-messages-precedence'
     return None, 'none-has-messages'
+
+
+def mode_of(root, db):
+    """The mode for this engine root, read from an open connection (the Memory mirror's read-only one)."""
+    override = _overrides.get(str(Path(root).resolve())) or _overrides.get(str(Path(root)))
+    if override in MODES:
+        return override
+    env = (os.environ.get(ENV) or '').strip().lower()
+    if env in MODES:
+        return env
+    try:
+        row = db.execute("SELECT value FROM chat_store_settings WHERE key='chat_store'").fetchone()
+    except Exception:
+        row = None
+    return row[0] if row and row[0] in MODES else DEFAULT_MODE
+
+
+def live_links(db):
+    """{donor: conversation, or None when every row of that chat is retired} for every chat the table
+    names, from an open connection ({} before the table exists)."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='chat_links'").fetchone():
+        return {}
+    out = {}
+    for donor, cid, retired in db.execute('SELECT donor_id,conversation_id,retired FROM chat_links'):
+        if retired is None:
+            out[donor] = cid
+        else:
+            out.setdefault(donor, None)
+    return out
+
+
+def linked_conversations(db):
+    """Every conversation any link row (live or retired) names."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='chat_links'").fetchone():
+        return set()
+    return {r[0] for r in db.execute('SELECT DISTINCT conversation_id FROM chat_links')}
 
 
 class ChatLinks:

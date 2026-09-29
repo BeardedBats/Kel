@@ -114,7 +114,10 @@ def _when(ms):
         return None
 
 
-def inventory(data, store=None, show_text=False):
+def inventory(data, store=None, show_text=False, effective_links=None):
+    """`effective_links` {donor: conversation or None}: the link each chat it names uses (the one store's
+    `chat_links`, D-80) instead of the first of D, C, E; None means unlinked. A chat it does not name
+    keeps the first of D, C, E (it was never folded into the table)."""
     engine_root, donor_db = _paths(data, store)
     session_map = session_records(engine_root)
     legacy = legacy_map(engine_root)
@@ -158,6 +161,11 @@ def inventory(data, store=None, show_text=False):
                                                                    ('donor_extra', 'donor-extra')) if links[key]]
             referenced.update(cid for cid, _ in candidates)
             effective = candidates[0] if candidates else None
+            if effective_links is not None and donor_id in effective_links:
+                chosen = effective_links[donor_id]
+                effective = (chosen, 'chat-links') if chosen else None
+                if chosen:
+                    referenced.add(chosen)
             rows = [dict(r) for r in donor.execute('SELECT * FROM messages WHERE conversation_id=? ORDER BY created_at, id',
                                                    (donor_id,))]
             by_type = {'text': 0, 'acp_tool_call': 0, 'tips': 0, 'other': 0}

@@ -28,7 +28,9 @@ import {
 import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
-import { ChatLinks } from './chatLinks';
+import { ChatLinks, chatStoreOverride } from './chatLinks';
+import { migrateToOneChatStore } from './chatStoreMigration';
+import { getDataPath } from '../../utils/utils';
 import { memoryRoot, protectedPaths } from './protectedPaths';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
@@ -419,9 +421,26 @@ export async function initializeKel(port: number): Promise<void> {
     .then((outcome) => console.log('[KEL-BOOT] initializeKel Muse key: ' + outcome))
     .catch((): undefined => undefined);
   const historyPath = path.join(root, 'aion-history.json');
+  // D-80: the first launch of the one chat store archives every existing chat (after a backup) so
+  // the sidebar starts empty. A switch that did not finish keeps the legacy links for this run and
+  // finishes on the next launch.
+  const switched = await migrateToOneChatStore({
+    engine: (route, body) => kelRequest(route, body, 120000),
+    donor: (route, body, method) => core(route, body, method),
+    donorDb: path.join(getDataPath(), 'aionui-backend.db'),
+    override: chatStoreOverride(),
+  });
+  console.log('[KEL-BOOT] initializeKel chat store switch: ' + switched.state);
   // CP-10a (D-77): every read and write of "which conversation is this chat" goes through the one
   // link table (engine `chat_links`), or the old files when the `chat_store` switch says legacy.
-  const links = await ChatLinks.open(root, (route, body) => kelRequest(route, body));
+  const links = await ChatLinks.open(
+    root,
+    (route, body) => kelRequest(route, body),
+    process.env,
+    switched.state === 'failed' ? 'legacy' : undefined
+  );
+  const oneStore = links.mode === 'engine';
+  const switchedAt = switched.state === 'done' || switched.state === 'already' ? switched.switchedAt : 0;
   const mapping = links.map;
   console.log('[KEL-BOOT] initializeKel chat links: ' + links.mode);
   const history: Record<string, unknown[]> = fs.existsSync(historyPath)
@@ -497,7 +516,9 @@ export async function initializeKel(port: number): Promise<void> {
     adopting.set(cid, work);
     return work;
   }
-  for (const conversation of saved.conversations) {
+  // CP-10a stage 3: with the one store a chat's app row is made when it is needed (a scheduled run,
+  // opening one), never at start-up.
+  for (const conversation of oneStore ? [] : saved.conversations) {
     if (mapped.has(conversation.id)) continue;
     if (conversation.hidden) continue;
     if ((conversation as { utility?: unknown }).utility) continue; // FN-10: Kel's own utility chat
@@ -600,7 +621,9 @@ export async function initializeKel(port: number): Promise<void> {
       });
     }
   }
-  for (const [id, cid] of links.entries()) {
+  // CP-10a stage 3 (AC-6): with the one store start-up reads no chat's history; a chat is reconciled
+  // when it is opened (`kel:history`).
+  for (const [id, cid] of oneStore ? [] : links.entries()) {
     try {
       await reconcile(id, cid);
     } catch (error) {
@@ -738,10 +761,18 @@ export async function initializeKel(port: number): Promise<void> {
         hiddenToRemove.delete(cid);
       }
       const listed = (await kelRequest('/api/conversations')) as {
-        conversations?: Array<{ id?: unknown; schedule_id?: unknown; message_count?: unknown; job_count?: unknown }>;
+        conversations?: Array<{
+          id?: unknown;
+          schedule_id?: unknown;
+          message_count?: unknown;
+          job_count?: unknown;
+          created?: unknown;
+        }>;
       };
       for (const row of listed?.conversations || []) {
         if (typeof row?.id !== 'string' || !row.schedule_id || donorFor(row.id)) continue;
+        // D-80: a scheduled run from before the switch belongs to the archived past, not the sidebar.
+        if (oneStore && switchedAt && Number(row.created) < switchedAt) continue;
         if (row.message_count === 0 && row.job_count === 0) continue;
         if (await adoptEngineConversation(row.id).catch((): null => null)) changed = true;
       }

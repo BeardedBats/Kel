@@ -1,6 +1,8 @@
 # CP-10a — One chat store
 
-Status: **stages 0 and 1 built, 2026-09-28** (switch default `legacy`; see "Built" below). The rest is design. Base read: `main@b091df1` (desktop, engine and
+Status: **stages 0 and 1 built, 2026-09-28; the D-80 switch (fresh start, default `engine`) and stage 3's
+state writes built, 2026-09-29** (see the two "Built" notes below). Stage 2's read path and the
+engine-sourced sidebar list are still design. Base read: `main@b091df1` (desktop, engine and
 docs), plus read-only copies of Nick's `Data\store\aionui-backend.db` and `Data\engine\kel.sqlite3`
 taken into a scratch folder. Nothing was written to `Data` or `App`.
 
@@ -378,6 +380,34 @@ for a new chat, only when none exists, so a switch back to `legacy` finds it; C 
 table link to a conversation with no row yet counts as reserved, so a dead link's first message creates it. The
 same work fixed the archived-chat read (`repairWorkspacePaths.ts` asked aioncore for 200 rows a page; it allows 100),
 which had left archived chats out of the start-up link fold.
+
+### Built (2026-09-29): the switch with a fresh start (D-80), and stage 3's state writes
+
+- **The switch.** `chat_store` now defaults to `engine`. On the first launch of this build the main
+  process (`chatStoreMigration.ts`) asks the engine (`/api/chat-store`, not in the renderer's allowlist)
+  to `backup` (kel.sqlite3 and aionui-backend.db through SQLite's backup API, plus C, D and F, into
+  `Data\engine\chat-store-migration\<stamp>\`; left out of user backups because the app database there
+  still holds its keys), to `freeze` every chat that exists (active and archived) as `legacy` and
+  archived in `chat_state`, then archives every active chat and team in aioncore until the sidebar is
+  empty, then `complete` (the marker, and `chat_store = engine`). Each step is idempotent; a switch cut
+  short keeps the legacy links for that run and finishes on the next launch with the first backup.
+  `KEL_CHAT_STORE=legacy` skips it. Nothing is imported (D-80) and nothing is deleted.
+- **Stage 3, part.** Engine table `chat_state(donor_id PK, conversation_id, title, archived_at,
+  pinned_at, deleted_at, legacy, updated)`, keyed by the app chat because chats from before the switch
+  may have no conversation. Rename, pin, archive, unarchive, delete and "empty the archive" are written
+  there first (`common/adapter/kelChatState.ts` wraps those `ipcBridge` calls; an engine refusal stops
+  the change), then to aioncore. Engine search leaves deleted chats out (B-10). With the one store,
+  start-up adopts nothing and reconciles no chat (AC-6); a chat is reconciled when opened, and a
+  scheduled run from before the switch is not brought back into the sidebar.
+- **The Memory mirror** (D-81) reads a chat's conversation from `chat_links`, marks a chat archived when
+  aioncore or `chat_state` says so, and leaves out chats deleted in the app. Every chat, the ones
+  archived at the switch too, is still mirrored.
+- **Not built, and why.** The sidebar list still comes from aioncore's grouped read model (kept in step
+  by the writes above), and stage 2's read path is not built: the ACP host says several things only
+  into aioncore's stream — vetting answers, capability confirmations, stop, pause, cancel, failure and
+  approval sentences (`acp_host.py`, the `self.text` calls outside `_say_message`) — so "engine rows
+  only after the turn" would drop them. Stage 2 first needs those recorded in the engine (or stage 4).
+  Legacy code paths are not removed (retirement still needs a week on `engine` and Nick's OK).
 
 ### Stage 2 — history from the engine (fixes B-2, B-3, B-6, B-8, B-11, B-12, B-15, B-16). M, 3–5 days.
 

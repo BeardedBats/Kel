@@ -240,6 +240,9 @@ class ProjectsTests(_Temp):
         folder.mkdir()
         import hashlib
         (folder / (hashlib.sha256(b'donor-9').hexdigest() + '.json')).write_text(json.dumps({'donor-9': cid}))
+        # D-80: with the one chat store (the default) the ACP host reserves the chat in the link table too.
+        from kel.chat_links import ChatLinks
+        ChatLinks(self.store).link('donor-9', cid, 'acp')
         self.assertEqual(self.projects.pending_project(cid), pid, 'a reserved chat resolves through its binding')
         created = self.projects.create_conversation(self.context, {'donor': 'donor-9', 'id': cid})
         self.assertEqual(created, {'id': cid, 'project_id': pid})

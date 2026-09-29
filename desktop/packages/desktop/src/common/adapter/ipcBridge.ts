@@ -106,6 +106,7 @@ import {
   wsEmitter,
   wsMappedEmitter,
 } from './httpBridge';
+import { updateChange, withChatState } from './kelChatState';
 import { fromApiSearchResult, type ApiMessageSearchItem } from './searchMapper';
 import { fromApiSidebar, fromApiSidebarItems } from './sidebarMapper';
 import type { IAddTeamAssistantParams, ICreateTeamParams } from './teamMapper';
@@ -289,25 +290,32 @@ export const conversation = {
     ),
     (list) => list.map(fromApiConversation)
   ),
-  remove: httpDelete<boolean, { id: string }>((p) => `/api/conversations/${p.id}`),
+  // CP-10a stage 3: rename, pin and delete are written to Kel's engine first (kelChatState.ts).
+  remove: withChatState(httpDelete<boolean, { id: string }>((p) => `/api/conversations/${p.id}`), (p) => ({
+    donor: p.id,
+    deleted: true,
+  })),
   // `name_source` qualifies a `name` change: 'user' = explicit rename (backend
   // locks the name against agent-generated titles; also the default when absent),
   // 'auto' = frontend-derived default title (stays agent-overwritable).
-  update: httpPatch<
-    boolean,
-    { id: string; updates: Partial<TChatConversation> & { name_source?: 'user' | 'auto' }; merge_extra?: boolean }
-  >(
-    (p) => `/api/conversations/${p.id}`,
-    (p) => {
-      const updates = p.updates as Record<string, unknown>;
-      const { model: rawModel, ...rest } = updates;
-      const model = toApiModelOptional(rawModel as TProviderWithModel | undefined);
-      return {
-        ...rest,
-        ...(model ? { model } : {}),
-        merge_extra: p.merge_extra,
-      };
-    }
+  update: withChatState(
+    httpPatch<
+      boolean,
+      { id: string; updates: Partial<TChatConversation> & { name_source?: 'user' | 'auto' }; merge_extra?: boolean }
+    >(
+      (p) => `/api/conversations/${p.id}`,
+      (p) => {
+        const updates = p.updates as Record<string, unknown>;
+        const { model: rawModel, ...rest } = updates;
+        const model = toApiModelOptional(rawModel as TProviderWithModel | undefined);
+        return {
+          ...rest,
+          ...(model ? { model } : {}),
+          merge_extra: p.merge_extra,
+        };
+      }
+    ),
+    (p) => updateChange(p as Parameters<typeof updateChange>[0])
   ),
   reset: httpPost<void, IResetConversationParams>((p) => `/api/conversations/${p.id}/reset`),
   /**
@@ -2044,23 +2052,36 @@ export const sidebar = {
   // Archive a conversation/team (moves its slice out of the active sidebar and
   // unpins it). Team members cascade with the team. Both take no body; a missing
   // or foreign id maps to 404.
-  archive: httpPost<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
-    (p) => `/api/sidebar/${p.item_type}/${encodeURIComponent(p.item_id)}/archive`,
-    () => undefined
+  // CP-10a stage 3: a conversation's archive, unarchive and delete are written to Kel's engine first.
+  archive: withChatState(
+    httpPost<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
+      (p) => `/api/sidebar/${p.item_type}/${encodeURIComponent(p.item_id)}/archive`,
+      () => undefined
+    ),
+    (p) => (p.item_type === 'conversation' ? { donor: p.item_id, archived: true } : null)
   ),
   // Restore an archived conversation/team to the active sidebar.
-  unarchive: httpPost<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
-    (p) => `/api/sidebar/${p.item_type}/${encodeURIComponent(p.item_id)}/unarchive`,
-    () => undefined
+  unarchive: withChatState(
+    httpPost<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
+      (p) => `/api/sidebar/${p.item_type}/${encodeURIComponent(p.item_id)}/unarchive`,
+      () => undefined
+    ),
+    (p) => (p.item_type === 'conversation' ? { donor: p.item_id, archived: false } : null)
   ),
   // Empty the archive: hard-delete every archived team (members cascade) and every
   // independent archived conversation. Returns the removed counts.
-  deleteArchived: httpDelete<import('@/common/types/sidebar').ArchiveDeleteResult>('/api/sidebar/archived'),
+  deleteArchived: withChatState(
+    httpDelete<import('@/common/types/sidebar').ArchiveDeleteResult>('/api/sidebar/archived'),
+    () => ({ action: 'delete-archived' })
+  ),
   // Permanently delete a single archived unit (a conversation row or a team, whose
   // members cascade). The id is validated against the archived slice — an active,
   // foreign, or team-member id maps to 404.
-  deleteArchivedItem: httpDelete<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
-    (p) => `/api/sidebar/archived/${p.item_type}/${encodeURIComponent(p.item_id)}`
+  deleteArchivedItem: withChatState(
+    httpDelete<void, { item_type: import('@/common/types/sidebar').OrderItemType; item_id: string }>(
+      (p) => `/api/sidebar/archived/${p.item_type}/${encodeURIComponent(p.item_id)}`
+    ),
+    (p) => (p.item_type === 'conversation' ? { donor: p.item_id, deleted: true } : null)
   ),
   // Archive an entire standard project in one request: every unit classified into
   // its group (teams cascade to members, path-merged unbound conversations

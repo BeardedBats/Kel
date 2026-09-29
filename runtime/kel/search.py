@@ -96,4 +96,13 @@ class Search:
                             })
             except Exception:
                 pass
+            try:
+                # CP-10a stage 3 (D-77, B-10): a chat the person deleted is not found any more.
+                from .chat_state import read_states
+                gone = {s['conversation_id'] for s in read_states(db).values()
+                        if s.get('deleted_at') and s.get('conversation_id')}
+                if gone:
+                    results['conversations'] = [c for c in results['conversations'] if c['id'] not in gone]
+            except Exception:
+                pass
         return results

@@ -11,8 +11,9 @@
  * C is only ever added to (a chat adopted here), never rewritten or pruned, so switching back to
  * `legacy` finds the files as they were.
  *
- * The switch is the engine setting `chat_store`; `KEL_CHAT_STORE` overrides it for this run and is
- * handed to the engine, so the ACP host (which asks the engine) answers the same way.
+ * The switch is the engine setting `chat_store` (default `engine` since D-80); `KEL_CHAT_STORE`
+ * overrides it for this run and is handed to the engine, so the ACP host (which asks the engine)
+ * answers the same way.
  */
 import fs from 'fs';
 import path from 'path';
@@ -72,10 +73,16 @@ export class ChatLinks {
    * The switch for this run: `KEL_CHAT_STORE` (handed to the engine for this engine process), else
    * the engine's `chat_store` setting. An engine without the link table means legacy.
    */
-  static async open(root: string, engine: EngineCall, env: NodeJS.ProcessEnv = process.env): Promise<ChatLinks> {
+  static async open(
+    root: string,
+    engine: EngineCall,
+    env: NodeJS.ProcessEnv = process.env,
+    /** D-80: `legacy` for a run whose switch to the one store did not finish (it finishes next launch). */
+    force?: ChatStoreMode
+  ): Promise<ChatLinks> {
     let mode: ChatStoreMode = 'legacy';
     try {
-      const answer = (await engine('/api/chat-link', { action: 'mode', override: chatStoreOverride(env) })) as {
+      const answer = (await engine('/api/chat-link', { action: 'mode', override: force ?? chatStoreOverride(env) })) as {
         mode?: unknown;
       };
       if (answer?.mode === 'engine') mode = 'engine';
