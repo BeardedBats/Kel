@@ -431,6 +431,19 @@ export interface KelKnownService {
   /** How sure Kel is about the addresses: 'documented' | 'assumed' | 'to-confirm'. */
   source: 'documented' | 'assumed' | 'to-confirm';
   note?: string;
+  /** D-87: the values the Connect form asks for, each under the service's own name for it. */
+  fields?: KelKnownServiceField[];
+  /** D-87: one short line naming where the value comes from. */
+  where?: string;
+  /** D-87: the button for an account sign-in, e.g. "Connect with Google". */
+  connect_label?: string;
+}
+
+/** One value Nick supplies for a known service; `name` is the credential field the engine reads. */
+export interface KelKnownServiceField {
+  name: string;
+  label: string;
+  secret: boolean;
 }
 
 /** The form draft a known service fills in when Nick picks it. */
@@ -456,15 +469,8 @@ export const knownServiceDraft = (service: KelKnownService): ConnectionDraft => 
   auth_prefix: service.auth_prefix,
   docs_url: service.docs_url,
   test_endpoint: service.test_endpoint,
-  notes: service.note ?? '',
+  notes: '',
 });
-
-/** What a person should be told about a service Kel is not certain about. */
-export const KNOWN_SERVICE_SOURCE_LABELS: Record<KelKnownService['source'], string> = {
-  documented: 'Kel knows this address from the service’s own documentation.',
-  assumed: 'Kel assumes the usual address — correct it if this service gave you a different one.',
-  'to-confirm': 'Kel does not know this address; the service tells you when it issues your credential.',
-};
 
 /** V2-04 — one thing Kel can do with a service. Data: the request it makes and what it gives back. */
 export interface KelConnectionAction {
