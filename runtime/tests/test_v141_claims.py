@@ -63,11 +63,11 @@ REQUIRED = {
     'desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx': (
         # The V2 page retains the locked guardrail and action-check claims.
         'Safety rules (locked)',
-        'checked against them before it runs',
+        'Check what Kel may do',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
-        # V2 describes credential custody in its metadata empty state.
-        'the value itself lives in the OS-backed store',
+        # V2 states credential custody in the save result (D-87 removed the explainer text).
+        'the key is in the OS store',
     ),
 }
 
