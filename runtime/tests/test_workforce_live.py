@@ -229,13 +229,14 @@ class EngineStaffingTests(Base):
         self.assertEqual(row['template_id'], 'documentation-specialist')
         self.assertEqual(staff.calls(self.store, job), [])
 
-    def test_a_staffed_builder_runs_under_the_builder_archetype(self):
+    def test_a_staffed_writer_runs_under_its_own_archetype(self):
+        # D-88: writing that was the Builder's is the Writer's (supersedes D-69.4).
         job = self.staffed(writing('Draft a detailed onboarding guide for new engineers covering '
                                    'accounts, tooling, the review process, deployment and on-call '
                                    'expectations, with a checklist for the first two weeks and '
                                    'pointers to every internal system they will touch'))
         record = self.store.get(job)['contract']['staffing']
-        self.assertIn(record['steps']['document']['role'], ('builder', 'designer', 'utility'))
+        self.assertIn(record['steps']['document']['role'], ('writer', 'designer', 'utility'))
         self.run_engine({'fixture': FixtureAdapter()}, job,
                         lambda j: j['milestones']['document']['attempts'] >= 1)
         info = role_for(self.store, job, 'document')

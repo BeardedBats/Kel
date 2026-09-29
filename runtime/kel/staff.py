@@ -46,12 +46,17 @@ CREATE TABLE IF NOT EXISTS oracle_reviews(
 ROLE_LABELS = {'kel': 'Kel', 'discovery': 'Discovery', 'architect': 'Architect',
                'designer': 'Designer', 'builder': 'Builder', 'verifier': 'Verifier',
                'sentinel': 'Sentinel', 'release': 'Release', 'oracle': 'Oracle',
-               'utility': 'Utility', 'red_team': 'Red Team'}
+               'utility': 'Utility', 'red_team': 'Red Team', 'writer': 'Writer', 'animator': 'Animator'}
+# D-88: new roles start on Kel's ladder below "active" (WRITER_ANIMATOR_ROLES.md §4); the status is
+# recorded with every staffing decision that uses them. Validation runs are deferred (D-85), so they
+# stay here until Nick's use says otherwise.
+ROLE_STATUS = {'writer': 'shadow', 'animator': 'provisional'}
 REVIEW_ROLES = ('verifier', 'oracle', 'sentinel')
 # The authority template a step's executor runs under (the V1.5 frozen role snapshot). Utility is
 # the Builder's fast tier (charter doc 04); Kel's own work keeps the legacy per-kind template.
 EXECUTOR_TEMPLATES = {'builder': 'builder', 'utility': 'builder', 'discovery': 'discovery',
-                      'designer': 'designer', 'architect': 'architect'}
+                      'designer': 'designer', 'architect': 'architect', 'writer': 'writer',
+                      'animator': 'animator'}
 LEGACY_TEMPLATES = {'coding': 'implementation-engineer', 'research': 'research-specialist'}
 
 # `sentinel` and `red_team` are the other independent review passes (kel/oracle.py); like `check`
@@ -216,6 +221,10 @@ def features_for(contract, request=None):
 
 # ---- the staffing decision -------------------------------------------------------------------
 
+# D-88: whenever the Verifier reviews a Writer's step it reads through the editorial lens (the Editor),
+# and an Animator's step through the motion lens; other steps keep their job's lenses.
+STEP_LENSES = {'writer': ('editorial', 'requirements-coverage'),
+               'animator': ('motion', 'functional-testing')}
 REVIEW_LENSES = {'code': ('functional-testing', 'maintainability'),
                  'writing': ('requirements-coverage',), 'research': ('requirements-coverage',),
                  'recipe': ('requirements-coverage',)}
@@ -229,8 +238,10 @@ TIER_RANK = {'D0': 0, 'D1': 1, 'D2': 2, 'D3': 3, 'D4': 4}
 
 
 def _role_for_step(kind, milestone, tier, user_facing, text, final_id, hint=None):
+    if milestone.get('role') in ROLE_LABELS and milestone.get('role') not in REVIEW_ROLES:
+        return milestone['role']  # a plan template (a page, D-88) names each step's role itself
     if kind == 'code':
-        return 'builder'
+        return 'animator' if hint == 'motion' else 'builder'
     if final_id and milestone.get('id') == final_id:
         return 'kel'  # the Commander combines the parts into one answer (announce-chain synthesis)
     if 'web_research' in (milestone.get('required_capabilities') or []) or kind == 'research':
@@ -244,12 +255,12 @@ def _role_for_step(kind, milestone, tier, user_facing, text, final_id, hint=None
     if hint == 'utility' and TIER_RANK[tier] <= 1:
         return 'utility'
     if hint == 'writing':
-        return 'builder'
+        return 'writer'  # D-88.1: writing is the Writer's (supersedes D-69.4)
     if user_facing:
         return 'designer'
     if MECHANICAL.search(text) and TIER_RANK[tier] <= 1:
         return 'utility'
-    return 'builder'
+    return 'writer'
 
 
 def plan_job(store, contract, request=None, *, tier_max=None):
@@ -278,6 +289,19 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             reasons.append('%d independent code parts that write separate files run at the same time, each '
                            'in its own project copy (decomposability %d, sequentiality %d; doc 05 E3)'
                            % (len(streams), features['decomposability'], features['sequentiality']))
+            tier = 'D3'
+    elif kind == 'code' and contract.get('page'):
+        # D-88 (WRITER_ANIMATOR_ROLES.md §2.2): a page is a fixed hand-off, at least a D2 pod.
+        from .pages import staffing_parallel
+        if TIER_RANK[tier] < 2:
+            tier = 'D2'
+        reasons.append('a page: the Writer writes the copy, the Builder builds it with the copy locked'
+                       + (', the Designer sets the look' if contract['page'].get('designer') else '')
+                       + (', the Animator adds the motion' if contract['page'].get('animator') else ''))
+        parallel = staffing_parallel(contract)
+        if parallel:
+            reasons.append('the copy and the design are independent, so the Writer and the Designer work '
+                           'at the same time; the Builder combines them')
             tier = 'D3'
     elif kind == 'code' and tier in ('D3', 'D4'):
         reasons.append('no independent code parts in the plan, so one Builder makes the change')
@@ -308,11 +332,20 @@ def plan_job(store, contract, request=None, *, tier_max=None):
                               (contract.get('classification') or {}).get('task_class'))
         # Routing 2 §5.1: the step's task class and dispatch tier, frozen with the decision.
         step_kind = 'research' if 'web_research' in (milestone.get('required_capabilities') or []) else kind
+        if milestone.get('kind') == 'text':
+            step_kind = 'writing'  # a text step inside a code job (a page's copy or design brief)
         task_class = class_for_role(role, step_kind)
         dispatch, dispatch_why = tier_for_step(task_class, {'features': features, 'flags': flags,
                                                             'tier': tier}, hint)
         steps[milestone['id']] = {'role': role, 'label': ROLE_LABELS[role], 'task_class': task_class,
                                   'dispatch': dispatch, 'dispatch_why': dispatch_why}
+        if role in ROLE_STATUS:
+            steps[milestone['id']]['status'] = ROLE_STATUS[role]
+    for role in sorted({step['role'] for step in steps.values()} & set(ROLE_STATUS)):
+        reasons.append('the %s is a new role in %s status (D-88): it does the work, and its results are '
+                       'watched before it is confirmed' % (ROLE_LABELS[role], ROLE_STATUS[role]))
+    step_lenses = {mid: list(STEP_LENSES[step['role']]) for mid, step in steps.items()
+                   if step['role'] in STEP_LENSES}
     from .budget import CEILINGS, class_for
     budget_class = class_for(tier, flags, features)
     reasons.append('budget class %s' % budget_class)
@@ -339,7 +372,7 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             'budget_class': budget_class, 'budget': {'class': budget_class, 'ceilings': CEILINGS[budget_class]},
             'steps': steps,
             'parallel': parallel, 'serial': parallel is None,
-            'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses},
+            'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses, 'step_lenses': step_lenses},
             'oracle': {'required': bool(oracle_why), 'why': oracle_why},
             'sentinel': sentinel, 'red_team': red_team,
             'caps': {'workers_max': staffing.CAPS['workers_max'], 'engine_concurrency': 2}}

@@ -107,7 +107,7 @@ describe('Settings → Staff & models (D-70 item 3)', () => {
     expect(screen.getByRole('heading', { name: 'Staff & models' })).toBeTruthy();
     // D-87: no description of how staff work above the rows.
     expect(screen.queryByTestId('staff-defaults-note')).toBeNull();
-    expect(within(rowFor('builder')).getByText('Does the work: writes the code or the document.')).toBeTruthy();
+    expect(within(rowFor('builder')).getByText('Writes the code and builds the pages.')).toBeTruthy();
     const kelModel = within(rowFor('kel')).getByRole('combobox', { name: 'Kel: model' }) as HTMLSelectElement;
     expect(kelModel.value).toBe('gpt-6-luna');
     const architectModel = within(rowFor('architect')).getByRole('combobox', { name: 'Architect: model' }) as HTMLSelectElement;

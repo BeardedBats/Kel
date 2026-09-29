@@ -55,6 +55,8 @@ starts until the person chooses. Leave "scoping" out for small, clear requests.
 With "start_background_work" also say what kind of work it is and how much it deserves:
 "task_class" is one of "research" (finding current or outside information), "coding" (changing or
 building code), "design" (screens, layouts, visual or UX work), "writing" (documents, posts, plans),
+"page" (a web page or HTML file whose words matter: a landing page, one-pager, newsletter, microsite),
+"motion" (animation, transitions, micro-interactions, "make it feel alive"),
 "utility" (short mechanical work: format, convert, rename, tidy, extract); "tier" is "fast" (small and
 simple), "standard" (ordinary work), or "deep" (large, subtle or high-stakes work).
 
@@ -272,7 +274,7 @@ def _parse(raw):
 
 # Routing 2 §5.5: the turn model's reading of the work is the primary classification; anything else
 # it says is ignored (the service's floors may still force coding or research, never downgrade them).
-WORK_CLASSES = ('research', 'coding', 'design', 'writing', 'utility')
+WORK_CLASSES = ('research', 'coding', 'design', 'writing', 'page', 'motion', 'utility')  # D-88: page, motion
 WORK_TIERS = ('fast', 'standard', 'deep')
 
 

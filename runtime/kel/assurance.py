@@ -1,6 +1,7 @@
 """Assurance lenses and review findings (Phase 5.0): the fixed lens catalog.
 
-Design: `ux-audit/workforce-os/08_ASSURANCE_ARMY.md`. Fifteen constitution-level lenses
+Design: `ux-audit/workforce-os/08_ASSURANCE_ARMY.md`. Fifteen constitution-level lenses (plus
+the D-88 editorial and motion lenses)
 with deterministic gating classes; security, privacy, data-integrity, release-integrity
 and the Oracle are never-gate insurance and are never learned away. Lens names are stable
 identifiers (doc-08 spellings; `visual-design` stores the catalog's conservative `info`
@@ -49,6 +50,13 @@ LENSES = (
      'reviews': 'Deliberate break attempts: lies, edge cases, escape routes; different model family (Oracle)'},
     {'name': 'simplification', 'blocking_class': 'info', 'gate_class': 'standard', 'advisory': True,
      'reviews': 'Unrequested structure, hand-rolled stdlib, one-implementation abstractions, dependencies duplicating platform features'},
+    # D-88: the Editor (the Verifier reading a Writer's work) and the motion reviewer (an Animator's).
+    {'name': 'editorial', 'blocking_class': 'blocker', 'gate_class': 'standard',
+     'reviews': 'Prose against the brief: blocks only on an unsupported factual claim, missing required content, '
+                'slop over the threshold, or the wrong reader or purpose; every style note is advisory'},
+    {'name': 'motion', 'blocking_class': 'critical', 'gate_class': 'standard',
+     'reviews': "Motion against Nick's taste rules and references: purpose, choreography, origin, settle, "
+                'reduced motion; timing is judged by the measured numbers, not by eye'},
 )
 
 LENS_NAMES = tuple(item['name'] for item in LENSES)

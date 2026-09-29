@@ -510,6 +510,8 @@
   --kel-role-architect: #e6d98a;
   --kel-role-release: #b8e68a;
   --kel-role-utility: #c4cedc;
+  --kel-role-writer: #f6e3c6;
+  --kel-role-animator: #b9ecff;
   --kel-role-other: #edf2fa;
 }
 .kel-role--kel { --kel-role: var(--kel-role-kel); }
@@ -523,6 +525,8 @@
 .kel-role--architect { --kel-role: var(--kel-role-architect); }
 .kel-role--release { --kel-role: var(--kel-role-release); }
 .kel-role--utility { --kel-role: var(--kel-role-utility); }
+.kel-role--writer { --kel-role: var(--kel-role-writer); }
+.kel-role--animator { --kel-role: var(--kel-role-animator); }
 .kel-role--other { --kel-role: var(--kel-role-other); }
 
 .kel-wd-title__row { display: flex; align-items: center; gap: 12px; min-width: 0; }

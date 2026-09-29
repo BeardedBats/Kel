@@ -104,10 +104,12 @@ def is_subscription(adapter):
 CLAUDE_EFFORT = ('low', 'medium', 'high', 'xhigh', 'max')
 CODEX_EFFORT = ('low', 'medium', 'high', 'xhigh')  # when Codex's own catalog is unreadable
 
-ROLES = ('kel', 'discovery', 'designer', 'builder', 'verifier', 'oracle', 'utility',
-         'architect', 'sentinel', 'release')
+# D-88: the Writer (all writing that was the Builder's, D-69.4 superseded) and the Animator (motion).
+ROLES = ('kel', 'discovery', 'designer', 'writer', 'builder', 'animator', 'verifier', 'oracle',
+         'utility', 'architect', 'sentinel', 'release')
 ROLE_LABELS = {'kel': 'Kel', 'discovery': 'Discovery (research)', 'designer': 'Designer',
-               'builder': 'Builder', 'verifier': 'Verifier', 'oracle': 'Oracle (second opinion)',
+               'writer': 'Writer', 'builder': 'Builder', 'animator': 'Animator',
+               'verifier': 'Verifier', 'oracle': 'Oracle (second opinion)',
                'utility': 'Utility work', 'architect': 'Architect', 'sentinel': 'Sentinel',
                'release': 'Release'}
 # D-67 starting models (Preferred). Builder falls back to Codex; the rest to Kel's routing.
@@ -116,6 +118,10 @@ DEFAULTS = {
     'discovery': ('PREFERRED', 'claude-sonnet', 'auto'),
     'designer': ('PREFERRED', 'claude-fable-5-1', 'auto'),
     'builder': ('PREFERRED', 'claude-opus-5-5', 'auto'),
+    # D-88: Writer on Fable 5.1 (Opus 5.5 fallback); Animator on Opus 5.5 at High (motion is exact
+    # numeric work and interruption logic), Codex as its fallback; Astra reviews both as the Verifier.
+    'writer': ('PREFERRED', 'claude-fable-5-1', 'auto'),
+    'animator': ('PREFERRED', 'claude-opus-5-5', 'high'),
     'verifier': ('PREFERRED', 'gpt-6-astra', 'auto'),
     'oracle': ('PREFERRED', 'gpt-6-astra', 'auto'),
     'utility': ('PREFERRED', 'deepseek-flash', 'auto'),
@@ -123,7 +129,7 @@ DEFAULTS = {
     'sentinel': ('AUTOMATIC', None, 'auto'),
     'release': ('AUTOMATIC', None, 'auto'),
 }
-FALLBACKS = {'builder': ('codex',)}
+FALLBACKS = {'builder': ('codex',), 'writer': ('claude-opus-5-5',), 'animator': ('codex',)}
 # Independence (handoff §16): reviewers step to another family's strongest model when the preferred
 # one shares the Builder's family.
 INDEPENDENT = {'openai': ('gpt-6-astra', 'codex'), 'anthropic': ('claude-opus-5-5', 'claude-sonnet')}
@@ -135,7 +141,7 @@ ADAPTER_FAMILIES = {'claude': 'anthropic', 'claude-code': 'anthropic', 'internal
                     'deepseek': 'deepseek', 'openrouter': 'deepseek'}
 REJECTION_HOURS = 24
 # LIVE-3: the work a role exists for. A model that can't do it is not offered for that role.
-ROLE_PURPOSE = {'builder': 'code', 'discovery': 'web'}
+ROLE_PURPOSE = {'builder': 'code', 'animator': 'code', 'discovery': 'web'}
 PURPOSE_WORDS = {'code': ("can't change code", "the Builder's code work"),
                  'web': ("can't search the web", "Discovery's research")}
 

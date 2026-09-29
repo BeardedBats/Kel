@@ -215,6 +215,8 @@ const ROLE_NAMES: Record<string, string> = {
   oracle: 'Oracle',
   discovery: 'Discovery',
   designer: 'Designer',
+  writer: 'Writer',
+  animator: 'Animator',
   utility: 'Utility',
   architect: 'Architect',
   sentinel: 'Sentinel',
@@ -618,7 +620,7 @@ export const completedAt = (epoch: number | null | undefined): string | null => 
 export const teamHeading = (staff: unknown[]): string => `Team · ${staff.length} agent${staff.length === 1 ? '' : 's'}`;
 
 /** The role's colour key (every instance of a role shares it; unknown roles use the neutral one). */
-export const ROLE_COLOR_KEYS = ['kel', 'builder', 'verifier', 'oracle', 'sentinel', 'red-team', 'designer', 'discovery', 'architect', 'release', 'utility'] as const;
+export const ROLE_COLOR_KEYS = ['kel', 'builder', 'verifier', 'oracle', 'sentinel', 'red-team', 'designer', 'discovery', 'architect', 'release', 'utility', 'writer', 'animator'] as const;
 export type RoleColorKey = (typeof ROLE_COLOR_KEYS)[number] | 'other';
 
 export const roleColorKey = (member: Pick<OfficeStaff, 'role'>): RoleColorKey => {

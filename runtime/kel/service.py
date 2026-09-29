@@ -842,13 +842,19 @@ class Service:
         model_class=(decision or {}).get('task_class')
         out={'task_class':model_class,'tier':(decision or {}).get('tier'),'source':'model' if model_class else 'floors'}
         forced=('coding' if code_floor else 'research' if research_floor else None)
-        if forced and model_class not in ('coding','research') and model_class!=forced:
+        if forced and model_class not in ('coding','research','page','motion') and model_class!=forced:
             out.update(task_class=forced,forced_by='floor')
         if not out['task_class']:
             if needs_research(text):out['task_class']='research'
             elif MECHANICAL.search(lower) and len(lower.split())<=40:out['task_class']='utility'
             elif USER_FACING.search(lower):out['task_class']='design'
             else:out['task_class']='writing'
+        # D-88 (WRITER_ANIMATOR_ROLES.md §2.1): the page and motion floors only add a role's work, never
+        # take any away (research stays research, a utility job stays small).
+        from .pages import floor_class
+        floored=floor_class(text,out['task_class'])
+        if floored!=out['task_class']:
+            out.update(task_class=floored,forced_by='floor')
         packet['classification']={k:v for k,v in out.items() if v}
         try:
             with self.store.transaction() as db:
@@ -979,7 +985,7 @@ class Service:
         coding_verb=lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)
         classified=(packet.get('classification') or {}).get('task_class')
         # Routing 2 §5.5: the classification (the turn model's, floors as the safety net) is primary.
-        coding=kind=='coding' or (packet['project']['root'] and coding_verb) or classified=='coding'
+        coding=kind=='coding' or (packet['project']['root'] and coding_verb) or classified in ('coding','page','motion')
         target=file_action(text)
         if target and kind=='coding' and packet.get('kind_source')=='client':
             target=None  # an explicit coding request keeps its own project routing
@@ -1047,7 +1053,11 @@ class Service:
                 project_id=packet['project']['id'];tests=json.loads(row['command'])
             contract=compile_coding(text,root,tests,project_id,greenfield=greenfield)
             contract['planner']={'provider':None,'model':None,'compiler':contract.get('compiler')}
-            if not greenfield:
+            from .pages import is_page,page_contract
+            if classified=='page' or (classified in ('coding','design','writing',None) and is_page(text)):
+                # D-88: a page is the Writer's copy, then the Builder's code with the copy locked.
+                contract=dict(page_contract(contract,text,task_class=classified),planner=contract['planner'])
+            elif not greenfield:
                 contract=self._plan_code_parts(sid,cid,text,contract)
         elif kind=='research' or classified=='research' or (not classified and needs_research(text)):
             from .research import compile_research

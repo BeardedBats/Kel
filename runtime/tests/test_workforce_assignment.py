@@ -71,8 +71,8 @@ class VocabTests(unittest.TestCase):
 class ArchetypeTests(Base):
     def test_archetypes_seed_idempotently(self):
         created = ensure_archetypes(self.store)
-        self.assertEqual(created, ['discovery', 'architect', 'designer', 'builder',
-                                   'verifier', 'sentinel', 'release'])
+        self.assertEqual(created, ['discovery', 'architect', 'designer', 'builder', 'writer',
+                                   'animator', 'verifier', 'sentinel', 'release'])
         self.assertEqual(ensure_archetypes(self.store), [])
         ids = {row['template_id'] for row in self.team.roster()}
         for template_id, _name, _department, _fields in ARCHETYPES:

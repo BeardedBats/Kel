@@ -342,8 +342,11 @@ class FindingSchemaTests(Base):
 
 class RegistryTests(Base):
     def test_lens_catalog_matches_the_design(self):
-        self.assertEqual(len(LENSES), 15)
-        self.assertEqual(len(set(LENS_NAMES)), 15)
+        # 15 from doc 08, plus the D-88 editorial (Editor) and motion lenses.
+        self.assertEqual(len(LENSES), 17)
+        self.assertEqual(len(set(LENS_NAMES)), 17)
+        self.assertIn('editorial', LENS_NAMES)
+        self.assertIn('motion', LENS_NAMES)
         for name in NEVER_GATE:
             self.assertIn(name, LENS_NAMES)
         self.assertIn(ORACLE_LENS, NEVER_GATE)

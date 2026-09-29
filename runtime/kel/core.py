@@ -599,9 +599,16 @@ class Store:
                     raise PolicyError("Evidence belongs to another subject")
                 text = self.artifact_text(m['artifact'])
                 checks.append(dict(kind='artifact_digest', verdict='VERIFIED', subject=m['artifact']['sha256']))
-                if job['contract'].get('kind')=='coding':
+                if job['contract'].get('kind')=='coding' and spec.get('kind')!='text':  # D-88: a page's copy is text
                     from .coding import repository_check
                     checks.append(repository_check(self,m['artifact']['run_id']))
+                # D-88: a Writer's draft gets the deterministic slop scan; a page's build keeps the copy locked.
+                from .pages import copy_check
+                from .slop import check as slop_check
+                for extra in (slop_check(self, job, milestone_id, text), copy_check(self, job, milestone_id)
+                              if job['contract'].get('kind')=='coding' and spec.get('kind')!='text' else None):
+                    if extra:
+                        checks.append(extra)
                 if m['provider']=='research' or 'web_research' in spec.get('required_capabilities',job['contract'].get('required_capabilities',[])):
                     from .research import check_research_evidence
                     checks.append(dict(kind='research_evidence',verdict='VERIFIED' if check_research_evidence(self,m['artifact']['run_id'],text) else 'UNCERTAIN'))
@@ -626,6 +633,11 @@ class Store:
                 # what failed (engine prompt); if that informed try fails the same way, stop.
                 m['gate_failures'] = m.get('gate_failures', 0) + 1
                 if m['gate_failures'] >= 2 and m['state'] == 'NEEDS_REPAIR':
+                    m['state'] = 'EXHAUSTED'
+            if old_state == 'CHECKING' and any(c.get('failure') == 'slop' for c in checks):
+                # D-88: at most two revision rounds on slop; the third draft over the limit stops the step.
+                m['slop_failures'] = m.get('slop_failures', 0) + 1
+                if m['slop_failures'] >= 3 and m['state'] == 'NEEDS_REPAIR':
                     m['state'] = 'EXHAUSTED'
             if old_state == 'CHECKING':
                 job['spent'] += 1
@@ -697,7 +709,9 @@ class Store:
                 if m['state'] == 'ACCEPTED':
                     try:
                         self.artifact_text(m['artifact'])
-                        if job['contract'].get('kind')=='coding':
+                        if job['contract'].get('kind')=='coding' and not any(  # D-88: a page's text steps
+                                s.get('kind')=='text' and s.get('id')==m['artifact'].get('milestone_id')
+                                for s in job['contract'].get('milestones') or []):
                             from .coding import check_evidence
                             states.append(check_evidence(self,m['artifact']['run_id']))
                         elif m['provider'] in WEB_PROVIDERS:
@@ -1470,6 +1484,10 @@ def plain_check(check):
         return 'the tests did not pass.'
     if kind == 'research_evidence':
         return 'its sources could not be confirmed.'
+    if kind == 'slop':  # D-88
+        return 'the writing still read as machine-written after its revisions.'
+    if kind == 'copy_lock':  # D-88
+        return "the page's words did not match the Writer's copy."
     if kind in ('artifact_digest', 'artifact_integrity'):
         return 'the saved result could not be read back intact.'
     return 'a required check did not pass.'

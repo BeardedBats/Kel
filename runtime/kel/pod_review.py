@@ -19,10 +19,16 @@ SERIOUS = ('blocker', 'critical')
 TASK_PREFIX = 'pod:'
 
 
-def lenses_for(job):
+def lenses_for(job, milestone_id=None):
+    """The lenses the Verifier reviews one step through. D-88: a Writer's step is always read through
+    the editorial lens and an Animator's through the motion lens, whenever the Verifier reviews it;
+    other steps keep the pod's lenses (none below D2)."""
     from .staff import staffing_of
     record = staffing_of(job)
     review = (record or {}).get('review') or {}
+    step = (review.get('step_lenses') or {}).get(milestone_id) if milestone_id else None
+    if step:
+        return [lens for lens in step if isinstance(lens, str)]
     if review.get('mode') != 'pod':
         return []
     return [lens for lens in review.get('lenses') or [] if isinstance(lens, str)]
@@ -36,11 +42,15 @@ def lens_prompt(lenses):
             lines.append('- %s: %s' % (name, describe(name)['reviews']))
         except PolicyError:
             continue
-    return ('\nThis is a pod review: check the work through each of these lenses.\n' + '\n'.join(lines) +
-            '\nReturn every finding as an object instead of a string: {"lens":"<one of: %s>",'
-            '"severity":"blocker|critical|info","summary":"<one sentence>","where":"<file or section, '
-            'or null>"}. A blocker or critical finding means the work must not pass as it is.'
-            % ', '.join(lenses))
+    prompt = ('\nThis is a pod review: check the work through each of these lenses.\n' + '\n'.join(lines) +
+              '\nReturn every finding as an object instead of a string: {"lens":"<one of: %s>",'
+              '"severity":"blocker|critical|info","summary":"<one sentence>","where":"<file or section, '
+              'or null>"}. A blocker or critical finding means the work must not pass as it is.'
+              % ', '.join(lenses))
+    from .packs import lens_brief
+    for name in lenses:
+        prompt += lens_brief(name)
+    return prompt
 
 
 def task_id(job_id, milestone_id):

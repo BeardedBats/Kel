@@ -233,6 +233,52 @@ ARCHETYPES = (
         'independence': {'may_not_review_own': True, 'reviewer_family': 'any_but_executor'},
         'anti_patterns': ['gold-plating beyond spec', 'touching files outside the lease',
                           'silent interface changes']}),
+    # D-88 (WRITER_ANIMATOR_ROLES.md §1.2): the words a person will read. Starts in shadow status.
+    ('writer', 'Writer', 'Product', {
+        'goal': 'Write the words: the most important thing first, every factual claim supported, nothing that reads as filler.',
+        'inputs': 'brief (reader, purpose, length, register), Discovery facts with sources, voice samples when Nick has given any',
+        'outputs': 'draft.md or copy.md (every visible string of a page), notes (point, claim-to-source table, slop score, open questions)',
+        'quality_bar': 'point first; every checkable claim sourced or marked [needs source]; slop score within the threshold; the Editor verdict recorded',
+        'boundaries': 'writes only its own output; never code, HTML or CSS; never publishes or sends; never invents quotes, numbers, names or sources',
+        'escalation': 'the brief conflicts with the facts; taste not covered by the style sheet; the Editor and Writer disagree twice on one point',
+        'evidence_expectations': 'claim table + deterministic slop scan + Editor findings answered once',
+        'tool_policy': {'allow': ['read', 'write'],
+                        'deny': ['shell', 'install', 'git', 'browser', 'external_api', 'run_tests']},
+        'budget': 14,
+        'authority_max': 'workspace-write',
+        'capability_requirements': ['long_context', 'structured_output'],
+        'dispatch_tier': 'standard',
+        'budget_class': 'standard',
+        'default_skill_packs': ['writing-core', 'voice-nick'],
+        'independence': {'may_not_review_own': True, 'reviewer_family': 'different_family_if_available'},
+        'anti_patterns': ['throat-clearing openings', 'burying the point',
+                          'rule-of-three padding and "not just X, but Y" contrasts', 'vague attribution',
+                          'invented specifics', 'summary endings that repeat the piece',
+                          'uniform sentence rhythm and stacked hedges',
+                          "rewriting the Editor's finding away instead of fixing the text"]}),
+    # D-88 (WRITER_ANIMATOR_ROLES.md §1.5): motion built from Nick's taste library, proven by captures.
+    ('animator', 'Animator', 'Product', {
+        'goal': "Make things move the way Nick likes: purposeful motion from his taste library and Kel's motion rules, proven with captures and measurements.",
+        'inputs': 'target (file, component or page), the moments, feel words, rules.md, retrieved references and anti-references',
+        'outputs': 'code + motion/plan.md + motion/metrics.json (+ frame strips when the capture harness runs)',
+        'quality_bar': 'every moment has a purpose, a plan citing its references and measured numbers; hard motion checks pass',
+        'boundaries': "motion only: no copy changes, no layout or visual redesign, no new motion library, no endless loops, never edits the taste library",
+        'escalation': "the brief's feel conflicts with rules.md; a reference breaks a MOTION.md hard rule; two failed revisions on one moment",
+        'evidence_expectations': 'plan.md + metrics.json per moment; a moment without a capture is not verified',
+        'tool_policy': {'allow': ['read', 'write', 'run_tests', 'browser', 'git'],
+                        'deny': ['install', 'shell', 'external_api']},
+        'budget': 22,
+        'authority_max': 'leased-write',
+        'capability_requirements': ['repository_edit', 'code_execution', 'vision'],
+        'dispatch_tier': 'standard',
+        'budget_class': 'standard',
+        'default_skill_packs': ['motion-craft', 'taste-motion'],
+        'independence': {'may_not_review_own': True, 'reviewer_family': 'different_family_if_available'},
+        'anti_patterns': ['animating a keyboard or 100+/day action',
+                          "timing copied from how a clip looks instead of its measured numbers",
+                          'a layout that settles, then shifts', 'an end state that snaps',
+                          'transition: all, or animated layout properties', 'decorative loops',
+                          'a parallel token system next to the house one', 'delight on frequent UI']}),
     ('verifier', 'Verifier', 'Verification', {
         'goal': 'Independently establish acceptance or failure - never rubber-stamp.',
         'inputs': 'source request, contract, artifact text/digests, rubric',
@@ -293,7 +339,7 @@ ARCHETYPES = (
 
 
 def ensure_archetypes(store, author='kel'):
-    """Seed the 7 spawnable archetypes as role templates (idempotent, append-only)."""
+    """Seed the spawnable archetypes (9 with the D-88 Writer and Animator) as role templates (idempotent, append-only)."""
     team = Team(store)
     created = []
     for template_id, name, department, fields in ARCHETYPES:

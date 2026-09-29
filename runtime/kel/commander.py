@@ -471,9 +471,12 @@ class Commander:
         if spec.get('depends_on'):
             prompt+='\nAccepted dependency evidence:\n'+'\n'.join(store.artifact_text(job['milestones'][mid]['artifact']) for mid in spec['depends_on'])
         from .pod_review import lens_prompt,lenses_for
-        lenses=lenses_for(job)
+        lenses=lenses_for(job,milestone_id)
         if lenses:
             prompt+=lens_prompt(lenses)
+            # D-88: the Editor judges slop only against Kel's deterministic scan of this draft.
+            prompt+=''.join("\nKel's slop scan: "+str((c.get('findings') or [''])[0])
+                            for c in m.get('checks') or [] if c.get('kind')=='slop')
         started=time.monotonic()
         try:
             result=model.execute(prompt,run_id=review_id,**kwargs)

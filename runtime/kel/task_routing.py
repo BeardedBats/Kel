@@ -17,21 +17,24 @@ what was asked, what ran and why.
 """
 from .core import PolicyError
 
-TASK_CLASSES = ('quick_answer', 'planning', 'research', 'coding', 'design', 'writing', 'review',
-                'utility')
+TASK_CLASSES = ('quick_answer', 'planning', 'research', 'coding', 'design', 'writing', 'motion',
+                'review', 'utility')
 CLASS_LABELS = {'quick_answer': 'Quick answers', 'planning': 'Planning', 'research': 'Research',
-                'coding': 'Coding', 'design': 'Design', 'writing': 'Writing', 'review': 'Review',
-                'utility': 'Utility work'}
-# The Settings row (D-67 role) that governs each class. Writing stays on the Builder (D-69 item 4).
+                'coding': 'Coding', 'design': 'Design', 'writing': 'Writing', 'motion': 'Motion',
+                'review': 'Review', 'utility': 'Utility work'}
+# The Settings row (D-67 role) that governs each class. D-88: writing is the Writer's (supersedes
+# D-69 item 4) and motion the Animator's. A `page` is not a class of one step: it is a plan whose
+# steps are writing, design, coding and motion (kel.pages).
 CLASS_ROLE = {'quick_answer': 'kel', 'planning': 'kel', 'research': 'discovery', 'coding': 'builder',
-              'design': 'designer', 'writing': 'builder', 'review': 'verifier', 'utility': 'utility'}
-CLASS_PURPOSE = {'coding': 'code', 'research': 'text'}  # web research picks 'web' per step
+              'design': 'designer', 'writing': 'writer', 'motion': 'animator', 'review': 'verifier',
+              'utility': 'utility'}
+CLASS_PURPOSE = {'coding': 'code', 'motion': 'code', 'research': 'text'}  # web research picks 'web' per step
 
 TIERS = ('fast', 'standard', 'deep', 'assurance')
 TIER_LABELS = {'fast': 'Fast', 'standard': 'Standard', 'deep': 'Deep', 'assurance': 'Assurance'}
 # doc 10 §2: Discovery standard (fast for lookups), Builder standard, Verifier/Sentinel assurance.
 BASE_TIER = {'quick_answer': 'fast', 'planning': 'standard', 'research': 'standard',
-             'coding': 'standard', 'design': 'standard', 'writing': 'standard',
+             'coding': 'standard', 'design': 'standard', 'writing': 'standard', 'motion': 'standard',
              'review': 'assurance', 'utility': 'fast'}
 # The model strength each tier aims at (role_models.STRENGTH: 1 fast/cheap … 3 strongest).
 TIER_TARGET = {'fast': 1, 'standard': 2, 'deep': 3, 'assurance': 3}
@@ -55,11 +58,15 @@ def class_for_role(role, kind):
         return 'design'
     if role == 'utility':
         return 'utility'
+    if role == 'writer':
+        return 'writing'
+    if role == 'animator':
+        return 'motion'
     if kind == 'code':
         return 'coding'
     if kind == 'research':
         return 'research'
-    return 'writing'  # the Builder writing (D-69 item 4) and Kel's own D0 / combine steps
+    return 'writing'  # Kel's own D0 / combine steps (and a Builder asked to write, before D-88)
 
 
 def tier_for_step(task_class, record=None, hint=None):

@@ -30,7 +30,7 @@ CEILINGS = {
 # What one step is expected to use when nothing has been measured for its class and model yet
 # (processed tokens, run time in ms, API-equivalent cost). Deliberately modest: a step is only
 # stopped by what was actually measured plus a reasonable next step.
-STEP_DEFAULTS = {'coding': (250_000, 8 * 60_000, 1.50), 'research': (60_000, 3 * 60_000, 0.40),
+STEP_DEFAULTS = {'coding': (250_000, 8 * 60_000, 1.50), 'motion': (250_000, 8 * 60_000, 1.50), 'research': (60_000, 3 * 60_000, 0.40),
                  'design': (60_000, 3 * 60_000, 0.60), 'writing': (40_000, 2 * 60_000, 0.30),
                  'utility': (20_000, 60_000, 0.05), 'planning': (20_000, 60_000, 0.10),
                  'quick_answer': (10_000, 30_000, 0.05), 'review': (60_000, 3 * 60_000, 0.60)}
