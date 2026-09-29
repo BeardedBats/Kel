@@ -168,31 +168,11 @@ describe('the detail uses the engine’s own words (LIVE-10)', () => {
     },
   };
 
-  it('says how independent the check and the second opinion were in the engine’s words', async () => {
+  it('D-79: the Review Team keeps one status; independence, conclusions and coverage are gone', async () => {
     renderDetail(FINISHED);
     const review = await screen.findByTestId('kel-office-review');
-    expect(review.textContent).toContain('Checked by a different model family from the one that did the work.');
-    const oracle = screen.getByTestId('kel-office-oracle');
-    expect(oracle.textContent).toContain('Given by the same model family as the one that did the work, so less independent.');
-    expect(oracle.textContent).not.toContain('Less independent: given by');
-    // Why it was asked and how independent it was read as two sentences, not one run-on.
-    expect(screen.getByTestId('kel-office-oracle-why').textContent).toBe(
-      'Asked because: it changes more than 10 files. Given by the same model family as the one that did the work, so less independent.'
-    );
-  });
-
-  it('leads with the Oracle’s conclusion and says what it looked at', async () => {
-    renderDetail(FINISHED);
-    expect((await screen.findByTestId('kel-office-oracle-line')).textContent).toBe('It found nothing that should stop this, and left one note.');
-    expect(screen.getByTestId('kel-office-oracle-coverage').textContent).toBe(
-      'What it looked at: read every renamed file and the summary sheet; could not open the spreadsheet formulas.'
-    );
-  });
-
-  it('uses the conclusion when the second opinion couldn’t run', async () => {
-    renderDetail({ ...FINISHED, oracle: { state: 'could_not_run', why: 'no second model family here', conclusion: "It couldn't run: no second model family here." } });
-    expect((await screen.findByTestId('kel-office-oracle-line')).textContent).toBe("It couldn't run: no second model family here.");
-    expect(screen.queryByTestId('kel-office-oracle-coverage')).toBeNull();
+    expect(review.textContent).not.toMatch(/model family|What it looked at|It found nothing/);
+    expect(screen.queryByTestId('kel-office-oracle')).toBeNull();
   });
 
   it('marks the step a restart stopped as "Interrupted", not "Now"', async () => {
@@ -232,7 +212,9 @@ describe('the detail uses the engine’s own words (LIVE-10)', () => {
     });
     const kel = (await screen.findAllByTestId('kel-office-member'))[0];
     expect(within(kel).getByTestId('kel-office-model').textContent).toBe('ChatGPT Luna');
-    expect(kel.textContent).toContain('Kel used its standard plan for this kind of work.');
+    // D-79: no line under the row; its note is in the row's tooltip.
+    expect(kel.textContent).not.toContain('Kel used its standard plan for this kind of work.');
+    expect(kel.getAttribute('title')).toContain('Kel used its standard plan for this kind of work.');
   });
 });
 
@@ -616,9 +598,9 @@ describe('undone work says so from the engine’s record (LIVE-12)', () => {
     expect(screen.queryByTestId('kel-done-card-undo')).toBeNull();
   });
 
-  it('an applied change still offers Undo', async () => {
+  it('D-79: an applied change says where it went, with no Undo in the panel (Nick asks Kel)', async () => {
     renderDetail(RECEIPTS_DETAIL);
-    expect(await screen.findByTestId('kel-office-undo')).toBeTruthy();
-    expect(screen.getByTestId('kel-office-applied').textContent).toContain('Applied automatically');
+    expect((await screen.findByTestId('kel-office-applied')).textContent).toContain('Applied automatically');
+    expect(screen.queryByTestId('kel-office-undo')).toBeNull();
   });
 });

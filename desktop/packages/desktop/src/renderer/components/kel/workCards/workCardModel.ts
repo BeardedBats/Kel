@@ -4,6 +4,7 @@
  * did not run as if it did). React-free so the rules are tested on their own.
  */
 import type {
+  OfficeFinding,
   OfficeItem,
   OfficeItemDetail,
   OfficeOracle,
@@ -574,4 +575,109 @@ export const duration = (start: number | null | undefined, end: number | null | 
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
+};
+
+/* ─── D-79: the simplified detail panel ──────────────────────────────────────────────────── */
+
+/** D-79: finished work whose checks passed reads "Complete" (the when is in its tooltip). */
+export const COMPLETE_LABEL = 'Complete';
+
+/** The panel's (and the done card's) status words: "Complete", else the plain short state words. */
+export const panelStateLabel = (item: Pick<OfficeItemDetail, 'state' | 'verification' | 'review'> & { verdict?: string | null }): string => {
+  const label = detailStateLabel(item);
+  return label === 'Done and checked' ? COMPLETE_LABEL : label;
+};
+
+/** "09/29/26 09:31 AM" (MM/DD/YY hh:mm AM/PM) for the "Complete" tooltip. */
+export const completedAt = (epoch: number | null | undefined): string | null => {
+  if (!epoch || !Number.isFinite(epoch)) return null;
+  const d = new Date(epoch < 1e12 ? epoch * 1000 : epoch);
+  const two = (n: number) => String(n).padStart(2, '0');
+  const hours = d.getHours() % 12 || 12;
+  return `${two(d.getMonth() + 1)}/${two(d.getDate())}/${two(d.getFullYear() % 100)} ${two(hours)}:${two(d.getMinutes())} ${d.getHours() < 12 ? 'AM' : 'PM'}`;
+};
+
+/** "Team · 4 agents". */
+export const teamHeading = (staff: unknown[]): string => `Team · ${staff.length} agent${staff.length === 1 ? '' : 's'}`;
+
+/** The role's colour key (every instance of a role shares it; unknown roles use the neutral one). */
+export const ROLE_COLOR_KEYS = ['kel', 'builder', 'verifier', 'oracle', 'sentinel', 'red-team', 'designer', 'discovery', 'architect', 'release', 'utility'] as const;
+export type RoleColorKey = (typeof ROLE_COLOR_KEYS)[number] | 'other';
+
+export const roleColorKey = (member: Pick<OfficeStaff, 'role'>): RoleColorKey => {
+  if (isCommander(member)) return 'kel';
+  const key = word(member.role).replace(/[\s_]+/g, '-');
+  return (ROLE_COLOR_KEYS as readonly string[]).includes(key) ? (key as RoleColorKey) : 'other';
+};
+
+/** What the agent did (its hover tooltip); the fallback note rides along. */
+export const memberTooltip = (member: Pick<OfficeStaff, 'doing' | 'note'> & { plan?: string | null }): string | undefined => {
+  const parts = [member.doing, member.note && !usedStandardPlan(member as OfficeStaff) ? member.note : null]
+    .map((part) => (part ?? '').trim())
+    .filter(Boolean);
+  return parts.length ? parts.join('\n') : undefined;
+};
+
+export type ReviewTeamState = 'Not started' | 'In progress' | 'Failed' | 'Passed' | typeof UNCERTAIN_LABEL;
+
+type ReviewView = Pick<OfficeItemDetail, 'state' | 'verification' | 'review' | 'staff'> & {
+  verdict?: string | null;
+  sentinel?: OfficeOracle | null;
+  oracle?: OfficeOracle | null;
+  red_team?: OfficeOracle | null;
+};
+
+const PASS_NAMES: Array<[keyof ReviewView, string]> = [
+  ['review', 'Verifier'],
+  ['sentinel', 'Sentinel'],
+  ['oracle', 'Oracle'],
+  ['red_team', 'Red Team'],
+];
+
+const openProblems = (view: ReviewView): Array<{ by: string; summary: string }> => {
+  const out: Array<{ by: string; summary: string }> = [];
+  for (const [key, by] of PASS_NAMES) {
+    const findings = (view[key] as { findings?: OfficeFinding[] | null } | null | undefined)?.findings ?? [];
+    for (const finding of findings) {
+      if (finding.status === 'resolved' || finding.severity === 'note') continue;
+      const summary = (finding.summary ?? '').trim();
+      if (summary) out.push({ by, summary });
+    }
+  }
+  return out;
+};
+
+/**
+ * D-79 "Review Team": one status — Not started, In progress, Failed or Passed. (LIVE-10 keeps
+ * "Couldn’t fully check" for work whose checks could not run: that is not a failure.)
+ */
+export const reviewTeamState = (view: ReviewView): ReviewTeamState => {
+  if (passed(view)) return 'Passed';
+  if (isFinished(view.state) && isUncertain(view)) return UNCERTAIN_LABEL;
+  if (failedChecks(view) || (isFinished(view.state) && view.state === 'failed')) return 'Failed';
+  const started =
+    view.state === 'in_review' ||
+    Boolean(view.verification?.result) ||
+    Boolean(view.review?.verdict) ||
+    openProblems(view).length > 0 ||
+    PASS_NAMES.some(([key]) => key !== 'review' && ['running', 'done'].includes(String((view[key] as OfficeOracle | null | undefined)?.state ?? '')));
+  return started ? 'In progress' : 'Not started';
+};
+
+const lowerLead = (text: string) => (/^[A-Z](?![A-Z0-9-])/.test(text) ? text.charAt(0).toLowerCase() + text.slice(1) : text);
+
+/**
+ * When there is a problem: what it is and who is on it, in one line — "Sentinel found a password
+ * stored in plain text · Builder is fixing it". Null when nothing is open.
+ */
+export const reviewProblemLine = (view: ReviewView): string | null => {
+  const problems = openProblems(view);
+  if (!problems.length) return null;
+  const first = problems[0];
+  const what = `${first.by} found ${lowerLead(first.summary.replace(/[.!]+$/, ''))}`;
+  const more = problems.length > 1 ? ` (+${problems.length - 1} more)` : '';
+  const fixer = !isFinished(view.state)
+    ? (view.staff ?? []).find((member) => word(member.role) === 'builder' && word(member.state) === 'working')
+    : undefined;
+  return fixer ? `${what}${more} · ${roleName(fixer)} is fixing it` : `${what}${more}`;
 };

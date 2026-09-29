@@ -1,6 +1,7 @@
 # Kel motion language
 
-**Status:** proposal for Nick's approval (stage 1). Nothing in the app uses it yet.
+**Status:** approved by Nick (D-78, 2026-09-29) and built into the renderer (stage 2, §11). Later rules
+from Nick are §2.1 (the settling fade) and §8.1 (no layout shift); D-79 simplified the detail panel.
 **Prototype:** `C:\Users\Nick\Desktop\Kel\Tools\motion\kel-motion-prototype.html` (outside Git; rebuilt by
 `Tools\motion\src\build.py`). Every moment below is a live, clickable demo there. The page has a
 reduced-motion switch and a ×4 slow-motion switch. Key-frame contact sheets are in `Tools\motion\keyframes\`.
@@ -34,7 +35,7 @@ mass 1, stiffness *k* = (2π / duration)² and damping *c* = 2ζ·√k.
 | `gentle` | 0.62 s / 0.10 | 102.7 | 18.24 | 0.90 | 0.15% | 642 ms | long travel: the hand-off flight, sidebar list shifts |
 
 Rules:
-- **Overshoot never exceeds about 1%.** Nothing bounces visibly. The overshoot only makes an element feel
+- **Overshoot never exceeds about 1%.** Nick kept the tiny overshoot (D-78). Nothing bounces visibly. The overshoot only makes an element feel
   like it arrived rather than stopped.
 - A value that changes target several times keeps one spring and is retargeted, which is the same as summing one
   spring per change. It is never restarted from rest.
@@ -59,6 +60,23 @@ Opacity and blur are timed tweens, never springs, because a fade cannot overshoo
 | Backdrop in / out | 200 ms / 200 ms (out starts 80 ms late) | ease-out / ease-in |
 | Toast stay | 2.6 s, then exit 140 ms | — |
 | Reduced-motion cross-fade | 100 ms out, 140–150 ms in | linear |
+| **Settling fade** (§2.1), token `--kel-settle-ms` / `MOTION.settleMs` | **520 ms**, opacity plus a 3 px blur-to-sharp | ease-out (cubic) |
+| Settling fade under reduced motion | 360 ms, opacity only | linear |
+
+### 2.1 The settling fade (Nick, 2026-09-29)
+
+When something changes state in the same place, it never snaps. When the new state is **both** the
+resting end of its chain **and** will stay on screen for more than about five seconds, it arrives with the
+longer **settling fade**: 520 ms, eased out, opacity plus a 3 px blur clearing to sharp. Intermediate
+states, and anything gone within five seconds, keep the quicker enter (§4). Reduced motion keeps a
+gentle 360 ms cross-fade for it, never an instant swap.
+
+It applies to: a card reaching Done, Failed or Stopped (label, icon, finish time, the remove ×); the
+done check; "Complete" (was "Done and checked") on the result card; "You answered: … · Kel is
+continuing"; the scoping summary after Start; the Staff fallback note; the last step's tick;
+"Undone — the earlier files are back."; the Review Team's Passed or Failed. It does not apply to
+Working → In review, a middle step's tick, Thinking, a toast (gone in 2.6 s) or a menu opening. The
+rule is code: `classifyTransition({ final, staysMs })` in `renderer/motion/settling.ts`, with DOM tests.
 
 The whole of any transition, from the trigger to the last element settling, stays under about 650 ms.
 The only exceptions are the reply streaming in and the hand-off flight (about 900 ms, because it
@@ -154,6 +172,25 @@ When `prefers-reduced-motion: reduce` is set (or Kel's own setting, if one is ad
 - Polling re-renders (the card row every 3–30 s) must not replay entrances. Motion is keyed to real
   state changes (new id, new state, new step), never to a re-render.
 
+### 8.1 No layout shift; nothing changes after the motion settles (Nick, 2026-09-29, hard rule)
+
+1. **Final layout first.** The final layout (size, words, line positions) exists before the animation
+   starts; motion only carries the eye from the old to the new (FLIP or a morph). An element never
+   reaches its final size and then re-lays out or swaps its words.
+2. **Words change inside the motion.** A title or label change is a roll or cross-fade of old and new in
+   the same slot, already sized to the new words (`RollText`). It never happens after the container
+   settles.
+3. **Rows own their parts.** Icons, ticks and loaders are drawn in their own row from the first frame, in
+   a fixed slot (`SwapIn`); only their state animates (opacity, scale, draw). Nothing moves between rows
+   — so a step's "Now" no longer flies to the next row: the finished row's "Now" rolls away in place
+   and the next row's "Now" rolls in, in the same beat (§10.5).
+4. **Reserve space.** Fixed icon slots (the card's and the line's 16 px lead in every state), stable line
+   heights, one-line steps.
+5. **Checked mechanically.** `renderer/motion/layoutProbe.ts` records the boxes and words of key
+   elements on every frame of a capture: after a transition ends nothing may move by more than 1 px or
+   re-word; during it, a frame-to-frame jump much larger than its neighbours is a snap. The capture
+   script (`Tools\motion\capture-app.ts`) runs it on all fifteen moments in the packaged app.
+
 ## 9. Where motion is forbidden
 
 - **Never delay information Nick needs.** State changes, errors, questions and results appear at once.
@@ -242,11 +279,13 @@ mount and unmount instantly.
 - The fill's **right edge follows on `gentle`** while a brighter lead segment runs ahead on `micro` and
   collapses into it. The bar stretches edge by edge instead of growing linearly.
 - **Step tick** (`.kel-wd-step`): the finished row's loader shrinks out and its check draws on (260 ms).
-  **"Now" moves down** to the next row (a `snappy` flight of the accent word, not a fade). The finished
-  row's time ("9:16 AM") enters where "Now" was. The next row's lead grows in as the loader and its label
-  gains weight. "Next" appears one row further down. The Steps meta ("1 of 5"), the header meta ("Step 2
-  of 5") and the card's own count and bar all roll or stretch in the same beat.
-- The loader stays static. It does not spin forever (§9).
+  **"Now" moves down** to the next row — by §8.1, not as a flight: each row owns its words, so the
+  finished row's "Now" rolls away and the next row's "Now" rolls in, in the same beat. The next row's
+  lead grows in as the loader (turning once) and its label gains weight; "Next" appears one row further
+  down. The header meta ("Step 2 of 5") and the card's own count and bar roll or stretch in the same
+  beat. (D-79 removed the per-step times and the Steps "1 of 5", so the finished row's slot empties.)
+- The loader turns **once** when its step starts (D-78), then stays static. It never spins forever (§9).
+- The last step's tick is a resting end state: it settles (§2.1).
 
 ### 10.6 A "Needs you" answer sent from the card
 *Today:* on success, `.kel-na` is swapped for `.kel-na-answered` instantly, and the card updates on the
@@ -284,7 +323,11 @@ updates on the next read.
    FLIP up. Its rows enter in order, 40 ms apart: head (the check draws on), result sentence, "Applied
    to Mic mute app · 2 files · you can undo it", then actions.
 
-### 10.9 Undo
+### 10.9 Undo (as changed by D-79)
+*D-79 removed the Undo buttons from the panel and the done card; Nick asks Kel instead.* What remains is
+the moment the files come back: the applied line **rolls** to "Undone — the earlier files are back."
+with the settling fade (§2.1). "Open" (the project folder) stays. The notes below describe the
+prototype's Undo button and are kept for reference only.
 *Today:* the buttons dim to 0.55 while busy. Afterwards Undo and Open folder vanish and the applied line
 reads "Undone — the earlier files are back." (`changeApplication.ts:53`). There is no toast and no
 confirmation.
@@ -353,7 +396,26 @@ fade in (100 ms linear) and fade and height out (300 ms).
 
 ---
 
-## 11. Stage 2 (after approval): what gets built
+## 11. Stage 2: what was built
+
+As built (2026-09-29), in `desktop/packages/desktop/src/renderer/motion/`:
+- `spring.ts` — the closed-form solver, presets, `spring()` handles that retarget with velocity,
+  `tween()`, one `requestAnimationFrame` loop that runs only while something moves and batches writes
+  (`frameWrite`), and `motionClock` (manual stepping for tests and captures; `window.__kelMotion`).
+- `easing.ts` — `linear()` easings and `--kel-spring-{micro,snappy,morph,gentle}(-ms)` written at startup.
+- `reduced.ts` — `useReducedMotion()` / `isReducedMotion()` from the OS setting only (D-78).
+- `fx.ts` — enter, exit, `settleIn` (§2.1), draw-on, press, `turnOnce`, pulse, the chip bloom; one
+  running effect per element, taken over from its current opacity when interrupted.
+- `flip.ts` — `useFlip(ref, key)` (measures during render, before React touches the DOM; plays after
+  commit; resizes snap) and `glide()` for the thread following new content.
+- `morph.ts` — the surface, `morph()`, `morphInto()`, `fly()`, exit ghosts, shared elements.
+- `indicator.ts` + `EdgePill` — the two-spring indicator (transform plus its own size, `contain: strict`).
+- `components.tsx` — `RollText`, `SwapIn`, `ProgressFill`, `useEntrance`, `EdgePill`.
+- `popover.ts`, `messageArrival.ts`, `streamFade.ts` (Custom Highlight API; no DOM is wrapped),
+  `arrival.ts` (first-paint guard, scenes marked by the layout), `settling.ts`, `layoutProbe.ts`.
+- The row's choreography is `components/kel/workCards/workCardMotion.ts`.
+
+The original plan follows.
 
 A small renderer library, `renderer/motion/`:
 - `spring.ts`: the closed-form solver, presets, retargeting with velocity, and `settle()`.
@@ -369,7 +431,11 @@ A small renderer library, `renderer/motion/`:
 The prototype's `kel-motion.js` is the reference implementation of the solver, the surface, FLIP, the
 edge indicator and the reduced-motion path.
 
-## 12. Questions for Nick
+## 12. Questions for Nick (answered 2026-09-29, D-78)
+
+Answers: keep the tiny overshoot; the hand-off waits ~0.4 s; a step's loader turns once when the step
+starts; Kibble's tabs are fine as the filter example; reduced motion follows the Windows setting only.
+The original questions:
 
 1. **Overshoot:** 0.15–1.1% (as prototyped). Is that "tiny" enough, or should the presets be fully
    critically damped?

@@ -13,7 +13,7 @@ import { KelWorkCard } from '@renderer/components/kel/KelWorkCard';
 import { KelDoneCard, checksLine, resultSentence } from '@renderer/components/kel/workCards/KelDoneCard';
 import { KelScopingCard } from '@renderer/components/kel/workCards/KelScopingCard';
 import { KelMessageCard } from '@renderer/components/kel/workCards/KelMessageCard';
-import { OPEN_WORK_CARD_EVENT, takePendingWorkCard } from '@renderer/components/kel/workCards/workCardEvents';
+import { OPEN_WORK_CARD_EVENT, refreshWorkCards, takePendingWorkCard } from '@renderer/components/kel/workCards/workCardEvents';
 import { resetProjectsForTests } from '@renderer/components/kel/activeProject';
 import type { OfficeItem, OfficeItemDetail, ScopingView } from '@renderer/components/kel/workCards/officeApi';
 import { AT, LAPTOP, MIC, MIC_DETAIL, RECEIPTS, RECEIPTS_DETAIL } from './fixtures/kelOfficeFixtures';
@@ -329,7 +329,7 @@ const RESULT_META = {
 };
 
 describe('5d — the result carries the compact done card', () => {
-  it('title, verified state, checks, one sentence, where it was applied, Undo / Open folder / Details', async () => {
+  it('D-79: title, "Complete" (its when in the tooltip), checks, one sentence, where it was applied, Open / Details, no Undo', async () => {
     details = { 'job-mic': DONE_DETAIL };
     const request = install();
     const opened: string[] = [];
@@ -339,21 +339,26 @@ describe('5d — the result carries the compact done card', () => {
     render(<KelDoneCard job='job-mic' meta={RESULT_META} openFolder={openFolder} />);
     const card = await screen.findByTestId('kel-done-card');
     expect(within(card).getByText('Mic mute toggle app')).toBeTruthy();
-    expect(within(card).getByTestId('kel-done-card-state').textContent).toBe('Done and checked');
+    expect(within(card).getByTestId('kel-done-card-state').textContent).toBe('Complete');
+    expect(card.querySelector('.kel-dc__state-word')?.getAttribute('title')).toMatch(/^\d{2}\/\d{2}\/\d{2} \d{2}:\d{2} (AM|PM)$/);
     expect(within(card).getByText('4 of 4 checks passed')).toBeTruthy();
     expect(
       within(card).getByText('A tray app that mutes your mic with one hotkey and shows the state, even when you mute from Windows settings.')
     ).toBeTruthy();
     expect(within(card).getByTestId('kel-done-card-applied').textContent).toMatch(/^Applied to Projects › mic-mute at 10:31 AM · you can undo it$/);
-    fireEvent.click(within(card).getByTestId('kel-done-card-folder'));
+    expect(within(card).queryByTestId('kel-done-card-undo')).toBeNull();
+    const open = within(card).getByTestId('kel-done-card-folder');
+    expect(open.textContent).toBe('Open');
+    expect(open.getAttribute('aria-label')).toBe('Open the project folder');
+    fireEvent.click(open);
     await waitFor(() => expect(openFolder).toHaveBeenCalledWith('Projects › mic-mute'));
     fireEvent.click(within(card).getByTestId('kel-done-card-details'));
     expect(opened).toEqual(['job-mic']);
+    // Nick asked Kel to undo it: the card reads the engine again and says the files are back.
     details = { 'job-mic': { ...DONE_DETAIL, application: { ...DONE_DETAIL.application!, state: 'UNDONE' } } };
-    fireEvent.click(within(card).getByTestId('kel-done-card-undo'));
-    await waitFor(() => expect(posts(request, '/api/apply')).toEqual([{ job: 'job-mic', action: 'undo' }]));
+    act(() => refreshWorkCards());
     await waitFor(() => expect(within(card).getByTestId('kel-done-card-applied').textContent).toBe('Undone — the earlier files are back.'));
-    expect(within(card).queryByTestId('kel-done-card-undo')).toBeNull();
+    expect(posts(request, '/api/apply')).toEqual([]);
     window.removeEventListener(OPEN_WORK_CARD_EVENT, listen);
   });
 

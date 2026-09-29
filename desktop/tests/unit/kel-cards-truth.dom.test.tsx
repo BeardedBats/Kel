@@ -181,34 +181,25 @@ const renderDetail = (detail: OfficeItemDetail) => {
 };
 
 describe('the detail says it plainly', () => {
-  it('says "Not run yet" when nothing has been checked (VIS-3)', async () => {
-    renderDetail({ ...MIC_DETAIL, verification: { result: null, summary: [] } });
-    const word = await screen.findByTestId('kel-office-verification-word');
-    expect(word.textContent).toBe('Not run yet');
+  it('D-79: the Review Team says "Not started" when nothing has been checked (VIS-3)', async () => {
+    renderDetail({ ...MIC_DETAIL, state: 'working', verification: { result: null, summary: [] }, review: null });
+    expect((await screen.findByTestId('kel-office-review-state')).textContent).toBe('Not started');
   });
 
-  it('lists the verification lines without a second verdict or bullets, and names the models plainly (VIS-4, LIVE-10)', async () => {
+  it('D-79: the Review Team shows one status and none of the old blocks (VIS-4 lines are gone)', async () => {
     renderDetail({
       ...RECEIPTS_DETAIL,
-      verification: {
-        result: 'passed',
-        summary: [
-          'Verified',
-          '• Your existing tests still pass',
-          '• Tests: passed',
-          '• Executed by: Claude Code (claude-opus-5-5)',
-          '• Reviewed by: Codex (gpt-6-astra)',
-        ],
-      },
+      verification: { result: 'passed', summary: ['Verified', '• Your existing tests still pass'] },
+      oracle: { state: 'done', why: 'The change touches 26 files', independence: 'different', model_label: 'GPT-6 Astra', findings: [] },
     });
-    const verification = await screen.findByTestId('kel-office-verification');
-    expect(within(verification).getByTestId('kel-office-verification-word').textContent).toBe('Passed');
-    const lines = within(verification).getAllByRole('listitem').map((node) => node.textContent);
-    expect(lines).toEqual(['Your existing tests still pass', 'Tests passed', 'Built by Claude Opus 5.5 · Checked by GPT-6 Astra']);
-    expect(verification.textContent).not.toMatch(/•|Verified|Executed by|Reviewed by/);
+    const review = await screen.findByTestId('kel-office-review');
+    expect(within(review).getByTestId('kel-office-review-state').textContent).toBe('Passed');
+    expect(review.textContent).not.toMatch(/Verifier|Oracle|Verification|different model family|Asked because|existing tests/);
+    expect(screen.queryByTestId('kel-office-verification')).toBeNull();
+    expect(screen.queryByTestId('kel-office-oracle')).toBeNull();
   });
 
-  it('says "Kel + 0" never: Kel alone is "Kel", and stopped work is not "all done" (VIS-5)', async () => {
+  it('D-79: the team heading counts agents ("Team · 1 agent"), and stopped work says its result once (VIS-5)', async () => {
     renderDetail({
       ...RECEIPTS_DETAIL,
       state: 'stopped',
@@ -221,7 +212,7 @@ describe('the detail says it plainly', () => {
     const dialog = await screen.findByTestId('kel-office-detail');
     await within(dialog).findAllByTestId('kel-office-member');
     expect(dialog.textContent).not.toMatch(/Kel \+ 0|all done/);
-    expect(dialog.querySelector('.kel-wd-section-head .kel-wd-meta')?.textContent).toBe('Kel');
+    expect(dialog.querySelector('.kel-wd-col--team h3')?.textContent).toBe('Team · 1 agent');
     // "You stopped this work." once, not twice.
     const result = within(dialog).getByTestId('kel-office-result');
     expect(result.textContent?.match(/You stopped this work\./g)?.length).toBe(1);
@@ -263,48 +254,35 @@ describe('the detail says it plainly', () => {
     expect(screen.getByTestId('kel-office-detail').textContent).not.toContain('Kel used its standard coding plan.');
   });
 
-  it('says independence and the Oracle’s conclusion in plain words (LIVE-10)', async () => {
-    renderDetail({
-      ...RECEIPTS_DETAIL,
-      review: { ...RECEIPTS_DETAIL.review, independence: 'different' },
-      oracle: { state: 'done', why: 'The change touches 26 files', independence: 'different', model_label: 'GPT-6 Astra', findings: [] },
-    });
-    const review = await screen.findByTestId('kel-office-review');
-    expect(review.textContent).toContain('Checked by a different model family.');
-    expect(review.textContent).not.toContain('Independence');
-    const oracle = screen.getByTestId('kel-office-oracle');
-    expect(within(oracle).getByTestId('kel-office-oracle-line').textContent).toBe('No problems found.');
-    expect(oracle.textContent).toContain('Asked because: The change touches 26 files');
-    expect(oracle.textContent).not.toContain('Independence');
-  });
-
-  it("uses the engine's own words when it sends them: paused, standard plan, the Oracle's conclusion", async () => {
+  it("uses the engine's own words when it sends them: paused, standard plan", async () => {
     renderDetail({
       ...MIC_DETAIL,
       paused: true,
       staff: [{ id: 'kel', role: 'kel', role_label: 'Kel', state: 'done', model: null, standard_plan: true, note: 'Kel used its standard coding plan.' }],
-      oracle: { state: 'done', why: 'Security-flagged', conclusion: 'It found nothing that should stop this, and left one note.', findings: [] },
     });
     const steps = await screen.findAllByTestId('kel-office-step');
     expect(steps[2].querySelector('.kel-wd-step__when')?.textContent).toBe('Paused');
     expect(screen.getAllByTestId('kel-office-model')[0].textContent).toBe('Planned with Kel’s standard plan');
-    expect(screen.getByTestId('kel-office-oracle-line').textContent).toBe('It found nothing that should stop this, and left one note.');
   });
 
-  it("names the Oracle's findings when it raised some", async () => {
+  it('D-79: an open finding is one line — what it is and who is on it', async () => {
     renderDetail({
-      ...RECEIPTS_DETAIL,
-      oracle: { state: 'done', why: 'Security-flagged', findings: [{ severity: 'critical', summary: 'the token is logged', status: 'open' }] },
-    });
-    expect((await screen.findByTestId('kel-office-oracle-line')).textContent).toBe('Found: The token is logged.');
+      ...MIC_DETAIL,
+      state: 'in_review',
+      review: { verdict: null, findings: [] },
+      staff: [{ id: 'b1', role: 'builder', role_label: 'Builder', state: 'working', model_label: 'Claude Opus 5.5' }],
+      sentinel: { state: 'done', findings: [{ severity: 'blocker', summary: 'A password stored in plain text', status: 'open' }] },
+    } as OfficeItemDetail);
+    expect((await screen.findByTestId('kel-office-review-state')).textContent).toBe('In progress');
+    expect(screen.getByTestId('kel-office-review-problem').textContent).toBe('Sentinel found a password stored in plain text · Builder is fixing it');
   });
 
   it('labels an uncertain verdict "Couldn’t fully check", not "Didn’t pass" (LIVE-10)', async () => {
     renderDetail({ ...RECEIPTS_DETAIL, state: 'failed', review: { verdict: 'uncertain', findings: [] }, verification: { result: 'not_confirmed', summary: [] } });
     const dialog = await screen.findByTestId('kel-office-detail');
-    await within(dialog).findByTestId('kel-office-verification');
+    await within(dialog).findByTestId('kel-office-review');
     expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Couldn’t fully check');
-    expect(within(dialog).getByTestId('kel-office-verification-word').textContent).toBe('Couldn’t fully check');
+    expect(within(dialog).getByTestId('kel-office-review-state').textContent).toBe('Couldn’t fully check');
     expect(dialog.textContent).not.toContain('Didn’t pass');
     // A caution, not a failure: the uncertain tone replaces the red failed one.
     expect(dialog.className).toContain('is-uncertain');
@@ -338,31 +316,13 @@ describe('the detail says it plainly', () => {
   });
 });
 
-describe('the change report lives under Files changed (Work panel retired)', () => {
-  it('downloads the checked change report for finished coding work', async () => {
-    const created: string[] = [];
-    const originalCreate = URL.createObjectURL;
-    URL.createObjectURL = vi.fn(() => 'blob:report');
-    URL.revokeObjectURL = vi.fn();
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      created.push(this.download);
-    });
-    try {
-      extra = (route) => (route.startsWith('/api/artifact?') ? `# Change report for ${route.split('milestone=')[1]}` : undefined);
-      const request = renderDetail({ ...RECEIPTS_DETAIL, kind: 'code', steps: [{ id: 'm1', label: 'The change', state: 'done', at: AT(9, 40) }] });
-      fireEvent.click(await screen.findByTestId('kel-office-report'));
-      await waitFor(() => expect(created).toEqual(['receipts-tidy-up-change-report.md']));
-      expect(request).toHaveBeenCalledWith('/api/artifact?job=job-receipts&milestone=m1', undefined);
-    } finally {
-      click.mockRestore();
-      URL.createObjectURL = originalCreate;
-    }
-  });
-
-  it('offers no report while the work runs', async () => {
-    renderDetail(MIC_DETAIL);
-    await screen.findAllByTestId('kel-office-step');
+describe('D-79: no Files changed section and no change report in the panel', () => {
+  it('shows no files, no report and no footer text', async () => {
+    renderDetail({ ...RECEIPTS_DETAIL, kind: 'code', files_changed: ['calc.py'], steps: [{ id: 'm1', label: 'The change', state: 'done', at: AT(9, 40) }] });
+    const dialog = await screen.findByTestId('kel-office-detail');
+    await within(dialog).findAllByTestId('kel-office-step');
     expect(screen.queryByTestId('kel-office-report')).toBeNull();
+    expect(dialog.textContent).not.toMatch(/Files changed|calc\.py|Finished work stays at the top/);
     expect(reportFileName('Add power() to calc!')).toBe('add-power-to-calc-change-report.md');
   });
 });

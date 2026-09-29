@@ -10,7 +10,8 @@ import mobileRecipeStarIcon from '@renderer/assets/figma/refresh/mobile-recipe-s
  * Kel V1.4 Projects workspace — Knowledge (memory) · Map · Recipes.
  * Reads `/api/work`; actions go through `/api/memory` and `/api/map`.
  */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { EdgePill } from '@renderer/motion';
 import { ALL_PROJECTS, GENERAL_PROJECT_ID, liveProjects, useProjects } from '@renderer/components/kel/activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -122,6 +123,8 @@ export default function KelProjectsPage() {
   const [categories, setCategories] = useState<Array<{ name: string; count: number }>>([]);
   const [mobileRecipeTab, setMobileRecipeTab] = useState('All');
   const [desktopRecipeTab, setDesktopRecipeTab] = useState('All');
+  // D-78 §10.11: the recipe filter's underline stretches to the chosen tab.
+  const recipeTabsRef = useRef<HTMLDivElement>(null);
   // FN-12: "More actions" opens this recipe's own actions (never a second recipe table).
   const [toolsFor, setToolsFor] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ mode: 'new' } | { mode: 'edit'; recipeId: string; projectId?: string; value: RecipeEditorValue } | null>(null);
@@ -650,7 +653,8 @@ export default function KelProjectsPage() {
                       <input value={recipeQuery} onChange={(event) => void searchRecipes(event.target.value)}
                         placeholder="Search recipes" aria-label="Search recipes" />
                     </label>
-                    <div className="kel-recipe-desktop-tabs" role="tablist" aria-label="Recipe filters">
+                    <div ref={recipeTabsRef} className="kel-recipe-desktop-tabs" role="tablist" aria-label="Recipe filters">
+                      <EdgePill containerRef={recipeTabsRef} active="button[aria-selected='true']" trigger={desktopRecipeTab} axis="x" className="kel-underline-pill" />
                       {['All', 'Favorites', ...categories.map((category) => category.name)].map((tab) => (
                         <button key={tab} type="button" role="tab" aria-selected={desktopRecipeTab === tab}
                           onClick={() => setDesktopRecipeTab(tab)}>{tab}</button>

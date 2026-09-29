@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { usePopover } from '@renderer/motion';
 import check from '@renderer/assets/figma/chat-pickers/project-check.svg';
 import folder from '@renderer/assets/figma/chat-pickers/project-folder.svg';
 import search from '@renderer/assets/figma/chat-pickers/project-search.svg';
@@ -20,13 +21,16 @@ export const KelDesktopProjectMenu: React.FC<{
   onBrowse: () => void;
 }> = ({ projects, selected, onSelect, onBrowse }) => {
   const [query, setQuery] = useState('');
+  // D-78 §10.12: grows from its trigger's corner; leaves as a fading copy.
+  const menuRef = useRef<HTMLDivElement>(null);
+  usePopover(menuRef, 'bottom left', ':scope > *');
   const needle = query.trim().toLowerCase();
   const general = projects.find(project => project.id === GENERAL_ID) ?? { id: GENERAL_ID, name: 'General', root: null };
   const seen = new Set<string>();
   const choices = projects
     .filter(project => project.id !== GENERAL_ID && !seen.has(project.id) && Boolean(seen.add(project.id)))
     .filter(project => !needle || project.name.toLowerCase().includes(needle) || (project.root ?? '').toLowerCase().includes(needle));
-  return <div className='kel-desktop-project-menu kel-desktop-picker' data-testid='kel-desktop-project-menu' role='dialog' aria-label='Project picker'>
+  return <div ref={menuRef} className='kel-desktop-project-menu kel-desktop-picker' data-testid='kel-desktop-project-menu' role='dialog' aria-label='Project picker'>
     <p className='kel-desktop-project-menu__label'>Work in a project</p>
     <div className='kel-desktop-project-menu__search-wrap'><label className='kel-desktop-project-menu__search'>
       <img src={search} alt='' /><input autoFocus aria-label='Search projects' placeholder='Search projects…' value={query} onChange={event => setQuery(event.target.value)} />

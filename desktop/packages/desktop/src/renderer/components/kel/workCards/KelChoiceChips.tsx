@@ -4,6 +4,7 @@
  * "Something else…" chip that hands over to a typed answer. A radio group for assistive tech.
  */
 import React from 'react';
+import { bloom } from '@renderer/motion';
 import { iconCheck12Light } from './workCardIcons';
 
 export interface ChoiceChip {
@@ -48,7 +49,11 @@ export const KelChoiceChips: React.FC<Props> = ({
           aria-checked={picked}
           className={`kel-chip-pick${picked ? ' is-picked' : ''}`}
           disabled={disabled}
-          onClick={() => onPick(option.id)}
+          onClick={(event) => {
+            // D-78: the picked gradient grows from where Nick pressed.
+            if (!picked) void bloom(event.currentTarget, event.clientX, event.clientY);
+            onPick(option.id);
+          }}
           data-testid='kel-chip'
         >
           {picked ? <img src={iconCheck12Light} alt='' /> : null}

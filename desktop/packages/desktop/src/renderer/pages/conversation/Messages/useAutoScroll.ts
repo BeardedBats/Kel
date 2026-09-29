@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { TMessage } from '@/common/chat/chatLib';
+import { glide, isArrivalTime } from '@renderer/motion';
 
 const PROGRAMMATIC_SCROLL_GUARD_MS = 150;
 const AT_BOTTOM_THRESHOLD_PX = 100;
@@ -107,10 +108,13 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
 
       const gap = getBottomGap(scrollerEl);
       if (gap > 2) {
+        const before = scrollerEl.scrollTop;
         scrollToBottom('auto');
+        // D-78: the list follows new content by gliding up, not jumping (never on first paint).
+        if (contentEl && initialScrollDoneRef.current && isArrivalTime()) glide(contentEl, scrollerEl.scrollTop - before);
       }
     });
-  }, [scrollerEl, scrollToBottom]);
+  }, [contentEl, scrollerEl, scrollToBottom]);
 
   const handleScrollerRef = useCallback((ref: HTMLDivElement | null) => {
     setScrollerEl(ref);
@@ -231,10 +235,13 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     userScrolledRef.current = false;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        const before = scrollerEl?.scrollTop ?? 0;
         scrollToBottom('auto');
+        // D-78 §10.1: earlier messages glide up as Nick's message lands.
+        if (scrollerEl && contentEl && initialScrollDoneRef.current && isArrivalTime()) glide(contentEl, scrollerEl.scrollTop - before);
       });
     });
-  }, [messages, scheduleAutoFollow, scrollToBottom, scrollerEl]);
+  }, [messages, scheduleAutoFollow, scrollToBottom, scrollerEl, contentEl]);
 
   useEffect(() => {
     return () => {

@@ -14,12 +14,13 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Button, Dropdown, Empty, Input, Menu, Modal, Tooltip } from '@arco-design/web-react';
 import { FolderClose, MoreOne, Plus, Right } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { EdgePill, useFlip } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import WorkspaceCollapse from '../components/WorkspaceCollapse';
-import ConversationRow from './ConversationRow';
+import ConversationRow, { siderScene } from './ConversationRow';
 import SortableConversationRow from './SortableConversationRow';
 import { useBatchSelection } from './hooks/useBatchSelection';
 import { useConversationActions } from './hooks/useConversationActions';
@@ -244,6 +245,15 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
     [timelineSections]
   );
 
+  // D-78 §10.14: rows below a new chat FLIP down (gentle), and the current chat's highlight travels
+  // between rows (across Pinned and Recent) as one stretching pill.
+  const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!Number.isFinite(siderScene.at)) siderScene.at = performance.now();
+  }, []);
+  const rowOrder = [...pinnedConversations.map((c) => c.id), ...timelineSections.flatMap((section) => section.items.map((item) => item.conversation?.id ?? ''))].join('|');
+  useFlip(listRef, rowOrder, { selector: '.conversation-item', preset: 'gentle', axis: 'y' });
+
   if (timelineSections.length === 0 && pinnedConversations.length === 0) {
     return (
       <>
@@ -380,7 +390,8 @@ const WorkspaceGroupedHistory: React.FC<WorkspaceGroupedHistoryProps> = ({
         </div>
       </AionModal>
 
-      <div>
+      <div ref={listRef} className='kel-sider-list'>
+        {!collapsed ? <EdgePill containerRef={listRef} active=".conversation-item[aria-current='page']" trigger={`${id ?? ''}|${rowOrder}`} className='kel-sider-pill' /> : null}
         {/* L1: Pinned section */}
         <DndContext
           sensors={sensors}

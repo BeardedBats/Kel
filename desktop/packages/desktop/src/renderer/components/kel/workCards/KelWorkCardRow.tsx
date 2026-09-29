@@ -45,6 +45,19 @@ import {
   overflowWidth,
 } from './workCardModel';
 import { OPEN_WORK_CARD_EVENT, REFRESH_WORK_CARDS_EVENT, refreshWorkCards, takePendingWorkCard } from './workCardEvents';
+import { MOTION, claimShared, exitGhostAt, isArrivalTime, snapshotGhost, useFlip, type Snapshot } from '@renderer/motion';
+import {
+  backdropIn,
+  backdropOut,
+  cardIntoTile,
+  closeDetailMorph,
+  closeMenuMorph,
+  handoffFlight,
+  openDetailMorph,
+  openMenuMorph,
+  revealCard,
+  type OpenHandle,
+} from './workCardMotion';
 import './KelWorkCards.css';
 import './KelWorkCardsRow5.css';
 import './KelWorkCardsPhone.css';
@@ -583,17 +596,88 @@ export const KelWorkCardRow: React.FC<Props> = ({
     if (openJob && items && !openItem) setOpenJob(null);
   }, [openJob, items, openItem]);
 
+  /* ─── D-78 motion (MOTION.md §10.2, §10.3, §10.10). Keyed to real changes: the open card, the menu,
+     and which work is in the row — never to a poll that changed nothing. ─── */
+  const hostRef = useRef<HTMLDivElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const visibleIds = visible.map((item) => item.job_id);
+  const orderedIds = ordered.map((item) => item.job_id);
+  // Existing cards FLIP to their new places when work arrives or leaves (resizes snap).
+  useFlip(rowRef, `${visibleIds.join('|')}#${overflow.length}`, { selector: ':scope > .kel-wc-slot', enabled: !phone });
+  const motionSeen = useRef<{ open: string | null; menu: boolean; visible: string[]; ordered: string[]; loaded: boolean } | null>(null);
+  const snaps = useRef<{ panel?: Snapshot | null; menu?: Snapshot | null; cards: Map<string, Snapshot> }>({ cards: new Map() });
+  const opening = useRef<OpenHandle | null>(null);
+  const cardEl = (job: string | null | undefined): HTMLElement | null =>
+    job ? rowRef.current?.querySelector<HTMLElement>(`.kel-wc[data-job="${job.replace(/"/g, '\\"')}"]`) ?? null : null;
+  // Before React changes the DOM, copy what is about to leave it (the panel, the menu, departing cards).
+  const seen = motionSeen.current;
+  if (seen && !phone) {
+    if (seen.open && seen.open !== openJob && snaps.current.panel === undefined) {
+      snaps.current.panel = snapshotGhost(detailRef.current?.firstElementChild);
+    }
+    if (seen.menu && !menuOpen && snaps.current.menu === undefined) snaps.current.menu = snapshotGhost(menuRef.current);
+    for (const id of seen.visible) {
+      if (!visibleIds.includes(id) && !snaps.current.cards.has(id)) {
+        const snap = snapshotGhost(cardEl(id));
+        if (snap) snaps.current.cards.set(id, snap);
+      }
+    }
+  }
+  useLayoutEffect(() => {
+    const before = motionSeen.current;
+    motionSeen.current = { open: openJob, menu: menuOpen, visible: visibleIds, ordered: orderedIds, loaded: items !== null };
+    const taken = snaps.current;
+    snaps.current = { cards: new Map() };
+    const stack = stackRef.current;
+    if (phone || !before || !stack) return;
+    // The card and its panel.
+    if (before.open !== openJob) {
+      opening.current?.cancel();
+      opening.current = null;
+      if (before.open) void closeDetailMorph(stack, taken.panel ?? null, cardEl(before.open) ?? chipRef.current);
+      if (!openJob) backdropOut(hostRef.current, stack);
+      const panel = detailRef.current?.firstElementChild as HTMLElement | null;
+      if (openJob && panel) {
+        const source = cardEl(openJob) ?? chipRef.current;
+        if (source) opening.current = openDetailMorph(stack, source, panel);
+        if (!before.open) backdropIn(backdropRef.current);
+      }
+    }
+    // "+N more" and its menu.
+    if (before.menu !== menuOpen) {
+      if (menuOpen && chipRef.current && menuRef.current) openMenuMorph(stack, chipRef.current, menuRef.current);
+      else if (!menuOpen) void closeMenuMorph(stack, taken.menu ?? null, chipRef.current);
+    }
+    // Work that arrived while Nick watches: lifted out of its in-thread line, or revealed from its top edge.
+    if (before.loaded) {
+      for (const id of visibleIds) {
+        if (before.ordered.includes(id)) continue;
+        const card = cardEl(id);
+        if (!card) continue;
+        const line = claimShared(`handoff:${id}`);
+        if (line) void handoffFlight(line.el, card, MOTION.handoffBeatMs - (Date.now() - line.at));
+        else if (isArrivalTime()) revealCard(card);
+      }
+      for (const [id, snap] of taken.cards) {
+        if (orderedIds.includes(id) && chipRef.current) void cardIntoTile(stack, snap, chipRef.current);
+        else if (!orderedIds.includes(id)) void exitGhostAt(snap, { scale: 0.96, blur: 4, ms: 130 });
+      }
+    }
+  });
+
   if (!ordered.length) return null;
 
   const projectName = (id: string | null | undefined) => (id ? projects?.find((row) => row.id === id)?.name ?? null : null);
+  const projectRoot = (id: string | null | undefined) => (id ? projects?.find((row) => row.id === id)?.root ?? null : null);
   const hiddenRunning = overflow.filter((item) => !isFinished(item.state));
   const hiddenFinished = overflow.filter((item) => isFinished(item.state));
   const dots = overflow.slice(0, OVERFLOW_MAX_DOTS);
 
   return (
-    <div className={`kel-wc-host${phone ? ' kel-wc-host--phone' : ''}`} data-testid='kel-work-card-row' data-layout={phone ? 'phone' : 'desktop'}>
-      {openItem && !phone ? <div className='kel-wc-backdrop' data-testid='kel-office-backdrop' aria-hidden='true' onMouseDown={() => closeDetail(false)} /> : null}
-      <div className='kel-wc-stack'>
+    <div ref={hostRef} className={`kel-wc-host${phone ? ' kel-wc-host--phone' : ''}`} data-testid='kel-work-card-row' data-layout={phone ? 'phone' : 'desktop'}>
+      {openItem && !phone ? <div ref={backdropRef} className='kel-wc-backdrop' data-testid='kel-office-backdrop' aria-hidden='true' onMouseDown={() => closeDetail(false)} /> : null}
+      <div className='kel-wc-stack' ref={stackRef}>
       <div className={`kel-wc-row${phone ? ' kel-wc-row--phone' : ''}`} ref={rowRef} role='list' aria-label='Work in progress'>
         {visible.map((item) => (
           <div role='listitem' key={item.job_id} className='kel-wc-slot'>
@@ -694,6 +778,7 @@ export const KelWorkCardRow: React.FC<Props> = ({
             key={openItem.job_id}
             item={openItem}
             projectName={projectName(openItem.project_id)}
+            projectRoot={projectRoot(openItem.project_id)}
             pollMs={isRunning(openItem.state) ? pollActiveMs ?? POLL_ACTIVE_MS : pollIdleMs ?? POLL_IDLE_MS}
             onClose={closeDetail}
             onRemove={remove}

@@ -407,8 +407,8 @@
 
 .kel-wd-step, .kel-wd-file { display: flex; align-items: center; gap: 10px; padding: 3px 0; min-width: 0; }
 .kel-wd-step__lead { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 16px; height: 16px; }
-.kel-wd-step__lead > img { display: block; width: 14px; height: 14px; }
-.kel-wd-step--pending .kel-wd-step__lead > img { width: 16px; height: 16px; }
+.kel-wd-step__lead img { display: block; width: 14px; height: 14px; }
+.kel-wd-step--pending .kel-wd-step__lead img { width: 16px; height: 16px; }
 .kel-wd-step__label { flex: 1 1 0; min-width: 0; color: var(--kel-wc-text); font: 500 13px/17px var(--kel-wc-font); overflow-wrap: anywhere; }
 .kel-wd-step--now .kel-wd-step__label { font-weight: 600; }
 .kel-wd-step--pending .kel-wd-step__label { color: var(--kel-wc-muted); }
@@ -473,3 +473,76 @@
 .kel-wd.is-uncertain .kel-wd-state__label,
 .kel-wd.is-uncertain .kel-wd-result__head > strong { color: var(--kel-wc-needs-text); }
 .kel-wd.is-uncertain .kel-wd-tone--review { color: var(--kel-wc-needs-text); }
+
+/* ─── D-78 motion (docs/v2/design/MOTION.md) ────────────────────────────────────────────── */
+/* The state icon owns one fixed 16px slot in every state, so a state change never moves the words. */
+.kel-wc-state-icon { width: 16px; height: 16px; }
+.kel-wc--menu .kel-wc__title-row > .kel-wc-state-icon { width: 16px; }
+/* The overflow chevron turns on the snappy spring. */
+.kel-wc-overflow__label > img { transition: transform var(--kel-spring-snappy-ms, 450ms) var(--kel-spring-snappy, ease-out); }
+/* A travelling surface in the row's stack sits above the cards and below the panel. */
+.kel-wc-stack > .kel-wc-surface { z-index: 1; }
+.kel-wc-stack > .kel-wc-detail-slot { z-index: 2; }
+/*
+ * The third avatar was clipped on a 198px card reading "Needs you · 4 of 5" (found by the motion
+ * prototype): the state row needed ~182px of its 174. The avatars overlap 7px instead of 5px and the
+ * spacer gives back one of its two gaps, so three avatars always fit beside the longest label.
+ */
+.kel-wc--row .kel-wc__state-row > .kel-wc-push { margin-right: -6px; }
+.kel-wc--row .kel-wc-agents > .kel-wc-avatar { margin-right: -7px; }
+.kel-wc--row .kel-wc-agents > .kel-wc-avatar:last-child { margin-right: 0; }
+
+/* ─── D-79: the simplified detail panel ─────────────────────────────────────────────────── */
+/* Role colours (D-79; Kel is dark only, D-82): pale on the dark panel; every instance of a role
+   (parallel Builders) shares its role's colour. Each meets 4.5:1 on the panel (kel-d79-panel test). */
+:root {
+  --kel-role-kel: #ffffff;
+  --kel-role-builder: #9fc3ff;
+  --kel-role-verifier: #8fe3b4;
+  --kel-role-oracle: #d4b8ff;
+  --kel-role-sentinel: #ffc481;
+  --kel-role-red-team: #ffa3a3;
+  --kel-role-designer: #ffb3dd;
+  --kel-role-discovery: #7fe0e6;
+  --kel-role-architect: #e6d98a;
+  --kel-role-release: #b8e68a;
+  --kel-role-utility: #c4cedc;
+  --kel-role-other: #edf2fa;
+}
+.kel-role--kel { --kel-role: var(--kel-role-kel); }
+.kel-role--builder { --kel-role: var(--kel-role-builder); }
+.kel-role--verifier { --kel-role: var(--kel-role-verifier); }
+.kel-role--oracle { --kel-role: var(--kel-role-oracle); }
+.kel-role--sentinel { --kel-role: var(--kel-role-sentinel); }
+.kel-role--red-team { --kel-role: var(--kel-role-red-team); }
+.kel-role--designer { --kel-role: var(--kel-role-designer); }
+.kel-role--discovery { --kel-role: var(--kel-role-discovery); }
+.kel-role--architect { --kel-role: var(--kel-role-architect); }
+.kel-role--release { --kel-role: var(--kel-role-release); }
+.kel-role--utility { --kel-role: var(--kel-role-utility); }
+.kel-role--other { --kel-role: var(--kel-role-other); }
+
+.kel-wd-title__row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.kel-wd-title__row > h2 { min-width: 0; }
+.kel-wd-open { flex: none; height: 28px; font-size: 13px; }
+.kel-wd-open > img { width: 14px; height: 14px; }
+.kel-wd-state__word { display: inline-flex; flex: none; cursor: default; }
+.kel-wd-foot { display: flex; justify-content: flex-end; }
+
+.kel-wd .kel-wd-member { display: flex; align-items: center; padding: 1px 0; cursor: default; }
+.kel-wd .kel-wd-member__line { flex-wrap: nowrap; overflow: hidden; }
+.kel-wd .kel-wd-member__role { flex: none; color: var(--kel-role, var(--kel-wc-text)); font: 600 13px/17px var(--kel-wc-font); }
+.kel-wd .kel-wd-member .kel-wd-model { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kel-wd-step-tag { flex: none; color: var(--kel-wc-muted); font: 600 11px/16px var(--kel-wc-font); letter-spacing: 0.02em; white-space: nowrap; }
+
+/* Steps: one line each, never wrapped (the full words are in the row's tooltip). */
+.kel-wd .kel-wd-step__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; overflow-wrap: normal; }
+.kel-wd .kel-wd-col--steps { gap: 2px; }
+.kel-wd .kel-wd-col--steps > .kel-wd-section-head { margin-bottom: 6px; }
+.kel-wd .kel-wd-step__when:empty, .kel-wd .kel-wd-step__when .kel-roll__now:empty { display: none; }
+
+/* Review Team: one status, one line on a problem. */
+.kel-wd-review { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.kel-wd-review__status { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kel-wd-review__word { flex: none; font: 600 13px/17px var(--kel-wc-font); white-space: nowrap; }
+.kel-wd-review__problem { color: var(--kel-wc-text-2); font: 400 13px/19px var(--kel-wc-font); overflow-wrap: anywhere; }

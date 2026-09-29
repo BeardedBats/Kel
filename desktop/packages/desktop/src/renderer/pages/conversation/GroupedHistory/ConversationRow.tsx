@@ -33,6 +33,10 @@ import exportMenuIcon from '@renderer/assets/figma/chat-menu/export.svg';
 import archiveMenuIcon from '@renderer/assets/figma/chat-menu/archive.svg';
 import classNames from 'classnames';
 import React from 'react';
+import { SCENE_QUIET_MS, enter, prepareEnter } from '@renderer/motion';
+
+/** When the chat list itself first painted (its rows' arrivals don't depend on page changes). */
+export const siderScene = { at: Number.POSITIVE_INFINITY };
 import { useTranslation } from 'react-i18next';
 
 import type { ConversationRowProps } from './types';
@@ -96,6 +100,15 @@ const ConversationRow: React.FC<ConversationRowProps> = (props) => {
   // VIS-10: the row menu works from the keyboard like the project chip — focus moves in, arrows move,
   // Escape closes and returns to the ⋯ button, and changing page closes it.
   const menuTriggerRef = React.useRef<HTMLButtonElement>(null);
+  // D-78 §10.14: a chat that appears while Nick watches enters from 8 px to the left out of a 5 px blur.
+  const arrived = React.useRef(typeof performance !== 'undefined' && performance.now() - siderScene.at > SCENE_QUIET_MS).current;
+  React.useLayoutEffect(() => {
+    if (!arrived) return;
+    const row = document.getElementById(`c-${conversation.id}`);
+    if (!row) return;
+    prepareEnter(row, { x: -8, y: 0, blur: 5 });
+    void enter(row, { x: -8, y: 0, blur: 5, ms: 220, delay: 90 });
+  }, []);
   useMenuKeyboard({
     open: Boolean(menuVisible),
     onClose: () => onMenuVisibleChange(conversation.id, false),

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { EdgePill, enter, exitGhostAt, prepareEnter, snapshotGhost, type Snapshot } from '@renderer/motion';
 import { activeProjectLabel, useProjects } from './activeProject';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ShellWorkspaceLink from './ShellWorkspaceLink';
@@ -114,6 +115,26 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
   // D-60: Settings list only what Kel has built — no assistant catalog and no extension tabs.
   const groups = settings ? settingsGroups : projectGroups;
 
+  // D-78 §10.11: the selected row's highlight stretches between rows, and the page swaps — the old
+  // page leaves (120 ms, up 6 px, blur) while the new one enters (220 ms, from 8 px, blur).
+  const navRef = useRef<HTMLElement>(null);
+  const paneRef = useRef<HTMLDivElement>(null);
+  const shownPath = useRef(pathname);
+  const leavingPane = useRef<Snapshot | null>(null);
+  if (shownPath.current !== pathname && !leavingPane.current && paneRef.current) leavingPane.current = snapshotGhost(paneRef.current);
+  useLayoutEffect(() => {
+    const was = shownPath.current;
+    shownPath.current = pathname;
+    const snap = leavingPane.current;
+    leavingPane.current = null;
+    const pane = paneRef.current;
+    if (was === pathname || !snap || !pane) return;
+    void exitGhostAt(snap, { y: -6, blur: 4, ms: 120, scale: 1 });
+    const parts = Array.from(pane.children) as HTMLElement[];
+    prepareEnter(parts, { y: 8, blur: 6 });
+    void enter(parts, { y: 8, blur: 6, ms: 220, delay: 90 });
+  }, [pathname]);
+
   return <div className='kel-in-chat-frame' data-kind={settings ? 'settings' : 'projects'} data-mobile-index={mobileIndex}>
     <header className='kel-in-chat-frame__header'>
       <ShellWorkspaceLink />
@@ -126,7 +147,8 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
       <h1>{mobileTitle}</h1>
     </header>
     <div className='kel-in-chat-frame__card'>
-      <nav className='kel-in-chat-frame__nav' aria-label={`${heading} pages`}>
+      <nav ref={navRef} className='kel-in-chat-frame__nav' aria-label={`${heading} pages`}>
+        <EdgePill containerRef={navRef} active=".kel-in-chat-frame__nav-row[aria-current='page']" trigger={pathname} className='kel-nav-pill' />
         {groups.map(group => <div className='kel-in-chat-frame__nav-group' key={group.label}>
           <div className='kel-in-chat-frame__nav-label'>{group.label}</div>
           {group.items.map(item => <button
@@ -154,7 +176,7 @@ export default function KelInChatFrame({ children }: { children: React.ReactNode
           </div>
         </section>)}
       </nav>}
-      <div className='kel-in-chat-frame__pane'>
+      <div className='kel-in-chat-frame__pane' ref={paneRef}>
         {setupOpen && pathname !== '/onboarding' && <div className='kel-setup-return' role='status'>
           <span>{layout?.isMobile ? 'Setup is still open. Finish setup before starting a chat.' : <><span className='kel-setup-return-icon' aria-hidden='true'>⚠</span>Setup is still open. Finish it before starting a chat.</>}</span>
           <button type='button' onClick={() => void navigate('/onboarding')}>Continue setup</button>

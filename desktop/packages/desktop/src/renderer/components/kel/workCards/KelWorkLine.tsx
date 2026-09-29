@@ -5,7 +5,8 @@
  * nothing else in the thread repeats the work. When the work finishes the line points down to Kel's
  * result message, which carries the done card.
  */
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
+import { RollText, SwapIn, cardStateTransition, enter, frameWrite, isReducedMotion, offerShared, prepareEnter, spring, useArrival } from '@renderer/motion';
 import type { KelHandoff } from '../kelApi';
 import { StatusDot, iconCheck, iconChevronDown, iconStopMuted, iconWarning } from './workCardIcons';
 import { openWorkCard } from './workCardEvents';
@@ -73,6 +74,37 @@ export const KelWorkLine: React.FC<Props> = ({ view }) => {
   const pointer = finished ? (state === 'stopped' ? '— see it above' : '— result below') : '— follow it above';
   const job = view.job_id;
 
+  const lineRef = useRef<HTMLButtonElement>(null);
+  const arrived = useArrival();
+  const settling = cardStateTransition(state) === 'settling';
+
+  // §10.2 step 1: a line that arrives while Nick watches reveals from its leading edge, its parts in order.
+  useLayoutEffect(() => {
+    const line = lineRef.current;
+    if (!arrived || !line) return;
+    const parts = Array.from(line.querySelectorAll<HTMLElement>(':scope > *'));
+    prepareEnter(parts);
+    if (!isReducedMotion()) {
+      line.style.clipPath = 'inset(0 100% 0 0 round 8px)';
+      void spring(0, 1, 'morph', (v) => {
+        frameWrite(line, () => {
+          line.style.clipPath = v >= 0.999 ? '' : `inset(0 ${((1 - v) * 100).toFixed(2)}% 0 0 round 8px)`;
+        });
+      }, { eps: 0.001 }).finished.then(() => {
+        line.style.clipPath = '';
+      });
+    }
+    void enter(parts, { stagger: 25, delay: 60 });
+  }, []);
+
+  // §10.2 step 2: the top card lifts out of this line once the row has the work (a shared element).
+  const offered = useRef<string | null>(null);
+  useLayoutEffect(() => {
+    if (!job || offered.current === job || finished || !lineRef.current) return;
+    offered.current = job;
+    if (arrived) offerShared(`handoff:${job}`, lineRef.current);
+  }, [job, finished]);
+
   const go = () => {
     if (!job) return;
     if (finished && state !== 'stopped') {
@@ -86,27 +118,28 @@ export const KelWorkLine: React.FC<Props> = ({ view }) => {
     openWorkCard(job);
   };
 
-  const lead =
-    state === 'done' ? (
-      <span className='kel-wl__lead kel-wl__lead--check' aria-hidden='true'>
+  const lead = (
+    <SwapIn
+      className={`kel-wl__lead${state === 'done' || state === 'failed' || state === 'stopped' ? ' kel-wl__lead--check' : ''}`}
+      swapKey={state === 'in_review' || state === 'needs_you' || state === 'working' || state === 'starting' ? `dot:${state}` : state}
+      draw={state === 'done'}
+      settle={settling}
+    >
+      {state === 'done' ? (
         <img src={iconCheck} alt='' />
-      </span>
-    ) : state === 'failed' ? (
-      <span className='kel-wl__lead kel-wl__lead--check' aria-hidden='true'>
+      ) : state === 'failed' ? (
         <img src={iconWarning} alt='' />
-      </span>
-    ) : state === 'stopped' ? (
-      <span className='kel-wl__lead kel-wl__lead--check' aria-hidden='true'>
+      ) : state === 'stopped' ? (
         <img src={iconStopMuted} alt='' />
-      </span>
-    ) : (
-      <span className='kel-wl__lead' aria-hidden='true'>
+      ) : (
         <StatusDot tone={state === 'in_review' ? 'review' : state === 'needs_you' ? 'needs' : 'working'} />
-      </span>
-    );
+      )}
+    </SwapIn>
+  );
 
   return (
     <button
+      ref={lineRef}
       type='button'
       className={`kel-wl kel-wl--${state}`}
       onClick={go}
@@ -121,10 +154,8 @@ export const KelWorkLine: React.FC<Props> = ({ view }) => {
         ·
       </span>
       <span className='kel-wl__title'>{view.title ?? 'Your request'}</span>
-      <span className='kel-wl__state' data-testid='kel-work-line-state'>
-        {words}
-      </span>
-      <span className='kel-wl__pointer'>{pointer}</span>
+      <RollText className='kel-wl__state' value={words} settle={settling} testId='kel-work-line-state' />
+      <RollText className='kel-wl__pointer' value={pointer} settle={settling} />
       <img className={`kel-wl__chev${finished ? '' : ' kel-wl__chev--up'}`} src={iconChevronDown} alt='' />
     </button>
   );

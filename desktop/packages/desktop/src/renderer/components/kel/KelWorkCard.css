@@ -36,14 +36,8 @@
   background: rgba(159, 195, 255, 0.1);
 }
 .kel-work-card__mark img { display: block; width: 18px; height: 18px; }
-.kel-work-card__mark--active { animation: kel-work-card-pulse 1.8s ease-in-out infinite; }
-@keyframes kel-work-card-pulse {
-  0%, 100% { opacity: 0.55; transform: scale(0.94); box-shadow: 0 0 0 0 rgba(159, 195, 255, 0); }
-  50% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 4px rgba(159, 195, 255, 0.12); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kel-work-card__mark--active { animation: none; opacity: 1; }
-}
+.kel-work-card__mark--active { box-shadow: 0 0 0 3px rgba(159, 195, 255, 0.1); }
+/* D-78 (MOTION.md §9): the running mark no longer pulses — nothing loops except Thinking. */
 
 .kel-work-card__titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .kel-work-card__headline { color: #edf2fa; font: 700 15px/18px var(--kel-work-heading); }

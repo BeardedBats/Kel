@@ -2,7 +2,8 @@
  * Kel design-system primitives (Direction "Desk").
  * Class names come from renderer/styles/kel-tokens.css — components never carry ad-hoc values.
  */
-import React from 'react';
+import React, { useRef } from 'react';
+import { EdgePill } from '@renderer/motion';
 import ShellSourceCardHeader, { sourceCard } from './ShellSourceCardHeader';
 import { workWords, type WorkFacts } from './workLanguage';
 import '@renderer/styles/kel-tokens.css';
@@ -111,22 +112,27 @@ export const KelTabs: React.FC<{
   tabs: Array<{ id: string; label: string }>;
   active: string;
   onSelect: (id: string) => void;
-}> = ({ tabs, active, onSelect }) => (
-  <div className="kel-tabs" role="tablist">
-    {tabs.map((tab) => (
-      <button
-        key={tab.id}
-        type="button"
-        role="tab"
-        aria-selected={tab.id === active}
-        className={`kel-tab${tab.id === active ? ' kel-tab--on' : ''}`}
-        onClick={() => onSelect(tab.id)}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-);
+}> = ({ tabs, active, onSelect }) => {
+  // D-78 §10.11: the selected tab's highlight is one pill that stretches to the next tab.
+  const tabsRef = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={tabsRef} className="kel-tabs" role="tablist">
+      <EdgePill containerRef={tabsRef} active=".kel-tab--on" trigger={active} axis="x" className="kel-plain-tab-pill" />
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={tab.id === active}
+          className={`kel-tab${tab.id === active ? ' kel-tab--on' : ''}`}
+          onClick={() => onSelect(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export const KelCard: React.FC<
   React.PropsWithChildren<{ id?: string; title?: string; chip?: React.ReactNode; actions?: React.ReactNode; className?: string }>

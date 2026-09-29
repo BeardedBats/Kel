@@ -7,7 +7,8 @@
  * that, in plain words, and never claims a model can run when the engine says it cannot. Kel's own
  * chat model stays on Settings → Model and in the composer (D-69: staff always use their role model).
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useArrival, useEntrance, useFlip } from '@renderer/motion';
 import { useLocation } from 'react-router-dom';
 import { KelButton, KelCard, KelLoading } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
@@ -100,6 +101,29 @@ const optionText = (model: StaffModelOption | StaffRoleModelOption, perRole: boo
   const note = String(model.note ?? '').trim().replace(/[.\s]+$/, '');
   const why = note.toLowerCase().startsWith(model.label.toLowerCase()) ? note.slice(model.label.length).trim() : note;
   return `${model.label} (${why || 'unavailable'})`;
+};
+
+/** D-78 §10.15: the fallback note arrives while Nick watches; it is a resting state, so it settles in. */
+const FallbackNote: React.FC<{ role: string; text: string }> = ({ role, text }) => {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const arrived = useArrival();
+  useEntrance(ref, arrived, { settle: true });
+  return (
+    <p ref={ref} className='kel-staff-row__last' data-testid={`staff-last-${role}`}>
+      {text}
+    </p>
+  );
+};
+
+/** The rows below a note that arrives FLIP down to make room (snappy). */
+const StaffRowsFlip: React.FC<{ flipKey: string; children: React.ReactNode }> = ({ flipKey, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useFlip(ref, flipKey, { selector: ':scope > .kel-staff-row' });
+  return (
+    <div ref={ref} className='kel-staff-models__rows'>
+      {children}
+    </div>
+  );
 };
 
 function StaffRow({
@@ -245,11 +269,7 @@ function StaffRow({
           <span className='kel-staff-row__default'>Default</span>
         )}
       </div>
-      {fellBack && (
-        <p className='kel-staff-row__last' data-testid={`staff-last-${row.role}`}>
-          {fellBack}
-        </p>
-      )}
+      {fellBack && <FallbackNote role={row.role} text={fellBack} />}
       {error && (
         <p className='kel-staff-row__error' role='alert'>
           {error}
@@ -520,7 +540,7 @@ const StaffModelsSettings: React.FC = () => {
             {rows.length === 0 ? (
               <p className='kel-staff-models__note'>Kel did not list any staff roles. Try again in a moment.</p>
             ) : (
-              <div className='kel-staff-models__rows'>
+              <StaffRowsFlip flipKey={rows.map((row) => `${row.role}${fellBackLine(row.last_run) ? '!' : ''}`).join('|')}>
                 {rows.map((row) => (
                   <StaffRow
                     key={row.role}
@@ -532,7 +552,7 @@ const StaffModelsSettings: React.FC = () => {
                     onReset={() => void write(row, () => kelStaffResetRole(row.role), 'reset the model')}
                   />
                 ))}
-              </div>
+              </StaffRowsFlip>
             )}
           </KelCard>
         )}

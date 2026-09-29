@@ -184,16 +184,16 @@ body[arco-theme='dark'] .sendbox-panel .sendbox-draft-tool-action--disabled.arco
   border: 1px solid color-mix(in srgb, var(--color-fill-4) 94%, var(--color-bg-2)) !important;
 }
 
+/* D-78 (MOTION.md §9): nothing loops except Thinking — the stop button no longer breathes; it holds
+   the breathe's resting fill. */
 .sendbox-stop-button.bg-animate,
 .sendbox-stop-button.arco-btn.bg-animate,
-.sendbox-stop-button.arco-btn-secondary.bg-animate {
-  animation: sendbox-stop-breathe 1.4s ease-in-out infinite alternate;
-}
-
+.sendbox-stop-button.arco-btn-secondary.bg-animate,
 [data-theme='dark'] .sendbox-stop-button.bg-animate,
 [data-theme='dark'] .sendbox-stop-button.arco-btn.bg-animate,
 [data-theme='dark'] .sendbox-stop-button.arco-btn-secondary.bg-animate {
-  animation: sendbox-stop-breathe-dark 1.4s ease-in-out infinite alternate;
+  background-color: var(--aou-5) !important;
+  border-color: var(--aou-5) !important;
 }
 
 .sendbox-stop-button.bg-animate .arco-icon,

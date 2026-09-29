@@ -1,15 +1,17 @@
 /**
- * D-66 / D-68 — the detail that drops down from under the work-card row (Figma 4b running, 4d
- * finished). Three columns: the team (role · model · version · reasoning, and what each is doing),
- * steps and files changed, then review, the Oracle and verification. Read-only apart from "Talk to
- * Kel about this", Stop while the work runs (the same confirmed cancel as the in-chat work card),
- * and, once finished, Remove plus the D-65 Undo / Open folder when an applied change allows it.
+ * D-66 / D-68 / D-79 — the detail that drops down from under the work-card row. Simplified (D-79):
+ * the title with "Open" (the project folder) beside it and Remove (or Stop) top right; the status in
+ * plain short words ("Complete", its date and time in the tooltip); three columns — the team (role in
+ * its own colour, model and reasoning; what it did in a tooltip), the steps (one line each) and the
+ * Review Team (one status, and one line on any open problem and who is on it); "Talk to Kel about this"
+ * bottom right. No Undo here: Nick asks Kel.
  */
-import kelMark from '@renderer/assets/figma/kel-mark.png';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { kelControl, kelHandoff, kelRequest, kelUndoChange, type KelChangeApplication } from '../kelApi';
-import { applicationLine, isApplied } from '../changeApplication';
-import type { OfficeFinding, OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ProgressFill, RollText, SwapIn, cardStateTransition, fillTone, measure, playFlip, snapshotGhost, stepTickTransition, type Point, type Snapshot } from '@renderer/motion';
+import { answeredMorph, panelHeightEase } from './workCardMotion';
+import { kelControl, kelHandoff, type KelChangeApplication } from '../kelApi';
+import { applicationLine } from '../changeApplication';
+import type { OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
 import { officeItem } from './officeApi';
 import { KelAnsweredLine, KelNeedsAnswer, type AnsweredNote } from './KelNeedsAnswer';
 import { KelBudgetStop } from './KelBudgetStop';
@@ -19,53 +21,45 @@ import {
   StateIcon,
   StatusDot,
   iconCheck14,
-  iconFile,
   iconFolder,
   iconLoader,
   iconRemove,
   iconStop,
-  iconUndo,
   iconWarning,
   iconWarningAmber,
   stepPending,
 } from './workCardIcons';
 import {
-  UNCERTAIN_LABEL,
+  COMPLETE_LABEL,
   clockTime,
-  detailStateLabel,
-  duration,
-  failedChecks,
-  independenceWords,
+  completedAt,
   isCommander,
-  REVIEW_PASSES,
-  showReviewPass,
   isFinished,
   isUncertain,
   isUndone,
+  memberTooltip,
   modelLine,
-  oracleCoverage,
-  oracleLines,
-  passed,
+  panelStateLabel,
   plainResultText,
   progressFraction,
-  reasoningLabel,
-  ringTone,
+  reviewProblemLine,
+  reviewTeamState,
+  roleColorKey,
   roleName,
-  initials,
-  teamMeta as teamMetaWords,
+  teamHeading,
   undoneLine,
-  usedStandardPlan,
-  verificationLines,
 } from './workCardModel';
 
 type Props = {
   item: OfficeItem;
   projectName?: string | null;
+  /** D-79: the project's folder, for "Open" when the work has no applied change of its own. */
+  projectRoot?: string | null;
   pollMs: number;
   onClose: () => void;
   onRemove: (item: OfficeItem) => void;
   onTalk: (item: OfficeItem) => void;
-  /** Called after Stop or Undo so the row reads the new state at once. */
+  /** Called after Stop so the row reads the new state at once. */
   onChanged: () => void;
   /** LIVE-3: open a page in Kel (Settings → Staff & models from a needs-you card); the row navigates. */
   onOpenSettings?: (path: string) => void;
@@ -107,23 +101,9 @@ export const reportFileName = (title: string | null | undefined): string => {
   return `${slug || 'kel'}-change-report.md`;
 };
 
-const saveTextFile = (name: string, text: string) => {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-const openFindings = (findings: OfficeFinding[] | null | undefined) =>
-  (findings ?? []).filter((finding) => finding.status !== 'resolved' && finding.severity !== 'note');
-
-const SectionHead: React.FC<{ title: string; meta?: string | null; id?: string }> = ({ title, meta, id }) => (
+const SectionHead: React.FC<{ title: string; id?: string }> = ({ title, id }) => (
   <div className='kel-wd-section-head'>
     <h3 id={id}>{title}</h3>
-    <span className='kel-wc-push' />
-    {meta ? <span className='kel-wd-meta'>{meta}</span> : null}
   </div>
 );
 
@@ -137,29 +117,23 @@ const SheetBody: React.FC<{ sheet: boolean; children: React.ReactNode }> = ({ sh
     <>{children}</>
   );
 
-const Member: React.FC<{ member: OfficeStaff; itemState: string }> = ({ member, itemState }) => {
+/** D-79: role (in its own colour), model and reasoning; what it did is in the tooltip. */
+const Member: React.FC<{ member: OfficeStaff }> = ({ member }) => {
   const commander = isCommander(member);
-  const tone = commander && !member.state ? 'working' : ringTone(member, itemState);
   return (
-    <li className='kel-wd-member' data-testid='kel-office-member'>
-      <span className={`kel-wd-avatar kel-wc-avatar--${tone}`} aria-hidden='true'>
-        {commander ? <img src={kelMark} alt='' /> : initials(member)}
-      </span>
-      <span className='kel-wd-member__text'>
-        <span className='kel-wd-member__line'>
-          <strong>{roleName(member)}</strong>
-          {commander ? <span className='kel-wc-sr'>, Commander</span> : null}
-          {member.step_label ? (
-            <span className='kel-wd-step' data-testid='kel-office-step-label'>
-              {member.step_label.split(':')[0]}
-            </span>
-          ) : null}
-          <span className='kel-wd-model' data-testid='kel-office-model'>
-            {modelLine(member)}
+    <li className={`kel-wd-member kel-role--${roleColorKey(member)}`} data-testid='kel-office-member' title={memberTooltip(member)}>
+      <span className='kel-wd-member__line'>
+        <strong className='kel-wd-member__role' data-testid='kel-office-role'>
+          {roleName(member)}
+        </strong>
+        {commander ? <span className='kel-wc-sr'>, Commander</span> : null}
+        {member.step_label ? (
+          <span className='kel-wd-step-tag' data-testid='kel-office-step-label'>
+            {member.step_label.split(':')[0]}
           </span>
-        </span>
-        {member.doing ? <span className='kel-wd-doing'>{member.doing}</span> : null}
-        {member.note && !usedStandardPlan(member) ? <span className='kel-wd-note-line'>{member.note}</span> : null}
+        ) : null}
+        {/* §10.15: when the model line changes (a fallback), it rolls. */}
+        <RollText className='kel-wd-model' value={modelLine(member)} flipSiblings={false} testId='kel-office-model' />
       </span>
     </li>
   );
@@ -168,6 +142,7 @@ const Member: React.FC<{ member: OfficeStaff; itemState: string }> = ({ member, 
 export const KelOfficeDetail: React.FC<Props> = ({
   item,
   projectName,
+  projectRoot,
   pollMs,
   onClose,
   onRemove,
@@ -244,7 +219,6 @@ export const KelOfficeDetail: React.FC<Props> = ({
     };
   }, [finished, coding, view.application, submission, conversation]);
   const application = view.application !== undefined ? view.application : handoffApplication;
-  const applied = coding && isApplied(application);
 
   // Focus moves into the dialog (its heading is announced) and stays there — Tab wraps — until it
   // closes. The dialog itself takes focus so no action looks pre-selected.
@@ -275,6 +249,33 @@ export const KelOfficeDetail: React.FC<Props> = ({
     }
   };
 
+  // D-78 §10.6: "Kel is asking you" becomes "You answered" — the section's surface morphs into the
+  // line, the blocks below FLIP up and the panel's own height eases down. Copied before React swaps it.
+  const answeredSeen = useRef(answered);
+  const answerSnap = useRef<{ question: Snapshot | null; below: Map<HTMLElement, Point>; height: number } | null>(null);
+  if (answered && !answeredSeen.current && !answerSnap.current && dialogRef.current) {
+    const question = dialogRef.current.querySelector<HTMLElement>(':scope .kel-na');
+    const below: HTMLElement[] = [];
+    let next = question?.nextElementSibling ?? null;
+    while (next) {
+      below.push(next as HTMLElement);
+      next = next.nextElementSibling;
+    }
+    answerSnap.current = { question: snapshotGhost(question), below: measure(below), height: dialogRef.current.getBoundingClientRect().height };
+  }
+  useLayoutEffect(() => {
+    const was = answeredSeen.current;
+    answeredSeen.current = answered;
+    const snap = answerSnap.current;
+    answerSnap.current = null;
+    const dialog = dialogRef.current;
+    if (!answered || was || !snap || !dialog) return;
+    const line = dialog.querySelector<HTMLElement>('.kel-na-answered');
+    if (line) answeredMorph(snap.question, line);
+    void playFlip(snap.below, 'morph');
+    panelHeightEase(dialog, snap.height);
+  }, [answered]);
+
   const guarded = async (action: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(true);
@@ -297,35 +298,14 @@ export const KelOfficeDetail: React.FC<Props> = ({
       await read();
     });
 
-  const undo = () =>
-    guarded(async () => {
-      await kelUndoChange(job);
-      setHandoffApplication((current) => (current ? { ...current, state: 'UNDONE' } : current));
-      onChanged();
-      await read();
-    });
-
-  const folder = application?.root ?? null;
-
-  // The checked change's report (the retired Work panel's "Download change report"), per finished step.
-  const reportSteps = coding && finished ? (view.steps ?? []).filter((step) => stepPhase(step) === 'done') : [];
-  const downloadReport = () =>
-    guarded(async () => {
-      const parts: string[] = [];
-      for (const step of reportSteps) {
-        const text = await kelRequest<string>(`/api/artifact?job=${encodeURIComponent(job)}&milestone=${encodeURIComponent(step.id)}`);
-        if (typeof text === 'string' && text.trim()) parts.push(text);
-      }
-      if (!parts.length) throw new Error('Kel has no change report for this work yet.');
-      saveTextFile(reportFileName(view.title), parts.join('\n\n---\n\n'));
-    });
+  // D-79: "Open" beside the title opens the project folder (the applied change's folder, else the project's).
+  const folder = application?.root ?? projectRoot ?? null;
   const showFolder = () =>
     guarded(async () => {
       if (folder && openFolder) await openFolder(folder);
     });
 
   const staff = view.staff ?? [];
-  const teamMeta = teamMetaWords(staff, view.state);
 
   // VIS-6: paused work marks the step it paused at (amber warning, "Paused"). The engine's own step
   // state wins; until it sends one, the step in progress (or the next one) of paused work is it.
@@ -340,91 +320,21 @@ export const KelOfficeDetail: React.FC<Props> = ({
   const firstPending = steps.findIndex((step) => stepPhase(step) === 'pending');
   // LIVE-3: nothing comes "Next" while a step waits to be started again.
   const stalled = pausedAt >= 0 || steps.some((step) => stepPhase(step) === 'interrupted');
-  const stepMeta =
-    view.progress && view.progress.total > 0 ? `${Math.min(view.progress.done, view.progress.total)} of ${view.progress.total}` : null;
 
-  const files = view.files_changed;
-  const review = view.review ?? null;
-  const findings = openFindings(review?.findings);
-  const reviewPassed = passed(view);
-  const reviewFailed = failedChecks(view);
-  const verifier = staff.find((member) => (member.role ?? '').toLowerCase() === 'verifier');
   const uncertain = finished && isUncertain(view);
-  const reviewTone = findings.length ? 'review' : reviewPassed ? 'done' : reviewFailed ? 'failed' : 'review';
-  const reviewWord = findings.length
-    ? `${findings.length} to fix`
-    : reviewPassed
-      ? 'Passed'
-      : reviewFailed
-        ? 'Didn’t pass'
-        : uncertain
-          ? UNCERTAIN_LABEL
-          : review?.verdict
-            ? 'Reviewing'
-            : 'Not yet';
-  const reviewText = findings.length
-    ? findings.map((finding) => finding.summary).filter(Boolean).join(' ')
-    : review?.checked_by
-      ? `Checked by ${review.checked_by}.`
-      : null;
-
-  const verification = view.verification ?? null;
-  const verificationTone = reviewPassed
-    ? 'done'
-    : reviewFailed
-      ? 'failed'
-      : verification?.result || view.state === 'in_review'
-        ? 'review'
-        : 'quiet';
-  // VIS-3: nothing checked yet is "Not run yet" (Figma 5a); "In progress" only while it is checked.
-  const verificationWord = verification?.result
-    ? reviewPassed
-      ? 'Passed'
-      : reviewFailed
-        ? 'Didn’t pass'
-        : isUncertain({ verification })
-          ? UNCERTAIN_LABEL
-          : verification.result.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())
-    : running
-      ? view.state === 'in_review'
-        ? 'In progress'
-        : 'Not run yet'
-      : 'Not run';
-  // VIS-4: the summary as a list — no second verdict, no bullets, one "Built by · Checked by" line.
-  const verificationList = verificationLines(verification?.summary, staff, review?.checked_by);
-  // bc873da: Sentinel → Oracle → Red Team, each in the Oracle's shape; Sentinel and the Red Team only
-  // when the engine has something to say about them.
-  const passes = REVIEW_PASSES.filter(({ kind }) => showReviewPass(kind, view[kind])).map(({ kind, name }) => {
-    const pass = view[kind];
-    const member = staff.find((row) => (row.role ?? '').toLowerCase() === kind);
-    const model = pass?.model_label
-      ? [pass.model_label, reasoningLabel(pass.reasoning)].filter(Boolean).join(' · ')
-      : member
-        ? modelLine(member)
-        : null;
-    return {
-      kind,
-      name,
-      model,
-      lines: oracleLines(pass, kind),
-      coverage: oracleCoverage(pass),
-      independence: independenceWords(pass?.independence, 'second_opinion', pass?.independence_label),
-    };
-  });
-  const reviewIndependence = independenceWords(review?.independence, 'check', review?.independence_label);
+  // D-79 Review Team: one status, and one line on any open problem and who is on it.
+  const reviewState = reviewTeamState(view);
+  const reviewTone: 'done' | 'failed' | 'review' | 'next' =
+    reviewState === 'Passed' ? 'done' : reviewState === 'Failed' ? 'failed' : reviewState === 'Not started' ? 'next' : 'review';
+  const problem = reviewProblemLine(view);
 
   const started = clockTime(view.started_at);
-  const ended = clockTime(view.finished_at ?? view.updated_at);
-  const took = finished ? duration(view.started_at, view.finished_at ?? view.updated_at) : null;
   const total = view.progress?.total ?? 0;
   const stepNow = total > 0 ? Math.min((view.progress?.done ?? 0) + 1, total) : 0;
   const runningMeta =
     pausedAt >= 0 && steps.length ? `Paused at step ${pausedAt + 1} of ${steps.length}` : total > 0 ? `Step ${stepNow} of ${total}` : null;
-  const subtitle = [
-    running ? runningMeta : ended ? `Finished ${ended}` : null,
-    running ? (started ? `Started ${started}` : null) : took ? `Took ${took}` : null,
-    projectName || null,
-  ].filter(Boolean);
+  // D-79: finished work carries no "5 of 5" and no finish time (the "Complete" tooltip has the when).
+  const subtitle = [running ? runningMeta : null, running && started ? `Started ${started}` : null, projectName || null].filter(Boolean);
 
   // D-72: what the work has used so far (cost or "Included in your plan", tokens, model time).
   const usageLine = usageHeaderLine(view.usage);
@@ -432,6 +342,7 @@ export const KelOfficeDetail: React.FC<Props> = ({
   // where the change went (or that it was undone).
   const resultText = plainResultText(view.result, coding ? application : null) || (view.status_line ?? '').trim();
   const attention = view.state === 'needs_you' || view.state === 'failed' || view.state === 'stopped';
+  const headSettles = cardStateTransition(view.state) === 'settling';
   // VIS-5: the result line is not said twice ("You stopped this work." as the result and as the why).
   const attentionText = [view.why, view.next]
     .filter((part) => part && part.trim() && (!finished || part.trim() !== resultText))
@@ -440,8 +351,11 @@ export const KelOfficeDetail: React.FC<Props> = ({
   const undone = coding && isUndone({ undone: view.undone, application });
   const appliedLine = coding ? (undone ? undoneLine({ undone: view.undone, application }) : applicationLine(application)) : null;
   const titleId = `kel-office-detail-title-${job}`;
+  const stateWords = panelStateLabel(view);
+  const completeTip = stateWords === COMPLETE_LABEL ? completedAt(view.finished_at ?? view.updated_at) ?? undefined : undefined;
 
-  const actions = confirming ? (
+  // Top right: Remove once finished; Stop (with its confirm) while it runs. No Undo (D-79: Nick asks Kel).
+  const topActions = confirming ? (
     <div className='kel-wd-confirm' data-testid='kel-office-stop-confirm'>
       <span>Stop this work? Anything already checked is kept.</span>
       <button type='button' className='kel-wd-button' disabled={busy} onClick={() => setConfirming(false)}>
@@ -459,29 +373,17 @@ export const KelOfficeDetail: React.FC<Props> = ({
           Stop
         </button>
       ) : (
-        <>
-          <button type='button' className='kel-wd-button' disabled={busy} onClick={() => onRemove(item)} data-testid='kel-office-remove'>
-            <img src={iconRemove} alt='' />
-            Remove
-          </button>
-          {applied ? (
-            <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void undo()} data-testid='kel-office-undo'>
-              <img src={iconUndo} alt='' />
-              Undo
-            </button>
-          ) : null}
-          {applied && folder && openFolder ? (
-            <button type='button' className='kel-wd-button' disabled={busy} onClick={() => void showFolder()} data-testid='kel-office-open-folder'>
-              <img src={iconFolder} alt='' />
-              Open folder
-            </button>
-          ) : null}
-        </>
+        <button type='button' className='kel-wd-button' disabled={busy} onClick={() => onRemove(item)} data-testid='kel-office-remove'>
+          <img src={iconRemove} alt='' />
+          Remove
+        </button>
       )}
-      <button type='button' className='kel-wd-button kel-wd-button--primary' onClick={() => onTalk(item)} data-testid='kel-office-talk'>
-        Talk to Kel about this
-      </button>
     </div>
+  );
+  const talkButton = (
+    <button type='button' className='kel-wd-button kel-wd-button--primary' onClick={() => onTalk(item)} data-testid='kel-office-talk'>
+      Talk to Kel about this
+    </button>
   );
 
   return (
@@ -498,13 +400,31 @@ export const KelOfficeDetail: React.FC<Props> = ({
       {sheet ? <div className='kel-wd-sheet__handle' aria-hidden='true' /> : null}
       <div className='kel-wd-head'>
         <div className='kel-wd-title'>
-          <h2 id={titleId}>{view.title}</h2>
+          <div className='kel-wd-title__row'>
+            <h2 id={titleId}>{view.title}</h2>
+            {folder && openFolder ? (
+              <button
+                type='button'
+                className='kel-wd-button kel-wd-open'
+                disabled={busy}
+                onClick={() => void showFolder()}
+                aria-label='Open the project folder'
+                title='Open the project folder'
+                data-testid='kel-office-open-folder'
+              >
+                <img src={iconFolder} alt='' />
+                Open
+              </button>
+            ) : null}
+          </div>
           <div className='kel-wd-state' role='status' aria-live='polite'>
-            <StateIcon state={view.state} size='detail' uncertain={uncertain} />
-            <span className='kel-wd-state__label' data-testid='kel-office-detail-state'>
-              {detailStateLabel(view)}
+            <SwapIn className='kel-wc-state-icon' swapKey={`${view.state}${uncertain ? ':u' : ''}`} draw={view.state === 'done'} settle={headSettles}>
+              <StateIcon state={view.state} size='detail' uncertain={uncertain} />
+            </SwapIn>
+            <span className='kel-wd-state__word' title={completeTip} data-testid='kel-office-detail-state-word'>
+              <RollText className='kel-wd-state__label' value={stateWords} settle={headSettles} testId='kel-office-detail-state' />
             </span>
-            {subtitle.length ? <span className='kel-wd-state__meta'>{sheet ? subtitle.join('  ·  ') : `·  ${subtitle.join('  ·  ')}`}</span> : null}
+            {subtitle.length ? <RollText className='kel-wd-state__meta' value={sheet ? subtitle.join('  ·  ') : `·  ${subtitle.join('  ·  ')}`} /> : null}
           </div>
           {usageLine ? (
             <div className='kel-wd-usage' data-testid='kel-office-usage'>
@@ -513,7 +433,7 @@ export const KelOfficeDetail: React.FC<Props> = ({
           ) : null}
         </div>
         <span className='kel-wc-push' />
-        {sheet ? null : actions}
+        {sheet ? null : topActions}
       </div>
       <SheetBody sheet={sheet}>
         {notice ? (
@@ -561,18 +481,14 @@ export const KelOfficeDetail: React.FC<Props> = ({
           </section>
         ) : null}
         <div className='kel-wc-progress kel-wd-progress' aria-hidden='true'>
-          <span className='kel-wc-progress__fill' style={{ width: `${(progressFraction(view) * 100).toFixed(2)}%` }} />
+          <ProgressFill fraction={progressFraction(view)} tone={fillTone(view.state, uncertain)} />
         </div>
         {finished && (resultText || appliedLine) ? (
           <section className='kel-wd-result' aria-label='Result' data-testid='kel-office-result'>
             <div className='kel-wd-result__head'>
               <StateIcon state={view.state} size='detail' uncertain={uncertain} />
               <strong>Result</strong>
-              {appliedLine ? (
-                <span className='kel-wd-meta' data-testid='kel-office-applied'>
-                  {appliedLine}
-                </span>
-              ) : null}
+              {appliedLine ? <RollText className='kel-wd-meta' value={appliedLine} settle={undone} flipSiblings={false} testId='kel-office-applied' /> : null}
             </div>
             {resultText ? <p>{resultText}</p> : null}
             {attention && attentionText ? <p className='kel-wd-result__why'>{attentionText}</p> : null}
@@ -583,182 +499,110 @@ export const KelOfficeDetail: React.FC<Props> = ({
         {detail ? (
           <div className='kel-wd-columns'>
             <section className='kel-wd-col kel-wd-col--team' aria-labelledby={`${titleId}-team`}>
-              <SectionHead id={`${titleId}-team`} title='Team' meta={teamMeta} />
+              <SectionHead id={`${titleId}-team`} title={staff.length ? teamHeading(staff) : 'Team'} />
               {staff.length ? (
                 <ul className='kel-wd-list'>
                   {staff.map((member) => (
-                    <Member key={member.id} member={member} itemState={view.state} />
+                    <Member key={member.id} member={member} />
                   ))}
                 </ul>
               ) : (
                 <p className='kel-wd-empty'>Kel is handling this alone.</p>
               )}
             </section>
-            <div className='kel-wd-col kel-wd-col--steps'>
-              <section aria-labelledby={`${titleId}-steps`}>
-                <SectionHead id={`${titleId}-steps`} title='Steps' meta={stepMeta} />
-                {steps.length ? (
-                  <ol className='kel-wd-list kel-wd-steps'>
-                    {steps.map((step, index) => {
-                      const phase = stepPhase(step);
-                      const at = phase === 'done' || phase === 'failed' ? clockTime(step.at) : null;
-                      return (
-                        <li key={step.id} className={`kel-wd-step kel-wd-step--${phase}`} data-testid='kel-office-step'>
-                          <span className='kel-wd-step__lead' aria-hidden='true'>
-                            <img
-                              src={
-                                phase === 'done'
-                                  ? iconCheck14
-                                  : phase === 'now'
-                                    ? iconLoader
-                                    : phase === 'failed'
-                                      ? iconWarning
-                                      : phase === 'paused' || phase === 'interrupted'
-                                        ? iconWarningAmber
-                                        : stepPending
-                              }
-                              alt=''
-                            />
-                          </span>
-                          <span className='kel-wd-step__label'>{step.label}</span>
-                          <span className='kel-wd-step__when'>
-                            {phase === 'now'
+            <section className='kel-wd-col kel-wd-col--steps' aria-labelledby={`${titleId}-steps`}>
+              <SectionHead id={`${titleId}-steps`} title='Steps' />
+              {steps.length ? (
+                <ol className='kel-wd-list kel-wd-steps'>
+                  {steps.map((step, index) => {
+                    const phase = stepPhase(step);
+                    const last = stepTickTransition(index, steps.length) === 'settling';
+                    return (
+                      <li key={step.id} className={`kel-wd-step kel-wd-step--${phase}`} data-testid='kel-office-step' title={step.label ?? undefined}>
+                        {/* D-78: each row owns its icon; only its state animates (the loader turns once, a check draws on). */}
+                        <SwapIn className='kel-wd-step__lead' swapKey={phase} draw={phase === 'done'} turn={phase === 'now'} settle={phase === 'done' && last}>
+                          <img
+                            src={
+                              phase === 'done'
+                                ? iconCheck14
+                                : phase === 'now'
+                                  ? iconLoader
+                                  : phase === 'failed'
+                                    ? iconWarning
+                                    : phase === 'paused' || phase === 'interrupted'
+                                      ? iconWarningAmber
+                                      : stepPending
+                            }
+                            alt=''
+                          />
+                        </SwapIn>
+                        {/* D-79: one line each; the full words are in the tooltip. */}
+                        <span className='kel-wd-step__label' data-testid='kel-office-step-text'>
+                          {step.label}
+                        </span>
+                        <RollText
+                          className='kel-wd-step__when'
+                          flipSiblings={false}
+                          value={
+                            phase === 'now'
                               ? 'Now'
                               : phase === 'paused'
                                 ? 'Paused'
                                 : phase === 'interrupted'
                                   ? 'Interrupted'
-                                  : phase === 'pending'
-                                  ? index === firstPending && running && !stalled
+                                  : phase === 'pending' && index === firstPending && running && !stalled
                                     ? 'Next'
                                     : ''
-                                  : (at ?? '')}
-                          </span>
-                          <span className='kel-wc-sr'>
-                            {phase === 'done'
-                              ? ', done'
-                              : phase === 'now'
-                                ? ', in progress'
-                                : phase === 'paused'
-                                  ? ', paused here'
-                                  : phase === 'interrupted'
-                                    ? ', stopped part-way when Kel’s worker stopped'
-                                    : phase === 'failed'
+                          }
+                        />
+                        <span className='kel-wc-sr'>
+                          {phase === 'done'
+                            ? ', done'
+                            : phase === 'now'
+                              ? ', in progress'
+                              : phase === 'paused'
+                                ? ', paused here'
+                                : phase === 'interrupted'
+                                  ? ', stopped part-way when Kel’s worker stopped'
+                                  : phase === 'failed'
                                     ? ', did not finish'
                                     : ', not started'}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                ) : (
-                  <p className='kel-wd-empty'>No steps reported yet.</p>
-                )}
-              </section>
-              {Array.isArray(files) ? (
-                <section aria-labelledby={`${titleId}-files`}>
-                  <SectionHead
-                    id={`${titleId}-files`}
-                    title='Files changed'
-                    meta={`${files.length} file${files.length === 1 ? '' : 's'}`}
-                  />
-                  {files.length ? (
-                    <ul className='kel-wd-list'>
-                      {files.map((path) => (
-                        <li key={path} className='kel-wd-file'>
-                          <img src={iconFile} alt='' />
-                          <span>{path}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className='kel-wd-empty'>No files changed.</p>
-                  )}
-                  {reportSteps.length ? (
-                    <button
-                      type='button'
-                      className='kel-wd-button kel-wd-files__report'
-                      disabled={busy}
-                      onClick={() => void downloadReport()}
-                      data-testid='kel-office-report'
-                    >
-                      <img src={iconFile} alt='' />
-                      Download change report
-                    </button>
-                  ) : null}
-                </section>
-              ) : null}
-            </div>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <p className='kel-wd-empty'>No steps reported yet.</p>
+              )}
+            </section>
             <section className='kel-wd-col kel-wd-col--review' aria-labelledby={`${titleId}-review`}>
-              <SectionHead id={`${titleId}-review`} title='Review and checks' />
-              <div className='kel-wd-finding' data-testid='kel-office-review'>
-                <div className='kel-wd-finding__head'>
+              <SectionHead id={`${titleId}-review`} title='Review Team' />
+              <div className='kel-wd-review' data-testid='kel-office-review'>
+                <div className='kel-wd-review__status'>
                   <StatusDot tone={reviewTone} />
-                  <strong>Verifier</strong>
-                  {verifier ? <span className='kel-wc-sr'>{`, ${modelLine(verifier)}`}</span> : null}
-                  <span className='kel-wc-push' />
-                  <span className={`kel-wd-finding__word kel-wd-tone--${reviewTone}`}>{reviewWord}</span>
+                  <RollText
+                    className={`kel-wd-review__word kel-wd-tone--${reviewTone === 'next' ? 'quiet' : reviewTone}`}
+                    value={reviewState}
+                    settle={reviewState === 'Passed' || reviewState === 'Failed'}
+                    testId='kel-office-review-state'
+                  />
                 </div>
-                {reviewText ? <p>{reviewText}</p> : null}
-                {reviewIndependence ? <p className='kel-wd-note'>{reviewIndependence}</p> : null}
-              </div>
-              {passes.map((pass) => {
-                const id = pass.kind === 'oracle' ? 'kel-office-oracle' : `kel-office-${pass.kind.replace('_', '-')}`;
-                return (
-                  <div key={pass.kind} className='kel-wd-oracle' data-testid={id} data-pass={pass.kind}>
-                    <StatusDot tone='next' />
-                    <span className='kel-wd-member__text'>
-                      <span className='kel-wd-member__line'>
-                        <strong>{pass.name}</strong>
-                        {pass.model ? <span className='kel-wd-model'>{pass.model}</span> : null}
-                      </span>
-                      <span className='kel-wd-oracle__line' data-testid={`${id}-line`}>
-                        {pass.lines.line}
-                      </span>
-                      {pass.coverage ? (
-                        <span className='kel-wd-oracle__why' data-testid={`${id}-coverage`}>
-                          {pass.coverage}
-                        </span>
-                      ) : null}
-                      {pass.lines.why || pass.independence ? (
-                        <span className='kel-wd-oracle__why' data-testid={`${id}-why`}>
-                          {[pass.lines.why, pass.independence]
-                            .filter((part): part is string => Boolean(part))
-                            .map((part) => (/[.!?…]$/.test(part) ? part : `${part}.`))
-                            .join(' ')}
-                        </span>
-                      ) : null}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className='kel-wd-verification' data-testid='kel-office-verification'>
-                <div className='kel-wd-verification__head'>
-                  <strong>Verification</strong>
-                  <span className={`kel-wd-tone--${verificationTone}`} data-testid='kel-office-verification-word'>
-                    {verificationWord}
-                  </span>
-                </div>
-                {verificationList.length ? (
-                  <ul className='kel-wd-verification__list' data-testid='kel-office-verification-list'>
-                    {verificationList.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
+                {problem ? (
+                  <p className='kel-wd-review__problem' data-testid='kel-office-review-problem'>
+                    {problem}
+                  </p>
                 ) : null}
               </div>
             </section>
           </div>
         ) : null}
-        <p className='kel-wd-footer'>
-          {finished
-            ? `Finished work stays at the top until you remove it. ${sheet ? 'Tap' : 'Click'} anywhere outside to close.`
-            : `Read-only. Kel runs the team; ask Kel for any change. ${sheet ? 'Tap' : 'Click'} anywhere outside to close.`}
-        </p>
+        {sheet ? null : <div className='kel-wd-foot'>{talkButton}</div>}
       </SheetBody>
       {sheet ? (
         <div className='kel-wd-sheet__foot' data-testid='kel-office-sheet-foot'>
-          {actions}
+          {topActions}
+          {talkButton}
         </div>
       ) : null}
     </div>

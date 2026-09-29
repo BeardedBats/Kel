@@ -148,16 +148,18 @@ describe('the bottom sheet', () => {
     expect(dialog.querySelector('.kel-wd-sheet__handle')).toBeTruthy();
     await within(dialog).findAllByTestId('kel-office-member');
     const body = within(dialog).getByTestId('kel-office-sheet-body');
-    expect(within(body).getByRole('heading', { name: 'Team' })).toBeTruthy();
+    // D-79: the same simplified parts as the desktop panel.
+    expect(within(body).getByRole('heading', { name: /^Team · \d+ agents?$/ })).toBeTruthy();
     expect(within(body).getByRole('heading', { name: 'Steps' })).toBeTruthy();
-    expect(within(body).getByRole('heading', { name: 'Review and checks' })).toBeTruthy();
+    expect(within(body).getByRole('heading', { name: 'Review Team' })).toBeTruthy();
     expect(within(body).getAllByTestId('kel-office-step').length).toBeGreaterThan(0);
     const foot = within(dialog).getByTestId('kel-office-sheet-foot');
     expect(within(foot).getByTestId('kel-office-talk').textContent).toBe('Talk to Kel about this');
     expect(within(foot).getByTestId('kel-office-stop')).toBeTruthy();
     // The head carries no actions on the phone (they would be out of thumb reach).
     expect(dialog.querySelector('.kel-wd-head .kel-wd-actions')).toBeNull();
-    expect(dialog.querySelector('.kel-wd-footer')?.textContent).toContain('Tap anywhere outside to close.');
+    // D-79: no footer text.
+    expect(dialog.querySelector('.kel-wd-footer')).toBeNull();
     // The page behind stays still while the sheet is open.
     expect(document.body.style.overflow).toBe('hidden');
   });
@@ -206,18 +208,17 @@ describe('the bottom sheet', () => {
     expect(posts(request, '/api/apply')).toEqual([{ job: 'job-laptop', action: 'leave' }]);
   });
 
-  it('finished, applied work offers Undo and Remove (no Open folder — that folder is on the PC)', async () => {
+  it('D-79: finished work offers Remove — no Undo (Nick asks Kel) and no Open (that folder is on the PC)', async () => {
     list = [RECEIPTS];
     details = { [RECEIPTS.job_id]: RECEIPTS_DETAIL };
     const request = install();
     renderPhone();
     const { dialog } = await openCard(/Receipts tidy-up/);
     const foot = within(dialog).getByTestId('kel-office-sheet-foot');
-    const undo = await within(foot).findByTestId('kel-office-undo');
-    expect(within(foot).getByTestId('kel-office-remove')).toBeTruthy();
+    expect(await within(foot).findByTestId('kel-office-remove')).toBeTruthy();
+    expect(within(dialog).queryByTestId('kel-office-undo')).toBeNull();
     expect(within(dialog).queryByTestId('kel-office-open-folder')).toBeNull();
-    fireEvent.click(undo);
-    await waitFor(() => expect(posts(request, '/api/apply')).toEqual([{ job: RECEIPTS.job_id, action: 'undo' }]));
+    expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Complete');
     fireEvent.click(within(foot).getByTestId('kel-office-remove'));
     await waitFor(() => expect(screen.queryByTestId('kel-work-sheet')).toBeNull());
     await waitFor(() => expect(posts(request, '/api/office')).toEqual([{ action: 'dismiss', id: RECEIPTS.job_id }]));

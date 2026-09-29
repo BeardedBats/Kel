@@ -274,19 +274,21 @@ describe('work card row (D-68)', () => {
     ]);
     const members = within(dialog).getAllByTestId('kel-office-member');
     expect(members[0].textContent).toContain('Kel, Commander');
-    expect(members[1].textContent).toContain('Writing the global hotkey listener');
-    // Figma 4b: "Kel + 3" (VIS-5: no "on it").
-    expect(dialog.textContent).toContain('Kel + 3');
-    expect(dialog.textContent).not.toContain('on it');
+    // D-79: no avatars; what each agent is doing is its tooltip, not a line under it.
+    expect(dialog.querySelector('.kel-wd-avatar')).toBeNull();
+    expect(members[1].textContent).not.toContain('Writing the global hotkey listener');
+    expect(members[1].getAttribute('title')).toContain('Writing the global hotkey listener');
+    expect(dialog.querySelector('.kel-wd-col--team h3')?.textContent).toBe('Team · 4 agents');
+    expect(dialog.textContent).not.toContain('Kel + 3');
     expect(dialog.textContent).toContain('Step 3 of 5');
     expect(dialog.textContent).toContain('Personal');
+    // D-79: no per-step times, no "N of N"; the current and next steps keep their words.
     const steps = within(dialog).getAllByTestId('kel-office-step').map((node) => node.querySelector('.kel-wd-step__when')?.textContent);
-    expect(steps).toEqual(['9:13 AM', '9:16 AM', 'Now', 'Next', '']);
-    expect(within(dialog).getByTestId('kel-office-review').textContent).toContain('1 to fix');
-    expect(within(dialog).getByTestId('kel-office-oracle').textContent).toContain('Second opinion before hand-over.');
-    expect(within(dialog).getByTestId('kel-office-verification-word').textContent).toBe('In progress');
-    expect(within(dialog).getAllByRole('listitem').map((node) => node.textContent)).toContain('2 of 4 passed');
-    expect(dialog.textContent).toContain('src/hotkey.ts');
+    expect(steps).toEqual(['', '', 'Now', 'Next', '']);
+    expect(dialog.textContent).not.toMatch(/9:13 AM|9:16 AM/);
+    expect(within(dialog).getByTestId('kel-office-review-state').textContent).toBe('In progress');
+    expect(within(dialog).queryByTestId('kel-office-oracle')).toBeNull();
+    expect(dialog.textContent).not.toContain('src/hotkey.ts');
   });
 
   it('asks before Stop and then cancels through the existing work-card path', async () => {
@@ -301,28 +303,33 @@ describe('work card row (D-68)', () => {
     await waitFor(() => expect(request).toHaveBeenCalledWith('/api/control', { job: 'job-mic', action: 'cancel' }));
   });
 
-  it('shows a finished result with Remove, Undo and Open folder when the applied change allows it', async () => {
+  it('D-79: a finished result reads "Complete" (its when in the tooltip), with Open beside the title and Remove, and no Undo', async () => {
     list = [RECEIPTS];
     const request = install();
     renderRow();
     fireEvent.click(await screen.findByRole('button', { name: /^Receipts tidy-up,/ }));
     const dialog = await screen.findByRole('dialog');
-    await within(dialog).findByTestId('kel-office-undo');
-    expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Done and checked');
+    await within(dialog).findAllByTestId('kel-office-member');
+    expect(within(dialog).getByTestId('kel-office-detail-state').textContent).toBe('Complete');
+    expect(within(dialog).getByTestId('kel-office-detail-state-word').getAttribute('title')).toMatch(/^\d{2}\/\d{2}\/\d{2} \d{2}:\d{2} (AM|PM)$/);
+    expect(dialog.textContent).not.toMatch(/Done and checked|Took 22 min|Finished \d/);
     expect(within(dialog).getByTestId('kel-office-result').textContent).toContain('Sorted 64 receipts');
     expect(within(dialog).getByTestId('kel-office-result').textContent).toContain('Applied automatically to 2026 (65 files)');
     expect(within(dialog).queryByTestId('kel-office-stop')).toBeNull();
-    expect(dialog.textContent).toContain('Kel + 3, all done');
-    expect(dialog.textContent).toContain('Took 22 min');
+    expect(within(dialog).queryByTestId('kel-office-undo')).toBeNull();
     expect(within(dialog).getAllByTestId('kel-office-model').map((node) => node.textContent)[1]).toBe(
       'Asked for DeepSeek Flash · ran Claude Sonnet · Low'
     );
-    expect(within(dialog).getByTestId('kel-office-oracle').textContent).toContain('Not asked for this work.');
 
-    fireEvent.click(within(dialog).getByTestId('kel-office-open-folder'));
+    // "Open" sits beside the title and opens the project folder.
+    const open = within(dialog).getByTestId('kel-office-open-folder');
+    expect(open.textContent).toBe('Open');
+    expect(open.getAttribute('aria-label')).toBe('Open the project folder');
+    expect(open.closest('.kel-wd-title__row')?.querySelector('h2')?.textContent).toBe('Receipts tidy-up');
+    fireEvent.click(open);
     await waitFor(() => expect(openFolder).toHaveBeenCalledWith('C:\\Users\\Nick\\Documents\\Receipts\\2026'));
-    fireEvent.click(within(dialog).getByTestId('kel-office-undo'));
-    await waitFor(() => expect(request).toHaveBeenCalledWith('/api/apply', { job: 'job-receipts', action: 'undo' }));
+    // "Talk to Kel about this" is at the bottom right.
+    expect(within(dialog).getByTestId('kel-office-talk').closest('.kel-wd-foot')).toBeTruthy();
 
     list = [];
     fireEvent.click(within(dialog).getByTestId('kel-office-remove'));

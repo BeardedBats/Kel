@@ -646,3 +646,46 @@ h6 {
 .arco-empty .arco-empty-description {
   color: var(--color-bg-6);
 }
+
+/* D-78 §10.13 — toasts move like the rest of Kel: they rise 10px out of a 6px blur (scale 0.96,
+   220ms ease-out) and leave with opacity, a 4px blur and scale 0.97 (140ms ease-in); the stack then
+   closes the gap. Arco's own fade classes carry the shared timing. */
+.fadeMessage-enter,
+.fadeMessage-appear {
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  filter: blur(6px);
+}
+.fadeMessage-enter-active,
+.fadeMessage-appear-active {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition:
+    opacity 220ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    transform 220ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    filter 220ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+.fadeMessage-exit {
+  opacity: 1;
+  overflow: hidden;
+}
+.fadeMessage-exit-active {
+  opacity: 0;
+  height: 0;
+  transform: scale(0.97);
+  filter: blur(4px);
+  transition:
+    opacity 140ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+    transform 140ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+    filter 140ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+    height 160ms var(--kel-spring-snappy, ease-out) 140ms;
+}
+
+/* D-78 §10.12 — Kel's pickers in an Arco dropdown grow in with Kel's own popover motion, so Arco's
+   slideDynamicOrigin (scaleY 0.9) is switched off for them. */
+.arco-trigger:has(> .kel-desktop-picker, .kel-desktop-model-menu):is(.slideDynamicOrigin-enter, .slideDynamicOrigin-appear, .slideDynamicOrigin-enter-active, .slideDynamicOrigin-appear-active, .slideDynamicOrigin-exit, .slideDynamicOrigin-exit-active) {
+  transform: none !important;
+  opacity: 1 !important;
+  transition: none !important;
+}

@@ -22,7 +22,8 @@ import { iconColors } from '@/renderer/styles/colors';
 import { Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
 import { Copy, Edit, Refresh } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useMessageArrival, useStreamFade } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 import { emitter } from '@/renderer/utils/emitter';
@@ -225,6 +226,14 @@ const MessageText: React.FC<{
     [conversationContext?.workspace, files]
   );
 
+  // D-78 §10.1: a message that arrives while Nick watches — his words fly from the composer, Kel's mark
+  // flies from Thinking to the reply's avatar, and a streamed reply's new words fade out of a blur.
+  const turnRef = useRef<HTMLDivElement>(null);
+  const [markdownBody, setMarkdownBody] = useState<HTMLDivElement | null>(null);
+  const onMarkdownBody = useCallback((el?: HTMLDivElement | null) => setMarkdownBody(el ?? null), []);
+  useMessageArrival(turnRef, isUserMessage ? 'user' : isTeammateMessage || message.content.cronMeta ? 'other' : 'kel');
+  useStreamFade(markdownBody, !isUserMessage);
+
   // D-75.2: Nick can edit a message he sent; Kel answers again from there.
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState('');
@@ -344,7 +353,7 @@ const MessageText: React.FC<{
 
   return (
     <>
-      {actionsOnly ? actionsRow : <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
+      {actionsOnly ? actionsRow : <div ref={turnRef} className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
         {message.created_at && <div className='kel-shell-message-meta'>
           {!isUserMessage && !isTeammateMessage && (layout?.isMobile
             ? <img src={kelMark} alt='Kel' width={22} height={22} />
@@ -479,7 +488,7 @@ const MessageText: React.FC<{
             </CollapsibleContent>
           ) : (
             <div data-testid='message-text-content'>
-              <MarkdownView codeStyle={CODE_STYLE} onLocalFileLink={handleLocalFileLink}>
+              <MarkdownView codeStyle={CODE_STYLE} onLocalFileLink={handleLocalFileLink} onRef={onMarkdownBody}>
                 {data}
               </MarkdownView>
             </div>

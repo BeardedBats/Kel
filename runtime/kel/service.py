@@ -1008,7 +1008,7 @@ class Service:
                 ensure_folder(self.store,root)  # D-62: General's default folder is made when work needs it
             if greenfield:
                 # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
-                # workspace: a fresh git repo under Documents/Kel Projects with a
+                # workspace: a fresh git repo under Memory\Projects (D-81) with a
                 # deterministic smoke-test command the worker must make pass.
                 # VIS-16: a short human name (the work's own title when it has one) and a tidy folder.
                 from .projects import new_project_folder,readable_project_name
@@ -1018,7 +1018,7 @@ class Service:
                 name=readable_project_name(text,ack['title'] if ack else None,taken)
                 root=new_project_folder(name)
                 # V1.5: creating project files is an effect; it crosses the boundary under the
-                # user-project-create policy (user actor, confined to the Kel Projects root).
+                # user-project-create policy (user actor, confined to Memory\Projects).
                 from .authorize import authorize
                 decision=authorize(self.store,{'actor':'user','action_kind':'write','target':str(root),
                     'metadata':{'operation':'create-project','what':'create a new project folder',

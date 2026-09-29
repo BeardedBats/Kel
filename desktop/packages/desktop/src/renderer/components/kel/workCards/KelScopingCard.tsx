@@ -7,7 +7,8 @@
  * D-74.3: "Not now" cancels the questions — nothing starts, and the card settles into one line.
  */
 import kelMark from '@renderer/assets/figma/kel-mark.png';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { LOOKS, morphInto, snapshotGhost, type Snapshot } from '@renderer/motion';
 import { emitter } from '@/renderer/utils/emitter';
 import { resolveEngineConversation } from '../KelApprovalCard';
 import { KelAnswerBox } from './KelAnswerBox';
@@ -133,11 +134,33 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
     };
   }, [engineCid, open, read]);
 
+  // D-78 §10.7: Start (or Not now) collapses the card into its one-line summary — the card's surface
+  // shrinks into the line (height on `morph`, width on `snappy`, radius 12 → 8) and the summary, the
+  // resting end of the questions, settles in with its check drawing on. Copied before React swaps it.
+  const hostRef = useRef<HTMLElement | null>(null);
+  const seenState = useRef(view?.state ?? null);
+  const leaving = useRef<Snapshot | null>(null);
+  if (seenState.current === 'open' && view && view.state !== 'open' && !leaving.current && hostRef.current) {
+    leaving.current = snapshotGhost(hostRef.current);
+  }
+  useLayoutEffect(() => {
+    const was = seenState.current;
+    seenState.current = view?.state ?? null;
+    const snap = leaving.current;
+    leaving.current = null;
+    const line = hostRef.current;
+    if (was !== 'open' || !view || view.state === 'open' || !snap || !line) return;
+    void morphInto({ from: snap, to: line, fromLook: LOOKS.scoping, toLook: LOOKS.collapsed, settle: true, draw: view.state === 'dismissed' ? undefined : ':scope > img', presets: { h: 'morph', w: 'snappy', y: 'morph' } });
+  }, [view?.state]);
+  const setHost = (el: HTMLElement | null) => {
+    hostRef.current = el;
+  };
+
   if (!view) return null;
 
   if (view.state === 'dismissed') {
     return (
-      <div className='kel-sc-collapsed kel-sc-collapsed--dismissed' data-testid='kel-scoping-dismissed' data-scoping-card={view.id}>
+      <div ref={setHost} className='kel-sc-collapsed kel-sc-collapsed--dismissed' data-testid='kel-scoping-dismissed' data-scoping-card={view.id}>
         <img src={iconChat} alt='' />
         <span className='kel-sc-collapsed__word'>Not now</span>
         <span className='kel-sc-collapsed__answers'>Nothing started. Ask again whenever you want it.</span>
@@ -148,7 +171,7 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
   if (view.state !== 'open') {
     const started = clockTime(view.started_at);
     return (
-      <div className='kel-sc-collapsed' data-testid='kel-scoping-collapsed' data-scoping-card={view.id}>
+      <div ref={setHost} className='kel-sc-collapsed' data-testid='kel-scoping-collapsed' data-scoping-card={view.id}>
         <img src={iconCheck} alt='' />
         <span className='kel-sc-collapsed__word'>{view.state === 'best_guess' ? 'Scoped · best guess' : 'Scoped'}</span>
         <span className='kel-sc-collapsed__answers'>{view.answer_line ?? ''}</span>
@@ -183,7 +206,7 @@ export const KelScopingCard: React.FC<Props> = ({ scopingId, conversationId }) =
     }));
 
   return (
-    <section className='kel-sc' aria-label='Kel’s questions before it starts' data-testid='kel-scoping-card' data-scoping-card={view.id}>
+    <section ref={setHost} className='kel-sc' aria-label='Kel’s questions before it starts' data-testid='kel-scoping-card' data-scoping-card={view.id}>
       <div className='kel-sc__head'>
         <img className='kel-sc__mark' src={kelMark} alt='' />
         <h3>{scopingHeading(view.questions.length)}</h3>

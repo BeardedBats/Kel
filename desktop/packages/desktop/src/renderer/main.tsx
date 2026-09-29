@@ -72,6 +72,10 @@ import './styles/themes/index.css';
 import './styles/markdown.css';
 import './styles/figma-variables.css';
 import './styles/kel-shell.css';
+// D-78: Kel's motion language (springs, morphs, indicators) and its CSS tokens.
+import './motion/motion.css';
+import { initMotion } from './motion';
+initMotion();
 import { loadKelFonts } from './utils/theme/kelFonts';
 
 // Config service — kick off initialization before i18n / theme modules load,

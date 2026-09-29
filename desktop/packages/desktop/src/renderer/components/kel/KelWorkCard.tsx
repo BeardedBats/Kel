@@ -17,6 +17,7 @@ import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
 import { KelWorkLine } from './workCards/KelWorkLine';
 import { answerApply } from './workCards/officeApi';
+import { refreshWorkCards } from './workCards/workCardEvents';
 import './KelWorkCard.css';
 
 export const KEL_WORK_CARD_POLL_MS = 3000;
@@ -170,6 +171,16 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
       setView((current) => (current ? { ...current, phase: 'starting', can_retry: false, why: null } : current));
       setGeneration((value) => value + 1);
     });
+
+  // D-78 / §10.2: the moment work is handed off (a job id appears for running work), ask the top row
+  // to read now — the new card must be there for the hand-off, not on the next 30 s idle poll.
+  const announced = useRef<string | null>(null);
+  useEffect(() => {
+    const job = view?.job_id;
+    if (!job || announced.current === job || isTerminalPhase(view?.phase)) return;
+    announced.current = job;
+    refreshWorkCards();
+  }, [view?.job_id, view?.phase]);
 
   const phase = view?.phase ?? 'starting';
   // D-70 item 2: staffed work has its top card; in the thread it is one line pointing at it. Work

@@ -97,63 +97,22 @@ afterEach(() => {
   delete (window as unknown as { kelAPI?: unknown }).kelAPI;
 });
 
-describe('Sentinel and the Red Team in Review and checks', () => {
-  it('lists Sentinel → Oracle → Red Team, conclusion first, then what it looked at', async () => {
+describe('D-79: the Review Team replaces Review and checks', () => {
+  it('one status while the passes run, and none of the old per-pass blocks', async () => {
     list = [{ ...MIC, state: 'in_review' }];
     details = { [MIC.job_id]: withPasses({ sentinel: SENTINEL_DONE, red_team: RED_TEAM_RUNNING }) };
     install();
     renderRow();
     const dialog = await openMic();
-    const order = Array.from(dialog.querySelectorAll('[data-pass]')).map((node) => node.getAttribute('data-pass'));
-    expect(order).toEqual(['sentinel', 'oracle', 'red_team']);
-
-    const sentinel = within(dialog).getByTestId('kel-office-sentinel');
-    expect(within(sentinel).getByText('Sentinel')).toBeTruthy();
-    expect(within(sentinel).getByText('GPT-6 Astra · High')).toBeTruthy();
-    expect(within(sentinel).getByTestId('kel-office-sentinel-line').textContent).toBe('No security or data-safety problems found.');
-    expect(within(sentinel).getByTestId('kel-office-sentinel-coverage').textContent).toBe(
-      'What it looked at: the password hashing and the settings form; not the network layer.'
-    );
-    expect(within(sentinel).getByTestId('kel-office-sentinel-why').textContent).toBe(
-      'Asked because: the change touches how passwords are stored. Given by a different model family from the one that did the work.'
-    );
-    // The line comes before the coverage in reading order.
-    const line = within(sentinel).getByTestId('kel-office-sentinel-line');
-    const coverage = within(sentinel).getByTestId('kel-office-sentinel-coverage');
-    expect(line.compareDocumentPosition(coverage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-    const red = within(dialog).getByTestId('kel-office-red-team');
-    expect(within(red).getByText('Red Team')).toBeTruthy();
-    expect(within(red).getByTestId('kel-office-red-team-line').textContent).toBe('Trying to break the accepted result now.');
-    expect(within(red).queryByTestId('kel-office-red-team-coverage')).toBeNull();
-  });
-
-  it('leaves out a pass the engine did not need and gave no reason for; a skipped one says why, compactly', async () => {
-    list = [{ ...MIC, state: 'in_review' }];
-    details = {
-      [MIC.job_id]: withPasses({
-        sentinel: { state: 'not_needed', why: null, findings: [] },
-        red_team: { state: 'not_needed', why: 'An earlier review already stands', conclusion: 'An earlier review already stands', findings: [] },
-      }),
-    };
-    install();
-    renderRow();
-    const dialog = await openMic();
+    const review = await within(dialog).findByTestId('kel-office-review');
+    expect(within(review).getByTestId('kel-office-review-state').textContent).toBe('In progress');
+    expect(dialog.querySelector('[data-pass]')).toBeNull();
     expect(within(dialog).queryByTestId('kel-office-sentinel')).toBeNull();
-    expect(within(dialog).getByTestId('kel-office-oracle')).toBeTruthy();
-    expect(within(dialog).getByTestId('kel-office-red-team-line').textContent).toBe('Not needed: an earlier review already stands.');
+    expect(review.textContent).not.toMatch(/What it looked at|Asked because|different model family/);
+    expect(dialog.querySelector('.kel-wd-col--review h3')?.textContent).toBe('Review Team');
   });
 
-  it('an older engine without the blocks shows the Oracle alone, as before', async () => {
-    list = [MIC];
-    details = { [MIC.job_id]: MIC_DETAIL };
-    install();
-    renderRow();
-    const dialog = await openMic();
-    expect(Array.from(dialog.querySelectorAll('[data-pass]')).map((node) => node.getAttribute('data-pass'))).toEqual(['oracle']);
-  });
-
-  it('names the new staff rows: Sentinel and Red Team', async () => {
+  it('names the new staff rows: Sentinel and Red Team, each in its own role colour', async () => {
     expect(roleName({ role: 'red_team', role_label: null })).toBe('Red Team');
     expect(roleName({ role: 'sentinel', role_label: null })).toBe('Sentinel');
     expect(initials({ role: 'red_team', role_label: 'Red Team' })).toBe('Re');
@@ -162,16 +121,20 @@ describe('Sentinel and the Red Team in Review and checks', () => {
     install();
     renderRow();
     const dialog = await openMic();
-    const names = within(dialog).getAllByTestId('kel-office-member').map((row) => row.querySelector('strong')?.textContent);
+    const rows = within(dialog).getAllByTestId('kel-office-member');
+    const names = rows.map((row) => row.querySelector('strong')?.textContent);
     expect(names).toContain('Sentinel');
     expect(names).toContain('Red Team');
+    expect(rows.find((row) => row.textContent?.includes('Sentinel'))?.className).toContain('kel-role--sentinel');
+    expect(rows.find((row) => row.textContent?.includes('Red Team'))?.className).toContain('kel-role--red-team');
   });
 
-  it('a Sentinel blocker is Needs you in Sentinel’s words, with Apply anyway / Leave it', async () => {
+  it('a Sentinel blocker is Needs you in Sentinel’s words, with Apply anyway / Leave it, and one problem line', async () => {
     list = [{ ...MIC, state: 'needs_you' }];
     details = {
       [MIC.job_id]: withPasses({
         state: 'needs_you',
+        review: { verdict: null, findings: [] },
         sentinel: { ...SENTINEL_DONE, conclusion: 'Found: any password is accepted.', findings: [{ summary: 'Any password is accepted', status: 'open', severity: 'blocker' }] },
         question: {
           kind: 'second_opinion',
@@ -194,10 +157,10 @@ describe('Sentinel and the Red Team in Review and checks', () => {
     expect(within(question).getByTestId('kel-needs-question-text').textContent).toBe('Sentinel’s security check raised a problem. Apply the change anyway?');
     expect(within(question).getByRole('radio', { name: 'Apply anyway' })).toBeTruthy();
     expect(within(question).getByRole('radio', { name: 'Leave it' })).toBeTruthy();
-    expect(within(dialog).getByTestId('kel-office-sentinel-line').textContent).toBe('Found: any password is accepted.');
+    expect(within(dialog).getByTestId('kel-office-review-problem').textContent).toMatch(/^Sentinel found any password is accepted/);
   });
 
-  it('shows the same passes in the phone sheet', async () => {
+  it('shows the same Review Team in the phone sheet', async () => {
     list = [{ ...MIC, state: 'in_review' }];
     details = { [MIC.job_id]: withPasses({ sentinel: SENTINEL_DONE, red_team: RED_TEAM_RUNNING }) };
     install();
@@ -205,9 +168,8 @@ describe('Sentinel and the Red Team in Review and checks', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Mic mute toggle app/ }));
     const sheet = await screen.findByTestId('kel-work-sheet');
     const body = within(sheet).getByTestId('kel-office-sheet-body');
-    await waitFor(() => expect(within(body).getByTestId('kel-office-sentinel')).toBeTruthy());
-    expect(Array.from(body.querySelectorAll('[data-pass]')).map((node) => node.getAttribute('data-pass'))).toEqual(['sentinel', 'oracle', 'red_team']);
-    expect(within(body).getByTestId('kel-office-red-team-line').textContent).toBe('Trying to break the accepted result now.');
+    await waitFor(() => expect(within(body).getByTestId('kel-office-review-state').textContent).toBe('In progress'));
+    expect(body.querySelector('[data-pass]')).toBeNull();
   });
 });
 

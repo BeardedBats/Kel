@@ -1,0 +1,169 @@
+/* D-78 — Kel's motion language (docs/v2/design/MOTION.md). Structural styles for the motion library.
+   Spring easings arrive as --kel-spring-{micro,snappy,morph,gentle} (+ -ms) from installMotionTokens(). */
+
+.kel-motion-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* The shared-element surface: out of flow, contain: strict, so writing its size lays out nothing else. */
+.kel-motion-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-style: solid;
+  contain: strict;
+  will-change: transform;
+  pointer-events: none;
+}
+.kel-motion-surface > .kel-motion-content {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0 !important;
+  max-width: none !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none;
+}
+.kel-motion-fly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+  pointer-events: none;
+}
+.kel-motion-exit {
+  position: absolute;
+  box-sizing: border-box;
+  margin: 0 !important;
+  pointer-events: none;
+}
+.kel-motion-hidden { visibility: hidden !important; }
+/* A panel whose look a travelling surface is drawing for a moment. */
+.kel-motion-bare {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Label rolls: the slot is sized by the new words; the old words leave from the same place. */
+.kel-roll { position: relative; display: inline-flex; min-width: 0; }
+.kel-roll__now { display: inline-block; min-width: 0; overflow: inherit; text-overflow: inherit; white-space: inherit; }
+.kel-roll__old {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Icon swaps: a fixed slot that owns its icon; the old one shrinks away inside the same slot. */
+.kel-swap { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; }
+.kel-swap__now { display: inline-flex; align-items: center; justify-content: center; }
+.kel-swap__old {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Progress: the lead segment and the old colour being uncovered. */
+.kel-progress-lead,
+.kel-progress-old {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.kel-progress-lead { width: 100%; filter: brightness(1.35); }
+
+/* Stretching indicators: one pill per track. The host switches its selected row's own fill off. */
+.kel-edge-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  visibility: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* CSS-driven state changes use the same springs. */
+/* Press: buttons scale to 0.94 on micro and come back on snappy (§10.1, §10.6, §10.7, §10.9). */
+:is(.kel-press, .kel-wd-button, .kel-chip-pick, .kel-answer .kel-wd-button, .send-button-custom) {
+  transition: transform var(--kel-spring-snappy-ms, 450ms) var(--kel-spring-snappy, ease-out);
+}
+:is(.kel-press, .kel-wd-button, .kel-chip-pick, .send-button-custom):active:not(:disabled) {
+  transform: scale(0.94);
+  transition-duration: var(--kel-spring-micro-ms, 230ms);
+  transition-timing-function: var(--kel-spring-micro, ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.kel-press, .kel-wd-button, .kel-chip-pick, .send-button-custom):active:not(:disabled) { transform: none; }
+}
+
+/* A chip's picked gradient growing from the press point. */
+.kel-bloom {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(#6493f8, #2356b3);
+  pointer-events: none;
+}
+
+/* ─── The stretching pills per surface (§6, §10.11, §10.12, §10.14). The track is the pill's
+   positioned parent; while a pill draws the selection, the selected row's own fill and border are
+   off, so there is only ever one highlight. Geometry is the row's own border box. ─── */
+
+/* Settings / Projects nav (Figma 311:2239): the pill is the 28px row, inset 10px from both sides of
+   the 200px nav (its padding), radius 8. */
+.kel-v2-shell .kel-in-chat-frame__nav { position: relative; }
+.kel-nav-pill { border: 1px solid rgba(127, 160, 255, 0.45); border-radius: 8px; background: rgba(47, 107, 224, 0.28); }
+.kel-v2-shell .kel-in-chat-frame__nav.kel-edge-host .kel-in-chat-frame__nav-row { position: relative; }
+.kel-v2-shell .kel-in-chat-frame__nav.kel-edge-host .kel-in-chat-frame__nav-row[aria-current='page'] { background: transparent; border-color: transparent; }
+
+/* The sidebar's current chat (across Pinned and Recent). */
+.kel-sider-list { position: relative; }
+.kel-sider-pill { border-radius: 8px; background: rgba(47, 107, 224, 0.22); }
+.kel-v2-shell .kel-sider-list.kel-edge-host .conversation-item:not(.settings-sider__item)[aria-current='page'] { background: transparent !important; }
+
+/* Amber tab pills: the model picker's scope tabs, the Files / Changes tabs, Kibble's status tabs. */
+.kel-desktop-model-menu__scope, .kel-workspace-tabs, .kel-tabs { position: relative; }
+.kel-tab-pill { border-radius: 6px; background: rgba(255, 183, 100, 0.08); }
+:is(.kel-desktop-model-menu__scope, .kel-workspace-tabs).kel-edge-host > button { position: relative; }
+:is(.kel-desktop-model-menu__scope, .kel-workspace-tabs).kel-edge-host > button[aria-selected='true'] { background: transparent !important; }
+/* Kel's general tabs keep their selected look on the pill. */
+.kel-tabs > .kel-edge-pill.kel-plain-tab-pill { border: 1px solid var(--kel-figma-color-control-edge); border-radius: 8px; background: var(--kel-shell-selected); }
+.kel-shell-kibble .kel-tabs > .kel-edge-pill.kel-plain-tab-pill { border: 0; border-radius: 6px; background: rgba(255, 183, 100, 0.08); }
+.kel-v2-shell .kel-tabs.kel-edge-host > .kel-tab { position: relative; }
+.kel-v2-shell .kel-tabs.kel-edge-host > .kel-tab--on { background: transparent; border-color: transparent; }
+
+/* Recipe filters: the amber underline is the moving part. */
+.kel-recipe-desktop-tabs { position: relative; }
+.kel-underline-pill { border-bottom: 2px solid var(--kel-figma-color-accent-amber, #ffb764); }
+.kel-v2-shell #project-recipes .kel-recipe-desktop-tabs.kel-edge-host button[aria-selected='true'] { border-bottom-color: transparent; }
+
+/* The project menu's pressed row. */
+.kel-workspace-menu { position: relative; }
+.kel-menu-pill { border-radius: 6px; background: rgba(47, 107, 224, 0.22); }
+.kel-workspace-menu.kel-edge-host > .kel-desktop-picker__row { position: relative; }
+.kel-workspace-menu.kel-edge-host > .kel-desktop-picker__row[aria-pressed='true'] { background: transparent !important; }
+
+/* Chevrons that turn on the snappy spring (§10.10, §10.12). */
+.kel-shell-workspace-link img:last-child { transition: transform var(--kel-spring-snappy-ms, 450ms) var(--kel-spring-snappy, ease-out); }
+.kel-shell-workspace-link > .kel-roll { max-width: 100%; }

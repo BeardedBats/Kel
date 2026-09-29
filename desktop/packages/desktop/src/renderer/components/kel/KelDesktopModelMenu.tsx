@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { EdgePill, usePopover } from '@renderer/motion';
 import { Message } from '@arco-design/web-react';
 import check from '@renderer/assets/figma/chat-pickers/model-check.svg';
 import plus from '@renderer/assets/figma/chat-pickers/model-plus.svg';
@@ -49,10 +50,15 @@ export const KelDesktopModelMenu: React.FC<{
     finally { setPending(false); }
   };
   const kelsAutomatic = kels ? kels.row.mode === 'AUTOMATIC' || !kels.row.model : false;
+  // D-78 §10.11/§10.12: the popover grows from its trigger's corner; the scope tabs' pill stretches.
+  const menuRef = useRef<HTMLDivElement>(null);
+  const scopeRef = useRef<HTMLDivElement>(null);
+  usePopover(menuRef, 'bottom right', ':scope > *');
   const olderDefault = Boolean(state.default?.provider);
-  return <div className='kel-desktop-model-menu kel-desktop-picker' data-testid='kel-desktop-model-menu' data-kel-model-menu={menuId} role='dialog' aria-label='Model picker' onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } }}>
+  return <div ref={menuRef} className='kel-desktop-model-menu kel-desktop-picker' data-testid='kel-desktop-model-menu' data-kel-model-menu={menuId} role='dialog' aria-label='Model picker' onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); onClose(); } }}>
     <p className='kel-desktop-model-menu__caption' data-testid='kel-model-menu-caption'>{KEL_MODEL_SCOPE_NOTE}</p>
-    <div className='kel-desktop-model-menu__scope' role='tablist' aria-label='Model scope'>
+    <div ref={scopeRef} className='kel-desktop-model-menu__scope' role='tablist' aria-label='Model scope'>
+      <EdgePill containerRef={scopeRef} active="button[aria-selected='true']" trigger={scope} axis='x' className='kel-tab-pill' />
       <button type='button' role='tab' aria-selected={scope === 'conversation'} disabled={!hasConversation || pending} onClick={() => setScope('conversation')}>This chat</button>
       <button type='button' role='tab' aria-selected={scope === 'default'} disabled={pending} onClick={() => setScope('default')}>Kel's model</button>
     </div>

@@ -12,6 +12,7 @@ import Titlebar from '@/renderer/components/layout/Titlebar';
 import { Layout as ArcoLayout, Tooltip } from '@arco-design/web-react';
 import classNames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useMotionScene } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { setGlobalNavigate } from '@/renderer/utils/navigation';
@@ -142,6 +143,8 @@ const Layout: React.FC<{
   useKelAttentionNotification();
   const navigate = useNavigate();
   const location = useLocation();
+  // D-78: opening a page or a chat is first paint — what mounts with it shows at once (MOTION.md §9).
+  useMotionScene(location.pathname);
   const inChatSection = /^\/(settings|connections|work|activity|autonomy|projects|scheduled|providers|diagnostics|onboarding)(\/|$)/.test(location.pathname) || location.pathname === '/transcription/library';
 
   // Kel V1.4 first-run: a genuinely fresh install (no completion flag and no conversations) is offered

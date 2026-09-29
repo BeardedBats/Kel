@@ -400,6 +400,8 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
       onSettings={() => { setPopupVisible(false); navigate('/settings/model'); }}
       onStaff={() => { setPopupVisible(false); navigate(staffPath); }} menuId={menuId} /> : items}
       trigger='click' position={desktop ? 'tr' : 'bl'} unmountOnExit={desktop}
+      // D-78: Kel's own popover motion runs on the desktop menu (it grows in and leaves as a copy).
+      triggerProps={desktop ? { duration: 0 } : undefined}
       popupVisible={popupVisible} onVisibleChange={setPopupVisible}>
       <button
         ref={triggerRef}

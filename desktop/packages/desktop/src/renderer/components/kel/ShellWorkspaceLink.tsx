@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { EdgePill, RollText, exitGhostAt, isReducedMotion, popIn, snapshotGhost, type Snapshot } from '@renderer/motion';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ipcBridge } from '@/common';
@@ -91,6 +92,8 @@ export default function ShellWorkspaceLink({ conversationId }: { conversationId?
       setError(err instanceof Error ? err.message : 'Kel could not switch projects.');
       return;
     }
+    // Let the highlight arrive on the chosen row before the menu closes (a moment, never the data).
+    if (!isReducedMotion()) await new Promise((resolve) => setTimeout(resolve, 180));
     setOpen(false);
     if (inChat && chat.project && id !== chat.project.id) {
       const startsIn = id === ALL_PROJECTS ? GENERAL_PROJECT_NAME : name;
@@ -101,6 +104,20 @@ export default function ShellWorkspaceLink({ conversationId }: { conversationId?
   };
 
   const rows = liveProjects(view.projects);
+
+  // D-78 §10.12: the menu grows from the chip's corner and leaves as a fading copy; the pressed row's
+  // highlight stretches to the new project before the menu closes.
+  const wasOpen = useRef(open);
+  const leavingMenu = useRef<Snapshot | null>(null);
+  if (wasOpen.current && !open && !leavingMenu.current) leavingMenu.current = snapshotGhost(menuRef.current);
+  useLayoutEffect(() => {
+    const before = wasOpen.current;
+    wasOpen.current = open;
+    const snap = leavingMenu.current;
+    leavingMenu.current = null;
+    if (open && !before && menuRef.current) void popIn(menuRef.current, 'top left', ':scope > *');
+    if (!open && before) void exitGhostAt(snap, { ms: 120, scale: 0.97, blur: 3 });
+  }, [open]);
 
   const menu = open
     ? createPortal(
@@ -122,6 +139,7 @@ export default function ShellWorkspaceLink({ conversationId }: { conversationId?
             />
           ) : (
             <>
+              <EdgePill containerRef={menuRef} active=".kel-desktop-picker__row[aria-pressed='true']" trigger={`${selected}|${view.active}`} className='kel-menu-pill' />
               <p className='kel-workspace-menu__label'>Projects</p>
               {!view.loaded && <p className='kel-workspace-menu__empty'>Loading…</p>}
               <button
@@ -188,7 +206,7 @@ export default function ShellWorkspaceLink({ conversationId }: { conversationId?
         data-testid='kel-project-chip'
       >
         <img src={workspaceIcon} alt='' />
-        <span>{label}</span>
+        <RollText value={label} />
         <img src={chevronIcon} alt='' />
       </button>
       {menu}

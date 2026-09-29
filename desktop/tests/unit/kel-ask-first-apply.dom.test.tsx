@@ -179,7 +179,7 @@ describe('Ask first — the top card asks Apply / Leave it', () => {
 });
 
 describe('Ask first — the result card in the thread offers Apply too', () => {
-  it('shows Needs you, where it would go, and Apply / Leave it; Apply writes it and the card turns into Undo', async () => {
+  it('shows Needs you, where it would go, and Apply / Leave it; Apply writes it and the card reads Complete (D-79: no Undo button)', async () => {
     details = { 'job-calc': DETAIL };
     const request = install();
     extra = (route, body) => {
@@ -198,10 +198,10 @@ describe('Ask first — the result card in the thread offers Apply too', () => {
     expect(screen.getByTestId('kel-done-card-answer-leave').textContent).toBe('Leave it');
     expect(screen.queryByTestId('kel-done-card-undo')).toBeNull();
     fireEvent.click(screen.getByTestId('kel-done-card-answer-apply_anyway'));
-    await waitFor(() => expect(screen.getByTestId('kel-done-card-state').textContent).toBe('Done and checked'));
+    await waitFor(() => expect(screen.getByTestId('kel-done-card-state').textContent).toBe('Complete'));
     expect(posts(request, '/api/apply')).toEqual([{ job: 'job-calc', action: 'apply_anyway' }]);
     expect(screen.queryByTestId('kel-done-card-answer-apply_anyway')).toBeNull();
-    expect(screen.getByTestId('kel-done-card-undo')).toBeTruthy();
+    expect(screen.queryByTestId('kel-done-card-undo')).toBeNull();
     expect(screen.getByTestId('kel-done-card-applied').textContent).toContain('Applied to Calc demo (folder R6Proj)');
   });
 

@@ -54,6 +54,8 @@ html[data-theme='light'] {
 /* Quick-pick chips (reusable). */
 .kel-chips { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; min-width: 0; }
 .kel-chip-pick {
+  position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -167,8 +169,10 @@ html[data-theme='light'] {
 .kel-wl:hover { background: rgba(47, 107, 224, 0.16); }
 .kel-wl:focus-visible { outline: 2px solid var(--kel-wc-link); outline-offset: 2px; }
 .kel-wl__lead { position: relative; display: inline-flex; flex: none; align-items: center; justify-content: center; width: 16px; height: 16px; }
-.kel-wl__lead--check { width: 13px; height: 13px; }
-.kel-wl__lead--check > img { display: block; width: 13px; height: 13px; }
+.kel-wl__lead--check { width: 16px; height: 16px; }
+/* D-78: the lead is one fixed 16px slot for every state (the 13px check sits centred), so a state
+   change never moves the words beside it. */
+.kel-wl__lead--check img { display: block; width: 13px; height: 13px; }
 .kel-wl__handed { flex: none; white-space: nowrap; }
 .kel-wl__dot { flex: none; color: var(--kel-wc-faint); }
 .kel-wl__title { min-width: 0; overflow: hidden; color: var(--kel-wc-text); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -181,6 +185,7 @@ html[data-theme='light'] {
 .kel-wl__pointer { flex: none; color: var(--kel-wc-faint); font: 500 12px/16px var(--kel-wc-font); white-space: nowrap; }
 .kel-wl__chev { display: block; flex: none; width: 14px; height: 14px; }
 .kel-wl__chev--up { transform: rotate(180deg); }
+.kel-wl__chev { transition: transform var(--kel-spring-snappy-ms, 450ms) var(--kel-spring-snappy, ease-out); }
 
 /* 5d: the compact done card on Kel's result message. */
 .kel-dc {
@@ -199,7 +204,7 @@ html[data-theme='light'] {
 .kel-dc p { margin: 0; }
 .kel-dc__head { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .kel-dc__lead { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 14px; height: 14px; }
-.kel-dc__lead > img { display: block; width: 14px; height: 14px; }
+.kel-dc__lead img { display: block; width: 14px; height: 14px; }
 .kel-dc__title { min-width: 0; overflow: hidden; color: var(--kel-wc-text); font: 600 14px/18px var(--kel-wc-font); text-overflow: ellipsis; white-space: nowrap; }
 .kel-dc__state { flex: none; color: var(--kel-wc-done-text); font: 600 12px/16px var(--kel-wc-font); white-space: nowrap; }
 .kel-dc--failed .kel-dc__state { color: var(--kel-wc-red); }
