@@ -917,3 +917,22 @@ settles: the final layout (size, text, lines) is computed before animating; text
 place inside the morph, never after the container arrives; icons render in their own final row from the
 first frame and only their state animates; space for arriving content is reserved. Verified by recording
 element positions frame by frame (no movement > 1 px after a transition ends).
+
+## D-79 — Simplify the work-card detail panel
+
+**Decided by Nick 2026-09-29** (from an annotated screenshot of the panel). Goal: simplify.
+- **Header:** title with an "Open folder" button beside it (opens the project folder on the desktop).
+  "Remove" top right. **No Undo** in the panel (Nick asks Kel instead). "Talk to Kel about this" moves
+  to the bottom right.
+- **Status:** "Done and checked" becomes **"Complete"**; no "5 of 5", no finish time. Hovering "Complete"
+  shows the date and time (MM/DD/YY hh:mm AM/PM).
+- **Team:** heading "Team · N agents" (no "Kel + 3 on it"). No avatar circles. Each role has its own pale
+  colour (Kel stays white; Builder, Verifier, Oracle, Sentinel, Red Team, Designer, Discovery… each
+  distinct). Each row shows role, model and reasoning only; what it did moves to a hover tooltip.
+- **Steps:** one line each (never wrapped), no per-step times, no "5 of 5".
+- **Review Team** (replaces "Review and checks"): one simple status — not started, in progress, failed or
+  passed — and, when there's a problem, what the issue is and who is working on it. Nothing else.
+- **Removed:** the Files changed section (a "View Diff Report" button comes later) and the footer text
+  "Finished work stays at the top…".
+The same simplification applies to the phone bottom sheet and the in-thread result card where they
+repeat these parts. Engine data stays as is; this is presentation only.
