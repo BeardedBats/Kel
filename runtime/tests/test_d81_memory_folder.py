@@ -266,6 +266,8 @@ class MirrorTests(Layout):
         stop = threading.Event()
         self.addCleanup(stop.set)
         keeper = memory_mirror.Keeper(self.engine, stop, poll=0.05, quiet=0.1, check=0.2).start()
+        # Stop and wait for the mirror thread before the temp folder is removed (Windows file locks).
+        self.addCleanup(lambda: (stop.set(), keeper.thread.join(5)))
         deadline = time.time() + 10
         while not (self.memory / 'Kel' / 'settings.json').exists() and time.time() < deadline:
             time.sleep(0.05)
