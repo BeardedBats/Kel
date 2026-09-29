@@ -51,7 +51,7 @@ describe('Scheduled tasks list (WK-8, JR-28)', () => {
     expect(screen.getByTestId('where').textContent).toBe('/scheduled/cron-1');
   });
 
-  it('teaches when there are no tasks, with one way to make one', async () => {
+  it('says there are no tasks, with one way to make one (D-87: no explanation)', async () => {
     cron.jobs = [];
     const { default: ScheduledTasksPage } = await import('@renderer/pages/cron/ScheduledTasksPage');
     render(
@@ -60,7 +60,7 @@ describe('Scheduled tasks list (WK-8, JR-28)', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('No scheduled tasks yet.')).toBeTruthy();
-    expect(screen.getByText(/on a schedule/)).toBeTruthy();
+    expect(screen.queryByText(/on a schedule/)).toBeNull();
     const create = screen.getAllByRole('button', { name: 'New task' });
     fireEvent.click(create[create.length - 1]);
     expect(screen.getByTestId('create-task-dialog')).toBeTruthy();

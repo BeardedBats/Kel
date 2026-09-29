@@ -39,9 +39,9 @@ describe('Kel suggests surface (D9)', () => {
     expect(projectsPage).toContain('work?.memory.proposals ?? []');
   });
 
-  it('speaks user language and never applies anything by itself', () => {
+  it('speaks user language; D-87 removed the line explaining that nothing applies by itself', () => {
     expect(projectsPage).toContain('Kel suggests');
-    expect(projectsPage).toContain('nothing here applies by itself');
+    expect(projectsPage).not.toContain('nothing here applies by itself');
     expect(projectsPage).toContain('kel-project-suggestion-why-prefix');
     expect(projectsPage).toContain('{proposal.why}');
   });
