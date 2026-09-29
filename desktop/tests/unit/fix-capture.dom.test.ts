@@ -19,6 +19,7 @@ import {
   elementText,
   imageRect,
   panelPlacement,
+  savedGeometry,
   shortPreview,
 } from '@renderer/components/kel/fixCapture/captureTarget';
 import {
@@ -222,6 +223,17 @@ describe('Fix Capture — reading the clicked element', () => {
     const nested = element('<div><ul><li><span>deep</span></li></ul></div>');
     const span = nested.querySelector('span')!;
     expect(buildSelector(span)).toBe('div > ul > li > span');
+  });
+
+  it('saves the target in screenshot pixels at 115% zoom (FIX-0018 box was off by the zoom)', () => {
+    // Nick's window: 2560x1392 device pixels, Kel zoom 115% -> a 2226x1210 CSS viewport.
+    const target = { tag: 'textarea', role: null, text: '', label: "What's up?", selector: '[data-testid="guid-input"]',
+      rect: { x: 842, y: 1114, width: 583, height: 25 } };
+    const saved = savedGeometry(target, { width: 2560, height: 1392 }, { width: 2226, height: 1210 });
+    expect(saved.element?.rect).toEqual({ x: 968, y: 1282, width: 670, height: 29 });
+    expect(saved.window).toEqual({ width: 2560, height: 1392, scale: 1.15 });
+    expect(target.rect.x).toBe(842);
+    expect(savedGeometry(null, { width: 10, height: 10 }, { width: 10, height: 10 }).element).toBeNull();
   });
 
   it('maps a DOM rect into the captured image, whatever the scale', () => {
