@@ -62,7 +62,7 @@ REQUIRED = {
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx': (
         # The V2 page retains the locked guardrail and action-check claims.
-        'These safety rules are locked and cannot be changed',
+        'Safety rules (locked)',
         'checked against them before it runs',
     ),
     'desktop/packages/desktop/src/renderer/pages/kel/providers/index.tsx': (
