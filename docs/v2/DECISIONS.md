@@ -911,3 +911,9 @@ never snaps. When the new state (A) will stay on screen for more than ~5 seconds
 item of a chain (the resting end state), it fades in with a longer, gentle transition — e.g. Undo /
 "Undone", a card reaching Done, "Done and checked", "You answered … · Kel is continuing". Intermediate
 states and anything gone within 5 s keep the quicker timing. Reduced motion still cross-fades gently.
+
+**D-78 addition (Nick, 2026-09-29) — no layout shift.** Nothing may shift or change after a motion
+settles: the final layout (size, text, lines) is computed before animating; text changes cross-fade in
+place inside the morph, never after the container arrives; icons render in their own final row from the
+first frame and only their state animates; space for arriving content is reserved. Verified by recording
+element positions frame by frame (no movement > 1 px after a transition ends).
