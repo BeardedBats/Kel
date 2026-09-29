@@ -960,3 +960,19 @@ are off-limits.
   Memory; this needs Codex's stronger Windows sandbox (one Windows admin approval by Nick).
 Supersedes the D-62 projects root (`Documents\Kel Projects`) for new projects, and D-64's protected-list
 approach becomes an allow-list (Memory only).
+
+## D-82 — Kel is dark only
+
+**Decided by Nick 2026-09-29.** Nick will not use Light mode. All Light-mode development and Light-mode
+bug fixing stops. Kel ships dark only: the theme/colour choice is removed from Settings → Appearance,
+which from now on holds only non-colour controls (text size, zoom, density and similar). Existing light
+tokens may stay in code but are no longer maintained or tested. Supersedes D-73.2.
+
+## D-83 — Recipes: save when sending, create ahead of time
+
+**Decided by Nick 2026-09-29.** Nick can save a request as a recipe at the moment he sends it (an option
+in the composer), and can create a recipe before ever using it (in the Recipes settings/page). "Save as a
+recipe" is no longer limited to work that passed its checks. Supersedes D-73.5.
+
+Also confirmed by Nick 2026-09-29: all other adopted defaults in D-72..D-77 stand. No Anthropic API key
+will be added.
