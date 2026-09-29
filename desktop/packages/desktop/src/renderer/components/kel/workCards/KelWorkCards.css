@@ -485,11 +485,14 @@
 .kel-wc-stack > .kel-wc-detail-slot { z-index: 2; }
 /*
  * The third avatar was clipped on a 198px card reading "Needs you · 4 of 5" (found by the motion
- * prototype): the state row needed ~182px of its 174. The avatars overlap 7px instead of 5px and the
- * spacer gives back one of its two gaps, so three avatars always fit beside the longest label.
+ * prototype): the state row needed ~182px of its 174 (measured in the packaged app). The row's gaps
+ * are 5px (3px before the count), the spacer gives back one of its two gaps and the avatars overlap
+ * 7px instead of 5px (their initials stay readable), so three avatars fit beside the longest label.
  */
-.kel-wc--row .kel-wc__state-row > .kel-wc-push { margin-right: -6px; }
+.kel-wc--row:not(.kel-wc--strip) .kel-wc__state-row { gap: 5px; }
+.kel-wc--row .kel-wc__state-row > .kel-wc-push { margin-right: -5px; }
 .kel-wc--row .kel-wc-agents > .kel-wc-avatar { margin-right: -7px; }
+.kel-wc--row:not(.kel-wc--strip) .kel-wc__state-row > .kel-wc-count { margin-left: -2px; }
 .kel-wc--row .kel-wc-agents > .kel-wc-avatar:last-child { margin-right: 0; }
 
 /* ─── D-79: the simplified detail panel ─────────────────────────────────────────────────── */

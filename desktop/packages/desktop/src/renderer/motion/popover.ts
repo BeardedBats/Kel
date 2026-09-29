@@ -13,7 +13,8 @@ import { frameWrite, spring, tween, waitMotion } from './spring';
 export type Origin = 'top left' | 'top right' | 'bottom left' | 'bottom right';
 
 export const popIn = async (menu: HTMLElement, origin: Origin = 'top left', rowsSelector = ':scope > *'): Promise<void> => {
-  const rows = Array.from(menu.querySelectorAll<HTMLElement>(rowsSelector)).slice(0, 14);
+  // The stretching pill is positioned by its own transform; it is never one of the rows that enter.
+  const rows = Array.from(menu.querySelectorAll<HTMLElement>(rowsSelector)).filter((el) => !el.classList.contains('kel-edge-pill')).slice(0, 14);
   if (isReducedMotion()) {
     setFx(menu, { o: 0 });
     await tween(0, 1, 140, 'linear', (v) => setFx(menu, { o: v })).finished;

@@ -429,8 +429,12 @@ export const panelHeightEase = (panel: HTMLElement, oldHeight: number): void => 
   if (Math.abs(box.h - oldHeight) < 1) return;
   const { sf } = stackSurface(stack, { ...box, h: oldHeight }, LOOKS.panel);
   panel.classList.add('kel-motion-bare');
+  // Blocks FLIPping up from below the panel's new edge stay visible over the surface meanwhile.
+  const overflow = panel.style.overflow;
+  panel.style.overflow = 'visible';
   void sf.to({ h: box.h }, { preset: 'morph' }).then(() => {
     panel.classList.remove('kel-motion-bare');
+    panel.style.overflow = overflow;
     sf.remove();
   });
 };

@@ -184,7 +184,18 @@ const GATEWAY_FAILURE_TEXT: Record<string, string> = {
     'Kel stopped answering on that computer. Your work is kept — try again in a moment.',
 };
 
+/**
+ * D-78 motion captures only: a script driving an off-screen copy of Kel over the DevTools protocol can
+ * answer chosen engine reads with scripted states (so every moment can be recorded without running
+ * real work). Nothing in the app sets it; when it is absent (always, in use) this is a no-op.
+ */
+type CaptureFixture = (route: string, body?: unknown) => unknown;
+const captureFixture = (): CaptureFixture | undefined =>
+  typeof window === 'undefined' ? undefined : (window as unknown as { __kelCaptureFixture?: CaptureFixture }).__kelCaptureFixture;
+
 async function call<T>(route: string, body?: unknown): Promise<T> {
+  const scripted = captureFixture()?.(route, body);
+  if (scripted !== undefined) return (await scripted) as T;
   const api = typeof window === 'undefined' ? undefined : window.kelAPI;
   if (api) return (await api.request(route, body)) as T;
   // D11 — away from the desktop (the remote browser) the same renderer talks to the engine through

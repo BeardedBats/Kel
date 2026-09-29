@@ -314,6 +314,23 @@ describe('the shared-element morph', () => {
   });
 });
 
+describe('popovers', () => {
+  it('a popover’s rows enter, but its stretching pill keeps its own transform', async () => {
+    const { popIn } = await import('@renderer/motion');
+    const menu = document.createElement('div');
+    menu.innerHTML = '<span class="kel-edge-pill" style="transform: translate(0px, 70px)"></span><button>A</button><button>B</button>';
+    document.body.appendChild(menu);
+    const pill = menu.querySelector<HTMLElement>('.kel-edge-pill')!;
+    const done = popIn(menu, 'top left');
+    motionClock.advance(30);
+    expect(pill.style.transform).toBe('translate(0px, 70px)');
+    expect(Number(menu.querySelector<HTMLElement>('button')!.style.opacity)).toBeLessThan(1);
+    await motionClock.advanceAsync(800);
+    await done;
+    expect(pill.style.transform).toBe('translate(0px, 70px)');
+  });
+});
+
 describe('React pieces keep the final layout first', () => {
   it('RollText shows the new words at once, rolls the old ones out of the same slot, and never replays on re-render', async () => {
     const { container, rerender, getByTestId } = render(<RollText value='Working' testId='label' />);
