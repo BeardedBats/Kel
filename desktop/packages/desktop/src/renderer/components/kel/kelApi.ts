@@ -1226,6 +1226,8 @@ export interface KelFix {
   page_title?: string | null;
   element?: KelFixElement | null;
   window?: KelFixWindow | null;
+  /** `voice: 'none' | 'partial'` when the words did not (fully) come through; `recovered` after a restart. */
+  diagnostics?: Record<string, unknown> | null;
   project_id?: string | null;
   conversation?: string | null;
   version?: string | null;
@@ -1260,6 +1262,8 @@ export const kelDogfood = {
     window?: KelFixWindow | null;
     version?: string | null;
     conversation?: string | null;
+    /** e.g. `{ voice: 'none' | 'partial' }` when the words did not (fully) come through. */
+    diagnostics?: Record<string, unknown> | null;
   }) => call<KelFix>('/api/dogfood', { action: 'save', ...body }),
   setStatus: (id: string, status: KelFixStatus) =>
     call<KelFix>('/api/dogfood', { action: 'set_status', id, status }),

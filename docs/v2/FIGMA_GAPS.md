@@ -260,3 +260,10 @@ Audit 2 supersedes the earlier sidebar, extra-card, and placeholder-copy decisio
 | No reference for Kibble or Connections | Nearest DS cards/buttons | Existing routes retain their behavior with shared shell styling. | `dogfood/index.tsx`, Connections |
 
 Audit evidence and checks: [SHELL_AUDIT_2.md](SHELL_AUDIT_2.md).
+
+## Composer and Kibble — 2026-09-29 (FIX-0018, D-86)
+
+| State / element | Figma | What the app does | Implementation |
+| --- | --- | --- | --- |
+| Focused empty composer | Home/Chat composer frames show "What's up?" in the box | Nick's words win (FIX-0018): the placeholder disappears as soon as the composer is focused and returns on blur when the box is still empty. | `kel-shell.css` |
+| Kibble top panels | Two panels side by side (prompt + Build an update) | D-86 removed Build an update; the Prepare-a-fix-prompt panel spans the row alone and is titled "Prepare a fix prompt". | `dogfood/index.tsx`, `index.module.css` |

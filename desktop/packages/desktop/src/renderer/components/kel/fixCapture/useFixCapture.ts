@@ -16,6 +16,7 @@ import {
   initialFixCaptureState,
   type FixCaptureScreenshot,
   type FixCaptureState,
+  type FixCaptureVoice,
 } from './fixCaptureMachine';
 
 declare const __APP_VERSION__: string;
@@ -27,9 +28,70 @@ const MIN_AUDIO_MS = 400;
 /** The one sentence a person reads when Muse could not transcribe their recording. */
 const TRANSCRIBE_FAILED = "Couldn't transcribe this recording.";
 
+/** Said with every voice failure: the finding itself is never lost (FIX-0019). */
+const STILL_SAVED = 'Save still keeps the screenshot and the spot you clicked.';
+const PARTIAL_NOTE = 'Only part of what you said came through. Add the rest, or retry the transcription.';
+
 const failureNote = (error: unknown): string => {
   const detail = (failureSentence(error, '') || '').trim();
-  return detail && detail !== TRANSCRIBE_FAILED ? `${TRANSCRIBE_FAILED} ${detail}` : TRANSCRIBE_FAILED;
+  const head = detail && detail !== TRANSCRIBE_FAILED ? `${TRANSCRIBE_FAILED} ${detail}` : TRANSCRIBE_FAILED;
+  return `${head} ${STILL_SAVED}`;
+};
+
+/**
+ * The unsaved fix, kept on this computer until the engine confirms the save. If Kel closes, reloads or
+ * the capture layer is remounted mid-capture, the next start saves what was there instead of losing it.
+ */
+export const FIX_DRAFT_KEY = 'kel.fixCapture.draft.v1';
+
+type FixSaveBody = Parameters<typeof kelDogfood.save>[0];
+
+const draftStore = {
+  read(): FixSaveBody | null {
+    try {
+      const raw = window.localStorage?.getItem(FIX_DRAFT_KEY);
+      const parsed = raw ? (JSON.parse(raw) as FixSaveBody) : null;
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
+    }
+  },
+  write(body: FixSaveBody): void {
+    try {
+      window.localStorage?.setItem(FIX_DRAFT_KEY, JSON.stringify(body));
+    } catch {
+      /* storage unavailable: the in-memory capture is still there */
+    }
+  },
+  clear(): void {
+    try {
+      window.localStorage?.removeItem(FIX_DRAFT_KEY);
+    } catch {
+      /* nothing to clear */
+    }
+  },
+};
+
+/** One fix as the engine stores it, from the capture state (the same body for save and recovery). */
+const saveBody = (state: FixCaptureState, transcript: string, voice: FixCaptureVoice): FixSaveBody => {
+  const shot = state.screenshot;
+  return {
+    transcript: transcript.trim(),
+    screenshot: shot?.screenshot ?? null,
+    route: state.route,
+    page_title: state.pageTitle,
+    element: state.target,
+    window: shot
+      ? {
+          width: shot.content.width,
+          height: shot.content.height,
+          scale: shot.image.width / Math.max(1, shot.content.width),
+        }
+      : null,
+    version: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : null,
+    conversation: state.conversation,
+    diagnostics: voice ? { voice } : null,
+  };
 };
 
 export interface FixCaptureContext {
@@ -74,6 +136,8 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
   const pendingRef = useRef<string | null>(null);
   /** The completed recording, held so a failed transcription can be retried without re-recording. */
   const audioRef = useRef<{ base64: string; durationMs: number } | null>(null);
+  /** The newest live words, so a failed finish still keeps whatever was heard. */
+  const liveRef = useRef('');
 
   const stopTimers = useCallback(() => {
     if (tickRef.current !== null) window.clearInterval(tickRef.current);
@@ -100,8 +164,11 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
     void kelRequest('/api/dogfood', { action: 'discard', screenshot: relpath }).catch(() => {});
   }, []);
 
-  /** Cancel audio + live session + any unsaved capture; used by Esc, click-outside, unmount. */
-  const teardown = useCallback(() => {
+  /**
+   * Cancel audio + live session. An explicit cancel (Esc, Cancel) also throws the capture away; an
+   * unmount keeps the screenshot and the stored draft so the next start can still save the fix.
+   */
+  const teardown = useCallback((keepCapture = false) => {
     epochRef.current += 1;
     stopTimers();
     const capture = captureRef.current;
@@ -112,11 +179,12 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       /* already gone */
     }
     endSession();
-    if (pendingRef.current) {
+    if (pendingRef.current && !keepCapture) {
       discardCapture(pendingRef.current);
-      pendingRef.current = null;
     }
-    // Cancel/Esc/click-outside throws the recording away too: nothing is left to retry or save.
+    pendingRef.current = null;
+    if (!keepCapture) draftStore.clear();
+    // Cancel/Esc throws the recording away too: nothing is left to retry or save.
     audioRef.current = null;
   }, [discardCapture, endSession, stopTimers]);
 
@@ -154,6 +222,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
         return;
       }
       sessionRef.current = started.live ? started.session_id : null;
+      liveRef.current = '';
       dispatch({ type: 'started' });
       tickRef.current = window.setInterval(() => dispatch({ type: 'tick' }), 1000);
       if (started.live && started.session_id) {
@@ -161,7 +230,10 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
           const session = sessionRef.current;
           if (!session) return;
           void kelRequest<{ text?: string }>('/api/transcription', { action: 'stream_status', session })
-            .then((live) => dispatch({ type: 'live', text: live.text || '' }))
+            .then((live) => {
+              if (live.text) liveRef.current = live.text;
+              dispatch({ type: 'live', text: live.text || '' });
+            })
             .catch(() => {});
         }, LIVE_POLL_MS);
       }
@@ -191,7 +263,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
 
   const cancel = useCallback(() => {
     if (state.phase === 'idle' || state.phase === 'saving' || state.phase === 'saved') return;
-    teardown();
+    teardown(false);
     dispatch({ type: 'cancel' });
   }, [state.phase, teardown]);
 
@@ -239,12 +311,22 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
         audioRef.current = { base64: recording.base64, durationMs: recording.durationMs };
         await chainRef.current.catch(() => {});
         let text = '';
+        // The engine says whether the live stream heard the whole recording; when it did not and it
+        // could not recover the rest, the words are marked partial instead of passed off as all of it.
+        let complete = true;
         if (session) {
-          const finished = await kelRequest<{ text?: string }>('/api/transcription', {
-            action: 'stream_finish',
-            session,
-          });
-          text = finished.text || '';
+          try {
+            const finished = await kelRequest<{ text?: string; complete?: boolean }>('/api/transcription', {
+              action: 'stream_finish',
+              session,
+            });
+            text = finished.text || '';
+            complete = finished.complete !== false;
+          } catch (error) {
+            if (!liveRef.current.trim()) throw error;
+            text = liveRef.current;
+            complete = false;
+          }
         }
         if (!text.trim() && recording.durationMs > MIN_AUDIO_MS) {
           const quick = await kelRequest<{ text?: string }>('/api/transcription', {
@@ -254,23 +336,34 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
             duration_ms: recording.durationMs,
           });
           text = quick.text || '';
+          complete = true;
         }
         const produced = text.trim();
-        if (produced) {
+        if (produced && complete) {
           dispatch({ type: 'stopped', text: produced });
+        } else if (produced) {
+          dispatch({ type: 'stopped', text: produced, note: PARTIAL_NOTE, retryable: true, voice: 'partial' });
         } else if (recording.durationMs > MIN_AUDIO_MS) {
-          // Real audio came back with no words: that is a failure a person can retry, never a blank.
-          dispatch({ type: 'stopped', text: '', note: TRANSCRIBE_FAILED, retryable: true });
+          // Real audio came back with no words: a failure a person can retry, and never a lost fix.
+          dispatch({
+            type: 'stopped',
+            text: '',
+            note: `${TRANSCRIBE_FAILED} ${STILL_SAVED}`,
+            retryable: true,
+            voice: 'none',
+          });
         } else {
           // Too short to be feedback at all (a stray click): nothing to transcribe, nothing to retry.
-          dispatch({ type: 'stopped', text: '' });
+          dispatch({ type: 'stopped', text: '', voice: 'none' });
         }
       } catch (error) {
+        const heard = liveRef.current.trim();
         dispatch({
           type: 'stopped',
-          text: '',
+          text: heard,
           note: failureNote(error),
           retryable: audioRef.current !== null,
+          voice: heard ? 'partial' : 'none',
         });
       }
     })();
@@ -290,7 +383,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       });
       const text = (quick.text || '').trim();
       if (!text) {
-        dispatch({ type: 'note', note: TRANSCRIBE_FAILED });
+        dispatch({ type: 'note', note: `${TRANSCRIBE_FAILED} ${STILL_SAVED}` });
         return;
       }
       dispatch({ type: 'transcribed', text });
@@ -310,25 +403,13 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
 
   const save = useCallback(async () => {
     if (state.phase !== 'review') return;
-    const shot = state.screenshot;
+    const body = saveBody(state, state.draft, state.draft.trim() ? state.voice : 'none');
+    draftStore.write(body);
     dispatch({ type: 'save' });
     try {
-      const saved = await kelDogfood.save({
-        transcript: state.draft.trim(),
-        screenshot: shot?.screenshot ?? null,
-        route: state.route,
-        page_title: state.pageTitle,
-        element: state.target,
-        window: shot
-          ? {
-              width: shot.content.width,
-              height: shot.content.height,
-              scale: shot.image.width / Math.max(1, shot.content.width),
-            }
-          : null,
-        version: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : null,
-        conversation: state.conversation,
-      });
+      const saved = await kelDogfood.save(body);
+      // Only a confirmed save lets go of the local draft.
+      draftStore.clear();
       dispatch({ type: 'saved', id: saved.id });
       pendingRef.current = null;
       audioRef.current = null;
@@ -348,10 +429,33 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
 
   const setDraft = useCallback((text: string) => dispatch({ type: 'edit', text }), []);
 
+  // Keep the unsaved fix on this computer while it is being captured: the words heard so far while
+  // recording (marked partial), the reviewed note afterwards. Cleared only by a confirmed save or an
+  // explicit cancel.
+  useEffect(() => {
+    if (!state.target) return;
+    if (state.phase === 'recording' || state.phase === 'stopping') {
+      draftStore.write(saveBody(state, state.live, state.live.trim() ? 'partial' : 'none'));
+    } else if (state.phase === 'review') {
+      draftStore.write(saveBody(state, state.draft, state.draft.trim() ? state.voice : 'none'));
+    }
+  }, [state]);
+
+  // A fix left unsaved when Kel last closed (or this layer was remounted) is saved now, marked as
+  // recovered. The draft is released first so a double mount cannot save it twice, and put back if
+  // the engine does not confirm.
+  useEffect(() => {
+    const leftover = draftStore.read();
+    if (!leftover) return;
+    draftStore.clear();
+    const diagnostics = { ...(leftover.diagnostics ?? {}), recovered: true };
+    void kelDogfood.save({ ...leftover, diagnostics }).catch(() => draftStore.write(leftover));
+  }, []);
+
   useEffect(
     () => () => {
       if (dismissRef.current !== null) window.clearTimeout(dismissRef.current);
-      teardown();
+      teardown(true);
     },
     [teardown]
   );

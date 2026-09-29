@@ -65,3 +65,10 @@ it('offers no Build an update surface and never asks the engine for a build', as
   expect(screen.getByRole('button', { name: 'Prepare prompt (2)' })).toBeTruthy();
   expect(requests.some(r => String(r.action).includes('build'))).toBe(false);
 });
+
+it('shows a plain line for a finding whose voice did not come through (FIX-0019)', async () => {
+  const { fixes } = transport();
+  Object.assign(fixes[0], { transcript: '', diagnostics: { voice: 'none' } });
+  open(); await screen.findByTestId('fix-list');
+  expect(screen.getAllByText(/No words came through — the screenshot and the spot you clicked were saved\./).length).toBeGreaterThan(0);
+});

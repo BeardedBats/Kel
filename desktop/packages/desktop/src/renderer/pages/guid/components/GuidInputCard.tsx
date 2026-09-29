@@ -122,12 +122,15 @@ const GuidInputCard: React.FC<GuidInputCardProps> = ({
           boxShadow: isInputActive && !isFileDragging ? activeShadow : 'none',
         }}
       >
+        {/* No border radius on the textarea itself (FIX-0018): on a one-line box a 12px radius clipped
+            the caret to half height at the start of the line and cut the selection into a shadowed
+            shape. The composer around it carries the rounded corners. */}
         <Input.TextArea
           ref={inputRef}
           autoSize={textareaAutoSize}
           placeholder={placeholder}
           spellCheck={false}
-          className={`text-14px focus:b-none rounded-xl !bg-transparent !b-none !resize-none !py-0 !pe-0 !ps-7px ${styles.lightPlaceholder}`}
+          className={`text-14px focus:b-none !bg-transparent !b-none !resize-none !py-0 !pe-0 !ps-7px ${styles.lightPlaceholder}`}
           value={input}
           onChange={onInputChange}
           onPaste={onPaste}

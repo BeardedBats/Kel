@@ -135,33 +135,17 @@ const FixCaptureLayer: React.FC = () => {
     };
   }, [phase]);
 
-  // While the panel is open: a click on the highlighted area stops the recording, and a click
-  // anywhere else cancels — deliberately, and never as a save.
+  // While the panel is open a stray click never throws a fix away (FIX-0019: findings were lost this
+  // way): a click outside the panel stops a recording, and does nothing to a note under review. Only
+  // Esc or Cancel discards.
   useEffect(() => {
     if (!ACTIVE_PHASES.has(phase)) return;
     const onMouseDown = (event: MouseEvent) => {
       if (panelRef.current?.contains(event.target as Node)) return;
-      if (phaseRef.current === 'saving') return;
-      const target = api.current.state.target?.rect ?? null;
-      // A meaningful target has area: a zero-size box can never be "the highlighted area".
-      const inside =
-        !!target &&
-        target.width > 0 &&
-        target.height > 0 &&
-        event.clientX >= target.x &&
-        event.clientX <= target.x + target.width &&
-        event.clientY >= target.y &&
-        event.clientY <= target.y + target.height;
-      if (inside && phaseRef.current === 'recording') {
-        event.preventDefault();
-        event.stopPropagation();
-        api.current.stop();
-        return;
-      }
-      if (inside && phaseRef.current !== 'recording') return;
+      if (phaseRef.current !== 'recording') return;
       event.preventDefault();
       event.stopPropagation();
-      api.current.cancel();
+      api.current.stop();
     };
     window.addEventListener('mousedown', onMouseDown, true);
     return () => window.removeEventListener('mousedown', onMouseDown, true);
@@ -233,7 +217,7 @@ const FixCaptureLayer: React.FC = () => {
                   </button>
                 </div>
                 <p className={styles.hintLine}>
-                  Ctrl+Shift+F stops · clicking the highlighted area stops · Esc cancels
+                  Ctrl+Shift+F or a click stops · Esc cancels
                 </p>
               </>
             ) : phase === 'saving' ? (
@@ -302,13 +286,12 @@ const FixCaptureLayer: React.FC = () => {
                     type='button'
                     className={`${styles.primary} ${styles.save}`}
                     onClick={() => void save()}
-                    disabled={!state.draft.trim()}
                     data-testid='fix-capture-save'
                   >
                     {desktop ? 'Save fix' : 'Save Fix'}
                   </button>
                 </div>
-                <p className={styles.hintLine}>Esc or clicking outside cancels — nothing is saved</p>
+                <p className={styles.hintLine}>Esc discards this fix — nothing else does</p>
               </>
             )}
           </div>,

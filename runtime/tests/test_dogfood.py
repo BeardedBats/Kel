@@ -62,6 +62,24 @@ class DogfoodCase(unittest.TestCase):
             self.save('   ')
         self.assertIn('what went wrong', str(ctx.exception))
 
+    def test_a_capture_whose_voice_did_not_come_through_is_still_saved(self):
+        # FIX-0019: nothing is lost. The screenshot and the spot Nick clicked are the finding even
+        # when transcription produced no words, and the record says so plainly.
+        shot = craft_temp_screenshot(self.dogfood)
+        element = {'tag': 'textarea', 'label': "What's up?", 'rect': {'x': 1, 'y': 2, 'width': 3, 'height': 4}}
+        item = self.save('  ', screenshot=self.dogfood.relative(shot), element=element, route='/guid')
+        self.assertEqual(item['transcript'], '')
+        self.assertTrue(item['has_screenshot'])
+        self.assertEqual(item['diagnostics'], {'voice': 'none'})
+        prompt = self.dogfood.prepare_prompt([item['id']])['prompt']
+        self.assertIn('no words came through', prompt)
+        self.assertNotIn('Nick said: ""', prompt)
+
+    def test_a_partial_voice_note_is_marked_in_the_prompt(self):
+        item = self.save('one line is being saved', diagnostics={'voice': 'partial'})
+        prompt = self.dogfood.prepare_prompt([item['id']])['prompt']
+        self.assertIn('"one line is being saved" (only part of his voice note came through', prompt)
+
     def test_save_allocates_sequential_ids_and_opens(self):
         first = self.save('First finding')
         second = self.save('Second finding')

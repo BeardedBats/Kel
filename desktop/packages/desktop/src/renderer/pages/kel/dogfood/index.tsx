@@ -204,7 +204,7 @@ const DogfoodFixes: React.FC = () => {
                           }
                           data-testid={`fix-pick-${fix.id}`}
                         />
-                        {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span><span className='kel-meta'>{fix.route || 'screen not recorded'}</span></> : <span className={styles.pickText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span></span>}
+                        {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(said(fix))}</span><span className='kel-meta'>{fix.route || 'screen not recorded'}</span></> : <span className={styles.pickText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(said(fix))}</span></span>}
                       </label>
                     </li>
                   ))}
@@ -271,7 +271,7 @@ const DogfoodFixes: React.FC = () => {
                       onClick={() => setSelectedId(fix.id === selectedId ? null : fix.id)}
                     >
                       {!isMobile && <svg className={styles.bugIcon} viewBox='0 0 16 16' fill='none' stroke='currentColor' aria-hidden='true'><path d='M5 5h6v5a3 3 0 0 1-6 0V5ZM6 5V3h4v2M2 7h3m6 0h3M2 10h3m6 0h3M4 13l2-2m4 0 2 2'/></svg>}
-                      {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(fix.transcript)}</span></> : <span className={styles.fixText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{`“${preview(fix.transcript)}”`}</span></span>}
+                      {isMobile ? <><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{preview(said(fix))}</span></> : <span className={styles.fixText}><span className='kel-strong'>{fix.id}</span><span className={styles.preview}>{`“${preview(said(fix))}”`}</span></span>}
                       {isMobile && <span className='kel-meta'>
                         {STATUS_COPY[fix.status]} · {fix.route || 'screen not recorded'} ·{' '}
                         {formatWhen(fix.created)}
@@ -287,7 +287,8 @@ const DogfoodFixes: React.FC = () => {
                       <div className={styles.detail} data-testid={`fix-detail-${fix.id}`}>
                         <div className={isMobile ? styles.mobileContents : styles.detailText}>
                           {!isMobile && <p className='kel-meta'>What you said</p>}
-                          <p className={styles.transcript}>{fix.transcript}</p>
+                          <p className={styles.transcript}>{said(fix)}</p>
+                          {voiceOf(fix) === 'partial' && <p className='kel-meta'>Only part of the voice note came through.</p>}
                           {!isMobile && <p className='kel-meta'>{formatWhen(fix.created)} · {fix.route || 'Screen not recorded'}</p>}
                           <p className='kel-meta'>{detailLine(fix)}</p>
                         </div>
@@ -341,6 +342,11 @@ const DogfoodFixes: React.FC = () => {
     </div>
   );
 };
+
+/** What the person-facing list shows when the voice note did not come through (FIX-0019). */
+const NO_WORDS = 'No words came through — the screenshot and the spot you clicked were saved.';
+const voiceOf = (fix: KelFix): unknown => fix.diagnostics?.voice;
+const said = (fix: KelFix): string => (String(fix.transcript || '').trim() ? fix.transcript : NO_WORDS);
 
 const preview = (text: string): string => {
   const collapsed = String(text || '').replace(/\s+/g, ' ').trim();

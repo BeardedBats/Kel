@@ -96,6 +96,19 @@ def _loads(raw):
         return None
 
 
+def _said_line(item):
+    """What Nick said, or a plain line saying his words did not (fully) come through."""
+    words = ' '.join(str(item.get('transcript') or '').split())
+    voice = (item.get('diagnostics') or {}).get('voice') if isinstance(item.get('diagnostics'), dict) else None
+    if not words:
+        return ('- Nick said: (no words came through — his voice note was not transcribed; work from the '
+                'screenshot and the selected target, and ask him what he meant)')
+    line = '- Nick said: "' + words + '"'
+    if voice == 'partial':
+        line += ' (only part of his voice note came through — ask him for the rest)'
+    return line
+
+
 def _is_practice_text(value):
     """True when this text is the archived local practice copy (never a person's own words)."""
     from .transcription import FIXTURE_SENTENCES
@@ -207,8 +220,13 @@ class Dogfood:
              window=None, diagnostics=None, version=None, conversation=None):
         """Store exactly one fix. The screenshot is committed under the fix id, or not at all."""
         text = str(transcript or '').strip()
-        if not text:
+        if not text and not (screenshot or element):
             raise PolicyError('Record or type what went wrong first.')
+        if not text:
+            # Nothing is lost when the voice did not come through (FIX-0019): the screenshot and the
+            # spot Nick clicked are still the finding, and the record says plainly that no words came.
+            diagnostics = dict(diagnostics) if isinstance(diagnostics, dict) else {}
+            diagnostics.setdefault('voice', 'none')
         # A fix is Nick's own words. Practice/demo text is never saved as if it were his feedback —
         # not even when a debug build leaves practice mode switched on by accident.
         from .transcription import Transcription
@@ -327,7 +345,7 @@ class Dogfood:
             lines += [
                 '### ' + item['id'] + ' — ' + _short(element.get('text') or item.get('route') or 'Kel', 90),
                 '',
-                '- Nick said: "' + ' '.join(str(item['transcript']).split()) + '"',
+                _said_line(item),
                 '- Captured: ' + _iso(item['created']) + ' (Kel ' + str(item.get('version') or 'unknown') + ')',
                 '- Route: ' + str(item.get('route') or 'unknown') +
                 ((' — ' + str(item.get('page_title'))) if item.get('page_title') else ''),

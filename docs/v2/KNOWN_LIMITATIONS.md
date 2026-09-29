@@ -331,6 +331,12 @@ limits are appended as phases land.
 - **The shared meta credential is Windows-only.** `shared_muse_key()` reads Windows Credential Manager,
   so on another platform transcription reports `unavailable` unless a key is supplied through the
   environment or Kel's own setting.
+- **Multi-utterance dictation (D-52 follow-up, 2026-09-29, FIX-0019).** The engine now keeps every
+  utterance of one recording: a partial that restarts closes the previous utterance instead of replacing
+  it, finals without turn ids all count, and the open utterance at Stop is kept. When the live stream
+  stops listening before Stop (closed early, failed, or fell behind), the engine transcribes the whole
+  recording it kept in one go. Verified with the recorded V2-05 frame sequence and a fake stream; the
+  real Muse voice path is Nick's to verify.
 - **Muse realtime endpointing returns the utterances it closed before Stop**, so a long phrase can arrive
   in parts ("…verification orange"; "…blue baseball 83" for "eighty-three"). That is ASR behaviour, not
   Kel copy.

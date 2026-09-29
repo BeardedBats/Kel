@@ -276,6 +276,37 @@ def pcm_duration_ms(pcm_bytes, rate=TARGET_RATE, width=2):
     return int(round(len(pcm_bytes) / float(rate * width) * 1000.0))
 
 
+def pcm_to_wav(pcm_bytes, rate=TARGET_RATE):
+    """Wrap mono PCM16 (the live stream's own frames) as a WAV file for one-shot transcription."""
+    out = io.BytesIO()
+    with wave.open(out, 'wb') as writer:
+        writer.setnchannels(1)
+        writer.setsampwidth(2)
+        writer.setframerate(rate)
+        writer.writeframes(bytes(pcm_bytes))
+    return out.getvalue()
+
+
+def _words(text):
+    return re.findall(r"[a-z0-9']+", str(text or '').lower())
+
+
+def _starts_new_utterance(previous, current):
+    """True when a CUMULATIVE partial restarted instead of growing (a new utterance began).
+
+    Muse's cumulative partials grow within one utterance ("Cal" -> "Calmuse verification"). When an
+    utterance closes without a final frame, the next partial starts again from its first word
+    ("Calmuse verification, green baseball 64" -> "Mobile"): measured in V2-05 and recorded under
+    D-52. A shorter partial whose first word is not where the previous one began is that restart.
+    """
+    before, now = _words(previous), _words(current)
+    if not before or not now:
+        return False
+    if len(now) >= len(before):
+        return False
+    return not (before[0].startswith(now[0]) or now[0].startswith(before[0]))
+
+
 # ---- providers ---------------------------------------------------------------------------------
 
 class TranscriptionProvider:
@@ -483,12 +514,16 @@ class _MuseStream:
         self.provider = provider
         self.session_id = 'live-' + uuid.uuid4().hex
         self._queue = queue.Queue()
-        self.finals = []
-        self.partial = ''
+        # Every utterance of the recording, in order: {'turn', 'text', 'final'}. The last one may still
+        # be open (a partial). Nothing is dropped when Muse closes an utterance without a final frame,
+        # when finals carry no turn id, or when Stop arrives mid-utterance (D-52 follow-up).
+        self.segments = []
         self.state = 'connecting'
         self.error = ''
         self.audio_ms = 0
-        self._turns = set()
+        # The audio Kel fed, kept so a stream that ended early can still be transcribed whole.
+        self.pcm = bytearray()
+        self._ended = False
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
         deadline = time.time() + 12
@@ -517,6 +552,7 @@ class _MuseStream:
             while True:
                 item = self._queue.get()
                 if item is None:
+                    self._ended = True
                     socket.send(json.dumps({'type': 'endStream'}))
                     break
                 socket.send_binary(item)
@@ -574,34 +610,66 @@ class _MuseStream:
                 pass
         if not text:
             return
-        if data.get('final'):
-            turn = data.get('turnId')
-            if turn not in self._turns:
-                self._turns.add(turn)
-                self.finals.append(text)
-                self.partial = ''
-        else:
-            self.partial = text
+        self.apply_transcript(text, bool(data.get('final')), data.get('turnId'))
+
+    def apply_transcript(self, text, final, turn=None):
+        """Fold one transcript frame into the recording's utterances (pure; pinned by tests)."""
+        segments = self.segments
+        if turn is not None:
+            for segment in segments:
+                if segment['turn'] == turn:
+                    if final or not segment['final']:
+                        segment['text'] = text
+                        segment['final'] = segment['final'] or final
+                    return
+        last = segments[-1] if segments else None
+        if last is not None and not last['final']:
+            new_turn = turn is not None and last['turn'] is not None and turn != last['turn']
+            if new_turn or (not final and _starts_new_utterance(last['text'], text)):
+                last['final'] = True          # closed without a final frame: keep its words
+            else:
+                last['text'] = text
+                last['final'] = final
+                if turn is not None:
+                    last['turn'] = turn
+                return
+        if final and turn is None and last is not None and last['final'] and last['text'] == text:
+            return                            # the same final repeated without a turn id
+        segments.append({'turn': turn, 'text': text, 'final': final})
 
     # -- provider-stream face ---------------------------------------------------------------------
 
     def feed(self, pcm_bytes):
-        self._queue.put(bytes(pcm_bytes))
+        data = bytes(pcm_bytes)
+        if len(self.pcm) < MAX_UPLOAD_BYTES:
+            self.pcm.extend(data)
+        self._queue.put(data)
 
     def _full(self):
-        if self.finals:
-            return ' '.join(self.finals).strip()
-        return self.partial.strip()
+        return ' '.join(segment['text'].strip() for segment in self.segments
+                        if segment['text'].strip()).strip()
 
     def status(self):
         return {'text': self._full(), 'final': False, 'state': self.state, 'error': self.error}
+
+    def _complete(self):
+        """True when Muse heard the whole recording: it closed only after Kel's endStream."""
+        if self.state == 'failed' or self.state in ('connecting', 'live'):
+            return False
+        if not self._ended:
+            return False                      # the socket closed before Stop: later audio was never heard
+        fed = pcm_duration_ms(self.pcm)
+        if self.audio_ms and fed and self.audio_ms + 1500 < fed:
+            return False                      # Muse reported processing well short of what Kel fed
+        return True
 
     def finish(self):
         self._queue.put(None)
         deadline = time.time() + 25
         while self.state in ('connecting', 'live') and time.time() < deadline:
             time.sleep(0.05)
-        return {'text': self._full(), 'final': True, 'state': self.state, 'error': self.error}
+        return {'text': self._full(), 'final': True, 'state': self.state, 'error': self.error,
+                'complete': self._complete()}
 
     def close(self):
         """Release an abandoned stream without blocking (audit TR-01).
@@ -1026,12 +1094,32 @@ class Transcription:
 
     def stream_finish(self, session_id, conversation=None):
         entry = self._stream(session_id, conversation)
-        result = entry['handle'].finish()
-        duration = getattr(entry['handle'], 'audio_ms', 0) or 0
+        handle = entry['handle']
+        result = handle.finish()
+        duration = getattr(handle, 'audio_ms', 0) or 0
         self._streams.pop(session_id, None)
         try:
-            entry['handle'].close()  # idempotent: a failed/connecting stream may still hold a socket
+            handle.close()  # idempotent: a failed/connecting stream may still hold a socket
         except Exception:
             pass
-        return {'text': (result.get('text') or '').strip(), 'duration_ms': duration,
-                'mode': entry['provider'], 'error': result.get('error') or ''}
+        text = (result.get('text') or '').strip()
+        error = result.get('error') or ''
+        complete = result.get('complete', True) is not False
+        recovered = False
+        pcm = bytes(getattr(handle, 'pcm', b'') or b'')
+        if not complete and pcm_duration_ms(pcm) > 400:
+            # The live stream did not hear the whole recording (it closed early, failed, or fell
+            # behind). Kel kept every frame it fed, so the whole recording is transcribed in one go
+            # and the longer of the two answers wins: a long note is never cut to its first line.
+            try:
+                whole = self.provider().transcribe_file(pcm_to_wav(pcm), 'live-recording.wav',
+                                                        pcm_duration_ms(pcm))
+                whole_text = (whole.get('text') or '').strip()
+            except PolicyError as exc:
+                whole_text = ''
+                error = error or str(exc)
+            if len(whole_text) >= len(text) and whole_text:
+                text, recovered, complete = whole_text, True, True
+                duration = whole.get('duration_ms') or pcm_duration_ms(pcm)
+        return {'text': text, 'duration_ms': duration, 'mode': entry['provider'], 'error': error,
+                'complete': complete, 'recovered': recovered}

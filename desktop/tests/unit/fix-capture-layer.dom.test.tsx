@@ -36,7 +36,7 @@ const calls: Call[] = [];
 let captureResult: Record<string, unknown> | null = null;
 let streamText = 'the button jumps when I click it';
 /** What the engine answers at stop, and on a one-shot transcription: tests drive the failure paths. */
-let finishBehaviour: 'text' | 'empty' | 'throw' = 'text';
+let finishBehaviour: 'text' | 'empty' | 'throw' | 'partial' = 'text';
 let quickBehaviour: 'text' | 'empty' | 'throw' | 'empty-then-text' = 'text';
 /** The exact audio each one-shot transcription received, so a retry can be proven to reuse it. */
 const quickAudio: string[] = [];
@@ -62,6 +62,8 @@ const stubBridge = () => {
           return Promise.resolve({
             text: finishBehaviour === 'empty' ? '' : streamText,
             duration_ms: 2500,
+            // 'partial': the live stream stopped listening early and the engine could not recover it.
+            complete: finishBehaviour !== 'partial',
           });
         case 'quick_transcribe': {
           quickAudio.push(String(body?.audio ?? ''));
@@ -111,6 +113,7 @@ beforeEach(() => {
   mic.cancel.mockClear();
   mic.stop.mockClear();
   mic.failWith = null;
+  window.localStorage.clear();
   stubBridge();
 });
 
@@ -143,7 +146,9 @@ describe('Fix Capture — when transcription cannot produce the words', () => {
     expect(note.textContent).toContain("Couldn't transcribe this recording.");
     const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
     expect(transcript.value).toBe('');
-    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(true);
+    // Nothing is ever lost: without words the screenshot and the target can still be saved.
+    expect(note.textContent).toContain('Save still keeps the screenshot and the spot you clicked.');
+    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(false);
     expect(screen.getByTestId('fix-capture-retry')).toBeTruthy();
     expect(mic.stop).toHaveBeenCalledTimes(1);
     expect(quickAudio).toEqual(['QUJD']);
@@ -165,7 +170,7 @@ describe('Fix Capture — when transcription cannot produce the words', () => {
     expect(note.textContent).toContain("Couldn't transcribe this recording.");
     const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
     expect(transcript.value).toBe('');
-    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByTestId('fix-capture-save') as HTMLButtonElement).disabled).toBe(false);
     fireEvent.click(screen.getByTestId('fix-capture-retry'));
     await waitFor(() => expect(transcript.value).toBe('the button jumps when I click it'));
   });
@@ -330,9 +335,9 @@ describe('Fix Capture — the capture itself', () => {
     expect(findCall('save')?.body.transcript).toBe('typed: the toast overlaps the title');
   });
 
-  it('a click outside cancels a review: nothing is saved, nothing is left behind', async () => {
+  it('a stray click never throws a fix away: it stops a recording and leaves a review alone', async () => {
     captureResult = {
-      screenshot: 'dogfood/tmp/cancel-me.png',
+      screenshot: 'dogfood/tmp/keep-me.png',
       image: { width: 1280, height: 800 },
       content: { width: 1280, height: 800 },
       display: { scale: 1 },
@@ -346,13 +351,93 @@ describe('Fix Capture — the capture itself', () => {
       expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('recording')
     );
     fireEvent.mouseDown(document.body);
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('review')
+    );
+    expect(mic.cancel).not.toHaveBeenCalled();
+    expect(mic.stop).toHaveBeenCalledTimes(1);
+    fireEvent.mouseDown(document.body);
+    expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('review');
+    expect(findCall('discard')).toBeUndefined();
+    // Esc is the one way to throw it away, and then the screenshot goes back to the engine.
+    fireEvent.keyDown(window, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByTestId('fix-capture-panel')).toBeNull());
+    await waitFor(() => expect(findCall('discard')?.body.screenshot).toBe('dogfood/tmp/keep-me.png'));
+    expect(window.localStorage.getItem('kel.fixCapture.draft.v1')).toBeNull();
     expect(findCall('save')).toBeUndefined();
-    expect(mic.cancel).toHaveBeenCalled();
-    // Nothing was transcribed from the cancelled recording, so nothing of it can come back.
-    expect(findCall('quick_transcribe')).toBeUndefined();
-    // The in-flight screenshot goes back to the engine, which deletes it.
-    await waitFor(() => expect(findCall('discard')).toBeTruthy());
-    expect(findCall('discard')?.body.screenshot).toBe('dogfood/tmp/cancel-me.png');
+  });
+});
+
+describe('Fix Capture — nothing is ever lost (FIX-0019)', () => {
+  const shot = {
+    screenshot: 'dogfood/tmp/moment.png',
+    image: { width: 1280, height: 800 },
+    content: { width: 1280, height: 800 },
+    display: { scale: 1 },
+    captured_at: 1,
+  };
+  const toReview = async () => {
+    hotkey();
+    await waitFor(() => expect(screen.getByTestId('fix-capture-overlay')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('app-target'));
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('recording')
+    );
+    hotkey();
+    await waitFor(() =>
+      expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('review')
+    );
+  };
+
+  it('saves the screenshot and target when no words came through, and says so', async () => {
+    captureResult = shot;
+    finishBehaviour = 'empty';
+    quickBehaviour = 'empty';
+    renderLayer();
+    await toReview();
+    fireEvent.click(screen.getByTestId('fix-capture-save'));
+    await waitFor(() => expect(findCall('save')).toBeTruthy());
+    const payload = findCall('save')?.body ?? {};
+    expect(payload.transcript).toBe('');
+    expect(payload.screenshot).toBe('dogfood/tmp/moment.png');
+    expect(payload.element).toMatchObject({ tag: 'button' });
+    expect(payload.diagnostics).toEqual({ voice: 'none' });
+    await waitFor(() => expect(screen.getByText('Saved as FIX-0001.')).toBeTruthy());
+    expect(window.localStorage.getItem('kel.fixCapture.draft.v1')).toBeNull();
+  });
+
+  it('keeps a cut-off note, says only part came through, and marks it partial', async () => {
+    captureResult = shot;
+    finishBehaviour = 'partial';
+    streamText = 'one line is being saved';
+    renderLayer();
+    await toReview();
+    const transcript = (await screen.findByTestId('fix-capture-transcript')) as HTMLTextAreaElement;
+    expect(transcript.value).toBe('one line is being saved');
+    expect(screen.getByTestId('fix-capture-note').textContent).toContain('Only part of what you said came through.');
+    fireEvent.click(screen.getByTestId('fix-capture-save'));
+    await waitFor(() => expect(findCall('save')).toBeTruthy());
+    expect(findCall('save')?.body.diagnostics).toEqual({ voice: 'partial' });
+  });
+
+  it('keeps the draft through a remount and saves it on the next start, once', async () => {
+    captureResult = shot;
+    const first = renderLayer();
+    await toReview();
+    fireEvent.change(screen.getByTestId('fix-capture-transcript'), { target: { value: 'the send button hides' } });
+    first.unmount();
+    // The capture's screenshot is kept for the recovery, not handed back for deletion.
+    expect(findCall('discard')).toBeUndefined();
+    expect(JSON.parse(window.localStorage.getItem('kel.fixCapture.draft.v1') ?? '{}').transcript).toBe(
+      'the send button hides'
+    );
+    renderLayer();
+    await waitFor(() => expect(findCall('save')).toBeTruthy());
+    const payload = findCall('save')?.body ?? {};
+    expect(payload.transcript).toBe('the send button hides');
+    expect(payload.screenshot).toBe('dogfood/tmp/moment.png');
+    expect(payload.diagnostics).toMatchObject({ recovered: true });
+    await waitFor(() => expect(window.localStorage.getItem('kel.fixCapture.draft.v1')).toBeNull());
+    expect(calls.filter((entry) => entry.body?.action === 'save').length).toBe(1);
   });
 });

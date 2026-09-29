@@ -19,6 +19,8 @@ export type FixCapturePhase =
   | 'saving'
   | 'saved';
 
+export type FixCaptureVoice = 'none' | 'partial' | null;
+
 export interface FixCaptureScreenshot {
   screenshot: string;
   image: { width: number; height: number };
@@ -40,6 +42,11 @@ export interface FixCaptureState {
   note: string | null;
   /** True while the recording is still held so transcription can be retried (never re-recorded). */
   retryable: boolean;
+  /**
+   * How much of the voice note came through: 'none' (no words), 'partial' (only some), or null (all of
+   * it, or typed). Saved with the fix so nobody mistakes a cut-off note for the whole finding.
+   */
+  voice: FixCaptureVoice;
   savedId: string | null;
   route: string | null;
   pageTitle: string | null;
@@ -55,6 +62,7 @@ export const initialFixCaptureState: FixCaptureState = {
   seconds: 0,
   note: null,
   retryable: false,
+  voice: null,
   savedId: null,
   route: null,
   pageTitle: null,
@@ -70,7 +78,7 @@ export type FixCaptureEvent =
   | { type: 'tick' }
   | { type: 'live'; text: string }
   | { type: 'stop' }
-  | { type: 'stopped'; text: string; note?: string; retryable?: boolean }
+  | { type: 'stopped'; text: string; note?: string; retryable?: boolean; voice?: FixCaptureVoice }
   /** A retry produced real words: fill the review and drop the failure state. */
   | { type: 'transcribed'; text: string }
   | { type: 'note'; note: string | null }
@@ -110,7 +118,7 @@ export function fixCaptureReducer(state: FixCaptureState, event: FixCaptureEvent
     case 'mic-failed':
       // No microphone: the words can still be typed, so the capture continues instead of dying.
       if (state.phase !== 'preparing' && state.phase !== 'recording') return state;
-      return { ...state, phase: 'review', note: event.note, seconds: 0, live: '', retryable: false };
+      return { ...state, phase: 'review', note: event.note, seconds: 0, live: '', retryable: false, voice: 'none' };
     case 'tick':
       if (state.phase !== 'recording') return state;
       return { ...state, seconds: state.seconds + 1 };
@@ -129,21 +137,23 @@ export function fixCaptureReducer(state: FixCaptureState, event: FixCaptureEvent
         live: '',
         note: event.note ?? null,
         retryable: event.retryable ?? false,
+        voice: event.voice ?? null,
       };
     case 'transcribed':
       if (state.phase !== 'review') return state;
-      return { ...state, draft: event.text, note: null, retryable: false };
+      return { ...state, draft: event.text, note: null, retryable: false, voice: null };
     case 'note':
       if (state.phase !== 'review' && state.phase !== 'stopping') return state;
       return { ...state, note: event.note };
     case 'edit':
       if (state.phase !== 'review') return state;
-      return { ...state, draft: event.text };
+      // Words Nick types complete the note himself; only an untouched cut-off note stays marked.
+      return { ...state, draft: event.text, voice: event.text.trim() && state.voice === 'partial' ? null : state.voice };
     case 'again':
       // Record Again keeps who/what/where, drops the words AND the failed recording: the previous
       // attempt is neither saved nor kept around.
       if (state.phase !== 'review' && state.phase !== 'stopping') return state;
-      return { ...state, phase: 'recording', draft: '', live: '', seconds: 0, note: null, retryable: false };
+      return { ...state, phase: 'recording', draft: '', live: '', seconds: 0, note: null, retryable: false, voice: null };
     case 'save':
       if (state.phase !== 'review') return state;
       return { ...state, phase: 'saving', note: null };

@@ -267,13 +267,139 @@ class StreamLifecycleTests(TranscriptionBase):
         stream = _MuseStream.__new__(_MuseStream)
         stream._queue = queue.Queue()
         stream.state = 'live'
-        stream.finals = []
-        stream.partial = ''
+        stream.segments = []
         stream.error = ''
         stream.close()
         stream.close()
         self.assertEqual(stream.state, 'closed')
         self.assertIsNone(stream._queue.get_nowait())
+
+
+def _bare_muse_stream():
+    """A _MuseStream with no socket: only the frame-folding and finish bookkeeping."""
+    stream = _MuseStream.__new__(_MuseStream)
+    stream._queue = queue.Queue()
+    stream.segments = []
+    stream.state = 'live'
+    stream.error = ''
+    stream.audio_ms = 0
+    stream.pcm = bytearray()
+    stream._ended = False
+    return stream
+
+
+class MultiUtteranceTests(unittest.TestCase):
+    """FIX-0019 / D-52 follow-up: every utterance of one recording survives until Stop."""
+
+    def test_a_partial_that_restarts_keeps_the_utterance_muse_never_finalised(self):
+        # The measured V2-05 sequence: the first utterance was never marked final.
+        stream = _bare_muse_stream()
+        for text in ('Calmuse', 'Calmuse verification', 'Calmuse verification, green baseball 64',
+                     'Mobile', 'Mobile Calmuse'):
+            stream.apply_transcript(text, False)
+        self.assertEqual(stream._full(), 'Calmuse verification, green baseball 64 Mobile Calmuse')
+
+    def test_finals_without_turn_ids_all_count(self):
+        stream = _bare_muse_stream()
+        stream.apply_transcript('The caret is tiny.', True)
+        stream.apply_transcript('The placeholder stays', False)
+        stream.apply_transcript('The placeholder stays after I click.', True)
+        stream.apply_transcript('Only one line saves.', True)
+        self.assertEqual(stream._full(),
+                         'The caret is tiny. The placeholder stays after I click. Only one line saves.')
+
+    def test_turn_ids_order_the_utterances_and_the_open_one_is_kept_at_stop(self):
+        stream = _bare_muse_stream()
+        stream.apply_transcript('first', False, 't1')
+        stream.apply_transcript('first thing', True, 't1')
+        stream.apply_transcript('first thing', False, 't1')      # a late partial never rewinds a final
+        stream.apply_transcript('first thing', True, 't1')       # a repeated final is not doubled
+        stream.apply_transcript('second', False, 't2')
+        stream.apply_transcript('second thought', False, 't2')
+        stream.apply_transcript('third words still', False, 't3')  # t2 closed without a final
+        self.assertEqual(stream._full(), 'first thing second thought third words still')
+
+    def test_a_growing_partial_is_one_utterance(self):
+        stream = _bare_muse_stream()
+        for text in ('what', "what's up", "what's up is still there"):
+            stream.apply_transcript(text, False)
+        self.assertEqual(stream._full(), "what's up is still there")
+
+    def test_a_stream_that_closed_before_stop_is_not_complete(self):
+        stream = _bare_muse_stream()
+        stream.state = 'closed'
+        self.assertFalse(stream._complete())
+        stream._ended = True
+        self.assertTrue(stream._complete())
+        stream.pcm.extend(b'\x00\x00' * 24000 * 5)             # 5 s fed ...
+        stream.audio_ms = 1000                                   # ... 1 s heard
+        self.assertFalse(stream._complete())
+
+
+class _EarlyClosedStream:
+    """A live stream that heard only its first utterance, holding every frame Kel fed it."""
+
+    def __init__(self, seconds=6.0, text='one line is being saved', complete=False):
+        self.pcm = bytearray(b'\x00\x00' * int(24000 * seconds))
+        self.audio_ms = 1500
+        self.text = text
+        self.complete = complete
+
+    def finish(self):
+        return {'text': self.text, 'final': True, 'state': 'closed', 'error': '', 'complete': self.complete}
+
+    def close(self):
+        return None
+
+
+class _WholeFileProvider:
+    name = 'muse'
+
+    def __init__(self, text='', error=None):
+        self.text, self.error, self.calls = text, error, []
+
+    def transcribe_file(self, audio, filename, duration_ms=None):
+        self.calls.append((len(audio), filename, duration_ms))
+        if self.error:
+            raise PolicyError(self.error)
+        return {'text': self.text, 'turns': []}
+
+
+class StreamRecoveryTests(TranscriptionBase):
+    """A live stream that stopped listening early is transcribed whole from the audio Kel kept."""
+
+    def _finish(self, handle, provider):
+        session_id = 'ts-early-%d' % id(handle)
+        self.t._streams[session_id] = {'handle': handle, 'provider': 'muse', 'started': time.time(),
+                                       'conversation': ''}
+        self.addCleanup(self.t._streams.pop, session_id, None)
+        self.t.provider = lambda: provider
+        return self.t.stream_finish(session_id)
+
+    def test_an_early_closed_stream_is_transcribed_whole(self):
+        provider = _WholeFileProvider('one line is being saved after recording. And the second '
+                                      'finding came after it.')
+        result = self._finish(_EarlyClosedStream(), provider)
+        self.assertEqual(len(provider.calls), 1)
+        self.assertEqual(provider.calls[0][2], 6000)
+        self.assertIn('second finding', result['text'])
+        self.assertTrue(result['recovered'])
+        self.assertTrue(result['complete'])
+
+    def test_when_the_whole_file_fails_the_live_words_are_kept_and_marked_partial(self):
+        provider = _WholeFileProvider(error='Muse could not connect. Check your network, then try again.')
+        result = self._finish(_EarlyClosedStream(), provider)
+        self.assertEqual(result['text'], 'one line is being saved')
+        self.assertFalse(result['complete'])
+        self.assertFalse(result['recovered'])
+        self.assertIn('could not connect', result['error'])
+
+    def test_a_complete_stream_is_not_transcribed_twice(self):
+        provider = _WholeFileProvider('should not be used')
+        result = self._finish(_EarlyClosedStream(complete=True, text='all of it'), provider)
+        self.assertEqual(provider.calls, [])
+        self.assertEqual(result['text'], 'all of it')
+        self.assertTrue(result['complete'])
 
 
 class ProviderModeTests(TranscriptionBase):
