@@ -976,3 +976,13 @@ recipe" is no longer limited to work that passed its checks. Supersedes D-73.5.
 
 Also confirmed by Nick 2026-09-29: all other adopted defaults in D-72..D-77 stand. No Anthropic API key
 will be added.
+
+## D-84 — Kel owns the tests; Nick never touches verification
+
+**Decided by Nick 2026-09-29** (answers the D-71 limit). Nick never names, edits or approves tests. When a
+requested behaviour change contradicts an existing test, the Builder may change that test — and only such
+tests. Every changed or removed existing test must be approved by the independent Verifier (different
+model family) as necessary for, and faithful to, the request; the Oracle and Sentinel also see test
+changes on changes they review. A test change that isn't justified by the request fails the step (the
+D-49/D-71 protection against weakening tests stays). The result tells Nick in one plain line which tests
+Kel changed and why. Supersedes D-71's "Nick updates the test himself first".
