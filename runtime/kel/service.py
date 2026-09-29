@@ -226,9 +226,6 @@ class Service:
                 except Exception:pass  # A missing observation is not a zero quota or a free price.
                 self.stop.wait(60)
         self.telemetry=threading.Thread(target=telemetry,daemon=True);self.telemetry.start()
-        # D-81: Memory\Kel, the agents' read-only mirror of Kel's settings, chats and notes (debounced).
-        from . import memory_mirror
-        self.mirror=memory_mirror.Keeper(self.store.root,self.stop).start() if memory_mirror.enabled() else None
 
     def shutdown(self):
         """In-process shutdown: stop supervision, close the engine, join workers."""
@@ -242,8 +239,6 @@ class Service:
         # joining it releases its stderr handle before the caller cleans the data root up.
         if self.telemetry.is_alive():
             self.telemetry.join(timeout=30)
-        if getattr(self,'mirror',None) and self.mirror.thread.is_alive():
-            self.mirror.thread.join(timeout=10)
 
     def _tick(self):
         # CH-10: 5 passes a second while something moves; one every IDLE_TICK seconds when nothing
@@ -771,12 +766,10 @@ class Service:
                 if decision['action']=='amend_background_work':
                     return self._amend(sid,cid,text,packet,kind,greenfield_flag,decision)
                 if decision['action']=='start_background_work':
-                    # FN-01 / D-55 / D-81: a request that asks to touch a place outside Kel's Memory folder
-                    # (Kel's data, app, a credential folder, Documents...) is answered plainly before
-                    # anything starts — never promised, then failed.
+                    # FN-01 / D-55: a request that asks to touch Kel's own data or app, or a credential
+                    # folder, is answered plainly before anything starts — never promised, then failed.
                     from .runtime_guard import request_refusal
-                    refusal=request_refusal(text+'\n'+str(decision.get('request') or ''),self.store.root,
-                                            (packet.get('project') or {}).get('root'))
+                    refusal=request_refusal(text+'\n'+str(decision.get('request') or ''),self.store.root)
                     if refusal:
                         self._say(sid,cid,refusal,choice)
                         self._record_refusal(sid,cid,refusal)  # FN-05: one Activity line
@@ -1021,7 +1014,7 @@ class Service:
                 ensure_folder(self.store,root)  # D-62: General's default folder is made when work needs it
             if greenfield:
                 # Greenfield build: the user asked Kel to CREATE an app. Kel owns the
-                # workspace: a fresh git repo under Memory\Projects (D-81) with a
+                # workspace: a fresh git repo under Documents/Kel Projects with a
                 # deterministic smoke-test command the worker must make pass.
                 # VIS-16: a short human name (the work's own title when it has one) and a tidy folder.
                 from .projects import new_project_folder,readable_project_name
@@ -1031,7 +1024,7 @@ class Service:
                 name=readable_project_name(text,ack['title'] if ack else None,taken)
                 root=new_project_folder(name)
                 # V1.5: creating project files is an effect; it crosses the boundary under the
-                # user-project-create policy (user actor, confined to Memory\Projects).
+                # user-project-create policy (user actor, confined to the Kel Projects root).
                 from .authorize import authorize
                 decision=authorize(self.store,{'actor':'user','action_kind':'write','target':str(root),
                     'metadata':{'operation':'create-project','what':'create a new project folder',
@@ -2080,21 +2073,8 @@ class Service:
             from .autonomy import Autonomy
             if data.get('action') in ('mode','set_mode'):
                 # D-64: Full access (default) or Ask first; only the person's own request changes it.
-                from . import authority, memory_folder
-                answer=authority.apply(self.store,dict(data,actor='user'))
-                # D-81: where the AI tools work, and whether Windows already blocks Codex's reads outside it.
-                if isinstance(answer,dict):answer=dict(answer,memory=memory_folder.status(self.store.root))
-                return answer
-            if data.get('action')=='codex_sandbox_setup':
-                # D-81: the person's one Windows admin approval for Codex's stronger sandbox. It waits for
-                # Windows' prompt, so it runs in the background; `mode` reports how it went.
-                from . import memory_folder
-                state=memory_folder.codex_state(self.store.root)
-                if state.get('setup')!='running' or time.time()-float(state.get('at') or 0)>memory_folder.SETUP_TIMEOUT+60:
-                    from .runtime_guard import network_allowed
-                    threading.Thread(target=memory_folder.codex_sandbox_setup,
-                                     args=(self.store.root,network_allowed(self.store.root)),daemon=True).start()
-                return {'started':True,'memory':dict(memory_folder.status(self.store.root),codex_setup='running')}
+                from . import authority
+                return authority.apply(self.store,dict(data,actor='user'))
             # Lease issuance is Kel's decision; the shell can inspect, resolve, and revoke only.
             if data.get('action') not in ('leases','requests','guardrails','decisions','check','revoke','resolve','emergency_stop'):
                 raise PolicyError("Lease issuance is Kel's decision; this action is not available through the shell")

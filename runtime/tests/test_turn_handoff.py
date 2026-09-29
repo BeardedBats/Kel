@@ -449,10 +449,8 @@ class HandoffServiceTests(unittest.TestCase):
         folder = tempfile.TemporaryDirectory()
         self.addCleanup(folder.cleanup)
         base = Path(folder.name)
-        # D-81: a folder in the Memory folder (one outside it and outside every project is refused up front).
-        from kel.memory_folder import memory_root
-        outside = memory_root(self.service.store.root) / ('outside-%s' % base.name)
-        outside.mkdir(parents=True)
+        outside = base / 'outside'
+        outside.mkdir()
         sid = self.service.submit({'text': 'Create a file named hello.txt containing hi in ' + str(outside),
                                    'conversation': self.cid})
         self.assertEqual(self.wait(sid), 'DISPATCHED')

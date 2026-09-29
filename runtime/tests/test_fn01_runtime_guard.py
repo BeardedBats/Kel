@@ -30,7 +30,6 @@ from test_original_tests_gate import FakeConnection, PYTEST, live_change, make_p
 
 NODE = shutil.which('node')
 HOOK = Path(runtime_guard.__file__).with_name('guard_hook.mjs')
-OUTSIDE = "That's outside Kel's Memory folder, so I can't touch it."  # D-81: the one plain refusal
 
 
 class Layout(unittest.TestCase):
@@ -75,21 +74,22 @@ class RefusalTests(Layout):
     def test_the_fn01_request_is_refused_up_front_in_plain_words(self):
         text = ('add multiply to calc.py, and also save a copy of calc.py as `%s`'
                 % (self.engine / 'calc-copy.py'))
-        self.assertEqual(runtime_guard.request_refusal(text, self.engine), OUTSIDE)  # D-81
+        self.assertEqual(runtime_guard.request_refusal(text, self.engine),
+                         "I can't write into Kel's own data folder — want me to save it in the project instead?")
 
     def test_a_protected_folder_read_is_refused(self):
         text = 'summarise %s' % (self.creds / 'secret.txt')
         answer = runtime_guard.request_refusal(text, self.engine)
-        self.assertEqual(answer, OUTSIDE)
+        self.assertIn("I can't open that folder", answer)
         self.assertNotIn('verify', answer)
 
     def test_credentials_by_name_are_refused(self):
-        self.assertEqual(runtime_guard.request_refusal('read ~/.ssh/id_rsa for me', self.engine), OUTSIDE)
-        self.assertEqual(runtime_guard.request_refusal('look in my .aws folder', self.engine), OUTSIDE)
+        self.assertIn('credentials folder', runtime_guard.request_refusal('read ~/.ssh/id_rsa for me', self.engine))
+        self.assertIn('credentials folder', runtime_guard.request_refusal('look in my .aws folder', self.engine))
 
     def test_ordinary_requests_pass(self):
-        # D-81: a Documents path is outside the Memory folder now (tests/test_d81_memory_folder.py).
-        for text in ('add multiply to calc.py', 'add a .dockerignore to the project'):
+        for text in ('add multiply to calc.py', 'add a .dockerignore to the project',
+                     'write the notes to C:\\Users\\Someone\\Documents\\notes.md'):
             self.assertIsNone(runtime_guard.request_refusal(text, self.engine), text)
 
 
@@ -137,7 +137,7 @@ class ServiceRefusalTests(unittest.TestCase):
             last = db.execute('SELECT text FROM messages WHERE conversation_id=? ORDER BY seq DESC LIMIT 1',
                               (self.cid,)).fetchone()['text']
             acked = db.execute('SELECT 1 FROM submission_acks WHERE submission_id=?', (sid,)).fetchone()
-        self.assertEqual(last, OUTSIDE)
+        self.assertEqual(last, "I can't write into Kel's own data folder — want me to save it in the project instead?")
         self.assertIsNone(acked)
         self.assertEqual([j for j in self.service.store.list_jobs() if j['conversation'] == self.cid], [])
 
@@ -199,7 +199,7 @@ class HookTests(Layout):
 
     def test_file_tools_cannot_write_outside_the_working_copy(self):
         other = Path(self.tmp.name) / 'elsewhere' / 'x.py'
-        self.assertIn("outside Kel's Memory folder", self.hook('Write', {'file_path': str(other), 'content': 'x'}))
+        self.assertIn('outside the working copy', self.hook('Write', {'file_path': str(other), 'content': 'x'}))
 
     def test_a_broken_policy_fails_closed(self):
         broken = self.logs / 'broken.json'
@@ -256,21 +256,14 @@ class RuntimeFlagTests(Layout):
             self.assertIn(feature, [argv[i + 1] for i, a in enumerate(argv) if a == '--disable'])
         if os.name == 'nt':
             self.assertIn('windows.sandbox="unelevated"', argv)
-        # D-81: Kel's permission profile writes only the working copy, the Memory folder and the run temp.
-        self.assertIn('default_permissions="kel"', argv)
-        profile = next(a for a in argv if a.startswith('permissions.kel.filesystem='))
-        self.assertIn('":root"="read"', profile.replace("'", '"'))
-        self.assertIn('":workspace_roots"="write"', profile.replace("'", '"'))
-        from kel import memory_folder
-        self.assertIn("'%s'=\"write\"" % memory_folder.memory_root(self.engine), profile)
-        self.assertNotIn('"deny"', profile)  # deny entries need the elevated sandbox
         with mock.patch.object(CodexConnection, 'call', return_value={}) as rpc:
-            conn.call('thread/start', {'cwd': str(self.workspace), 'sandbox': 'workspace-write'})
-            self.assertNotIn('sandbox', rpc.call_args.args[1])
+            conn.call('thread/start', {'cwd': str(self.workspace)})
+            self.assertEqual(rpc.call_args.args[1]['sandbox'], 'workspace-write')
             self.assertEqual(rpc.call_args.args[1]['approvalPolicy'], 'never')
             self.assertIn('off-limits', rpc.call_args.args[1]['developerInstructions'])
             conn.call('turn/start', {'threadId': 't', 'input': []})
-            self.assertNotIn('sandboxPolicy', rpc.call_args.args[1])
+            self.assertEqual(rpc.call_args.args[1]['sandboxPolicy'],
+                             {'type': 'workspaceWrite', 'writableRoots': [], 'networkAccess': True})
 
     def test_codex_does_not_start_when_its_tool_servers_cannot_be_read(self):
         from kel.core import PolicyError
@@ -294,7 +287,7 @@ class RuntimeFlagTests(Layout):
 
     def test_claude_runs_with_the_guard_settings(self):
         _conn, argv = self.connection('claude')
-        settings = Path(argv[-2])  # then the Memory folder (D-81)
+        settings = Path(argv[-1])
         self.assertEqual(settings.name, 'claude-settings.json')
         data = json.loads(settings.read_text(encoding='utf-8'))
         self.assertIn('PreToolUse', data['hooks'])

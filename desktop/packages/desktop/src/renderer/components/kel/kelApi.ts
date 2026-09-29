@@ -1357,27 +1357,6 @@ export const kelAuthority = {
   set: (mode: KelAuthorityMode) => call<KelAuthorityState>('/api/autonomy', { action: 'set_mode', mode }),
 };
 
-/** D-81: the Memory folder — the only place the AI tools read and write — and how each is held to it. */
-export interface KelMemoryFolderState {
-  folder: string;
-  projects?: string;
-  mirror?: string;
-  claude?: string;
-  codex?: string;
-  codex_reads_blocked?: boolean;
-  codex_setup?: string | null;
-  codex_error?: string | null;
-  codex_setup_available?: boolean;
-}
-
-export const kelMemoryFolder = {
-  get: async (): Promise<KelMemoryFolderState | null> =>
-    ((await call<KelAuthorityState & { memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'mode' })).memory ??
-      null),
-  /** Codex's stronger Windows sandbox: Windows shows ONE admin prompt (for OpenAI's setup helper). */
-  setupCodexSandbox: () => call<{ started: boolean; memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'codex_sandbox_setup' }),
-};
-
 export interface KelDiagnosticsSnapshot {
   engine_version: string;
   counts: { jobs: number; runs: number };

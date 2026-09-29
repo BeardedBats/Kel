@@ -150,7 +150,8 @@ class ListTests(Base):
 class DetailTests(Base):
     def test_the_detail_names_every_staff_member_and_only_models_that_ran(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        # D-85: security brings the Verifier and Sentinel; the Oracle only for hard-to-undo work (deploy).
+        text = 'Fix the password check in app.txt and deploy it'
         job = self.staffed(compile_coding(text, project, ['python', '-c', 'pass']), text)
         claude = FakeCoder(self.store, reports='claude-opus-5-5')
         engine = self.engine({'claude-code': claude})
@@ -217,7 +218,7 @@ class DetailTests(Base):
 
     def test_an_oracle_blocker_shows_as_needs_you_with_its_finding(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        text = 'Fix the password check in app.txt and deploy it'
         job = self.staffed(compile_coding(text, project, ['python', '-c', 'pass']), text)
         reviews = {'codex': FakeModel('codex', challenges=[{'severity': 'blocker',
                                                             'summary': 'Any password is accepted.'}]),

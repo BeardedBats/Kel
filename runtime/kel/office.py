@@ -552,6 +552,19 @@ def detail(store, job_id):
               'independence': (checker or {}).get('independence'),
               'independence_label': INDEPENDENCE_WORDS.get((checker or {}).get('independence')),
               'findings': _findings_view(pod_rows)}
+    # D-84: which existing tests Kel changed, why, and who approved each (the Review Team's view too).
+    test_changes = []
+    if (job.get('contract') or {}).get('kind') == 'coding':
+        try:
+            from .coding import test_changes_line, test_changes_view
+            run_id = ((milestones.get('code') or {}).get('artifact') or {}).get('run_id')
+            test_changes = test_changes_view(store, run_id) if run_id else []
+        except Exception:
+            test_changes = []
+    review['test_changes'] = test_changes
+    # D-85: the review check was settled without an independent reviewer (small, reversible work).
+    skipped = next((c for c in checks if c.get('proportional')), None)
+    review['not_needed'] = (skipped.get('findings') or [None])[0] if skipped else None
     passes = {kind: _pass_view(store, job, job_calls, runs, kind, oracle_status, findings_for)
               for kind in PASS_VIEWS}
     files, application = None, None
@@ -594,7 +607,9 @@ def detail(store, job_id):
         out['usage'] = None
     out.update({'why': why, 'next': nxt, 'staff': staff_view, 'steps': steps, 'review': review,
                 'oracle': passes['oracle'], 'sentinel': passes['sentinel'], 'red_team': passes['red_team'],
-                'files_changed': files, 'application': application,
+                'files_changed': files, 'application': application, 'test_changes': test_changes,
+                'test_changes_line': test_changes_line([c for c in test_changes if c.get('ruling') == 'approved'])
+                if test_changes else None,
                 'verification': {'result': result_word, 'summary': summary},
                 'result': _short(published['text'], 600) if published else None,
                 'links': {'conversation_id': job.get('conversation'),

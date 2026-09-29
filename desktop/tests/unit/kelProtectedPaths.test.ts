@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { memoryRoot, protectedPaths } from '@process/services/kel/protectedPaths';
+import { protectedPaths } from '@process/services/kel/protectedPaths';
 
 /** FN-01: the main process hands the engine's runtime guard the app and credential folders. */
 describe('protectedPaths', () => {
@@ -34,21 +34,5 @@ describe('protectedPaths', () => {
     const value = protectedPaths({ ...windows, appDir: undefined });
     expect(value).not.toContain('Desktop\\Kel\\App');
     expect(value).toContain('C:\\Users\\Nick\\.ssh');
-  });
-});
-
-/** D-81: the engine is told where the Memory folder is: beside the installed App, unless already set. */
-describe('memoryRoot', () => {
-  it('is the Memory folder beside the installed App', () => {
-    expect(memoryRoot({ appDir: 'C:\\Users\\Nick\\Desktop\\Kel\\App', platform: 'win32' })).toBe(
-      'C:\\Users\\Nick\\Desktop\\Kel\\Memory'
-    );
-  });
-
-  it('keeps a value already set and passes nothing for an unpackaged build', () => {
-    expect(memoryRoot({ existing: 'D:\\Scratch\\Memory', appDir: 'C:\\Kel\\App', platform: 'win32' })).toBe(
-      'D:\\Scratch\\Memory'
-    );
-    expect(memoryRoot({ platform: 'win32' })).toBeUndefined();
   });
 });

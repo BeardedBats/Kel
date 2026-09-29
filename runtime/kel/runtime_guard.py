@@ -6,15 +6,14 @@ runtime could write straight into Kel's own Data folder (found live: "save a cop
 <Data>\\engine\\calc-copy.py" did exactly that). Full access means "no approval prompts", not "no
 boundaries" (handoff §21, §12, D-64). This module holds the three layers:
 
-1. **Prevent** — each runtime is started with its own real boundary (D-81: an allow-list, the working
-   copy and Kel's Memory folder; see docs/v2/design/MEMORY_FOLDER.md):
+1. **Prevent** — each runtime is started with its own real boundary:
    * Claude Code (2.1.283): `--settings` carrying a PreToolUse hook (`guard_hook.mjs`) plus
      `permissions.deny` rules. bypassPermissions "auto-approves every tool call (except explicit deny
-     rules)"; a PreToolUse hook gates every call in every mode. Tools may read and write only the
-     working copy, Memory and the run's temp folder, and read the system and tool folders.
-   * Codex (0.157.1): the permission profile `kel` (`codex_config`): write only the working copy,
-     Memory and the run's temp folder, at the OS level. Reads are confined by Windows only in Codex's
-     elevated sandbox (after the person's one-time admin approval), through `deny` entries.
+     rules)"; a PreToolUse hook gates every call in every mode. File tools may write only inside the
+     working copy; no tool may read or write a protected place.
+   * Codex (0.157.1): `sandbox_mode="workspace-write"` with the native Windows sandbox
+     (`windows.sandbox="unelevated"`, restricted token + ACLs, no UAC). Writes outside the working copy
+     (and temp) fail at the OS level; `sandbox_workspace_write.network_access` keeps the web.
 2. **Detect** — `Watch` snapshots metadata (names, sizes, mtimes; never contents) of the protected
    places before a run and compares after it. Anything new or changed there fails the step with a
    plain sentence, one Activity line, and the new entries are moved out (restored) where possible.
@@ -37,9 +36,6 @@ DATA_LABEL = "Kel's own data folder"
 APP_LABEL = "Kel's installed app folder"
 CREDENTIALS_LABEL = 'your credentials folder'
 PROTECTED_LABEL = 'a protected folder'
-NEIGHBOUR_LABEL = "one of Kel's own folders"
-OUTSIDE_LABEL = "a place outside Kel's Memory folder"
-MIRROR_LABEL = "Kel's read-only copy in the Memory folder"
 
 HOOK = Path(__file__).with_name('guard_hook.mjs')
 DENIALS = 'guard-denials.jsonl'
@@ -52,7 +48,7 @@ _ENGINE_BUSY = {'desktop-session.json', 'controller.lock', 'aion-history.json', 
 _ENGINE_DIRS = {'sessions', 'native-logs', 'repositories', 'transport-locks', 'broker-locks', 'broker-logs',
                 'logs', 'telemetry', 'artifacts', 'backups', 'application-backups', 'attachments',
                 'migration-backups', 'missions', 'workspaces', 'dogfood', 'transcription',
-                'aion-session-map', 'aion-workspaces', 'modules', 'recovery', 'memory-mirror'}
+                'aion-session-map', 'aion-workspaces', 'modules', 'recovery'}
 
 
 class _Root:
@@ -115,32 +111,22 @@ def place_of(path, engine_root=None, workspace=None):
 
 # ---- 1. prevent -----------------------------------------------------------------------------------
 
-def policy(engine_root, workspace, logs, temp=None, tools=()):
-    """The hook's policy for one run (D-81, an allow-list): the working copy, the Memory folder and the
-    run's own temp folder are readable and writable; Memory\\Kel (Kel's mirror) and a few named files
-    are readable; the system and tool folders the CLIs need are readable (`memory_folder.
-    system_readable_roots`, plus `tools`: the CLIs' own install folders); everything else is refused.
-    The protected places are listed so a refusal can say what the place is."""
-    from . import memory_folder
-    memory = memory_folder.memory_root(engine_root)
-    places = [{'path': str(root), 'label': label} for root, label, _kind in protected_places(engine_root)]
-    places += [{'path': str(root), 'label': NEIGHBOUR_LABEL} for root in memory_folder.neighbours(engine_root)
-               if not any(_norm(root) == _norm(p['path']) for p in places)]
+def policy(engine_root, workspace, logs):
+    """The hook's policy for one run: where file tools may write, what may be read, what is off-limits."""
+    temp = [p for p in {os.environ.get('TEMP'), os.environ.get('TMP')} if p]
     return {'workspace': str(_norm(workspace)),
-            'memory': str(_norm(memory)),
-            'mirror': str(_norm(memory / memory_folder.MIRROR)),
-            'writable': [str(_norm(temp))] if temp else [],
+            'writable': [str(_norm(p)) for p in temp if not place_of(p, engine_root)],
             # kel.conn (the Connections bridge) reads the engine's session file to reach Kel.
             'readable': [str(_norm(Path(engine_root) / 'desktop-session.json'))] if engine_root else [],
-            'system': [str(path) for path, _why in memory_folder.system_readable_roots(engine_root, tools)],
-            'protected': places,
+            'protected': [{'path': str(root), 'label': label}
+                          for root, label, _kind in protected_places(engine_root)],
             'log': str(Path(logs) / DENIALS)}
 
 
-def write_policy(engine_root, workspace, logs, temp=None, tools=()):
+def write_policy(engine_root, workspace, logs):
     Path(logs).mkdir(parents=True, exist_ok=True)
     target = Path(logs) / 'guard-policy.json'
-    target.write_text(json.dumps(policy(engine_root, workspace, logs, temp, tools), indent=1), encoding='utf-8')
+    target.write_text(json.dumps(policy(engine_root, workspace, logs), indent=1), encoding='utf-8')
     return target
 
 
@@ -153,20 +139,17 @@ def _rule_path(path):
 
 
 def claude_settings(policy_file, node, workspace):
-    """The `--settings` JSON for Kel's Claude Code host: the guard hook (the allow-list), and deny rules
-    for every off-limits place that does not hold the working copy (Kel's Data folder holds it by
-    design, so that one is left to the hook, which carves the working copy out), plus no edits in
-    Memory\\Kel. Deny rules cannot express "everything but Memory"; the hook does."""
+    """The `--settings` JSON for Kel's Claude Code host: the guard hook, and deny rules for every
+    protected place that does not hold the working copy (Kel's Data folder holds it by design, so
+    that one is left to the hook, which carves the working copy out)."""
     command = '"%s" "%s"' % (str(node).replace('\\', '/'), str(HOOK).replace('\\', '/'))
     deny = []
     data = json.loads(Path(policy_file).read_text(encoding='utf-8'))
     for item in data['protected']:
-        if _inside(workspace, item['path']) or (data.get('memory') and _inside(data['memory'], item['path'])):
+        if _inside(workspace, item['path']):
             continue
         rule = _rule_path(item['path'])
         deny += ['Read(%s/**)' % rule, 'Edit(%s/**)' % rule]
-    if data.get('mirror'):
-        deny.append('Edit(%s/**)' % _rule_path(data['mirror']))
     return {'permissions': {'deny': deny},
             'hooks': {'PreToolUse': [{'matcher': '*', 'hooks': [
                 {'type': 'command', 'command': command, 'timeout': 30}]}]}}
@@ -219,126 +202,24 @@ def codex_mcp_servers(codex, cwd):
     return names
 
 
-CODEX_PROFILE = 'kel'
-
-
-def _toml_str(text):
-    text = str(text)
-    if "'" not in text and '\n' not in text:
-        return "'%s'" % text  # a TOML literal string: backslashes stay as they are
-    return json.dumps(text)
-
-
-def codex_deny_paths(engine_root, workspace=None, temp=None):
-    """What Codex's elevated Windows sandbox is told it may NOT read (D-81).
-
-    Codex 0.157.1 cannot express "read only these folders": both Windows sandbox modes refuse a
-    permission profile without `:root` read (windows-sandbox-rs lib.rs / resolved_permissions.rs), and
-    only the elevated mode enforces `deny` entries (as deny ACEs for its CodexSandboxUsers group). So
-    the allow-list is approximated by denying, around the Memory folder and the run's own folders:
-    - Kel's own folders beside Memory (App, Kel source, Tools, ...) and the parts of Data that hold
-      no run folder (everything in Data but the engine; in the engine everything but `repositories`
-      and `sessions`, the working copies and run temp folders);
-    - the credential folders and KEL_PROTECTED_PATHS;
-    - the person's own folders in the home folder (Documents, Downloads, Pictures, Music, Videos,
-      OneDrive, Favorites, ...), the Desktop apart from the Kel folder, and the home's `.claude`,
-      `.ssh`-style dot folders.
-    Only existing paths are listed (Codex would create a missing one), and never a folder that holds
-    Memory, the working copy or the run's temp folder (a deny there would reach them).
-    Not denied (still readable by Codex even when elevated): Windows, Program Files, ProgramData,
-    AppData (tool installs live there) and other drives. See docs/v2/design/MEMORY_FOLDER.md."""
-    from . import memory_folder
-    memory = _norm(memory_folder.memory_root(engine_root))
-    keep = [memory] + [_norm(p) for p in (workspace, temp) if p]
-
-    def holds_kept(path):
-        p = _norm(path)
-        return any(k == p or k.is_relative_to(p) for k in keep)
-
-    out, seen = [], set()
-
-    def deny(path):
-        p = _norm(path)
-        key = str(p).lower()
-        if key in seen or not p.exists() or holds_kept(p):
-            return
-        seen.add(key)
-        out.append(p)
-
-    def deny_around(folder, depth=3):
-        """Deny every child of `folder` except the ones on the way to a kept folder (recursively)."""
-        try:
-            children = list(Path(folder).iterdir())
-        except OSError:
-            return
-        for child in children:
-            if holds_kept(child):
-                if depth > 1 and child.is_dir() and not any(_norm(child) == k for k in keep):
-                    deny_around(child, depth - 1)
-            else:
-                deny(child)
-
-    kel_root = memory.parent
-    if memory_folder.neighbours(engine_root):
-        deny_around(kel_root, depth=3)  # App, Kel, Tools; Data -> engine -> all but repositories/sessions
-    from .containment import _credential_roots, _protected_roots
-    for path in _credential_roots() + _protected_roots():
-        deny(path)
-    home = Path(os.environ.get('USERPROFILE') or Path.home())
-    for name in ('Documents', 'Downloads', 'Pictures', 'Music', 'Videos', 'Favorites', 'Contacts', 'Links',
-                 'Saved Games', 'Searches', '3D Objects', '.claude', '.claude.json', '.codex/auth.json', '.gnupg',
-                 '.config', '.git-credentials', '.npmrc', '.pypirc', '.netrc'):
-        deny(home / name)
-    try:
-        for child in home.iterdir():
-            if child.name.lower().startswith('onedrive'):
-                deny(child)
-    except OSError:
-        pass
-    desktop = home / 'Desktop'
-    if desktop.is_dir():
-        if holds_kept(desktop):
-            deny_around(desktop, depth=1)
-        else:
-            deny(desktop)
-    return out
-
-
-def codex_config(network=True, codex=None, cwd=None, engine_root=None, temp=None, elevated=False):
-    """Codex app-server overrides (D-81): a permission profile `kel` — read the machine (Codex 0.157.1
-    requires `:root` read in both Windows sandbox modes), write only the working copy (`:workspace_roots`),
-    the Memory folder and the run's temp folder — network per the person's setting, and nothing that
-    runs outside it (the outside-acting features off, every MCP server switched off by name).
-
-    `elevated` (after the one-time Windows admin approval, `codex_sandbox_setup`) runs the commands as
-    Codex's own sandbox users and adds `deny` entries (`codex_deny_paths`) so reads outside the Memory
-    folder are blocked by Windows too. Without it (the restricted-token sandbox, no admin) writes are
-    confined but reads are not; Kel's instructions and request check are the only read limit then.
-
-    Kel sends no per-thread `sandbox` and no per-turn `sandboxPolicy`: either replaces the profile
-    with the legacy policy (which also makes the whole machine temp folder writable)."""
-    from . import memory_folder
-    memory = memory_folder.memory_root(engine_root)
-    entries = {':root': 'read', ':workspace_roots': 'write', str(memory): 'write'}
-    if temp:
-        entries[str(temp)] = 'write'
-    if elevated:
-        for path in codex_deny_paths(engine_root, cwd, temp):
-            entries[str(path)] = 'deny'
-    table = '{%s}' % ', '.join('%s="%s"' % (_toml_str(k), v) for k, v in entries.items())
-    args = ['-c', 'sandbox_mode="workspace-write"',  # the fallback if the profile were ever ignored
-            '-c', 'default_permissions="%s"' % CODEX_PROFILE,
-            '-c', 'permissions.%s.filesystem=%s' % (CODEX_PROFILE, table),
-            '-c', 'permissions.%s.network.enabled=%s' % (CODEX_PROFILE, 'true' if network else 'false'),
+def codex_config(network=True, codex=None, cwd=None):
+    """Codex app-server overrides: the workspace-write sandbox on the native Windows sandbox (no UAC,
+    restricted token + ACLs), network per the person's setting, and nothing that runs outside it —
+    the outside-acting features off and every MCP server switched off by name."""
+    args = ['-c', 'sandbox_mode="workspace-write"',
             '-c', 'sandbox_workspace_write.network_access=%s' % ('true' if network else 'false')]
     if os.name == 'nt':
-        args += ['-c', 'windows.sandbox="%s"' % ('elevated' if elevated else 'unelevated')]
+        args += ['-c', 'windows.sandbox="unelevated"']
     for feature in CODEX_OUTSIDE_FEATURES:
         args += ['--disable', feature]
     if codex is not None:
         for name in codex_mcp_servers(codex, cwd or os.getcwd()):
             args += ['-c', 'mcp_servers.%s.enabled=false' % name]
     return args
+
+
+def codex_turn_policy(network=True):
+    return {'type': 'workspaceWrite', 'writableRoots': [], 'networkAccess': bool(network)}
 
 
 # ---- 2. detect ------------------------------------------------------------------------------------
@@ -483,37 +364,6 @@ def _attempt(item):
     return 'let the worker run a command that reached it'
 
 
-def _refusal_label(reason):
-    if 'Memory\\Kel' in reason:
-        return MIRROR_LABEL
-    return next((l for l in (DATA_LABEL, APP_LABEL, CREDENTIALS_LABEL, PROTECTED_LABEL, NEIGHBOUR_LABEL)
-                 if l in reason), OUTSIDE_LABEL)
-
-
-def _restore_mirror(store, job_id, run_id, result):
-    """D-81: Memory\\Kel is Kel's read-only mirror. Anything a run changed there is put back at once
-    (one Activity line, one sentence in the result); the step itself stands."""
-    from . import memory_mirror
-    try:
-        if not (Path(store.root) / memory_mirror.STATE_DIR / memory_mirror.MANIFEST).exists():
-            return
-        if not memory_mirror.tampered(store.root):
-            return
-        reverted = memory_mirror.sync(store.root)['reverted']
-    except Exception:
-        return  # the mirror keeper retries; a run's result never depends on it
-    if not reverted:
-        return
-    _event(store, job_id, 'approval.refused',
-           {'summary': 'keep the change the worker made to %s' % reverted[0], 'reason': MIRROR_LABEL,
-            'source': 'runtime-guard', 'run_id': run_id, 'changes': len(reverted), 'restored': len(reverted)})
-    if isinstance(result, dict) and isinstance(result.get('text'), str):
-        result['text'] += ("\n\nKel put back Memory\\Kel (%s): it is Kel's read-only copy, and agents never change "
-                           "Kel's settings." % reverted[0])
-    if isinstance(result, dict):
-        result['mirror_reverted'] = reverted[:10]
-
-
 def settle(store, job_id, run_id, watch, logs, result, actor='The worker'):
     """After a runtime turn: record what the guard refused, and fail the step on any protected write.
 
@@ -523,15 +373,16 @@ def settle(store, job_id, run_id, watch, logs, result, actor='The worker'):
     refused = denials(logs)
     for item in refused[:5]:
         reason = str(item.get('reason') or '')
-        label = _refusal_label(reason)
+        label = next((l for l in (DATA_LABEL, APP_LABEL, CREDENTIALS_LABEL, PROTECTED_LABEL) if l in reason),
+                     'a place outside the working copy')
         _event(store, job_id, 'approval.refused',
                {'summary': _attempt(item), 'reason': label, 'source': 'runtime-guard', 'run_id': run_id})
     if refused and isinstance(result, dict) and isinstance(result.get('text'), str):
-        places = sorted({_refusal_label(str(i.get('reason'))) for i in refused})
+        places = sorted({next((l for l in (DATA_LABEL, APP_LABEL, CREDENTIALS_LABEL, PROTECTED_LABEL)
+                               if l in str(i.get('reason'))), 'a place outside the working copy') for i in refused})
         result['text'] += ('\n\nKel stopped the worker from touching %s; that part of the request was not done.'
                            % ' or '.join(places))
         result['protected_refusals'] = len(refused)
-    _restore_mirror(store, job_id, run_id, result)
     if watch is None:
         return None
     changes = watch.changes()
@@ -564,9 +415,7 @@ def settle(store, job_id, run_id, watch, logs, result, actor='The worker'):
 # ---- 3. refuse clearly ----------------------------------------------------------------------------
 
 _QUOTED = re.compile(r'[`"“”\']([^`"“”\'\n]{3,400})[`"“”\']')
-# A path a request names: a drive path (not the "s://" of a URL), ~, %VAR%, $env:VAR, or Git Bash /c/...
-_BARE = re.compile(r'(?:(?<![A-Za-z0-9])[A-Za-z]:[\\/]|(?<![\w/.~-])~[\\/]|%[A-Za-z_]+%[\\/]?|\$(?:env:)?[A-Za-z_]+[\\/]'
-                   r'|(?<![\w/.:~-])/[a-zA-Z]/)[^\s`"\'<>|,;]*')
+_BARE = re.compile(r'(?:[A-Za-z]:[\\/]|~[\\/]|%[A-Za-z_]+%[\\/]?|\$(?:env:)?[A-Za-z_]+[\\/]|/[a-zA-Z]/)[^\s`"\'<>|,;]*')
 _WRITE = re.compile(r'\b(save|saving|write|writing|copy|copying|move|put|create|add|edit|change|modify|delete|'
                     r'remove|overwrite|store|place|drop|append|replace|install|patch|update)\b', re.I)
 _PHRASES = (
@@ -575,7 +424,6 @@ _PHRASES = (
     (re.compile(r"(?:~[\\/]|\b(?:my|your|the user'?s|home|user)\s+)\.(ssh|aws|gnupg|azure|kube|docker)(?=$|[\s\\/\"`'.,])",
                 re.I), CREDENTIALS_LABEL),
     (re.compile(r'\b(?:credentials?|ssh keys?)\s+(?:folder|directory)\b', re.I), CREDENTIALS_LABEL),
-    (re.compile(r"\bkel'?s\s+(own\s+)?settings\b", re.I), MIRROR_LABEL),
 )
 
 
@@ -594,86 +442,38 @@ def _expand(text):
     return t
 
 
-def _project_roots(engine_root):
-    """The folders of Kel's saved projects (existing projects stay where they are, D-81)."""
-    if not engine_root:
-        return []
-    try:
-        with contextlib.closing(sqlite3.connect('file:%s?mode=ro' % (Path(engine_root) / 'kel.sqlite3').as_posix(),
-                                                uri=True, timeout=2)) as db:
-            query = 'SELECT root FROM projects WHERE root IS NOT NULL AND root<>""'
-            if db.execute("SELECT 1 FROM sqlite_master WHERE name='project_meta'").fetchone():
-                # Only the person's live projects: never archived or plumbing ("system") ones.
-                query = ('SELECT p.root FROM projects p LEFT JOIN project_meta m ON m.project_id=p.id WHERE p.root IS NOT '
-                         "NULL AND p.root<>'' AND m.archived IS NULL AND COALESCE(m.kind,'user')<>'system'")
-            rows = db.execute(query).fetchall()
-    except sqlite3.Error:
-        return []
-    roots = []
-    for (root,) in rows:
-        # Never a project whose folder is Kel's own (old plumbing projects pointed into Data or temp).
-        if root and os.path.isabs(root) and not place_of(root, engine_root):
-            roots.append(root)
-    return roots
-
-
-def _where(path, engine_root=None, project_root=None, write=False):
-    """None when a worker may use `path` (D-81); else the label of the place it is in."""
-    from . import memory_folder
-    if memory_folder.in_mirror(path, engine_root):
-        return MIRROR_LABEL if write else None
-    if memory_folder.in_memory(path, engine_root):
-        return None
-    if project_root and _inside(path, project_root):
-        return None  # the project's own folder: the worker has its working copy
-    if any(_inside(path, root) for root in _project_roots(engine_root)):
-        return None  # another saved project: Kel routes the work there, on a working copy
-    hit = place_of(path, engine_root)
-    if hit:
-        return hit[0]
-    if not write and any(_inside(path, root) for root, _why in memory_folder.system_readable_roots(engine_root)):
-        return None
-    return OUTSIDE_LABEL
-
-
-def mentions(text, engine_root=None, project_root=None):
-    """Places outside Kel's Memory folder that a request names: [(label, path-or-None)]."""
+def mentions(text, engine_root=None):
+    """Protected places a request names: [(label, path-or-None)]."""
     found = []
-    write = bool(_WRITE.search(text or ''))
-    text = text or ''
-    # A bare path stops at a space; "C:\...\Kel Projects\calc" is also tried up to the line's end or
-    # the next punctuation (without ".." hops), and counts as fine when either form is.
-    candidates = [(m.group(1), None) for m in _QUOTED.finditer(text)]
-    candidates += [(m.group(0), re.match(r'[^\n`"\'<>|,;]*', text[m.start():]).group(0).rstrip(' .:)'))
-                   for m in _BARE.finditer(text)]
-    for raw, longer in candidates:
+    candidates = [m.group(1) for m in _QUOTED.finditer(text or '')] + [m.group(0) for m in _BARE.finditer(text or '')]
+    for raw in candidates:
         path = _expand(raw)
-        if not (os.path.isabs(path) or re.match(r'^[A-Za-z]:[\\/]', path)):
+        if not (os.path.isabs(path) or re.match(r'^[A-Za-z]:', path)):
             continue
-        label = _where(path, engine_root, project_root, write)
-        if label and longer and longer != raw and not re.search(r'(^|[\\/])\.\.([\\/]|$)', longer):
-            # Try each space-separated extension: "…\Kel" → "…\Kel Projects" → "…\Kel Projects\calc\calc.py".
-            pieces = longer[len(raw):].split(' ')
-            for n in range(1, len(pieces) + 1):
-                if not _where(_expand(raw + ' '.join(pieces[:n])), engine_root, project_root, write):
-                    label = None
-                    break
-        if label:
-            found.append((label, path))
+        hit = place_of(path, engine_root)
+        if hit:
+            found.append((hit[0], path))
     for pattern, label in _PHRASES:
-        if pattern.search(text or '') and (label != MIRROR_LABEL or write):
+        if pattern.search(text or ''):
             found.append((label, None))
     return found
 
 
-def request_refusal(text, engine_root=None, project_root=None):
-    """One plain sentence when a request asks to touch a place outside Kel's Memory folder (D-81), or
-    to change Kel's own mirror in it (D-55: said before any work starts, never promised and failed
-    later); None when it does not."""
-    from .memory_folder import MIRROR_REFUSAL, REFUSAL
-    found = mentions(text, engine_root, project_root)
+def request_refusal(text, engine_root=None):
+    """One plain sentence when a request asks to touch a protected place (D-55: said before any work
+    starts, never promised and failed later); None when it does not."""
+    found = mentions(text, engine_root)
     if not found:
         return None
-    if all(label == MIRROR_LABEL for label, _path in found):
-        return MIRROR_REFUSAL
-    return REFUSAL
+    label = found[0][0]
+    write = bool(_WRITE.search(text or ''))
+    if label == CREDENTIALS_LABEL:
+        return ("I can't %s your credentials folder — Kel keeps credentials out of its work. "
+                'Want me to do the rest without it?' % ('write into' if write else 'open'))
+    if label == PROTECTED_LABEL:
+        return ("I can't %s that folder — it's on Kel's protected list. Want me to %s?"
+                % ('write into' if write else 'open', 'save it in the project instead' if write
+                   else 'do the rest without it'))
+    if write:
+        return "I can't write into %s — want me to save it in the project instead?" % label
+    return "I can't open %s for work — want me to do the rest without it?" % label

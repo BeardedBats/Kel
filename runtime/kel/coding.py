@@ -129,6 +129,258 @@ def failing_tests(*outputs):
     return found[:5]
 
 
+def all_failing(*outputs):
+    """Every test id a runner named as failing (no limit)."""
+    found = []
+    for output in outputs:
+        for line in str(output or '').splitlines():
+            text = line.strip()
+            for prefix in ('FAILED ', 'ERROR ', 'FAIL: ', 'ERROR: '):
+                if text.startswith(prefix):
+                    ident = text[len(prefix):].split(' - ')[0].strip()
+                    if ident and ident not in found:
+                        found.append(ident)
+    return found
+
+
+# ---- D-84: Kel owns the tests ---------------------------------------------------------------------
+# The Builder may change an existing test only where the requested behaviour contradicts it, and says
+# so in a structured block. Kel finds every changed or removed existing test itself (per test, from the
+# code), and the original-tests run may fail only on those. Every other original test still has to
+# pass in its original form, and test setup files are still put back (never a way to skip tests).
+CHANGED_TESTS_KEY = 'command/exec#changed-tests'  # the changed-tests run's durable RPC identity
+TEST_RULES = (
+    'Existing tests: Kel runs the original versions of the existing test files and test settings against your '
+    'code, so add new tests freely (new test functions or files) but keep every existing test as it is, except a '
+    'test whose expectation the requested behaviour directly contradicts. You may change or remove such a test, '
+    'and only such a test; never change test settings (conftest.py, pytest.ini, pyproject.toml, setup.cfg, '
+    'package.json and similar) to skip or relax tests. For every existing test you change or remove, end your '
+    'report with this block (JSON, one entry per test):\n```kel-test-changes\n[{"test": "test_file.py::test_name", '
+    '"request_quote": "<the exact words of the request that contradict it>", "was": "<what the test expected '
+    'before>", "now": "<what it expects now, or empty if removed>"}]\n```\nKel checks each change against the '
+    'request; a change the request does not require fails the step.')
+JUSTIFY_FENCE = 'kel-test-changes'
+MODULE = '(module)'
+
+
+def _py_units(source):
+    """{unit id: normalised code} for one Python test file, or None when it does not parse.
+
+    Units: each test function (`test_x`), each test method (`TestX::test_y`), a class's other code
+    (`TestX`), and the module's own code (`(module)`: imports, helpers, fixtures, assignments).
+    Formatting and comments never count as a change (the code is compared as a syntax tree).
+    """
+    import ast
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError):
+        return None
+    units, module = {}, []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith('test'):
+            units[node.name] = ast.dump(node)
+        elif isinstance(node, ast.ClassDef) and (node.name.startswith('Test') or any(
+                isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name.startswith('test') for n in node.body)):
+            rest = []
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith('test'):
+                    units[node.name + '::' + item.name] = ast.dump(item)
+                else:
+                    rest.append(ast.dump(item))
+            units[node.name] = json.dumps([[ast.dump(d) for d in node.decorator_list],
+                                           [ast.dump(b) for b in node.bases], rest])
+        else:
+            module.append(node)
+    units[MODULE] = module
+    return units
+
+
+def _module_changed(before, after):
+    """True when a test file's own code changed in a way that can change what its tests check.
+
+    Removing or changing an existing statement counts; adding imports or new helper functions/classes
+    does not, unless the new definition shadows a name the file already had (an import or a helper) —
+    `def divide(...)` added to a test file would silently replace the code under test.
+    """
+    import ast
+
+    def bindings(nodes):
+        """Import bindings: bound name -> where it comes from."""
+        found = {}
+        for node in nodes:
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    found[alias.asname or alias.name.split('.')[0]] = (alias.name if alias.asname else
+                                                                       alias.name.split('.')[0], None)
+            elif isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    found[alias.asname or alias.name] = ('.' * node.level + (node.module or ''), alias.name)
+        return found
+    imports = (ast.Import, ast.ImportFrom)
+    old = [ast.dump(n) for n in before if not isinstance(n, imports)]
+    new = [ast.dump(n) for n in after if not isinstance(n, imports)]
+    if any(item not in new for item in old):
+        return True
+    # Imports: adding names or dropping them is fine (a test that needs a dropped name fails on its
+    # own); binding a name the file already had to something else is not (`from fake import add`).
+    was, now = bindings(before), bindings(after)
+    known = {n.name for n in before if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))}
+    if any(name in was and was[name] != source or name in known for name, source in now.items()):
+        return True
+    for node in after:
+        if isinstance(node, imports) or ast.dump(node) in old:
+            continue
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and \
+                node.name not in known and node.name not in was:
+            continue
+        return True
+    return False
+
+
+def test_edits(workspace, base, baseline, after, command):
+    """Every changed or removed existing test, per test where the language allows (D-84).
+
+    [{'test': id, 'file': path, 'change': 'changed'|'removed'}] — ids are pytest-style
+    (`test_calc.py::test_divide`, `tests/test_a.py::TestA::test_b`); a file's own code is
+    `path::(module)`; a non-Python test file is one entry, its path. New tests are not edits.
+    """
+    edits = []
+    for path, expected in sorted(protected_files(baseline, command).items()):
+        if suite_role(path, command) != 'test' or after.get(path) == expected:
+            continue
+        original = _baseline_bytes(workspace, base, path, expected)
+        current = (Path(workspace) / path).read_bytes() if path in after else None
+        old = _py_units(original.decode('utf-8', 'replace')) if path.endswith('.py') else None
+        new = _py_units(current.decode('utf-8', 'replace')) if (old is not None and current is not None) else None
+        if old is None or (current is not None and new is None):
+            edits.append({'test': path, 'file': path, 'change': 'removed' if current is None else 'changed'})
+            continue
+        new = new or {}
+        for unit in sorted(old):
+            if unit == MODULE:
+                if current is not None and _module_changed(old[MODULE], new.get(MODULE) or []):
+                    edits.append({'test': path + '::' + MODULE, 'file': path, 'change': 'changed'})
+                continue
+            if unit not in new:
+                edits.append({'test': path + '::' + unit, 'file': path, 'change': 'removed'})
+            elif new[unit] != old[unit]:
+                edits.append({'test': path + '::' + unit, 'file': path, 'change': 'changed'})
+    return edits
+
+
+def _failing_ref(ident):
+    """(file, [names]) for one failing test id (pytest or unittest form), or None."""
+    ident = ident.strip()
+    if '(' in ident and ident.endswith(')'):  # unittest: "test_b (pkg.test_a.TestA.test_b)"
+        method = ident.split('(')[0].strip()
+        dotted = ident[ident.index('(') + 1:-1].split('.')
+        if dotted and dotted[-1] == method:
+            dotted = dotted[:-1]
+        if len(dotted) < 2:
+            return None
+        return '/'.join(dotted[:-1]) + '.py', [dotted[-1], method]
+    parts = ident.replace('\\', '/').split('::')
+    names = [part.split('[')[0] for part in parts[1:]]
+    return parts[0], names
+
+
+def _covers(entry_id, ref):
+    """True when a changed/removed test (entry id) accounts for one failing test (ref)."""
+    file, names = ref
+    if entry_id in (file, file + '::' + MODULE):
+        return True
+    if not names:
+        # The whole file failed in its original form (it no longer imports: the request removed a name
+        # it used). Its unchanged tests are the same code in the new file, which the changed-tests run
+        # checks with the original setup; only its changed/removed tests need a reason.
+        return entry_id.startswith(file + '::')
+    for depth in range(1, len(names) + 1):
+        if entry_id == file + '::' + '::'.join(names[:depth]):
+            return True
+    return False
+
+
+def builder_justifications(text):
+    """The Builder's structured reasons for its test changes (the fenced `kel-test-changes` block)."""
+    import re
+    found = []
+    for block in re.findall(r'```\s*' + JUSTIFY_FENCE + r'\s*\n(.*?)```', str(text or ''), re.S):
+        try:
+            value = json.loads(block)
+        except (TypeError, ValueError):
+            continue
+        for item in value if isinstance(value, list) else [value]:
+            if isinstance(item, dict) and str(item.get('test') or '').strip():
+                found.append({k: ' '.join(str(item.get(k) or '').split())[:400]
+                              for k in ('test', 'request_quote', 'was', 'now')})
+    return found
+
+
+def _match(entry, reasons):
+    test = entry['test']
+    short = test.split('::')[-1]
+    for reason in reasons:
+        given = reason['test'].replace('\\', '/').strip()
+        if given == test or test.endswith('::' + given) or given.endswith('::' + short) or given == short:
+            return reason
+    return None
+
+
+def _norm(text):
+    import re
+    return re.sub(r'[^a-z0-9]+', ' ', str(text or '').lower()).strip()
+
+
+def quote_in_request(request, quote):
+    """The lighter guard (D-85, no Verifier): the reason quotes the words of the request it relies on."""
+    quote = _norm(quote)
+    return len(quote) >= 3 and quote in _norm(request)
+
+
+def _justified(entry, request, guard):
+    reason = entry.get('justification') or {}
+    if not reason.get('request_quote') or not reason.get('was'):
+        return False
+    if entry['change'] == 'changed' and not reason.get('now'):
+        return False
+    if guard == 'request' and not quote_in_request(request, reason['request_quote']):
+        return False
+    return True
+
+
+def _short_test(test):
+    parts = test.split('::')
+    return parts[-1] if parts[-1] != MODULE else parts[0] + ' (shared test code)'
+
+
+def change_reason(entry):
+    """'test_divide_by_zero now expects 0 instead of an error' for one justified change."""
+    reason = entry.get('justification') or {}
+    name = _short_test(entry['test'])
+    if entry['change'] == 'removed':
+        return '%s was removed because your change removed what it checked (%s)' % (
+            name, reason.get('was') or 'its old behaviour')
+    return '%s now expects %s instead of %s' % (name, (reason.get('now') or 'the new behaviour').rstrip('.'),
+                                                (reason.get('was') or 'the old behaviour').rstrip('.'))
+
+
+def test_changes_line(changes):
+    """One plain line for Nick: which tests Kel changed and why (D-84), or None."""
+    changes = [c for c in changes or [] if c.get('reason')]
+    if not changes:
+        return None
+    updated = [c for c in changes if c.get('change') != 'removed']
+    removed = [c for c in changes if c.get('change') == 'removed']
+    parts = []
+    if updated:
+        parts.append('Kel updated %s to match your change: %s' % (
+            '1 test' if len(updated) == 1 else '%d tests' % len(updated), '; '.join(c['reason'] for c in updated)))
+    if removed:
+        parts.append('Kel removed %s: %s' % ('1 test' if len(removed) == 1 else '%d tests' % len(removed),
+                                             '; '.join(c['reason'] for c in removed)))
+    return '. '.join(parts) + '.'
+
+
 def _names(paths, limit=4):
     paths = sorted(paths)
     shown = ', '.join(paths[:limit])
@@ -151,7 +403,24 @@ def _existing_summary(check):
     state = check['state']
     if state == 'none':
         return 'There were no existing tests to keep.'
-    if check['missing']:
+    edits = check.get('edits')
+    unjustified = check.get('unjustified') or []
+    missing = check['missing'] if edits is None else sorted(
+        {e['file'] for e in edits if e['file'] in check['missing'] and e['test'] in unjustified})
+    if state == 'changed':
+        line = test_changes_line([{'change': e['change'], 'reason': change_reason(e)} for e in edits])
+        return line[:-1] + '; your other existing tests still pass.'
+    if state == 'changed_failed':
+        failed = check.get('changed_failing') or []
+        return ('A test Kel changed does not pass in its new form with your original test settings: %s.'
+                % _names(failed) if failed else
+                'The changed tests do not pass in their new form with your original test settings (exit code %s).'
+                % check.get('changed_exit_code'))
+    if state == 'unjustified' and not missing:
+        return ('An existing test was changed without a reason from your request: %s. Kel changes an existing '
+                'test only where the request contradicts it.' % _names(_short_test(t) for t in unjustified))
+    if missing:
+        check = dict(check, missing=missing)
         which = _names(check['missing'])
         return ('An existing test file was removed: %s.' if len(check['missing']) == 1
                 else 'Existing test files were removed: %s.') % which
@@ -183,6 +452,48 @@ def _existing_summary(check):
         return ('An existing test was changed or removed: %s no longer passes in its original form.'
                 % _names(changed_tests)) + note
     return ('Your existing tests do not pass with the new code (exit code %s).' % check.get('exit_code')) + note
+
+
+def settle_existing(check, request, reasons, guard):
+    """Finish the existing-tests check (D-71, D-84): (preserved, check) with its plain summary.
+
+    With no changed or removed existing test this is D-71 unchanged. Otherwise every such test needs
+    the Builder's reason (`reasons`, from its `kel-test-changes` block); the original-tests run may fail
+    only on those tests; and they must pass in their new form with the original test setup. `guard` is
+    who judges the reasons: 'verifier' (the independent Verifier rules on each one after this) or
+    'request' (D-85 small work, no Verifier: each reason must quote the words of the request it relies on).
+    """
+    state = check['state']
+    edits = check.get('edits') or []
+    if edits and state in ('passed', 'failed'):
+        for entry in edits:
+            entry['justification'] = _match(entry, reasons or [])
+            entry['justified'] = _justified(entry, request, guard)
+        check['unjustified'] = [e['test'] for e in edits if not e['justified']]
+        check['guard'] = guard
+        if check.get('covered'):
+            if check['unjustified']:
+                state = 'failed' if state == 'failed' else 'unjustified'
+            elif check.get('changed_exit_code') not in (0, None):
+                state = 'changed_failed'
+            else:
+                state = 'changed'
+        check['state'] = state
+        preserved = state == 'changed'
+    else:
+        preserved = state in ('passed', 'none') and not check['missing']
+    check['summary'] = _existing_summary(check)
+    return preserved, check
+
+
+def test_changes_of(tests):
+    """The justified test changes recorded in one run's evidence: [{test, change, reason}]."""
+    existing = (tests or {}).get('existing_tests') or {}
+    if existing.get('state') != 'changed':
+        return []
+    return [{'test': e['test'], 'change': e['change'], 'reason': change_reason(e),
+             'justification': e.get('justification'), 'breaks_original': bool(e.get('breaks_original'))}
+            for e in existing.get('edits') or []]
 
 
 def _baseline_bytes(workspace, base, path, expected):
@@ -228,6 +539,32 @@ def build_original_tests_copy(workspace, target, base, baseline, after, command)
     had_tests = any(suite_role(p, command) == 'test' for p in protected)
     for path, expected in protected.items():
         if after.get(path) != expected:
+            dest = target / path
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(_baseline_bytes(workspace, base, path, expected))
+    for path in after:
+        if path in baseline:
+            continue
+        role = suite_role(path, command)
+        if role == 'setup' or (role == 'test' and had_tests):
+            (target / path).unlink(missing_ok=True)
+    return target
+
+
+def build_changed_tests_copy(workspace, target, base, baseline, after, command):
+    """D-84: a throwaway copy with the Builder's changed tests in their new form but every original
+    test setup file put back (and new setup files left out), so a changed test has to pass on its own
+    merits — never because a conftest or config change skipped it. New test files stay out when the
+    project already had tests, as in the original-tests copy."""
+    target = Path(target)
+    _remove_tree(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(workspace, target, symlinks=True,
+                    ignore=shutil.ignore_patterns('.git', '__pycache__', '.pytest_cache'))
+    protected = protected_files(baseline, command)
+    had_tests = any(suite_role(p, command) == 'test' for p in protected)
+    for path, expected in protected.items():
+        if suite_role(path, command) == 'setup' and after.get(path) != expected:
             dest = target / path
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(_baseline_bytes(workspace, base, path, expected))
@@ -301,10 +638,12 @@ def retry_brief(store, run_id):
             'How Kel checks a change: it runs the test command on your change, and again on a copy where every '
             'existing test file and test setup file (conftest.py, sitecustomize.py, pytest.ini, pyproject.toml, '
             'setup.cfg, tox.ini, package.json, test configs and similar) is put back exactly as it was before your '
-            'change, with new test setup files and new test files left out. Both runs must pass. So keep existing '
-            'tests passing without editing, weakening, skipping or removing them; add new tests as new test '
-            'functions or new files (adding to an existing test file is fine); do not add or change test setup to '
-            'change what runs.')
+            'change, with new test setup files and new test files left out. Both runs must pass, except that an '
+            'existing test the request directly contradicts may be changed or removed: then list it in the '
+            '`kel-test-changes` block with the words of the request that contradict it, and it must pass in its new '
+            'form with the original test settings. Never weaken, skip or remove any other existing test; add new '
+            'tests as new test functions or new files (adding to an existing test file is fine); do not add or '
+            'change test setup to change what runs.')
     if output.strip():
         text += '\nEnd of the failing output:\n' + _tail(output, 3000)
     return text
@@ -446,14 +785,18 @@ class CodingAdapter:
         `build_original_tests_copy`), run with the same command, sandbox request, scrubbed keys and time
         budget. It is skipped when that copy would equal the workspace (then the first run already was
         the original suite). Its RPC has its own durable identity, so a restart reuses its receipt.
+
+        D-84: it also finds every changed or removed existing test (`test_edits`). When the original run
+        fails only on those, a third run (`build_changed_tests_copy`, its own durable identity) checks
+        they pass in their new form with the original test setup. `settle_existing` then applies the
+        Builder's reasons and who judges them.
         """
         command=contract['test_command']
         plan=original_tests_plan(baseline,after,command)
         check={k:v for k,v in plan.items() if k!='needed'}
         def done(state,**extra):
             check.update(state=state,**extra)
-            check['summary']=_existing_summary(check)
-            return {'preserved':state in ('passed','none') and not check['missing'],'check':check}
+            return check
         if plan['state']=='none':
             return done('none',ran=False)
         if not plan['needed']:
@@ -465,6 +808,8 @@ class CodingAdapter:
         from .host_runtime import ORIGINAL_TESTS_DIR
         target=self.store.root/'native-logs'/run_id/ORIGINAL_TESTS_DIR
         try:
+            # D-84: every changed or removed existing test, found from the code (never from the Builder).
+            check['edits']=test_edits(workspace,base,baseline,after,command)
             if not (resumed and _rpc_recorded(self.store,run_id,EXISTING_TESTS_KEY)):
                 build_original_tests_copy(workspace,target,base,baseline,after,command)
             receipt=connection.call('command/exec',run_params(command,target),timeout=100,key=EXISTING_TESTS_KEY)
@@ -472,10 +817,44 @@ class CodingAdapter:
             return done('error',ran=True,exit_code=None,failing=[],error=str(exc)[:300])
         finally:
             _remove_tree(target)
-        return done('passed' if receipt['exitCode']==0 else 'failed',ran=True,exit_code=receipt['exitCode'],
-                    failing=failing_tests(receipt.get('stdout'),receipt.get('stderr')),
-                    stdout=_tail(receipt.get('stdout')),stderr=_tail(receipt.get('stderr')),
-                    execution=receipt.get('_kel_execution'))
+        failing=all_failing(receipt.get('stdout'),receipt.get('stderr'))
+        done('passed' if receipt['exitCode']==0 else 'failed',ran=True,exit_code=receipt['exitCode'],
+             failing=failing[:5],stdout=_tail(receipt.get('stdout')),stderr=_tail(receipt.get('stderr')),
+             execution=receipt.get('_kel_execution'))
+        edits=check['edits']
+        if not edits:
+            return check
+        # Which original tests failed, and does a changed/removed test account for each one?
+        refs=[_failing_ref(f) for f in failing]
+        for entry in edits:
+            entry['breaks_original']=any(ref and _covers(entry['test'],ref) for ref in refs)
+        uncovered=[f for f,ref in zip(failing,refs) if not ref or not any(_covers(e['test'],ref) for e in edits)]
+        check['uncovered']=uncovered[:5]
+        check['covered']=receipt['exitCode']==0 or bool(failing and not uncovered)
+        if not check['covered']:
+            return check
+        # D-84: the changed tests must pass in their new form on their own merits: original test setup
+        # put back, new setup left out. When that copy equals the workspace the first run already was it.
+        protected=protected_files(baseline,command)
+        had_tests=any(suite_role(p,command)=='test' for p in protected)
+        same=not (plan['added_setup'] or (had_tests and plan['added_tests'])
+                  or any(suite_role(p,command)=='setup' for p in plan['changed']))
+        if same:
+            changed={'exitCode':tests['exitCode'],'stdout':tests['stdout'],'stderr':tests['stderr'],'ran':False}
+        else:
+            try:
+                if not (resumed and _rpc_recorded(self.store,run_id,CHANGED_TESTS_KEY)):
+                    build_changed_tests_copy(workspace,target,base,baseline,after,command)
+                changed=dict(connection.call('command/exec',run_params(command,target),timeout=100,key=CHANGED_TESTS_KEY),ran=True)
+            except (PolicyError,RuntimeError,TimeoutError,OSError) as exc:
+                return done('error',error=str(exc)[:300])
+            finally:
+                _remove_tree(target)
+        check.update(changed_ran=changed['ran'],changed_exit_code=changed['exitCode'],
+                     changed_failing=failing_tests(changed.get('stdout'),changed.get('stderr')))
+        if changed['ran']:
+            check.update(changed_stdout=_tail(changed.get('stdout')),changed_stderr=_tail(changed.get('stderr')))
+        return check
 
     def execute(self,prompt,run_id=None,session_id=None,cancel=None):
         with contextlib.closing(self.store.connect()) as db:
@@ -606,8 +985,7 @@ class CodingAdapter:
                               'only these files; do not create, change or delete any other file (Kel refuses a change outside them).')
                     elif integrating:
                         head+='\n'+note
-                    result=connection.run(head+' Preserve existing tests: Kel also runs the original versions of the existing '
-                    'test files and test settings against your code, so add new tests freely but do not change what existing tests expect. '
+                    result=connection.run(head+' '+TEST_RULES+' '
                     'Do not change the source checkout. '
                     'Do not delete caches or clean the workspace. Kel runs tests after your turn. Avoid generating bytecode. '
                     'Test command: '+encode(contract['test_command'])
@@ -642,16 +1020,26 @@ class CodingAdapter:
             breach=runtime_guard.settle(self.store,job['id'],run_id,watch,self.store.root/'native-logs'/run_id,result,
                                   actor="The project's tests")
             if breach:return breach
-            preserved=existing['preserved']
             after=file_manifest(workspace)  # the second run works on a copy; the workspace must not move
             stable=before==after
             git(workspace,'add','-A')
             patch=git(workspace,'diff','--cached','--binary',base).decode('utf-8','replace')
+            # D-84/D-85: who judges the Builder's test changes — the independent Verifier when one
+            # reviews this change, else the request itself (each reason must quote it).
+            from .proportional import verifier_needed
+            files=sum(1 for line in patch.splitlines() if line.startswith('diff --git '))
+            lines=sum(1 for line in patch.splitlines() if line[:1] in '+-' and not line.startswith(('+++','---')))
+            guard='verifier' if verifier_needed(job,files,lines)[0] else 'request'
+            preserved,existing_check=settle_existing(existing,contract['request'],
+                                                     builder_justifications(result.get('text')),guard)
             evidence={'exit_code':tests['exitCode'],'stdout':tests['stdout'],'stderr':tests['stderr'],
                       'summary':tests_summary(tests['exitCode'],tests['stdout'],tests['stderr']),
-                      'existing_tests_preserved':preserved,'existing_tests':existing['check'],
+                      'existing_tests_preserved':preserved,'existing_tests':existing_check,
                       'source_stable_during_tests':stable,
                       'command':contract['test_command']}
+            changes=test_changes_of(evidence)
+            if changes:
+                evidence.update(test_changes=changes,test_changes_guard=guard)
             if tests.get('_kel_execution'):evidence['execution']=tests['_kel_execution']
             if stream:
                 evidence['ownership']=code_streams.ownership(self.store,lease,baseline,after,stream['write_paths'])
@@ -670,6 +1058,148 @@ class CodingAdapter:
         finally:
             connection.close()
             code_streams.release(self.store,lease)
+
+
+# ---- D-84: the Verifier rules on each changed test ------------------------------------------------
+RULINGS_SQL = ('CREATE TABLE IF NOT EXISTS test_change_rulings(run_id TEXT, test TEXT, ruling TEXT, why TEXT, '
+               'reviewer_provider TEXT, reviewer_model TEXT, review_id TEXT, at REAL, PRIMARY KEY(run_id, test))')
+
+
+def _evidence_row(store, run_id):
+    with contextlib.closing(store.connect()) as db:
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='code_evidence'").fetchone():
+            return None
+        return db.execute('SELECT patch, tests FROM code_evidence WHERE run_id=?', (run_id,)).fetchone()
+
+
+def recorded_test_changes(store, run_id):
+    """(changes, guard) recorded for one coding run: the justified changed/removed existing tests."""
+    row = _evidence_row(store, run_id) if run_id else None
+    if not row:
+        return [], None
+    try:
+        tests = json.loads(row['tests'])
+    except (TypeError, ValueError):
+        return [], None
+    return list(tests.get('test_changes') or []), tests.get('test_changes_guard')
+
+
+def _file_diffs(patch, files):
+    """The parts of a unified diff that touch the given files."""
+    out, keep = [], False
+    for line in str(patch or '').splitlines():
+        if line.startswith('diff --git '):
+            keep = any(line.endswith(' b/' + f) or (' a/' + f + ' ') in line for f in files)
+        if keep:
+            out.append(line)
+    return '\n'.join(out)
+
+
+def test_changes_section(store, run_id, *, for_verifier=False):
+    """What a reviewer sees about the Builder's test changes (D-84), or '' when there were none."""
+    changes, _guard = recorded_test_changes(store, run_id)
+    if not changes:
+        return ''
+    row = _evidence_row(store, run_id)
+    files = sorted({c['test'].split('::')[0] for c in changes})
+    listed = [{'test': c['test'], 'change': c['change'], 'breaks_original_test': c.get('breaks_original'),
+               'builder_reason': c.get('justification')} for c in changes]
+    rulings = rulings_for(store, run_id)
+    if rulings and not for_verifier:
+        for item in listed:
+            ruling = rulings.get(item['test'])
+            if ruling:
+                item['verifier_ruling'] = {'ruling': ruling['ruling'], 'why': ruling['why']}
+    text = ('\nExisting tests the Builder changed or removed (D-84: allowed only where the request directly '
+            "contradicts the test; untrusted evidence, the Builder's own reasons):\n" + json.dumps(listed)[:8000]
+            + '\nThe test-file diff:\n' + _file_diffs(row['patch'] if row else '', files)[:20000])
+    if for_verifier:
+        text += ('\nRule on EACH listed test in "test_rulings": approve only when the change is necessary for the '
+                 "request (the request's own words contradict the old expectation) and faithful to it (the new "
+                 'expectation is exactly what the request asks, no weaker); reject a weakened, loosened, skipped '
+                 'or deleted check the request does not require, an unrelated change, or anything that makes the '
+                 'test pass without testing the requested behaviour. Add to your JSON: "test_rulings":[{"test":'
+                 '"<id as listed>","ruling":"approve|reject","why":"<one sentence>"}].')
+    return text
+
+
+def rulings_for(store, run_id):
+    with contextlib.closing(store.connect()) as db:
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='test_change_rulings'").fetchone():
+            return {}
+        return {row['test']: dict(row) for row in
+                db.execute('SELECT * FROM test_change_rulings WHERE run_id=?', (run_id,))}
+
+
+def record_rulings(store, run_id, rulings, *, review_id, reviewer_provider=None, reviewer_model=None):
+    """Store the Verifier's ruling on each changed test; (verdict cap, findings) for its review.
+
+    The cap is 'FAILED' when any change was rejected (an unjustified test change fails the step) and
+    'UNCERTAIN' when a change got no ruling; None when every change was approved. Rulings are keyed by
+    run and test, so a restarted review replaces them rather than adding to them.
+    """
+    changes, guard = recorded_test_changes(store, run_id)
+    if not changes or guard != 'verifier':
+        return None, []
+    given = [r for r in (rulings if isinstance(rulings, list) else []) if isinstance(r, dict)]
+    reasons = [{'test': str(r.get('test') or ''), 'ruling': str(r.get('ruling') or '').strip().lower(),
+                'why': ' '.join(str(r.get('why') or '').split())[:400]} for r in given]
+    cap, findings, now = None, [], time.time()
+    with store.transaction() as db:
+        db.execute(RULINGS_SQL)
+        for change in changes:
+            ruling = _match(change, [r for r in reasons if r['test']])
+            verdict = (ruling or {}).get('ruling')
+            verdict = ('approve' if verdict in ('approve', 'approved')
+                       else 'reject' if verdict in ('reject', 'rejected') else None)
+            name = _short_test(change['test'])
+            if verdict == 'reject':
+                cap = 'FAILED'
+                findings.append('The Verifier rejected the change to %s: %s'
+                                % (name, ruling.get('why') or 'the request does not require it'))
+            elif verdict is None:
+                cap = cap or 'UNCERTAIN'
+                findings.append('The Verifier did not rule on the change to %s.' % name)
+            db.execute('INSERT OR REPLACE INTO test_change_rulings VALUES(?,?,?,?,?,?,?,?)',
+                       (run_id, change['test'], verdict or 'none', (ruling or {}).get('why'), reviewer_provider,
+                        reviewer_model, review_id, now))
+    return cap, findings
+
+
+def test_changes_view(store, run_id):
+    """`test_changes` for Nick's surfaces: [{test, reason, approved_by, ruling, change, id}] (D-84)."""
+    changes, guard = recorded_test_changes(store, run_id)
+    if not changes:
+        return []
+    rulings = rulings_for(store, run_id) if guard == 'verifier' else {}
+    out = []
+    for change in changes:
+        item = {'test': _short_test(change['test']), 'id': change['test'], 'change': change['change'],
+                'reason': change.get('reason'), 'approved_by': None, 'ruling': None}
+        if guard == 'request':
+            quote = (change.get('justification') or {}).get('request_quote')
+            item.update(ruling='approved', approved_by='Kel: your request says "%s"' % quote)
+        else:
+            ruling = rulings.get(change['test'])
+            if ruling and ruling['ruling'] == 'approve':
+                label = None
+                try:
+                    from .role_models import describe_model
+                    label = describe_model(raw=ruling.get('reviewer_model'))[0]
+                except Exception:
+                    label = None
+                item.update(ruling='approved', approved_by='Verifier' + (' (%s)' % label if label else ''))
+            elif ruling and ruling['ruling'] == 'reject':
+                item.update(ruling='rejected', why=ruling.get('why'))
+        out.append(item)
+    return out
+
+
+def test_changes_result_line(store, job):
+    """The one plain line for the result (D-84), from the approved changes of the code step, or None."""
+    run_id = (((job.get('milestones') or {}).get('code') or {}).get('artifact') or {}).get('run_id')
+    view = [c for c in test_changes_view(store, run_id) if c['ruling'] == 'approved'] if run_id else []
+    return test_changes_line(view)
 
 
 def check_evidence(store,run_id):
@@ -707,6 +1237,10 @@ def repository_check(store, run_id):
         existing = ('Your existing test files are unchanged.' if tests.get('existing_tests_preserved')
                     else 'An existing test file was changed or removed.')
     check.update(tests=summary, existing=existing)
+    if tests.get('test_changes'):
+        # D-84: which existing tests Kel changed and why (the Verifier's rulings are read live).
+        check['test_changes'] = [{'test': c['test'], 'change': c['change'], 'reason': c['reason']}
+                                 for c in tests['test_changes']]
     if verdict == 'FAILED':
         if not tests.get('existing_tests_preserved', True):
             check.update(failure='existing_tests', reason=existing)

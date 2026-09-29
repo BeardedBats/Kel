@@ -394,7 +394,7 @@ class RetryTests(GateBase):
         self.assertIn("The change didn't pass Kel's checks, so nothing was applied to your project.", text)
         self.assertIn('Why: An existing test was changed or removed: test_calc.py::test_add no longer passes', text)
         self.assertIn('it failed the same way, so Kel stopped rather than repeat it', text)
-        self.assertIn('update or remove that test in your project yourself', text)
+        self.assertIn('Kel updates a test only where your request contradicts it', text)  # D-84
         summary = verification_summary(job)
         self.assertIn('• Your tests passed', summary)
         self.assertIn('• An existing test was changed or removed', summary)

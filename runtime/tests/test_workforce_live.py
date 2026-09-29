@@ -82,14 +82,19 @@ class StaffingDecisionTests(Base):
         self.assertEqual(record['tier'], 'D1')
         self.assertIn('code is always written by a Builder (at least one specialist)', record['reasons'])
 
-    def test_security_work_is_a_pod_with_the_security_lens_and_an_oracle(self):
+    def test_security_work_is_a_pod_with_the_security_lens_and_sentinel(self):
         record = staff.plan_job(self.store, coding('Fix the password check on the login page'))
         self.assertEqual(record['tier'], 'D2')
         self.assertIn('R3', record['rules'])
         self.assertEqual(record['review']['mode'], 'pod')
         self.assertIn('security', record['review']['lenses'])
         self.assertIn('functional-testing', record['review']['lenses'])
-        self.assertTrue(record['oracle']['required'])
+        # D-85: Verifier and Sentinel; the Oracle is for large or hard-to-undo work, not every security fix.
+        self.assertEqual(record['review']['verifier']['when'], 'always')
+        self.assertTrue(record['sentinel']['required'])
+        self.assertFalse(record['oracle']['required'])
+        hard = staff.plan_job(self.store, coding('Fix the password check on the login page and deploy it'))
+        self.assertTrue(hard['oracle']['required'])
 
     def test_independent_research_parts_run_as_parallel_streams(self):
         record = staff.plan_job(self.store, research('Research three CRM options and compare them', 3))

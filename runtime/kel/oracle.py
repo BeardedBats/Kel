@@ -277,6 +277,9 @@ def _artifact_view(store, job, milestone_id):
                                                               'source_stable_during_tests', 'command')},
                                   existing_tests=(tests.get('existing_tests') or {}).get('summary')))
                 + '\nThe exact change (diff):\n' + (row['patch'] if row else '(no diff recorded)')[:60000])
+        # D-84: every existing test the Builder changed or removed, its reason and the Verifier's ruling.
+        from .coding import test_changes_section
+        body += test_changes_section(store, milestone['artifact']['run_id'])
     else:
         body = 'The result:\n' + store.artifact_text(milestone['artifact'])[:60000]
     return ('Request: ' + str(contract.get('request'))[:4000] +

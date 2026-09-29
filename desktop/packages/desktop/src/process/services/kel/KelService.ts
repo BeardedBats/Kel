@@ -29,7 +29,7 @@ import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
 import { ChatLinks } from './chatLinks';
-import { memoryRoot, protectedPaths } from './protectedPaths';
+import { protectedPaths } from './protectedPaths';
 import { assertTrustedSender } from '../../../common/senderGuard';
 type Descriptor = { url: string; token: string; engine_version: string };
 let descriptor: Descriptor;
@@ -149,12 +149,6 @@ function spawnEngine(root: string): ChildProcess {
     appData: process.env.APPDATA,
     localAppData: process.env.LOCALAPPDATA,
   });
-  // D-81: the Memory folder beside the installed App — the AI tools' only place to read and write.
-  const memory = memoryRoot({
-    existing: process.env.KEL_MEMORY_ROOT,
-    appDir: app.isPackaged ? path.dirname(app.getPath('exe')) : undefined,
-  });
-  if (memory) injectedEnv.KEL_MEMORY_ROOT = memory;
   const child = spawn(spec.command, [...spec.baseArgs, '--data', root], {
     cwd: spec.cwd,
     detached: true,

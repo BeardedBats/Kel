@@ -10,7 +10,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { failureSentence } from '../engineFailure';
 import { kelDogfood, kelRequest } from '../kelApi';
 import { friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
-import { describeElement, savedGeometry } from './captureTarget';
+import { describeElement } from './captureTarget';
 import {
   fixCaptureReducer,
   initialFixCaptureState,
@@ -75,17 +75,19 @@ const draftStore = {
 /** One fix as the engine stores it, from the capture state (the same body for save and recovery). */
 const saveBody = (state: FixCaptureState, transcript: string, voice: FixCaptureVoice): FixSaveBody => {
   const shot = state.screenshot;
-  // FIX-0018's box was off by the 115% zoom: the rect is saved in the screenshot's own pixels.
-  const geometry = shot
-    ? savedGeometry(state.target, shot.image, { width: window.innerWidth, height: window.innerHeight })
-    : { element: state.target, window: null };
   return {
     transcript: transcript.trim(),
     screenshot: shot?.screenshot ?? null,
     route: state.route,
     page_title: state.pageTitle,
-    element: geometry.element,
-    window: geometry.window,
+    element: state.target,
+    window: shot
+      ? {
+          width: shot.content.width,
+          height: shot.content.height,
+          scale: shot.image.width / Math.max(1, shot.content.width),
+        }
+      : null,
     version: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : null,
     conversation: state.conversation,
     diagnostics: voice ? { voice } : null,

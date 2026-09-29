@@ -46,16 +46,19 @@ class TriggerTests(unittest.TestCase):
         record = self.code('Fix the password check in app.txt')
         self.assertEqual(record['sentinel'], {'required': True, 'why': ['a code change touching security'],
                                               'lenses': ['security']})
-        # The Red Team waits for the verified diff's size; it is not required up front.
-        self.assertEqual(record['red_team'], {'required': False, 'why': [],
-                                              'size_trigger': {'files': 5, 'lines': 150}})
+        # D-85: the Red Team is for high-assurance (D4) work only; security alone never brings it.
+        self.assertEqual(record['red_team'], {'required': False, 'why': [], 'size_trigger': None})
+        self.assertFalse(record['oracle']['required'], 'security is for Sentinel; the Oracle is for hard-to-undo work')
 
     def test_migration_and_privacy_work_bring_their_own_lenses(self):
         self.assertEqual(self.code('Migrate the users table to the new schema')['sentinel']['lenses'],
                          ['data-integrity'])
+        # D-85: a privacy word alone is not security work; the Verifier covers it.
         record = self.code('Stop sending personal data in the crash telemetry')
-        self.assertEqual((record['sentinel']['required'], record['sentinel']['lenses']), (True, ['privacy']))
-        self.assertIsNone(record['red_team']['size_trigger'], 'the Red Team size trigger is for security changes')
+        self.assertEqual((record['sentinel']['required'], record['sentinel']['lenses']), (False, ['privacy']))
+        self.assertEqual(record['review']['verifier']['when'], 'always')
+        record = self.code('Encrypt the personal data in the crash telemetry')
+        self.assertEqual((record['sentinel']['required'], record['sentinel']['lenses']), (True, ['privacy', 'security']))
 
     def test_an_ordinary_change_has_no_sentinel(self):
         record = self.code('Fix the typo in app.txt')
@@ -99,9 +102,15 @@ class EngineBase(unittest.TestCase):
         CodingAdapter(self.store)
         self.project = make_project(self.tmp.name)
 
-    def job(self, text):
+    def job(self, text, legacy=False):
         contract = compile_coding(text, self.project, ['python', '-c', 'pass'])
         contract['staffing'] = staff.plan_job(self.store, contract, text)
+        if legacy:
+            # A job staffed before D-85: its frozen record brings the Oracle and the Red Team's size
+            # trigger for security work, and is never re-decided.
+            contract['staffing']['oracle'] = {'required': True, 'why': ['consequential work (security boundary)']}
+            contract['staffing']['red_team']['size_trigger'] = {'files': 5, 'lines': 150}
+            contract['staffing']['review'].pop('verifier', None)
         return self.store.create(contract)
 
     def engine(self, reviews, adapters=('codex', 'claude'), files=1):
@@ -137,7 +146,7 @@ class SentinelTests(EngineBase):
             self.drive(engine, job, lambda j: (self.project / 'app.txt').read_text() == 'new')
         finally:
             engine.close()
-        self.assertEqual(self.kinds(job), [('sentinel', 'sentinel', 'done'), ('oracle', 'oracle', 'done')])
+        self.assertEqual(self.kinds(job), [('sentinel', 'sentinel', 'done')], 'D-85: no Oracle for routine security work')
         call = next(c for c in staff.calls(self.store, job) if c['kind'] == 'sentinel')
         # Automatic role, resolved on the assurance tier (never lowered), another family than the Builder.
         self.assertEqual((call['asked']['role'], call['asked']['mode'], call['asked'].get('dispatch')),
@@ -160,7 +169,7 @@ class SentinelTests(EngineBase):
             'where': 'app.txt:1', 'proof': 'static', 'clears_when': 'It compares a salted hash.'}]}
         reviews = {'codex': FakeModel('codex', sentinel=blocker), 'claude': FakeModel('claude', sentinel=blocker)}
         job = self.job('Fix the password check in app.txt')
-        engine = self.engine(reviews, files=8)  # big enough for the Red Team — which is skipped
+        engine = self.engine(reviews, files=8)
         try:
             final = self.settled(engine, job)
         finally:
@@ -185,10 +194,8 @@ class SentinelTests(EngineBase):
         self.assertEqual(member['doing'], 'Security check: raised 1 serious finding')
         self.assertEqual(view['sentinel']['findings'][0]['area'], 'Security')
         self.assertTrue(view['sentinel']['conclusion'].startswith('It found a serious problem'))
-        # The Red Team was triggered by size but skipped: there is no accepted result to attack.
+        # D-85: no Red Team below D4.
         self.assertEqual(view['red_team']['state'], 'not_needed')
-        self.assertIn('earlier review already found a problem', view['red_team']['why'])
-        self.assertEqual(view['red_team']['conclusion'], view['red_team']['why'])
         self.assertNotIn('red_team', [c['kind'] for c in staff.calls(self.store, job)])
         team = office.items(self.store)['items'][0]['team']
         self.assertIn({'role': 'sentinel', 'role_label': 'Sentinel', 'state': 'done'}, team)
@@ -215,7 +222,7 @@ class RedTeamTests(EngineBase):
                   {'severity': 'info', 'surface': 'long input', 'summary': 'Long input is handled.',
                    'outcome': 'clean'}]
         reviews = {'codex': FakeModel('codex', challenges=note, attacks=attack), 'claude': FakeModel('claude')}
-        job = self.job('Fix the password check in app.txt')
+        job = self.job('Fix the password check in app.txt', legacy=True)
         engine = self.engine(reviews, files=7)
         try:
             final = self.settled(engine, job)
@@ -250,7 +257,7 @@ class RedTeamTests(EngineBase):
 
     def test_a_small_security_change_is_not_attacked(self):
         reviews = {'codex': FakeModel('codex'), 'claude': FakeModel('claude')}
-        job = self.job('Fix the password check in app.txt')
+        job = self.job('Fix the password check in app.txt', legacy=True)
         engine = self.engine(reviews, files=2)
         try:
             self.drive(engine, job, lambda j: (self.project / 'app.txt').read_text() == 'new')
@@ -260,7 +267,7 @@ class RedTeamTests(EngineBase):
 
     def test_same_family_red_team_records_reduced_independence(self):
         reviews = {'claude': FakeModel('claude')}
-        job = self.job('Fix the password check in app.txt')
+        job = self.job('Fix the password check in app.txt', legacy=True)
         engine = self.engine(reviews, adapters=('claude',), files=7)
         try:
             self.drive(engine, job, lambda j: (self.project / 'app.txt').read_text() == 'new')

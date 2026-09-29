@@ -39,7 +39,7 @@ QUESTIONS = {'questions': [
 class QuestionTests(Base):
     def _oracle_blocked(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        text = 'Fix the password check in app.txt and deploy it'  # D-85: hard to undo brings the Oracle
         job = self.staffed(compile_coding(text, project, ['python', '-c', 'pass']), text)
         reviews = {'codex': FakeModel('codex', challenges=[{'severity': 'blocker',
                                                             'summary': 'Any password is accepted.'}]),

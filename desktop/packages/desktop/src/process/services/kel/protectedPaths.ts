@@ -66,18 +66,3 @@ export function protectedPaths(input: ProtectedPathInput): string {
   }
   return out.join(';');
 }
-
-/**
- * D-81: KEL_MEMORY_ROOT for the engine — the Memory folder, the only place (with a run's working
- * copy) the AI tools may read or write, where new projects go and where Kel mirrors its settings,
- * chats and notes. It sits beside the installed App (for Nick: Desktop\Kel\Memory). A value already
- * in the environment wins (tests and off-screen audits point it at scratch); an unpackaged build
- * passes nothing and the engine picks the folder beside its Data folder.
- */
-export function memoryRoot(input: { existing?: string; appDir?: string; platform?: NodeJS.Platform }): string | undefined {
-  const existing = (input.existing || '').trim();
-  if (existing) return existing;
-  if (!input.appDir) return undefined;
-  const p = (input.platform ?? process.platform) === 'win32' ? path.win32 : path.posix;
-  return p.join(p.dirname(p.resolve(input.appDir)), 'Memory');
-}

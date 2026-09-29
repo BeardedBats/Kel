@@ -477,6 +477,11 @@ class Commander:
             # D-88: the Editor judges slop only against Kel's deterministic scan of this draft.
             prompt+=''.join("\nKel's slop scan: "+str((c.get('findings') or [''])[0])
                             for c in m.get('checks') or [] if c.get('kind')=='slop')
+        code_run=m['artifact'].get('run_id') if job['contract'].get('kind')=='coding' and spec.get('kind')!='text' else None
+        if code_run:
+            # D-84: the Verifier rules on every existing test the Builder changed or removed.
+            from .coding import test_changes_section
+            prompt+=test_changes_section(store,code_run,for_verifier=True)
         started=time.monotonic()
         try:
             result=model.execute(prompt,run_id=review_id,**kwargs)
@@ -500,6 +505,16 @@ class Commander:
                 from .pod_review import record
                 verdict_in,findings_in=record(store,job,milestone_id,review_id,desc['provider'],lenses,
                                               verdict_in,findings_in)
+            if code_run:
+                # D-84: only approved test changes may stand; a rejected one fails the step, a missing
+                # ruling leaves it unconfirmed (never a clean pass).
+                from .coding import record_rulings
+                cap,extra=record_rulings(store,code_run,review.get('test_rulings'),review_id=review_id,
+                                         reviewer_provider=desc['provider'],reviewer_model=desc['model'])
+                if cap=='FAILED' or (cap=='UNCERTAIN' and verdict_in=='VERIFIED'):
+                    verdict_in=cap
+                if extra:
+                    findings_in=list(extra)+list(findings_in if isinstance(findings_in,list) else [findings_in])
             verdict=store.record_review(job_id,milestone_id,m['artifact']['sha256'],review_id,verdict_in,findings_in,job['contract_version'],reviewer_provider=desc['provider'],reviewer_model=desc['model'])
             self._settle_call(store,call_id,result,summary='said '+str(verdict).lower())
             return verdict

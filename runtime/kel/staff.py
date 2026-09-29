@@ -230,7 +230,9 @@ REVIEW_LENSES = {'code': ('functional-testing', 'maintainability'),
                  'recipe': ('requirements-coverage',)}
 FLAG_LENSES = {'security_boundary': 'security', 'data_migration': 'data-integrity',
                'release': 'release-integrity'}
-ORACLE_FLAGS = ('security_boundary', 'irreversible', 'release', 'data_migration')
+# D-85: the Oracle is for large or hard-to-undo work. Security is Sentinel's (never three reviews on
+# routine work), so a security flag alone no longer brings the Oracle.
+ORACLE_FLAGS = ('irreversible', 'release', 'data_migration')
 # Sentinel (handoff §16): security, privacy, data integrity, migration risk — the flag and the lens
 # Sentinel reviews it through (never-gate lenses, workforce-os doc 08 §6).
 SENTINEL_FLAGS = {'security_boundary': 'security', 'privacy': 'privacy', 'data_migration': 'data-integrity'}
@@ -364,6 +366,8 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             oracle_why.append('consequential work (%s)' % ', '.join(f.replace('_', ' ') for f in hit))
     sentinel = sentinel_decision(kind, tier, flags)
     red_team = red_team_decision(kind, tier, flags)
+    from .proportional import verifier_decision
+    verifier = verifier_decision(kind, tier, flags, contract)  # D-85: review depth, frozen with the rest
     return {'schema': 1, 'decided_at': time.time(), 'kind': kind, 'tier': tier,
             'decided_tier': decision['tier'], 'score': decision['score'],
             'rules': [item['id'] for item in decision['rules_fired']], 'reasons': reasons,
@@ -372,7 +376,8 @@ def plan_job(store, contract, request=None, *, tier_max=None):
             'budget_class': budget_class, 'budget': {'class': budget_class, 'ceilings': CEILINGS[budget_class]},
             'steps': steps,
             'parallel': parallel, 'serial': parallel is None,
-            'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses, 'step_lenses': step_lenses},
+            'review': {'mode': 'pod' if pod else 'check', 'lenses': lenses, 'verifier': verifier,
+                       'step_lenses': step_lenses},
             'oracle': {'required': bool(oracle_why), 'why': oracle_why},
             'sentinel': sentinel, 'red_team': red_team,
             'caps': {'workers_max': staffing.CAPS['workers_max'], 'engine_concurrency': 2}}
@@ -423,6 +428,14 @@ def sentinel_decision(kind, tier, flags):
     hit = [flag for flag in flags if flag in SENTINEL_FLAGS]
     lenses = [SENTINEL_FLAGS[flag] for flag in hit]
     words = ', '.join(flag.replace('_boundary', '').replace('_', ' ') for flag in hit)
+    # D-85: Sentinel is for genuine security or data-migration work. A privacy word alone on a code
+    # change (telemetry, personal details) is covered by the Verifier; with a security or migration
+    # flag, privacy stays one of Sentinel's lenses.
+    genuine = any(flag in ('security_boundary', 'data_migration') for flag in hit)
+    if hit and kind == 'code' and not genuine and tier != 'D4':
+        return {'required': False, 'why': [], 'lenses': lenses,
+                'not_needed': 'the request mentions %s but no security or data-migration work, so the '
+                              'independent review covers it' % words}
     if hit and (kind == 'code' or tier == 'D4'):
         why = ['a code change touching %s' % words] if kind == 'code' else [
             'high-assurance work touching %s' % words]
@@ -435,14 +448,11 @@ def sentinel_decision(kind, tier, flags):
 def red_team_decision(kind, tier, flags):
     """Whether the Red Team (Independent Assurance mode B) attacks the accepted result.
 
-    Only when justified: high-assurance (D4) work always; a security-flagged code change only when
-    the verified diff is larger than the size trigger (measured after the change is checked).
+    D-85: only for high-assurance (D4) work. (Before D-85 a large security-flagged code change also
+    brought it; records frozen then keep their `size_trigger` and are never re-decided.)
     """
-    from .oracle import RED_TEAM_FILES, RED_TEAM_LINES
     why = ['high-assurance work is attacked once it is accepted'] if tier == 'D4' else []
-    size = ({'files': RED_TEAM_FILES, 'lines': RED_TEAM_LINES}
-            if kind == 'code' and 'security_boundary' in flags else None)
-    return {'required': bool(why), 'why': why, 'size_trigger': size}
+    return {'required': bool(why), 'why': why, 'size_trigger': None}
 
 
 def staffing_of(job):

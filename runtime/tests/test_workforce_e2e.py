@@ -164,22 +164,21 @@ class ServiceBase(unittest.TestCase):
 
 
 class ServiceLevelTests(ServiceBase):
-    def test_d0_kel_alone_writes_and_a_verifier_checks(self):
+    def test_d0_kel_alone_writes_and_gets_a_quick_sanity_check(self):
         self.wire({'codex': FakeText('gpt-6-luna'), 'claude': FakeText('claude-sonnet-4-6')})
         cid = self.service.context.conversation('default')
         job = self.submit('Write a haiku about autumn', cid)
         record = self.store.get(job)['contract']['staffing']
         self.assertEqual((record['tier'], record['steps']['document']['role']), ('D0', 'kel'))
+        self.assertEqual(record['review']['verifier']['when'], 'never')
         text = self.wait_published(job)
         self.assertIn('passed its checks', text)
         calls = staff.calls(self.store, job)
         work = next(c for c in calls if c['kind'] == 'work')
-        check = next(c for c in calls if c['kind'] == 'check')
         self.assertEqual((work['role'], work['ran']['adapter'], work['ran']['model']), ('kel', 'codex', 'gpt-6-luna'))
         self.assertEqual(work['asked']['model'], 'gpt-6-luna')
-        # Kel's own model is openai, so the Verifier moves to another family (D-69 independence).
-        self.assertEqual((check['role'], check['ran']['adapter'], check['ran']['independence']),
-                         ('verifier', 'claude', 'different'))
+        # D-85: a short draft gets Kel's built-in checks, not an independent review.
+        self.assertEqual([c for c in calls if c['kind'] == 'check'], [])
         self.assertEqual(self.store.get(job)['verdict'], 'VERIFIED')
 
     def code_setup(self, text):
@@ -199,15 +198,17 @@ class ServiceLevelTests(ServiceBase):
         text = self.wait_published(job)
         self.assertEqual((project / 'app.txt').read_text(), 'new', 'D-65 applied the verified change')
         self.assertIn('Applied to', text)
-        self.assertEqual(self.roles(job), [('builder', 'work', 'done'), ('verifier', 'check', 'done')])
+        # D-85: a one-file change gets its own tests and no independent reviewer; Undo covers the rest.
+        self.assertEqual(self.roles(job), [('builder', 'work', 'done')])
         builder = staff.calls(self.store, job)[0]
         self.assertEqual((builder['ran']['model'], builder['ran']['model_confirmed']), ('claude-opus-5-5', True))
-        check = staff.calls(self.store, job)[1]
-        self.assertEqual((check['ran']['adapter'], check['ran']['model']), ('codex', 'gpt-6-astra'))
+        review = next(c for c in self.store.get(job)['milestones']['code']['checks'] if c['kind'] == 'manual_review')
+        self.assertTrue(review['proportional'])
+        self.assertNotIn('a separate review approved', text)
         self.assertEqual(oracle.status(self.store, self.store.get(job))['state'], 'not_needed')
 
     def test_d2_pod_with_lens_review_and_the_oracle_before_apply(self):
-        project, cid, job, _claude = self.code_setup('Fix the password check in app.txt')
+        project, cid, job, _claude = self.code_setup('Fix the password check in app.txt and deploy it')
         record = self.store.get(job)['contract']['staffing']
         self.assertEqual((record['tier'], record['review']['mode']), ('D2', 'pod'))
         self.assertIn('security', record['review']['lenses'])
@@ -231,7 +232,7 @@ class ServiceLevelTests(ServiceBase):
     def test_an_oracle_blocker_stops_auto_apply_and_needs_nick(self):
         self.reviews['codex'].challenges = [{'severity': 'blocker', 'summary': 'The check accepts any password.',
                                              'claim': 'repository.evidence', 'settle': 'Try a wrong password.'}]
-        project, cid, job, _claude = self.code_setup('Fix the password check in app.txt')
+        project, cid, job, _claude = self.code_setup('Fix the password check in app.txt and deploy it')
         text = self.wait_published(job)
         self.assertEqual((project / 'app.txt').read_text(), 'old', 'nothing applied on its own')
         self.assertEqual(apply_decision(self.store, job)['decision'], 'waiting')
@@ -328,7 +329,7 @@ class EngineLevelTests(unittest.TestCase):
 
     def test_restart_mid_mission_resumes_review_and_oracle_without_replaying_work(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        text = 'Fix the password check in app.txt and deploy it'
         contract = compile_coding(text, project, ['python', '-c', 'pass'])
         contract['staffing'] = staff.plan_job(self.store, contract, text)
         decided = contract['staffing']['decided_at']
@@ -385,7 +386,7 @@ class EngineLevelTests(unittest.TestCase):
 
     def test_an_interrupted_oracle_is_retried_then_recorded_as_a_gap(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        text = 'Fix the password check in app.txt and deploy it'
         contract = compile_coding(text, project, ['python', '-c', 'pass'])
         contract['staffing'] = staff.plan_job(self.store, contract, text)
         job = self.store.create(contract)
@@ -460,7 +461,7 @@ class EngineLevelTests(unittest.TestCase):
 
     def test_the_oracle_goes_to_another_model_when_astra_cannot_run(self):
         project = make_project(self.tmp.name)
-        text = 'Fix the password check in app.txt'
+        text = 'Fix the password check in app.txt and deploy it'
         contract = compile_coding(text, project, ['python', '-c', 'pass'])
         contract['staffing'] = staff.plan_job(self.store, contract, text)
         job = self.store.create(contract)

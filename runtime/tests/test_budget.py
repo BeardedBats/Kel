@@ -148,7 +148,11 @@ class GovernorTests(Base):
     def test_a_review_of_finished_work_still_runs_when_the_budget_is_spent(self):
         contract = writing()
         contract['milestones'][0]['checks'].append({'kind': 'manual_review', 'rubric': 'Tidy.'})
-        job = self.staffed(contract)
+        # D-85 would give a short list a quick sanity check only; this work is set to be reviewed.
+        from unittest import mock
+        with mock.patch('kel.proportional.verifier_decision',
+                        return_value={'when': 'always', 'why': 'reviewed', 'size': None}):
+            job = self.staffed(contract)
 
         class Reviewer:
             provider, model = 'claude', None

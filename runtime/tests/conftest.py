@@ -17,13 +17,6 @@ if not os.environ.get('KEL_PROJECTS_ROOT'):
     os.environ['KEL_PROJECTS_ROOT'] = os.path.join(tempfile.mkdtemp(prefix='kel-tests-'), 'Kel Projects')
     os.makedirs(os.environ['KEL_PROJECTS_ROOT'], exist_ok=True)
 
-# D-81: the Memory folder (new projects, Kel's mirror) lives beside the installed app; the suite points it
-# at a throwaway folder and leaves the mirror keeper off (the mirror tests run it themselves).
-if not os.environ.get('KEL_MEMORY_ROOT'):
-    import tempfile
-    os.environ['KEL_MEMORY_ROOT'] = os.path.join(tempfile.mkdtemp(prefix='kel-tests-'), 'Memory')
-os.environ.setdefault('KEL_MEMORY_MIRROR', '0')
-
 # D-74.1: research routes through the installed Claude Code / Codex web search. The suite never
 # sends a real web search from a background job; tests of that route turn it on themselves.
 os.environ.setdefault('KEL_CLI_WEB', '0')

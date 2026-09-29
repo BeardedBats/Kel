@@ -85,7 +85,8 @@ def changed_paths(store, job):
 
 
 def verification_complete(store, job):
-    """True only when the trusted tests passed *and* a separate review approved the exact change."""
+    """True only when the trusted tests passed *and* the review check approved the exact change (a separate
+    review, or D-85's recorded decision that this small change needed none)."""
     if job.get('contract', {}).get('kind') != 'coding' or job.get('verdict') != 'VERIFIED':
         return False
     milestone = (job.get('milestones') or {}).get('code')
@@ -282,8 +283,13 @@ def result_text(store, job):
     root = str(job['contract'].get('root'))
     where = place(store, root, job['contract'].get('project_id'))['words']
     tests = ' '.join(str(part) for part in job['contract'].get('test_command') or [])
+    from .proportional import independently_reviewed
+    reviewed = independently_reviewed(job)
+    passed = 'passed its tests and a separate review' if reviewed else 'passed its tests'
     how = ('How it was checked: ' + ('your tests (' + tests + ')' if tests else 'the project tests') +
-           ' passed in a separate copy of the project, and a separate review approved the change.')
+           ' passed in a separate copy of the project' + (', and a separate review approved the change.'
+                                                            if reviewed else '; a change this small needed no '
+                                                            'separate review.'))
     if saved['decision'] == APPLIED:
         current = _select(store, 'SELECT plan FROM change_applications WHERE job_id=?', job['id']) or {}
         try:
@@ -305,12 +311,12 @@ def result_text(store, job):
         return (lead + 'Applied to ' + where + ': ' + what + ' (' + _count(len(changes), 'file') + ').\n\n'
                 + how + '\n\nThe earlier files are saved — Undo on the result card puts them back.')
     if saved['decision'] == WAITING and saved.get('reason') and saved['reason'] != ASK_REASON:
-        return ('The change passed its tests and a separate review. Kel did not apply it on its own: '
+        return ('The change ' + passed + '. Kel did not apply it on its own: '
                 + saved['reason'] + '. Choose Apply anyway on its work card at the top of this chat to write it into ' + where
                 + ' — Kel checks your project for conflicts and saves a backup first.')
     if saved['decision'] == WAITING and saved.get('reason') == ASK_REASON:
-        lead = ('The code for your new project passed its tests and a separate review.'
-                if job['contract'].get('greenfield') else 'The change passed its tests and a separate review.')
+        lead = ('The code for your new project ' + passed + '.'
+                if job['contract'].get('greenfield') else 'The change ' + passed + '.')
         return (lead + ' Ask first is on, so Kel has not changed ' + where + ' yet. Choose Apply on its work card'
                 + ' at the top of this chat to write it in, or Leave it — Kel checks your project for conflicts'
                 + ' and saves a backup first, so you can undo it.\n\n' + how)

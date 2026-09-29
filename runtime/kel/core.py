@@ -619,6 +619,15 @@ class Store:
                     elif kind == 'min_chars':
                         passed = len(text.strip()) >= criterion['value']
                     else:
+                        skip = None
+                        if kind == 'manual_review' and not any(c['verdict'] == 'FAILED' for c in checks):
+                            # D-85: small, reversible work gets its own tests and no independent reviewer.
+                            from .proportional import REVIEWER_ID, review_skip
+                            skip = review_skip(self, job, milestone_id)
+                        if skip:
+                            checks.append(dict(kind=kind, verdict='VERIFIED', reviewer_id=REVIEWER_ID,
+                                               proportional=True, findings=[skip]))
+                            continue
                         checks.append(dict(kind=kind, verdict='UNCERTAIN', reason='Independent rubric review not recorded'))
                         continue
                     checks.append(dict(kind=kind, verdict='VERIFIED' if passed else 'FAILED', expected=criterion.get('value')))
@@ -767,18 +776,30 @@ class Store:
             if job['verdict']=='VERIFIED':
                 text='\n\n'.join(self.artifact_text(m['artifact']) for m in accepted.values())
                 if job['contract'].get('kind')=='coding':
+                    # D-85: only say "a separate review" when one ran.
+                    from .proportional import independently_reviewed
+                    passed=('passed its tests and a separate review' if independently_reviewed(job)
+                            else 'passed its tests')
                     if job['contract'].get('greenfield'):
                         # LIVE-2/LIVE-10: nothing is in the new project's folder yet here, so it is not
                         # called "ready", and no absolute path is written into the message.
-                        text=('The code for your new project passed its tests and a separate review. '
+                        text=('The code for your new project '+passed+'. '
                               "It isn't in the project folder yet — its work card offers Apply.")
                     else:
-                        text=('The change passed its tests and a separate review. '
+                        text=('The change '+passed+'. '
                               'Its work card shows whether it is in your project and offers Apply or Undo.')
                     # D-65: Full access applied it (what, where, how it was checked) or says why not;
                     # under Ask first it names the Apply on its needs-you card (D-70).
                     from .auto_apply import result_text
                     text=result_text(self,job) or text
+                    # D-84: one plain line naming the tests Kel changed and why.
+                    try:
+                        from .coding import test_changes_result_line
+                        line=test_changes_result_line(self,job)
+                    except Exception:
+                        line=None
+                    if line:
+                        text=text+'\n\n'+line
                 # D-53: a conversational hand-off gets a lead-in that names the work — and only a
                 # VERIFIED result may say it passed its checks.
                 handoff=job['contract'].get('handoff') or {}
@@ -1444,9 +1465,9 @@ def explain_failure(job):
                         'After the first failure Kel told the Builder exactly what failed and gave it one more '
                         'try; it failed the same way, so Kel stopped rather than repeat it.' if stopped else
                         'The Builder had %s.' % tries_text),
-                    'If the behaviour that test checks is meant to change, update or remove that test in your '
-                    'project yourself, then ask again. Otherwise ask Kel to try again with more detail about '
-                    'the approach.')
+                    'If the behaviour that test checks is meant to change, ask again and say which behaviour '
+                    'should change — Kel updates a test only where your request contradicts it. Otherwise ask '
+                    'Kel to try again with more detail about the approach.')
             if coding:
                 return _explain(
                     "The change didn't pass Kel's checks, so nothing was applied to your project.",

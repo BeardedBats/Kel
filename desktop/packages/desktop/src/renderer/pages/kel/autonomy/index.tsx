@@ -19,7 +19,6 @@ import {
 } from '@renderer/components/kel/KelPrimitives';
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { KelAuthorityCard } from '@renderer/components/kel/KelAuthorityCard';
-import { KelMemoryFolderCard } from '@renderer/components/kel/KelMemoryFolderCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { KEL_ALL_CONVERSATIONS, kelAutonomy, kelState, type KelBoundaryRequest, type KelLease, type KelWorkJob } from '@renderer/components/kel/kelApi';
 import { workLabelFor } from '@renderer/components/kel/jobLabels';
@@ -143,8 +142,6 @@ export default function KelAutonomyPage() {
 
         {/* D-64: the mode first — Full access by default, one switch back to Ask first. */}
         <KelAuthorityCard />
-        {/* D-81: the Memory folder, and whether Windows already blocks Codex's reads outside it. */}
-        <KelMemoryFolderCard />
 
         {error && <KelFailureCard error={error} onRetry={() => void load()} />}
         {!error && leases === null && <KelLoading rows={3} />}

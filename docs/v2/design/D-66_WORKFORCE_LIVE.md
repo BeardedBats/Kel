@@ -154,6 +154,27 @@ a triggered code change **waits for Nick** instead of applying (missing coverage
 INTERRUPTED at engine start and are retried at most twice.
 
 ## 3a. Sentinel and the Red Team (phase 3, 2026-09-28)
+
+**D-85 thresholds (2026-09-29, proportional verification — these supersede the triggers below where
+they differ).** The default is the lightest check that fits; never three reviews on routine work.
+Decided at intake and frozen in the staffing record; jobs staffed earlier keep their frozen passes.
+
+| Pass | Runs when (D-85) | Where |
+|---|---|---|
+| Project's own tests | always, when the project has them (coding); Kel's built-in checks for writing | `coding.py`, `core.verify` |
+| Verifier | code: a risk flag (security, privacy, data migration, irreversible, release, new dependency), D4, or a verified diff of **more than 3 files or 80 changed lines**; research: always; writing: tier D2+ or a risk flag. Not for a small code change, a short draft (D0/D1 writing) or a new prototype project (greenfield: its smoke test is the sanity check) | `staffing['review']['verifier'] = {when: always\|if_large\|never, why, size}`, `proportional.review_skip` |
+| Sentinel | a code change with a **security or data-migration** flag, or D4 work with a Sentinel flag. A privacy word alone no longer brings it (the Verifier reviews it; with security or migration, privacy stays a Sentinel lens) | `staff.sentinel_decision` |
+| Oracle | D4; tier D2+ with a **hard-to-undo** flag (irreversible, release, data migration — security alone no longer); or a large change applied on its own (> 10 files / 400 lines, unchanged) | `staff.ORACLE_FLAGS`, `oracle.trigger` |
+| Red Team | **D4 only** (the security size trigger is gone; old records keep theirs) | `staff.red_team_decision` |
+
+A skipped Verifier is recorded, not hidden: the step's `manual_review` check is settled `VERIFIED` with
+`reviewer_id: 'kel:proportional'`, `proportional: true` and a plain finding ("No independent review was
+needed: a small change (1 file, 6 changed lines) whose tests pass. Undo puts it back."); the result says
+"passed its tests" (never "and a separate review") and the Office detail shows `review.not_needed`.
+D-84 test changes: when a Verifier runs it rules on each one; when none runs, each changed test needs the
+Builder's structured reason quoting the request's own words, plus the original-tests rule for every other
+test.
+
 Three independent passes now run, one at a time on the review pool, after a staffed job is VERIFIED
 and before anything is applied or published — **Sentinel → Oracle → Red Team** (`kel/oracle.py`,
 `PASSES`). The engine hook is unchanged: `oracle.pending` answers for all three and `oracle.run` runs

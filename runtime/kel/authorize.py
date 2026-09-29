@@ -108,13 +108,13 @@ def role_for(store, job_id, milestone_id):
 def project_creation_root():
     """The only location where an explicit user request may create a new project folder.
 
-    D-81: `Memory\\Projects`, or `KEL_PROJECTS_ROOT` when set — the engine test suite and off-screen
-    audits point it at a temporary folder so they never create folders in the real Memory folder."""
+    `%USERPROFILE%/Documents/Kel Projects`, or `KEL_PROJECTS_ROOT` when set — the engine test suite
+    and off-screen audits point it at a temporary folder so they never create folders in the real
+    Documents folder."""
     override = (os.environ.get('KEL_PROJECTS_ROOT') or '').strip()
     if override:
         return Path(os.path.expandvars(os.path.expanduser(override))).resolve()
-    from .memory_folder import projects_dir
-    return projects_dir().resolve()
+    return (Path.home() / 'Documents' / 'Kel Projects').resolve()
 
 
 class Authorizer:
@@ -196,7 +196,7 @@ class Authorizer:
             return _result('DENY', 'destructive-snapshot',
                            'A snapshot or backup reference is required before a destructive action')
         # 3b. Creating a new project folder from the user's explicit request is a user-actor effect
-        #     confined to Memory\Projects (D-81; guardrail checks above already applied).
+        #     confined to the Kel Projects root (guardrail checks above already applied).
         meta = intent.get('metadata') or {}
         if (actor == 'user' and kind == 'write'
                 and str(meta.get('operation') or '') == 'create-project'):
@@ -207,7 +207,7 @@ class Authorizer:
                 probe = None
             if probe is None or not probe.is_relative_to(allowed_root):
                 return _result('DENY', 'project-create-scope',
-                               "New projects are created only in the Memory folder's Projects folder")
+                               'New projects are created only under the Kel Projects folder')
             return _result('ALLOW', 'user-project-create',
                            'An explicit user request creates a new project folder')
         # 3c. Conversation capability controls (docs/session-tools/): this conversation may narrow
