@@ -38,12 +38,17 @@ afterEach(() => {
 });
 
 describe('Memory folder card (D-81)', () => {
-  it('names the folder and says plainly that Codex reads are not yet blocked', async () => {
+  it('shows the folder, the Codex state and the button, and nothing else', async () => {
     render(<KelMemoryFolderCard />);
-    expect(await screen.findByText('C:\\Users\\Nick\\Desktop\\Kel\\Memory')).toBeTruthy();
+    expect((await screen.findByTestId('kel-memory-folder')).textContent).toBe('C:\\Users\\Nick\\Desktop\\Kel\\Memory');
     const codex = screen.getByTestId('kel-memory-codex');
     expect(codex.getAttribute('data-blocked')).toBe('no');
-    expect(codex.textContent).toContain('not yet blocked for Codex');
+    expect(codex.textContent).toBe('Codex reads outside MemoryNot blocked');
+    const card = screen.getByTestId('kel-memory-folder-card');
+    // D-87: the engine's explanations are not repeated on the page.
+    for (const sentence of ['reads and writes only inside', 'held to the Memory folder', 'Codex can write only inside', 'administrator'])
+      expect(card.textContent).not.toContain(sentence);
+    expect(screen.getByRole('button', { name: 'Block Codex reads outside Memory' })).toBeTruthy();
   });
 
   it('asks the engine for the one-time setup and waits for Windows', async () => {
@@ -56,7 +61,9 @@ describe('Memory folder card (D-81)', () => {
   it('shows no button once Windows blocks Codex reads, and nothing when the engine cannot say', async () => {
     memory = { ...NOT_YET, codex_reads_blocked: true, codex_setup_available: false, codex: 'Codex runs in its own Windows sandbox.' };
     render(<KelMemoryFolderCard />);
-    expect((await screen.findByTestId('kel-memory-codex')).getAttribute('data-blocked')).toBe('yes');
+    const codex = await screen.findByTestId('kel-memory-codex');
+    expect(codex.getAttribute('data-blocked')).toBe('yes');
+    expect(codex.textContent).toContain('Blocked');
     expect(screen.queryByRole('button')).toBeNull();
     cleanup();
     memory = undefined;
