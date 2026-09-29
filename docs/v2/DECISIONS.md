@@ -986,3 +986,24 @@ model family) as necessary for, and faithful to, the request; the Oracle and Sen
 changes on changes they review. A test change that isn't justified by the request fails the step (the
 D-49/D-71 protection against weakening tests stays). The result tells Nick in one plain line which tests
 Kel changed and why. Supersedes D-71's "Nick updates the test himself first".
+
+## D-85 — Proportional verification: don't over-test or over-validate
+
+**Decided by Nick 2026-09-29.** Verification effort must match what's at stake. Skip or lighten checking
+when the thing (A) is going to change anyway, (B) can be verified by Nick later just by using it, or
+(C) isn't worth the effort. Project bloat from slow, heavy validation is itself a defect.
+
+**In Kel (runtime):** the default is the lightest check that fits.
+- Small, reversible or exploratory work: run the project's own tests if they exist; no independent
+  reviewer. Undo covers the rest.
+- A Verifier (independent review) only for real code changes of meaningful size or risk.
+- The Oracle only for large or hard-to-undo changes; Sentinel only for genuine security / data-migration
+  work; the Red Team only for high-assurance (D4) work. Never three reviews on routine work.
+- Prototypes, drafts and throwaway work get a quick sanity check, not the full chain.
+- Speed matters: a check that adds minutes must earn its place.
+
+**In building Kel (development process):** focused tests for what changed; one full suite before an
+install, not after every edit; live model runs and frame-by-frame captures only for risky or
+user-visible behaviour, not by default; no audits of things about to be redesigned; Nick's own use is a
+valid way to verify polish.
+Refines D-66/D-67 review triggers and D-84 (the Verifier still approves test changes when a Verifier runs).
