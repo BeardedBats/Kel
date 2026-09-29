@@ -425,7 +425,8 @@ export const KelModelPill: React.FC<{ conversationId?: string }> = ({ conversati
  * D-73.3: Settings → Model's card for Kel's model — the same value as the Kel row in Staff & models
  * (reasoning and Fixed/Preferred live there). An engine without roles keeps the older default list.
  */
-export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }> = ({ compact = false, title }) => {
+/** `compact` is accepted for older callers; since D-87 the card never carries a description. */
+export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }> = ({ title }) => {
   const navigate = useNavigate();
   const { state, kels, setDefault } = useKelModelState();
   const [busy, setBusy] = useState(false);
@@ -451,12 +452,6 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
     const older = state?.default?.provider && !state.kel_model ? choiceLabel(state, state.default) : null;
     return (
       <KelCard title={title ?? "Kel's model"} data-testid='kel-default-model-card'>
-        {!compact && (
-          <p className='text-14px text-t-secondary m-0 mb-10px'>
-            Kel talks with you, plans and hands work to the staff on this model. A chat can still pick its own
-            model from the composer; the staff use their own models.
-          </p>
-        )}
         {older ? (
           <p className='text-14px m-0 mb-10px' data-testid='kel-model-older-default'>
             {`Right now ${older} answers your chats — an older setting. Choose Kel's model below to make it the one setting.`}
@@ -473,7 +468,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
             style={{ background: automatic && !older ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
           >
             <span className='kel-shell-default-model-lead' aria-hidden='true'>✦</span>
-            <span className='kel-shell-default-model-name'>Automatic<span>Kel picks what is available</span></span>
+            <span className='kel-shell-default-model-name'>Automatic</span>
             <span className='kel-shell-default-model-status'>{automatic && !older ? 'Current' : ''}</span>
             <span className='kel-shell-default-model-action' />
           </button>
@@ -513,11 +508,6 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
 
   return (
     <KelCard title={title ?? 'Default model'} data-testid='kel-default-model-card'>
-      {!compact && <p className='text-14px text-t-secondary m-0 mb-10px'>
-        Kel uses this model for normal conversations. The list shows the models available to Kel right
-        now — a chat can still pick its own model from the chat header, and Automatic keeps Kel's
-        routing across every available provider.
-      </p>}
       {!state ? (
         <p className='text-14px text-t-secondary m-0'>Kel's model list is unavailable right now.</p>
       ) : (
@@ -531,7 +521,7 @@ export const KelDefaultModelCard: React.FC<{ compact?: boolean; title?: string }
             style={{ background: !state.default ? 'var(--color-fill-2)' : 'transparent', border: '1px solid var(--color-border-2)' }}
           >
             <span className='kel-shell-default-model-lead' aria-hidden='true'>✦</span>
-            <span className='kel-shell-default-model-name'>Automatic<span>Kel picks what is available</span></span>
+            <span className='kel-shell-default-model-name'>Automatic</span>
             <span className='kel-shell-default-model-status'>{!state.default ? 'Current' : ''}</span>
             <span className='kel-shell-default-model-action' />
           </button>

@@ -11,15 +11,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..', '..');
 const read = (relative: string) => readFileSync(path.join(repoRoot, relative), 'utf8');
 
-const autonomyPage = read('desktop/packages/desktop/src/renderer/pages/kel/autonomy/index.tsx');
 const autonomy = read('runtime/kel/autonomy.py');
 
 describe('live capability revision (D16)', () => {
-  it('the Permissions page states the rule in the user\u2019s language', () => {
-    expect(autonomyPage).toContain('Changes apply immediately');
-    expect(autonomyPage).toContain('nothing widens on its own');
-  });
-
+  // D-87 removed the Permissions page's explanation of this rule (no meta text); the engine pins below hold it.
   it('the engine enforces it at call time, fail-closed', () => {
     expect(autonomy).toContain('"""Fails closed. Returns');
     expect(autonomy).toContain("return {'allowed': False, 'rule': 'lease-' + lease['state'].lower(),");

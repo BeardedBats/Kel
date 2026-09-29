@@ -57,7 +57,7 @@ export const KelKeepAwakeCard: React.FC<{ compact?: boolean }> = ({ compact = fa
     <div>
       <div>Keep computer awake</div>
       <p className='kel-meta m-0'>
-        Stops this computer from sleeping while Kel is open so long work keeps running. The screen can still dim. Now:{' '}
+        Now:{' '}
         <span data-testid='kel-keep-awake-state' data-active={active ? 'true' : 'false'}>{liveState}</span>
       </p>
     </div>

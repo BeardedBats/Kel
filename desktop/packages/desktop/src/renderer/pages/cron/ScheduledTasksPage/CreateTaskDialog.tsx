@@ -492,7 +492,6 @@ const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({ visible, onClose, e
           <div className='kel-shell-task-queue mb-20px flex items-start justify-between gap-16px rounded-12px border border-solid border-[var(--color-border-2)] px-14px py-12px'>
             <div className='min-w-0'>
               <p className='m-0 text-14px font-medium text-t-primary'>Skip if still running</p>
-              <p className='mb-0 mt-4px text-12px leading-18px text-t-secondary'>Skip a run if the last one is still going.</p>
             </div>
             <Switch checked={skipIfRunning} onChange={setSkipIfRunning} aria-label='Skip if still running' />
           </div>

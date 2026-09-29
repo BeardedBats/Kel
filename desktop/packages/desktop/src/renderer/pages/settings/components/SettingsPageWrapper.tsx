@@ -141,7 +141,6 @@ const SettingsPageWrapper: React.FC<SettingsPageWrapperProps> = ({ children, cla
               <p>{pathname.endsWith('/model') || pathname.endsWith('/staff') ? 'Model' : pathname.endsWith('/about') ? 'Other' : /\/(model|tools|webui)$/.test(pathname) ? 'Settings' : pathname.endsWith('/archived') ? 'History' : 'Application'}</p>
               <h1>{pathname.endsWith('/model') ? 'Model' : pathname.endsWith('/staff') ? 'Staff & models' : pathname.endsWith('/skills') ? 'Skills' : pathname.endsWith('/webui') ? 'WebUI' : pathname.endsWith('/archived') ? <><span className='kel-desktop-only'>Archived</span><span className='kel-phone-only'>Archived conversations</span></> : menuItems.find((item) => pathname.includes(`/settings/${item.path}`))?.label ?? 'Settings'}</h1>
             </header>
-            {pathname.endsWith('/model') && <p className='kel-shell-model-description'>Kel uses this model for normal conversations. A chat can still pick its own model from the chat header, and Automatic keeps Kel's routing across every available provider.</p>}
             {children}
           </div>
         </div>

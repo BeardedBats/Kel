@@ -45,10 +45,6 @@ const SkillsOverviewSettings: React.FC = () => {
           {builtIn.length > 0 && <SkillList title='Built into Kel' skills={builtIn} empty='' testId='kel-settings-skills-builtin' />}
           <SkillList title='Added by you' skills={mine} empty='You haven’t added any skills' testId='kel-settings-skills-custom' />
         </>}
-      <section className='kel-card kel-shell-catalog-tip'>
-        <ShellSourceCardHeader title='How skills work' />
-        <p>Skills are ready-made instructions Kel can follow for particular kinds of work.</p>
-      </section>
     </div>
   </SettingsPageWrapper>;
 };

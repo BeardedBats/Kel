@@ -655,7 +655,6 @@ html[style*='--kel-shell-custom-border'] .kel-v2-shell :is(.kel-card, .kel-shell
 html[style*='--kel-shell-custom-accent'] .kel-v2-shell :is(.kel-btn--quiet, .kel-shell-workspace-link) { color: var(--kel-shell-custom-accent); }
 .kel-v2-shell .sider-footer[data-settings-context='true'] > div > :first-child { display: none; }
 .kel-shell-theme-gallery { position: relative; }
-.kel-shell-theme-gallery-actions > span { display: none; }
 .kel-shell-theme-gallery-actions { justify-content: flex-end; }
 .kel-v2-shell [data-testid^='theme-card-'] { box-sizing: border-box; border: 1px solid rgba(191,216,255,.24); border-radius: 10px; height: 116px; background: #0c1b36 !important; }
 .kel-v2-shell [data-testid='theme-card-light'] { background: #edf2fa !important; }
@@ -918,7 +917,6 @@ html[data-theme='dark'] body .kel-shell-model-modal .arco-modal-content { backgr
 }
 
 .kel-shell-model-settings { position: relative; }
-.kel-shell-model-description { margin: -8px 0 20px; font: 400 14px/18px var(--kel-shell-body); color: var(--kel-text-2); }
 .kel-shell-model-actions { display: flex; gap: 8px; margin-left: auto; }
 @media(min-width:768px) { .kel-shell-model-actions { position: absolute; right: 0; top: -94px; } }
 .kel-shell-custom-models .py-40px { min-height: 160px; padding-block: 24px; }
@@ -1024,7 +1022,6 @@ button.kel-shell-attention-line { cursor: pointer; }
 .kel-v2-shell .kel-shell-home-header { margin-bottom: 22px; }
 .kel-v2-shell .kel-page__head { min-height: 59px; }
 .kel-v2-shell .kel-scope { font-family: var(--kel-shell-body); }
-.kel-v2-shell .kel-shell-model-description { margin-bottom: 12px; }
 .kel-v2-shell .kel-shell-custom-models .py-40px { min-height: 21px; padding: 0; align-items: flex-start; }
 .kel-v2-shell .kel-shell-custom-models .py-40px h3 { margin: 0; font: 400 14px/20px var(--kel-shell-body); color: var(--kel-text-2); }
 .kel-v2-shell [data-testid='kel-default-model-card'] > .flex { gap: 0; }
@@ -1414,7 +1411,6 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header { margin: 0 0 24px; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header p { display: none; }
 .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-settings-header h1 { font: 600 20px/26px var(--kel-shell-heading); }
-.kel-v2-shell .kel-in-chat-frame__pane :is(.kel-shell-model-description, [data-testid='tools-header']) { display: none; }
 .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] { gap: 0; margin-bottom: 0; }
 .kel-v2-shell .kel-in-chat-frame__pane [data-testid='kel-default-model-card'] > .kel-shell-source-card-head { margin-bottom: 10px; }
 @media (min-width: 768px) {
@@ -1520,13 +1516,10 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
 .kel-v2-shell .kel-shell-catalog-row-copy { display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 2px; }
 .kel-v2-shell .kel-shell-catalog-row strong { font: 500 14px/20px var(--kel-shell-heading); color: var(--kel-text-1); }
 .kel-v2-shell .kel-shell-catalog-row-copy > span { overflow: hidden; font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); text-overflow: ellipsis; white-space: nowrap; }
-.kel-v2-shell .kel-shell-catalog-tip { min-height: 100px; }
-.kel-v2-shell .kel-shell-catalog-tip p { margin: 0; padding: 6px 12px; border: 1px solid var(--kel-figma-color-glass-edge); border-radius: 8px; background: rgba(47,107,224,.08); font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
 @media (min-width: 768px) {
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card:has(.kel-shell-catalog-list) { min-height: 0; padding-top: 18px; padding-bottom: 6px; gap: 4px; }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card .kel-shell-catalog-row { box-sizing: border-box; min-height: 58px; padding: 0 6px; border-color: rgba(191,216,255,.08); }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-card .kel-shell-catalog-row-icon { margin-inline: 2px 6px; }
-  .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-catalog-tip { display: none; }
 }
 
 .kel-v2-shell .kel-shell-ramble > aside { box-sizing: border-box; width: 256px; min-width: 256px; padding: 0 8px; }
@@ -1678,16 +1671,13 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-v2-shell .kel-shell-webui-progress { display: flex; gap: 4px; width: 100%; margin-bottom: 8px; }
   .kel-v2-shell .kel-shell-webui-progress > span { flex: 1; height: 3px; border-radius: 2px; background: rgba(191,216,255,.15); }
   .kel-v2-shell .kel-shell-webui-progress > span.is-active { background: var(--kel-figma-color-text-accent); }
-  .kel-v2-shell .kel-shell-webui-mobile-intro { margin: 0; color: var(--kel-figma-color-text-muted); font: 400 14px/20px var(--kel-shell-body); }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-settings-card { padding: 12px !important; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-row { box-sizing: border-box; min-height: 40px; padding-block: 8px; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-credential-field { width: auto; min-width: 0; height: auto; padding: 0; border: 0; background: transparent; color: var(--kel-figma-color-text-muted); box-shadow: none; }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty,
   .kel-v2-shell .kel-shell-catalog-card,
-  .kel-v2-shell .kel-shell-catalog-tip { min-height: 0; }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-shell-archived-empty { padding-bottom: 22px; }
   .kel-v2-shell .settings-page-content .kel-shell-catalog-card { padding-bottom: 22px; }
-  .kel-v2-shell .settings-page-content .kel-shell-catalog-tip { padding-bottom: 26px; }
   .kel-v2-shell .kel-shell-about { gap: 13px; }
   .kel-v2-shell .kel-shell-about > .kel-card { padding-bottom: 24px; }
   .kel-v2-shell .kel-shell-about-licenses .kel-card { padding-bottom: 19px; }
@@ -1696,8 +1686,7 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-v2-shell .kel-shell-archived-empty-icon,
   .kel-v2-shell .kel-shell-catalog-empty-icon { display: none; }
   .kel-v2-shell .kel-shell-archived-empty-content .kel-meta,
-  .kel-v2-shell .kel-shell-catalog-empty p,
-  .kel-v2-shell .kel-shell-catalog-tip p {
+  .kel-v2-shell .kel-shell-catalog-empty p {
     margin: 0; padding: 0; border: 0; border-radius: 0; background: none;
     color: var(--kel-figma-color-text-muted); font: 400 14px/20px 'Instrument Sans', 'Segoe UI', sans-serif;
   }
@@ -1867,7 +1856,6 @@ html body .kel-v2-shell .kel-shell-chat-composer .sendbox-panel :is(.sendbox-mod
   .kel-v2-shell .kel-in-chat-frame__pane #kel-autonomy-main > .kel-card > .kel-empty { min-height: 17px; }
   .kel-v2-shell .kel-in-chat-frame__pane #kel-autonomy-main > .kel-card > .kel-empty strong { font: 400 14px/17px var(--kel-shell-body); color: #8fa9d6; }
   .kel-v2-shell .kel-in-chat-frame__pane #kel-autonomy-main > .kel-card:has(.kel-permission-check-mobile) { padding-bottom: 4px; }
-  .kel-v2-shell #kel-autonomy-main .kel-permission-check-desktop { display: none; }
   .kel-v2-shell #kel-autonomy-main .kel-permission-check-mobile {
     box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 39px;
     padding: 10px 0; border: 0; background: transparent; color: var(--kel-text-1); text-align: left; cursor: pointer;
@@ -2609,7 +2597,6 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   .kel-v2-shell .kel-shell-webui-title-line { display: flex; align-items: center; gap: 10px; min-height: 32px; }
   .kel-v2-shell .kel-shell-webui-title-line .kel-shell-source-card-head { margin: 0; }
   .kel-v2-shell .kel-shell-webui-running { color: #8be2b5; font: 500 12px/18px var(--kel-shell-heading); }
-  .kel-v2-shell .kel-shell-webui-service-intro.is-hidden { display: none !important; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-service-card.is-running .kel-shell-webui-row,
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-login-card.is-running .kel-shell-webui-row { min-height: 50px; padding: 6px 0; }
   .kel-v2-shell .kel-shell-webui-panel .kel-shell-webui-service-card.is-running .kel-shell-webui-row.kel-shell-preference-row,
@@ -2825,7 +2812,6 @@ html[data-theme='dark'] body :is(.kel-tools-json-modal, .kel-tools-delete-modal,
   position: static; align-self: center; margin: 0;
 }
 .kel-v2-shell #project-recipes .kel-recipe-count { color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
-.kel-v2-shell #project-recipes .kel-recipe-desktop-intro p { margin: 2px 0 0; color: #8fa9d6; font: 400 13px/18px 'SF Pro Text',sans-serif; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; }
 .kel-v2-shell #project-recipes .kel-recipe-desktop-search {
   box-sizing: border-box; display: flex; align-items: center; gap: 8px; flex: none; width: 240px; height: 34px;
@@ -3201,7 +3187,6 @@ html[data-theme='light'] body .kel-task-delete-modal .arco-checkbox { color: var
   .kel-v2-shell #project-map .kel-shell-source-card-actions .kel-btn { background: var(--kel-figma-fill-button-primary); color: #fff1f0; border: 1px solid var(--kel-figma-color-glass-button-edge); height: 34px; min-height: 34px; }
   .kel-v2-shell .kel-project-map-caption { display: block; margin: -20px 0 8px; font: 400 12px/16px var(--kel-shell-body); color: #8fa9d6; }
   .kel-project-map-caption > span { display: block; margin: 0 125px 8px 110px; }
-  .kel-project-map-caption > p { margin: 0; }
   .kel-v2-shell .kel-project-map-desktop .kel-table { min-width: 560px; }
   .kel-v2-shell .kel-project-map-desktop .kel-table th { background: transparent; font: 500 12px/20px var(--kel-shell-heading); padding: 4px 0 8px; }
   .kel-v2-shell .kel-project-map-desktop .kel-table td { padding: 11px 0; font: 400 13px/20px var(--kel-shell-body); }
@@ -3241,7 +3226,6 @@ html[data-theme='light'] body .kel-task-delete-modal .arco-checkbox { color: var
   .kel-v2-shell .kel-in-chat-frame__pane #project-map .kel-shell-source-card-head .kel-h2 { font: 700 15px/18px var(--kel-shell-heading); }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-project-map-caption { margin: -8px 0 8px; }
   .kel-v2-shell .kel-in-chat-frame__pane .kel-project-map-caption > span { position: absolute; top: 20px; left: 130px; margin: 0; }
-  .kel-v2-shell .kel-in-chat-frame__pane .kel-project-map-caption > p { margin: 0; }
   .kel-v2-shell .kel-knowledge-trust-note { display: block; margin: 4px 0 8px; font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); }
 }
 @media(min-width:768px) and (max-width:1100px) {

@@ -105,8 +105,8 @@ describe('Settings → Staff & models (D-70 item 3)', () => {
     const order = Array.from(document.querySelectorAll('[data-testid^="staff-row-"]')).map((el) => el.getAttribute('data-role'));
     expect(order).toEqual(['kel', 'discovery', 'architect', 'designer', 'builder', 'verifier', 'sentinel', 'release', 'oracle', 'utility']);
     expect(screen.getByRole('heading', { name: 'Staff & models' })).toBeTruthy();
-    expect(screen.getByTestId('staff-defaults-note').textContent).toMatch(/starts on Kel's recommended default/);
-    expect(screen.getByTestId('staff-defaults-note').textContent).toMatch(/only for Kel's own replies/);
+    // D-87: no description of how staff work above the rows.
+    expect(screen.queryByTestId('staff-defaults-note')).toBeNull();
     expect(within(rowFor('builder')).getByText('Does the work: writes the code or the document.')).toBeTruthy();
     const kelModel = within(rowFor('kel')).getByRole('combobox', { name: 'Kel: model' }) as HTMLSelectElement;
     expect(kelModel.value).toBe('gpt-6-luna');

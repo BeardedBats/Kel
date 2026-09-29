@@ -91,7 +91,7 @@ export default function ScheduledTasksPage() {
           title='No scheduled tasks yet.'
           why={hiddenElsewhere > 0
             ? `This project has none. ${hiddenElsewhere} ${hiddenElsewhere === 1 ? 'task belongs' : 'tasks belong'} to other projects — switch to All projects to see ${hiddenElsewhere === 1 ? 'it' : 'them'}.`
-            : 'A scheduled task asks Kel to do the same thing on a schedule — for example, “every Friday at 4, summarize what changed in this project this week”. Each run shows up here with its result.'}
+            : undefined}
         />
       ) : <div>
         {shown.map(schedule => {

@@ -82,7 +82,7 @@ describe('ST-05 keep awake reports the live state (JR-48)', () => {
     bridge.getKeepAwake.mockResolvedValue({ enabled: false, active: false });
     render(<KelKeepAwakeCard compact />);
     await waitFor(() => expect(screen.getByTestId('kel-keep-awake-state').textContent).toBe('Off'));
-    expect(screen.getByText(/Stops this computer from sleeping/)).toBeTruthy();
+    expect(screen.queryByText(/Stops this computer from sleeping/)).toBeNull();
   });
 });
 

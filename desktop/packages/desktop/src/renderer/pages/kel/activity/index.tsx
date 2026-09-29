@@ -310,10 +310,7 @@ const KelActivityPage: React.FC = () => {
 
       <KelCard title='Happening now'>
         {now.length === 0 ? (
-          <KelEmpty
-            title='Nothing is running right now.'
-            why='When you ask Kel for something real, its progress shows up here.'
-          />
+          <KelEmpty title='Nothing is running right now.' />
         ) : (
           now.map((job) => (
             <React.Fragment key={job.id}>

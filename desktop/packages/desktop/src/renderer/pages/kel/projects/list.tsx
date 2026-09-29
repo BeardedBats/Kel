@@ -322,7 +322,6 @@ export default function KelProjectsList() {
             New project
           </KelButton>
         </div>
-        <p className='kel-meta'>Your active project is the same on every device.</p>
         {note && (
           <p className='kel-meta' role={note.alert ? 'alert' : 'status'}>
             {note.text}
@@ -346,7 +345,7 @@ export default function KelProjectsList() {
         ) : (
           <KelCard title='All projects'>
             {live.length === 0 ? (
-              <KelEmpty title='No projects yet.' why='A project keeps its chats, knowledge and folder together.' />
+              <KelEmpty title='No projects yet.' />
             ) : (
               live.map(row)
             )}

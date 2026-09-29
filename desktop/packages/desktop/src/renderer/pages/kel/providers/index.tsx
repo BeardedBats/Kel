@@ -263,7 +263,6 @@ const Providers: React.FC = () => {
                     className="kel-input"
                     type="password"
                     aria-label={`${provider.label} API key`}
-                    placeholder="paste the key — it goes to the OS store, never the engine"
                     value={keyDraft.value}
                     onChange={(event) => setKeyDraft({ provider: provider.provider, value: event.target.value })}
                   />
@@ -320,9 +319,6 @@ const Providers: React.FC = () => {
             <div className="kel-shell-provider-preflight-row"><span>Credential store</span><span className="kel-meta">OS-backed keychain</span><span className={`kel-chip ${secure?.available ? 'kel-chip--ok' : 'kel-chip--wait'}`}>{secure?.available ? 'Available' : 'Unavailable'}</span></div>
           </div>
           {readinessOptionsOpen && <div className="kel-shell-provider-preflight-options">
-          <p className="kel-sub">
-            This checks routing only. It does not send a prompt or prove a model response.
-          </p>
           <div className="kel-row">
             {['text', 'vision', 'tools', 'edit', 'shell'].map((name) => (
               <KelButton
@@ -376,10 +372,7 @@ const Providers: React.FC = () => {
           <details className="kel-work-details" data-testid="credential-details">
           <summary>Details</summary>
           {credentialRows.length === 0 ? (
-            <KelEmpty
-              title="No Kel-owned credential metadata yet."
-              why="The engine stores the provider, the field names, and a reference — the value itself lives in the OS-backed store."
-            />
+            <KelEmpty title="No Kel-owned credential metadata yet." />
           ) : (
             <KelTable
               head={['Provider', 'Fields', 'Reference', 'Updated']}

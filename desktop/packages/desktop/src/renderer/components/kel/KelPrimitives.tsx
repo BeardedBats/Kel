@@ -172,7 +172,7 @@ export const KelMeter: React.FC<{ used: number; total: number }> = ({ used, tota
   );
 };
 
-export const KelEmpty: React.FC<{ title: string; why: string; actionLabel?: string; onAction?: () => void }> = ({
+export const KelEmpty: React.FC<{ title: string; why?: string; actionLabel?: string; onAction?: () => void }> = ({
   title,
   why,
   actionLabel,
@@ -180,7 +180,7 @@ export const KelEmpty: React.FC<{ title: string; why: string; actionLabel?: stri
 }) => (
   <div className={`kel-empty${actionLabel && onAction ? ' kel-empty--action' : ''}`}>
     <strong>{title}</strong>
-    <span className='kel-empty-description'>{why}</span>
+    {why && <span className='kel-empty-description'>{why}</span>}
     {actionLabel && onAction && (
       <div className="kel-row" style={{ marginTop: 12 }}>
         <KelButton variant="primary" onClick={onAction}>

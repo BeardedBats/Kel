@@ -245,9 +245,6 @@ export default function KelAutonomyPage() {
         )}
 
         <KelCard title="Safety rules">
-          <p className="kel-sub kel-permission-check-desktop">
-            Kel checks every action against safety rules that projects, repositories and web content can't change.
-          </p>
           <button type="button" className="kel-permission-check-mobile" aria-expanded={advanced} onClick={() => setAdvanced(value => !value)}>
             <span>Safety rules</span>
             <span>{advanced ? 'Hide details' : 'Details'}</span>
@@ -290,15 +287,7 @@ export default function KelAutonomyPage() {
           Emergency stop revokes every active permission and pauses all active or queued work; Kel stops
           at its next safe check. It does not undo work that already finished.
         </p>
-            <p className="kel-meta">
-              Changes apply immediately — turning off a permission stops the next step, even while work is
-              running, and nothing widens on its own: extra access only follows an access request you approve.
-            </p>
             <KelCard title="Check what Kel may do">
-          <p className="kel-sub">
-            Ask whether Kel would be allowed to do something before any work runs. Kel refuses anything
-            outside what you approved, anything locked, and anything it cannot verify.
-          </p>
           <div className="kel-row">
             <KelTabs
               tabs={CHECK_KINDS.map((entry) => ({ id: entry, label: CHECK_KIND_LABEL[entry] ?? entry }))}
@@ -340,9 +329,6 @@ export default function KelAutonomyPage() {
 
         {leases !== null && leases.length > 0 && (
           <KelCard title="Work references">
-            <p className="kel-meta">
-              Support detail — the references behind the Work column, for troubleshooting only.
-            </p>
             <KelTable
               head={['Work', 'Job id', 'Lease id']}
               rows={leases.map((lease) => [
@@ -360,11 +346,6 @@ export default function KelAutonomyPage() {
 
         {rules.length > 0 && (
           <KelSection title="Safety rules (locked)">
-            <p className="kel-sub">
-              These safety rules are locked and cannot be changed by projects, repositories, or web content;
-              Kel refuses work that tries to change them. Every action is checked against them before it
-              runs, and every decision is recorded.
-            </p>
             <KelTable
               head={['Rule', 'What it means', 'Checked by']}
               rows={rules.map((rule) => [

@@ -169,11 +169,6 @@ const Diagnostics: React.FC = () => {
           style={isMobile ? undefined : { width: 560, top: 0, marginTop: 120 }} autoFocus focusLock>
           {isMobile ? (
             <KelCard title='Export and issue report'>
-              <p className='kel-sub'>
-                The report is built from an allowlist, not by filtering a dump: credentials, tokens and API
-                keys, prompts, unrelated chats, personal files and environment details are left out. It is
-                saved on this computer; nothing is sent.
-              </p>
               {receipt && (
                 <KelSection title='What the report includes'>
                   <p className='kel-meta'>Included: {receipt.included.join(' · ') || '—'}</p>

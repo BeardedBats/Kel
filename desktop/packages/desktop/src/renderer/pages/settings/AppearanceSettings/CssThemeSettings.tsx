@@ -381,7 +381,6 @@ const CssThemeSettings: React.FC = () => {
     <div className='space-y-12px kel-shell-theme-gallery'>
       {/* 标题栏 / Header */}
       <div className='kel-shell-theme-gallery-actions flex items-start md:items-center justify-between gap-8px flex-wrap'>
-        <span className='text-14px text-t-secondary leading-22px'>{t('settings.cssTheme.selectOrCustomize')}</span>
         <Button type='primary' size='small' className='!h-32px !rounded-8px !px-14px !m-0' onClick={handleAddTheme}>
           Add theme
         </Button>

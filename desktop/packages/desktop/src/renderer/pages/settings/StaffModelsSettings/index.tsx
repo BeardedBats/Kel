@@ -250,13 +250,11 @@ function StaffRow({
         ) : (
           <span className='kel-staff-row__state' data-tone='ok'>Available</span>
         )}
-        <span className='kel-staff-row__detail' data-testid={`staff-note-${row.role}`}>
-          {automatic
-            ? MODE_HINTS.AUTOMATIC
-            : unavailable
-              ? `${(row.note ?? `${modelLabel(listing, row.model)} can't run on this computer`).replace(/[.\s]+$/, '')}. ${consequence(row)}`
-              : MODE_HINTS[row.mode]}
-        </span>
+        {!automatic && unavailable ? (
+          <span className='kel-staff-row__detail' data-testid={`staff-note-${row.role}`}>
+            {`${(row.note ?? `${modelLabel(listing, row.model)} can't run on this computer`).replace(/[.\s]+$/, '')}. ${consequence(row)}`}
+          </span>
+        ) : null}
         <span className='kel-grow' />
         {row.is_default === false ? (
           <>
@@ -331,10 +329,6 @@ export function RankingCard() {
 
   return (
     <KelCard title='How Kel picks models'>
-      <p className='kel-staff-models__note'>
-        For each kind of work: the staff setting that decides it, how much model it gets, and the order Kel tries models in.
-        Your choices above always come first; recent results only reorder the rest.
-      </p>
       {error ? (
         <p className='kel-staff-row__error' role='alert'>
           {error}
@@ -406,10 +400,6 @@ export function ScopingThresholdCard() {
         <div className='kel-staff-row__main'>
           <div className='kel-staff-row__name'>
             <strong>When Kel asks first</strong>
-            <span>
-              Before bigger work Kel can ask two or three quick questions, and nothing starts until you answer or say
-              start.
-            </span>
           </div>
           <div className='kel-staff-row__controls'>
             <label className='kel-staff-row__field kel-staff-row__field--model'>
@@ -527,11 +517,6 @@ const StaffModelsSettings: React.FC = () => {
           </KelCard>
         ) : (
           <KelCard title='Staff'>
-            <p className='kel-staff-models__note' data-testid='staff-defaults-note'>
-              Kel hands real work to its staff, and each role runs on its own model. Every role starts on
-              Kel's recommended default; change one here or reset it any time. The model you pick in a chat
-              is only for Kel's own replies.
-            </p>
             {inEffect.line ? (
               <p className='kel-staff-models__in-effect' data-testid='staff-kel-in-effect' data-for-chat={inEffect.forChat || undefined}>
                 {inEffect.line}

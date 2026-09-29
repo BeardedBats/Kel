@@ -85,10 +85,6 @@ const getStatusPopoverContent = (
         {checkedAt ? (
           <div className='text-12px leading-18px text-t-secondary'>{`${t?.('settings.mcpCheckedAtLabel') || 'Checked at:'} ${checkedAt}`}</div>
         ) : null}
-        <div className='text-12px leading-18px text-t-secondary opacity-80'>
-          {t?.('settings.mcpCheckPurposeHint') ||
-            'Used to verify whether the MCP configuration is available. It does not represent the real-time status in the current conversation.'}
-        </div>
       </div>
     );
   }

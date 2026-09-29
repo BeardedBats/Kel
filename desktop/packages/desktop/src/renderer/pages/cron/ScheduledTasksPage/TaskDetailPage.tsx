@@ -197,7 +197,7 @@ const TaskDetailPage: React.FC = () => {
         <div className='kel-task-detail-field'><span>Project</span><span>{projectName}</span></div>
         {!isManual && <div className='kel-task-detail-field'><span>Next run</span><span>{schedule.enabled && !schedule.problem && schedule.next_due_at ? formatNextRun(schedule.next_due_at, i18n.language) : 'Paused'}</span></div>}
         <div className='kel-task-detail-field kel-task-detail-switch-row'>
-          <span>Skip if still running<small>If the last run has not finished, Kel skips this one.</small></span>
+          <span>Skip if still running</span>
           <Switch checked={schedule.skip_if_running} disabled={busy !== null} aria-label='Skip if still running'
             onChange={() => void act('skip', () => scheduleActions.update(schedule.id, { skip_if_running: !schedule.skip_if_running }))} />
         </div>

@@ -386,7 +386,7 @@ const SystemModalContent: React.FC = () => {
     {
       key: 'startOnBoot',
       label: t('settings.startOnBoot'),
-      description: startOnBoot.supported ? t('settings.startOnBootDesc') : t('settings.startOnBootUnsupported'),
+      description: startOnBoot.supported ? undefined : t('settings.startOnBootUnsupported'),
       component: (
         <Switch checked={startOnBoot.enabled} onChange={handleStartOnBootChange} disabled={!startOnBoot.supported} />
       ),
@@ -438,7 +438,6 @@ const SystemModalContent: React.FC = () => {
     {
       key: 'agentIdleTimeout',
       label: t('settings.agentIdleTimeout'),
-      description: t('settings.agentIdleTimeoutDesc'),
       component: (
         <InputNumber
           value={agentIdleTimeout}
@@ -454,7 +453,6 @@ const SystemModalContent: React.FC = () => {
     {
       key: 'previewTextSizeLimit',
       label: t('settings.previewTextSizeLimit'),
-      description: t('settings.previewTextSizeLimitDesc'),
       component: (
         <InputNumber
           key={`preview-limit-${previewLimitMb}`}
@@ -533,24 +531,24 @@ const SystemModalContent: React.FC = () => {
     crossSessionMessage: 'Messages between chats', promptTimeout: 'Prompt timeout',
     agentIdleTimeout: 'Idle timeout', previewTextSizeLimit: 'Preview size limit',
   };
-  // Plain-words descriptions for the desktop page (ST-05): every row says what it does, and a
-  // disabled or overridden row says why instead of looking broken.
+  // ST-05 / D-87: a row carries a line only when it changes what Nick would do — why a switch is off or
+  // overridden, a restart, a side effect or a range. What the switch does is its label.
   const startOnBootReason = startOnBoot.supported
-    ? 'Open Kel automatically when you sign in to this computer.'
+    ? undefined
     : startOnBoot.isPackaged
       ? 'Not available on this system.'
       : 'Available in the installed app only — this copy of Kel is a development build.';
   const desktopDescriptions: Record<string, string | undefined> = {
     startOnBoot: startOnBootReason,
-    closeToTray: 'Closing the window keeps Kel running in the tray so background work continues.',
-    notifications: 'Tell you on the desktop when work finishes or Kel needs you while its window is in the background.',
+    closeToTray: undefined,
+    notifications: undefined,
     hardwareAcceleration: gpuStatus?.autoDisabled
       ? 'Turned off automatically after repeated graphics crashes. Switch it on to try again (Kel restarts).'
-      : 'Use the graphics card to draw Kel. Turn off if the window flickers or crashes. Kel restarts to apply.',
-    crossSessionMessage: 'Let Kel send a message from one chat to another. Turning this off also disables @@ chat mentions.',
-    promptTimeout: 'How long Kel waits for a model to answer before giving up (30–3600 seconds).',
-    agentIdleTimeout: 'Stop helper processes that have been idle this long to free memory (1–60 minutes).',
-    previewTextSizeLimit: 'Text files larger than this open with a notice instead of their content. Applies to newly opened files.',
+      : 'Kel restarts to apply.',
+    crossSessionMessage: 'Turning this off also disables @@ chat mentions.',
+    promptTimeout: '30–3600 seconds',
+    agentIdleTimeout: '1–60 minutes',
+    previewTextSizeLimit: undefined,
   };
   const visiblePreferences = preferenceItems.filter((item) => item.key !== 'saveUploadToWorkspace');
   if (isDesktopPage) visiblePreferences.sort((a, b) => desktopOrder.indexOf(a.key) - desktopOrder.indexOf(b.key));
@@ -571,7 +569,7 @@ const SystemModalContent: React.FC = () => {
                 <PreferenceRow
                   key={item.key}
                   label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}
-                  description={isDesktopPage ? desktopDescriptions[item.key] ?? item.description : item.description}
+                  description={isDesktopPage && item.key in desktopDescriptions ? desktopDescriptions[item.key] : item.description}
                 >
                   {item.component}
                 </PreferenceRow>

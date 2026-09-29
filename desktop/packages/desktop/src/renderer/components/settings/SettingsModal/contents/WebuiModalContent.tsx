@@ -1,5 +1,4 @@
 import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeader';
-import webuiActivityIcon from '@renderer/assets/figma/webui/activity.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -565,12 +564,6 @@ const WebuiModalContent: React.FC = () => {
         {/* WebUI 服务卡片 / WebUI Service Card */}
         <div className={`kel-shell-settings-card kel-shell-webui-service-card ${isDesktopRunning ? 'is-running' : ''} px-[12px] md:px-[28px] py-14px bg-2 rd-16px`}>
           {isDesktopRunning ? <div className='kel-shell-webui-title-line'><ShellSourceCardHeader title='WebUI' /><span className='kel-shell-webui-running'>Running</span></div> : <ShellSourceCardHeader title='WebUI' />}
-          <p className='kel-phone-only kel-shell-webui-mobile-intro'>Turn on WebUI to reach Kel from your phone or a browser.</p>
-          {/* WebUI 引导提示 / WebUI hint */}
-          <div className={`kel-desktop-only kel-shell-webui-service-intro mb-8px rd-10px border border-line bg-fill-1 px-10px py-8px flex items-start gap-6px ${isDesktopRunning ? 'is-hidden' : ''}`}>
-            <img src={webuiActivityIcon} alt='' className='shrink-0' />
-            <div className='text-12px text-t-secondary leading-relaxed'>Turn on WebUI to reach Kel from your phone or a browser.</div>
-          </div>
 
           {/* 启用 WebUI / Enable WebUI */}
           <PreferenceRow
@@ -643,7 +636,6 @@ const WebuiModalContent: React.FC = () => {
             <>
               <div className='border-t border-line my-12px' />
               <div className='text-14px font-500 mb-4px text-t-primary'>{t('settings.webui.qrLogin')}</div>
-              <div className='text-12px text-t-tertiary mb-12px'>{t('settings.webui.qrLoginHint')}</div>
 
               <div className='flex flex-col items-center gap-12px'>
                 {/* 二维码显示区域 / QR Code display area */}

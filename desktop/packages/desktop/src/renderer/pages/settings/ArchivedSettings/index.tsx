@@ -543,7 +543,6 @@ const ArchivedSettings: React.FC = () => {
 
   return (
     <SettingsPageWrapper contentClassName='kel-shell-archived-page'>
-      <p className='kel-shell-model-description kel-shell-archive-description kel-phone-only'>Conversations and teams you archived.</p>
       <div className='kel-shell-archive-actions'>
         {
           total > 0 ? (
@@ -609,8 +608,7 @@ const ArchivedSettings: React.FC = () => {
           <div className='kel-phone-only'><ShellSourceCardHeader title='Archived conversations' /></div>
           <div className='kel-shell-archived-empty-content'>
             <span className='kel-shell-archived-empty-icon' aria-hidden='true'><img src={archivedIcon} alt='' /></span>
-            <p className='kel-meta kel-desktop-only'>No archived items</p>
-            <p className='kel-meta kel-phone-only'>No archived items. Archived chats will appear here.</p>
+            <p className='kel-meta'>No archived items</p>
           </div>
         </div>
       ) : (

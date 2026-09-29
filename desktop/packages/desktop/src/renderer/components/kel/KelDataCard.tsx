@@ -255,7 +255,7 @@ export const KelDataCard: React.FC = () => {
     <div className='kel-shell-preference-row kel-desktop-only'><div><div>Data folder</div><p className='kel-meta' data-testid='data-folder-path'>{dataPath ? dataPath.root : pathError ? 'Kel could not read the data folder path.' : 'Loading…'}</p></div>
       {pathError ? <Button onClick={loadPath}>Try again</Button> : <Button onClick={() => void openFolder()} disabled={!dataPath} data-testid='open-data-folder'>Show in folder</Button>}
     </div>
-    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Back up</div><p className='kel-meta'>Save a copy of your chats, projects and settings to a folder. Credentials are not included.</p></div><Button type='primary' onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
+    <div className='kel-shell-preference-row kel-desktop-only'><div><div>Back up</div><p className='kel-meta'>Credentials are not included.</p></div><Button type='primary' onClick={() => setFolderDialog('backup')} data-testid='backup-now'>Back up now</Button></div>
     <div className='kel-shell-preference-row kel-desktop-only'><div><div>Restore</div><p className='kel-meta'>Replace current data with a backup</p></div><Button onClick={() => setFolderDialog('restore')} data-testid='restore-inspect'>Restore...</Button></div>
     <Modal
       className='kel-shell-dialog-modal'

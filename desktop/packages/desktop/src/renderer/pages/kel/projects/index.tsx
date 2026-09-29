@@ -433,10 +433,7 @@ export default function KelProjectsPage() {
           <>
             <KelCard id="project-knowledge" title="Knowledge">
               {records.length === 0 ? (
-                <KelEmpty
-                  title="No saved knowledge in this project yet."
-                  why="Kel records what it learns while working — with its source and a trust score."
-                />
+                <KelEmpty title="No saved knowledge in this project yet." />
               ) : (
                 <><p className="kel-knowledge-trust-note">Trust ranks run from 1 (strongest) to 7.</p>{recordGroups.map((group) => <React.Fragment key={group.id ?? 'one'}>
                 {allMode && <h3 className="kel-strong kel-knowledge-project">{group.name}</h3>}
@@ -506,9 +503,6 @@ export default function KelProjectsPage() {
                   </span>
                 }
               >
-                <p className="kel-sub">
-                  {isMobile ? 'Kel only changes what it knows when you agree — nothing here applies by itself.' : 'Kel only changes what it knows when you agree.'}
-                </p>
                 {proposals.slice(0, 5).map((proposal) => (
                   <div className="kel-row kel-project-suggestion-row" key={proposal.id} style={{ alignItems: 'flex-start' }}>
                     <span className="kel-knowledge-proposal-icon" aria-hidden="true"><img src={proposal.kind === 'stale' ? knowledgeClockIcon : knowledgeSparkleIcon} alt="" /></span>
@@ -553,7 +547,7 @@ export default function KelProjectsPage() {
                 ))}
                 {proposals.length > 5 && (
                   <p className="kel-meta">
-                    {`${proposals.length - 5} more waiting — clearing these first keeps it simple.`}
+                    {`${proposals.length - 5} more waiting`}
                   </p>
                 )}
               </KelCard>
@@ -579,17 +573,14 @@ export default function KelProjectsPage() {
               </KelButton>
             </>}
           >
-            {work.map && <div className="kel-project-map-caption"><span>v{work.map.version} · built {formatWhen(work.map.updated)}</span><p>What Kel knows about how this project is built.</p></div>}
+            {work.map && <div className="kel-project-map-caption"><span>v{work.map.version} · built {formatWhen(work.map.updated)}</span></div>}
             {allMode ? (
               <KelEmpty
                 title="Choose a project to see its map."
                 why="Each project has its own map. Pick one in the project switcher above."
               />
             ) : !work.map ? (
-              <KelEmpty
-                title="No map built yet."
-                why="Kel builds a map of the project from its own verified work."
-              />
+              <KelEmpty title="No map built yet." />
             ) : (
               <>
               <div className="kel-project-table-scroll kel-project-map-desktop" tabIndex={0} role="region" aria-label="Project map table">
@@ -637,16 +628,11 @@ export default function KelProjectsPage() {
             )}
             {note && libraryView && !runDraft && <p className="kel-meta" role="status">{note}</p>}
             {entries.length === 0 ? (
-              <KelEmpty
-                title="No recipes in this project yet."
-                why="Recipes capture a workflow Kel finished and verified, so it can run again with your approval."
-              />
+              <KelEmpty title="No recipes in this project yet." />
             ) : (
               <>
                 <div className="kel-recipe-desktop-current">
-                  <div className="kel-recipe-desktop-intro">
-                    <p>Steps Kel saved from finished work. Run one again any time.</p>
-                  </div>
+                  <div className="kel-recipe-desktop-intro" />
                   <div className="kel-recipe-desktop-controls">
                     <label className="kel-recipe-desktop-search">
                       <img src={mobileRecipeSearchIcon} alt="" width={14} height={14} />
@@ -682,7 +668,6 @@ export default function KelProjectsPage() {
                         </>}
                       </div>
                       {preparing && runDraft && <div className="kel-recipe-desktop-expanded kel-recipe-desktop-run">
-                        <p>Check the inputs. Then start the recipe.</p>
                         <div className="kel-recipe-desktop-fields">
                           {runDraft.inputs.map((input) => <label key={input.name}>
                             <span>{input.name}{input.required ? ' *' : ''}</span>
@@ -794,7 +779,6 @@ export default function KelProjectsPage() {
             )}
             {libraryView && runDraft && (
               <div id="recipe-run-draft"><KelSection title={`Run — ${runDraft.name}`}>
-                <p className="kel-sub">Review the inputs before Kel starts this recipe.</p>
                 {note && <p className="kel-meta" role="status">{note}</p>}
                 {runDraft.inputs.map((input) => (
                   <label key={input.name} className="kel-recipe-input">
