@@ -944,3 +944,19 @@ chats. Nothing is imported from the old (aioncore-only) store: the 4 aioncore-on
 unmatched replies are left behind. When `chat_store` switches to `engine` (at an install point, after the
 automatic backup), every existing chat is archived — moved to Settings → Archived, nothing deleted — so
 Kel starts with an empty sidebar. This removes the reviewed-import step from CP-10a stage 2.
+
+## D-81 — The Memory folder: the agents' world
+
+**Decided by Nick 2026-09-29.** AI tools (Claude Code, Codex and every staff member) read and write
+**only inside `Desktop\Kel\Memory\`**, and anywhere inside it — including across projects. Nothing outside
+it: App, Data (the real data and all keys), Kel (source; self-improvement stays through Kibble) and Tools
+are off-limits.
+- `Memory\Projects\` — every new project is a subfolder here (new projects only; existing ones stay where
+  they are, D-62/D-80 unchanged otherwise). Any project may read or write another.
+- `Memory\Kel\` — a read-only mirror Kel keeps current for the agents: settings (no keys, passwords or
+  tokens), **all chats** (including chats outside any project, and archived ones) as readable files, and
+  project knowledge. Agents never change Kel's settings.
+- Enforcement is real, not instruction: Claude Code's guard and Codex's sandbox confine reads and writes to
+  Memory; this needs Codex's stronger Windows sandbox (one Windows admin approval by Nick).
+Supersedes the D-62 projects root (`Documents\Kel Projects`) for new projects, and D-64's protected-list
+approach becomes an allow-list (Memory only).
