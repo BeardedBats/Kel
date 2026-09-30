@@ -1,9 +1,8 @@
 """D-81: the Memory folder is the agents' world.
 
-Every AI tool Kel runs (Claude Code, Codex, every staff member) reads and writes only inside
-`Memory` — anywhere inside it, across projects — plus the run's own working copy (the isolated
-project copy Kel applies from). Nothing else: not Kel's Data (the real data and every key), not the
-installed App, not Kel's source, not Tools, not the person's Documents or home.
+The intended agent boundary is Memory plus each run's assigned working copy and temporary folder.
+Claude uses a tool guard. Codex confines writes, and its stronger Windows mode adds partial read
+denials. Neither implementation establishes complete OS read confinement to Memory.
 
 Layout:
 - `Memory\\Projects\\` — where Kel creates every NEW project (existing projects stay where they are).
@@ -181,8 +180,8 @@ def system_readable_roots(engine_root=None, extra=()):
 # Kel denies (`runtime_guard.codex_deny_paths`). It needs a one-time setup that Windows asks an
 # administrator to approve (a UAC prompt for OpenAI's codex-windows-sandbox-setup.exe). Kel switches
 # to it only after `codex_sandbox_setup` succeeds, and checks Codex's readiness before every elevated
-# run (a Codex update can require the setup again): if it is not ready, that run uses the
-# restricted-token sandbox rather than surprise the person with an admin prompt.
+# run (a Codex update can require the setup again): if it is not ready, that run stops without
+# downgrading or surprising the person with an admin prompt. Read denials remain partial.
 
 STATE_DIR = 'memory-mirror'  # in the engine root; listed in runtime_guard._ENGINE_DIRS
 CODEX_STATE = 'codex-sandbox.json'
@@ -218,11 +217,27 @@ def codex_elevated(engine_root):
     return os.name == 'nt' and codex_state(engine_root).get('mode') == 'elevated'
 
 
+def _codex_readiness(status):
+    if status == 'ready':
+        return 'ready'
+    if not isinstance(status, str) or not status or status in ('unknown', 'not_checked'):
+        return 'unknown'
+    return 'not_ready'
+
+
 def codex_not_ready(engine_root, status):
-    """An elevated run found Codex's sandbox not ready (e.g. after a Codex update): runs fall back to
-    the restricted-token sandbox and Settings offers the one-time setup again."""
-    _save_codex_state(engine_root, mode='unelevated', readiness=status,
-                      note='Codex needs its Windows sandbox set up again.')
+    """Keep the stronger choice; failed readiness stops the run without a downgrade."""
+    import time
+    _save_codex_state(engine_root, readiness=_codex_readiness(status),
+                      readiness_at=time.time(), setup='failed',
+                      error='Codex could not confirm its stronger Windows sandbox. This run stopped.',
+                      note='The stronger sandbox remains selected. Check its Windows setup before retrying.')
+
+
+def codex_ready(engine_root):
+    """Record the latest readiness observation, not a complete read-confinement claim."""
+    import time
+    _save_codex_state(engine_root, readiness='ready', readiness_at=time.time(), setup='done', error=None, note=None)
 
 
 def codex_sandbox_setup(engine_root, network=True, timeout=SETUP_TIMEOUT):
@@ -240,6 +255,7 @@ def codex_sandbox_setup(engine_root, network=True, timeout=SETUP_TIMEOUT):
     if os.name != 'nt':
         return _save_codex_state(engine_root, mode='unelevated', setup='not-windows')
     memory = ensure(engine_root)
+    failure_mode = 'elevated' if codex_state(engine_root).get('mode') == 'elevated' else 'unelevated'
     _save_codex_state(engine_root, setup='running')
     codex = executable('codex')
     argv = codex + ['app-server', '--stdio', '-c', 'analytics.enabled=false',
@@ -247,8 +263,9 @@ def codex_sandbox_setup(engine_root, network=True, timeout=SETUP_TIMEOUT):
     logs = Path(engine_root) / STATE_DIR / 'codex-setup'
     try:
         connection = CodexConnection(memory, logs, process_argv=argv)
-    except Exception as exc:
-        return _save_codex_state(engine_root, setup='failed', error=str(exc)[:300])
+    except Exception:
+        return _save_codex_state(engine_root, mode=failure_mode, setup='failed',
+                                 error='Codex could not start its Windows sandbox setup.')
     try:
         ready = connection.call('windowsSandbox/readiness', {}, timeout=60).get('status')
         started = connection.call('windowsSandbox/setupStart', {'mode': 'elevated', 'cwd': str(memory)}, timeout=60)
@@ -266,14 +283,19 @@ def codex_sandbox_setup(engine_root, network=True, timeout=SETUP_TIMEOUT):
                 params = event.get('params') or {}
                 if params.get('success'):
                     after = connection.call('windowsSandbox/readiness', {}, timeout=60).get('status')
-                    return _save_codex_state(engine_root, mode='elevated', setup='done', readiness=after,
-                                             before=ready, error=None, note=None)
-                return _save_codex_state(engine_root, mode='unelevated', setup='failed',
+                    observed = _codex_readiness(after)
+                    return _save_codex_state(engine_root, mode='elevated',
+                                             setup='done' if observed == 'ready' else 'failed', readiness=observed,
+                                             readiness_at=time.time(), before=_codex_readiness(ready),
+                                             error=None if observed == 'ready' else
+                                                'Codex setup finished, but its stronger sandbox is not confirmed ready.', note=None)
+                return _save_codex_state(engine_root, mode=failure_mode, setup='failed',
                                          error=str(params.get('error') or 'Windows did not allow the setup.')[:300])
-        return _save_codex_state(engine_root, mode='unelevated', setup='failed',
+        return _save_codex_state(engine_root, mode=failure_mode, setup='failed',
                                  error='No answer from the Windows prompt in time.')
-    except Exception as exc:
-        return _save_codex_state(engine_root, mode='unelevated', setup='failed', error=str(exc)[:300])
+    except Exception:
+        return _save_codex_state(engine_root, mode=failure_mode, setup='failed',
+                                 error='Codex could not complete its Windows sandbox setup.')
     finally:
         connection.close()
 
@@ -282,17 +304,22 @@ def status(engine_root):
     """What Settings says about the Memory folder and how each AI tool is held to it."""
     state = codex_state(engine_root)
     elevated = codex_elevated(engine_root)
+    readiness = state.get('readiness')
+    readiness = _codex_readiness(readiness) if readiness is not None else 'not_checked'
     if elevated:
-        codex = ("Codex runs in its own Windows sandbox: Windows blocks it from Kel's folders, Documents, "
-                 'Downloads, Pictures and the rest of your Desktop. It still reads Windows, Program Files and '
-                 'AppData, where tools are installed.')
+        codex = ('The stronger Windows sandbox limits some reads outside Memory. '
+                 'Each run checks readiness and stops if this protection is unavailable.')
     else:
-        codex = ('Codex can write only inside the Memory folder, but reads outside it are not yet blocked for '
-                 'Codex. Allow its Windows sandbox once (one Windows admin prompt) to block them.')
+        codex = ('Codex writes stay in its working folders. Reads outside Memory remain available. '
+                 'Stronger protection limits some reads.')
     return {'folder': str(memory_root(engine_root)), 'projects': str(projects_dir(engine_root)),
             'mirror': str(mirror_dir(engine_root)),
-            'claude': ('Claude Code is held to the Memory folder by Kel\'s guard, which checks every file and '
-                       'command it uses.'),
-            'codex': codex, 'codex_reads_blocked': elevated,
+            'claude': ('Kel checks Claude Code file and command tools with its guard. '
+                       'This is tool-level protection, not complete Windows read confinement.'),
+            'codex': codex, 'codex_reads_blocked': False,
+            'codex_configured_mode': 'elevated' if elevated else 'unelevated',
+            'codex_readiness': readiness, 'codex_readiness_at': state.get('readiness_at'),
+            'codex_read_coverage': 'partial-deny-list' if elevated else 'unconfined',
+            'codex_complete_read_confinement': False,
             'codex_setup': state.get('setup'), 'codex_error': state.get('error'),
-            'codex_setup_available': os.name == 'nt' and not elevated}
+            'codex_setup_available': os.name == 'nt' and (not elevated or readiness != 'ready')}

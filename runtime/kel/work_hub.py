@@ -45,7 +45,7 @@ class WorkHub:
             if action == 'preview':
                 return imports.preview(project, data.get('content'), format=data.get('format', 'text'),
                                        source=data.get('source', 'other'), source_id=data.get('source_id', ''),
-                                       title=data.get('title', ''))
+                                       title=data.get('title', ''), reference_files=data.get('reference_files'))
             if action == 'confirm':
                 return imports.confirm(data.get('preview_id'), data.get('digest'), project,
                                        confirm=data.get('confirm') is True)

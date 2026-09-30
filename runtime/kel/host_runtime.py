@@ -106,16 +106,51 @@ class HostConnection(CodexConnection):
             return
         self._start_codex(workspace,logs,argv)
         if self.elevated:
-            # A Codex update can require its sandbox setup again; an elevated command would then raise
-            # a Windows admin prompt mid-run. Check first, and run this one in the restricted-token
-            # sandbox instead (Settings offers the one-time setup again).
+            # The selected stronger boundary cannot silently become a weaker run.
             try:status=self.call('windowsSandbox/readiness',{}).get('status')
-            except Exception as exc:status='unknown: '+str(exc)[:80]
+            except Exception:status='unknown'
             if status!='ready':
                 self.close()
                 memory_folder.codex_not_ready(self.engine_root,status)
-                self.elevated=False
-                self._start_codex(workspace,logs,self._codex_argv(codex,workspace))
+                self._record_boundary(logs, 'blocked', memory_folder._codex_readiness(status))
+                raise PolicyError('Codex could not confirm its stronger Windows sandbox. This run stopped without using a weaker sandbox.')
+            try:
+                memory_folder.codex_ready(self.engine_root)
+                self._record_boundary(logs, 'elevated', 'ready')
+            except Exception:
+                self.close()
+                raise
+        else:
+            try:self._record_boundary(logs, 'unelevated', 'not_checked')
+            except Exception:
+                self.close()
+                raise
+
+    def _record_boundary(self, logs, effective_mode, readiness):
+        """Sanitized per-run fact in the existing owned log folder; no database schema."""
+        target = Path(logs).absolute()/'boundary.json'
+        engine = Path(self.engine_root).absolute()
+        if not target.is_relative_to(engine) or not target.resolve().is_relative_to(engine.resolve()):
+            raise PolicyError('The run boundary log is outside its owned engine folder.')
+        current = target
+        while True:
+            try:info = current.lstat()
+            except FileNotFoundError:
+                if current != target:raise PolicyError('The run boundary log folder is unavailable.')
+            else:
+                if current.is_symlink() or getattr(info, 'st_file_attributes', 0) & 0x400:
+                    raise PolicyError('The run boundary log contains a linked path.')
+                if current == target and info.st_nlink > 1:
+                    raise PolicyError('The run boundary log contains a linked file.')
+            if current == engine:break
+            current = current.parent
+        fact = {'provider':'codex', 'configured_mode':'elevated' if self.elevated else 'unelevated',
+                'effective_mode':effective_mode, 'readiness':readiness, 'checked_at':time.time(),
+                'read_coverage':'partial-deny-list' if effective_mode == 'elevated' else
+                    ('unconfined' if effective_mode == 'unelevated' else 'not_started'),
+                'complete_read_confinement':False}
+        self.boundary_fact = fact
+        target.write_text(json.dumps(fact, sort_keys=True), encoding='utf-8')
 
     def _codex_argv(self,codex,workspace):
         from . import runtime_guard

@@ -317,7 +317,7 @@ class CodexSandboxTests(Layout):
             self.assertIn('windows.sandbox="unelevated"', argv)
         state = memory_folder.status(self.engine)
         self.assertFalse(state['codex_reads_blocked'])
-        self.assertIn('reads outside it are not yet blocked for Codex', state['codex'])
+        self.assertIn('Reads outside Memory remain available.', state['codex'])
 
     def test_elevated_denies_kels_folders_and_the_persons_own_but_never_what_a_run_needs(self):
         (self.home / 'Desktop' / 'photos').mkdir(parents=True)
@@ -335,8 +335,9 @@ class CodexSandboxTests(Layout):
             self.assertIn('windows.sandbox="elevated"', argv)
 
     @unittest.skipUnless(os.name == 'nt', 'Windows sandbox')
-    def test_an_elevated_run_that_finds_codex_not_ready_falls_back_without_a_prompt(self):
+    def test_an_elevated_run_that_finds_codex_not_ready_stops_without_weaker_restart(self):
         from kel.appserver import CodexConnection
+        from kel.core import PolicyError
         from kel.host_runtime import HostConnection
         memory_folder._save_codex_state(self.engine, mode='elevated', setup='done')
         self.assertTrue(memory_folder.codex_elevated(self.engine))
@@ -347,11 +348,13 @@ class CodexSandboxTests(Layout):
             conn.workspace, conn.logs = str(workspace), Path(logs)
 
         with mock.patch.object(CodexConnection, '__init__', fake_init),                 mock.patch.object(CodexConnection, 'close', lambda conn: None),                 mock.patch.object(CodexConnection, 'call', return_value={'status': 'updateRequired'}),                 mock.patch('kel.host_runtime.executable', lambda name: ['C:/bin/codex.exe']),                 mock.patch('kel.runtime_guard.codex_mcp_servers', return_value=[]):
-            conn = HostConnection(self.workspace, self.logs, provider='codex')
+            self.logs.mkdir(parents=True)
+            with self.assertRaisesRegex(PolicyError, 'without using a weaker sandbox'):
+                HostConnection(self.workspace, self.logs, provider='codex')
         self.assertIn('windows.sandbox="elevated"', started[0])
-        self.assertIn('windows.sandbox="unelevated"', started[1])
-        self.assertFalse(conn.elevated)
-        self.assertFalse(memory_folder.codex_elevated(self.engine))
+        self.assertEqual(len(started), 1)
+        self.assertTrue(memory_folder.codex_elevated(self.engine))
+        self.assertEqual(memory_folder.codex_state(self.engine)['readiness'], 'not_ready')
         self.assertTrue(memory_folder.status(self.engine)['codex_setup_available'])
 
 

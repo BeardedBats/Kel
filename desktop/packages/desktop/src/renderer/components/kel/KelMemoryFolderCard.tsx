@@ -1,10 +1,9 @@
 /**
- * D-81 — the Memory folder: where every AI tool Kel runs reads and writes, and nothing else.
+ * D-81 — show the working folder and the engine's actual protection limits.
  *
  * Shown on Settings → Permissions under the access mode. Read from the engine every time (nothing is
  * shown when the engine cannot say). D-87: only the folder, whether Codex's reads outside it are
- * blocked, and — until Nick allows Codex's stronger Windows sandbox once — the one button that asks
- * Windows (one administrator prompt from OpenAI's setup helper). No explanatory sentences.
+ * covered, and the deliberate setup action. A configured mode never proves complete read confinement.
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { KelButton, KelCard } from './KelPrimitives';
@@ -51,6 +50,8 @@ export const KelMemoryFolderCard: React.FC = () => {
 
   if (!state?.folder) return null;
   const running = asking || state.codex_setup === 'running';
+  const unavailable = state.codex_configured_mode === 'elevated' && state.codex_readiness !== 'ready';
+  const protection = unavailable ? 'Unavailable' : state.codex_read_coverage === 'partial-deny-list' ? 'Partial protection' : 'Not fully confined';
   return (
     <KelCard title="Where the AI tools work" data-testid="kel-memory-folder-card">
       <div className="kel-row">
@@ -59,15 +60,16 @@ export const KelMemoryFolderCard: React.FC = () => {
           {state.folder}
         </span>
       </div>
-      <div className="kel-row" data-testid="kel-memory-codex" data-blocked={state.codex_reads_blocked ? 'yes' : 'no'}>
-        <span className="kel-meta">Codex reads outside Memory</span>
-        <span className="kel-strong">{state.codex_reads_blocked ? 'Blocked' : 'Not blocked'}</span>
+      <div className="kel-row" data-testid="kel-memory-codex" data-blocked="no" data-coverage={state.codex_read_coverage ?? 'unknown'}>
+        <span className="kel-meta">Codex read protection</span>
+        <span className="kel-strong">{protection}</span>
       </div>
+      {state.codex && <p className="kel-meta m-0">{state.codex}</p>}
       {state.codex_setup === 'failed' && state.codex_error && <p className="kel-meta m-0">{state.codex_error}</p>}
       {state.codex_setup_available && (
         <div className="kel-row">
           <KelButton variant="secondary" disabled={running} onClick={() => void allow()}>
-            {running ? 'Waiting for Windows…' : 'Block Codex reads outside Memory'}
+            {running ? 'Waiting for Windows…' : 'Set up stronger Codex protection'}
           </KelButton>
         </div>
       )}

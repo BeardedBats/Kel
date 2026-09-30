@@ -18,6 +18,7 @@ export interface KelImportPreview {
   snippet: string;
   omissions: Array<string | { name: string; reason: string }>;
   continuation_supported: false;
+  reference_files?: Array<{ name: string; chars: number; sha256: string; status: 'included-reference'; snippet?: string }>;
 }
 
 export interface KelImportedWork {
@@ -29,10 +30,10 @@ export interface KelImportedWork {
 }
 
 export const kelWorkImports = {
-  preview: (projectId: string, input: { content: string; format?: string; source?: string; source_id?: string; title?: string }) =>
+  preview: (projectId: string, input: { content: string; format?: string; source?: string; source_id?: string; title?: string; reference_files?: Array<{ name: string; text: string }> }) =>
     call<KelImportPreview>('/api/work-hub/imports', { action: 'preview', project_id: projectId, ...input }),
   confirm: (projectId: string, preview: Pick<KelImportPreview, 'preview_id' | 'digest'>) =>
-    call<KelImportedWork>('/api/work-hub/imports', { action: 'confirm', project_id: projectId, ...preview, confirm: true }),
+    call<KelImportedWork>('/api/work-hub/imports', { action: 'confirm', project_id: projectId, preview_id: preview.preview_id, digest: preview.digest, confirm: true }),
   list: (projectId: string) => call<{ entries: Array<Record<string, unknown>> }>(`/api/work-hub/imports?project_id=${encodeURIComponent(projectId)}`),
 };
 
@@ -1553,6 +1554,11 @@ export interface KelMemoryFolderState {
   claude?: string;
   codex?: string;
   codex_reads_blocked?: boolean;
+  codex_configured_mode?: 'elevated' | 'unelevated';
+  codex_readiness?: 'ready' | 'not_ready' | 'unknown' | 'not_checked';
+  codex_readiness_at?: number | null;
+  codex_read_coverage?: 'partial-deny-list' | 'unconfined';
+  codex_complete_read_confinement?: false;
   codex_setup?: string | null;
   codex_error?: string | null;
   codex_setup_available?: boolean;

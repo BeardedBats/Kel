@@ -21,8 +21,12 @@ const omissionWords = (item: unknown): string => {
 export function WorkImport({ projectId }: { projectId: string }) {
   const navigate = useNavigate();
   const [content, setContent] = useState('');
+  const [transcriptName, setTranscriptName] = useState('');
+  const transcriptInput = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState('other');
   const [format, setFormat] = useState('text');
+  const [referenceFiles, setReferenceFiles] = useState<Array<{ name: string; text: string }>>([]);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<KelImportPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +41,7 @@ export function WorkImport({ projectId }: { projectId: string }) {
     setBusy(true); setError('');
     try {
       if (!confirm) {
-        const result = await kelWorkImports.preview(projectId, { content, source, format });
+        const result = await kelWorkImports.preview(projectId, { content, source, format, title: transcriptName, reference_files: referenceFiles });
         if (epoch === generation.current) setPreview(result);
       } else if (preview) {
         const imported = await kelWorkImports.confirm(projectId, preview);
@@ -52,9 +56,59 @@ export function WorkImport({ projectId }: { projectId: string }) {
     finally { if (epoch === generation.current) setBusy(false); }
   };
   const invalidate = () => { generation.current += 1; setPreview(null); setError(''); };
+  const chooseTranscript = async (file?: File) => {
+    if (busy || !file) return;
+    invalidate();
+    const epoch = generation.current;
+    setBusy(true);
+    try {
+      if (file.size > 400000 || file.name.length > 200) throw new Error('Choose a transcript with at most 100,000 characters and a shorter filename.');
+      const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      if (!text.trim() || text.length > 100000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) {
+        throw new Error('Choose a readable UTF-8 transcript with at most 100,000 characters.');
+      }
+      if (text.length + referenceFiles.reduce((size, item) => size + item.name.length + item.text.length, 0) > 100000) {
+        throw new Error('The transcript and reference files can contain at most 100,000 characters together.');
+      }
+      if (epoch === generation.current) { setContent(text); setTranscriptName(file.name); }
+    } catch (failure) {
+      if (epoch === generation.current) setError(failure instanceof TypeError ? 'Choose a transcript saved as UTF-8.' : failureSentence(failure, 'Kel could not read this transcript.'));
+    } finally { if (epoch === generation.current) setBusy(false); }
+  };
+  const addFiles = async (files: File[]) => {
+    if (busy || !files.length) return;
+    invalidate();
+    const epoch = generation.current;
+    setBusy(true);
+    try {
+      if (files.length + referenceFiles.length > 10) throw new Error('Choose at most 10 reference files.');
+      const names = new Set(referenceFiles.map(file => file.name.toLocaleLowerCase()));
+      for (const file of files) {
+        if (!/\.(txt|md|csv|json|jsonl|log|yaml|yml)$/i.test(file.name)) throw new Error('Choose UTF-8 text files, such as TXT, Markdown, CSV or JSON.');
+        if (file.size > 120000) throw new Error('Each reference file can contain at most 30,000 characters.');
+        const name = file.name.toLocaleLowerCase();
+        if (names.has(name)) throw new Error('Each reference file needs a different name.');
+        names.add(name);
+      }
+      const added = await Promise.all(files.map(async file => {
+        const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+        if (!text.trim() || text.length > 30000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) {
+          throw new Error('Choose readable text files with at most 30,000 characters each.');
+        }
+        return { name: file.name, text };
+      }));
+      const next = [...referenceFiles, ...added];
+      if (content.length + next.reduce((size, file) => size + file.name.length + file.text.length, 0) > 100000) {
+        throw new Error('The transcript and reference files can contain at most 100,000 characters together.');
+      }
+      if (epoch === generation.current) setReferenceFiles(next);
+    } catch (failure) {
+      if (epoch === generation.current) setError(failure instanceof TypeError ? 'Choose text files saved as UTF-8.' : failureSentence(failure, 'Kel could not read these files.'));
+    } finally { if (epoch === generation.current) setBusy(false); }
+  };
   return <KelCard title="Bring work into Kel">
     <details><summary>Import a transcript</summary>
-      <p>Paste text or a Kel transcript. Kel saves a separate chat in this Project. External sessions do not resume here.</p>
+      <p>Paste or choose a transcript. Kel saves a separate chat in this Project. External sessions do not resume here.</p>
       <div className="kel-row">
         <label>Source <select className="kel-select" disabled={busy || format === 'codex-exec-jsonl'} value={source} onChange={e => { invalidate(); setSource(e.target.value); }}>
           {['other', 'codex', 'claude', 'deepseek'].map(value => <option key={value} value={value}>{value === 'other' ? 'Other' : value}</option>)}
@@ -65,10 +119,27 @@ export function WorkImport({ projectId }: { projectId: string }) {
         </select></label>
       </div>
       {format === 'codex-exec-jsonl' && <p>Imports completed assistant output from Codex CLI JSONL. Original prompts, tool work, and attachment contents are omitted. Kel does not resume the original session.</p>}
+      <input ref={transcriptInput} type="file" hidden disabled={busy} aria-label="Transcript file" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml"
+        onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; void chooseTranscript(file); }} />
+      <div className="kel-row"><KelButton disabled={busy} onClick={() => transcriptInput.current?.click()}>Choose transcript file</KelButton></div>
+      {transcriptName && <p className="kel-meta">{transcriptName} · Check the format above before reviewing.</p>}
       <label>Transcript<textarea className="kel-input" rows={6} style={{ width: '100%' }} disabled={busy} value={content}
-        onChange={e => { invalidate(); setContent(e.target.value); }} /></label>
+        onChange={e => { invalidate(); setContent(e.target.value); setTranscriptName(''); }} /></label>
+      <input ref={fileInput} type="file" hidden multiple disabled={busy} aria-label="Reference text files" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml"
+        onChange={event => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ''; void addFiles(files); }} />
+      <div className="kel-row"><KelButton disabled={busy || referenceFiles.length >= 10} onClick={() => fileInput.current?.click()}>Add text files</KelButton></div>
+      <p className="kel-meta">Add reference text you want Kel to keep with this transcript. Images and other attachment contents are not restored.</p>
+      {referenceFiles.length > 0 && <ul>{referenceFiles.map(file => <li key={file.name}>
+        <span>{file.name} · {file.text.length.toLocaleString()} characters </span>
+        <KelButton variant="quiet" disabled={busy} ariaLabel={`Remove ${file.name}`} onClick={() => { invalidate(); setReferenceFiles(current => current.filter(item => item.name !== file.name)); }}>Remove</KelButton>
+      </li>)}</ul>}
       {preview && <section aria-label="Import review"><h3>{preview.title}</h3><p>{preview.message_count} {preview.message_count === 1 ? 'message' : 'messages'}</p>
         <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{preview.snippet}</pre>
+        {Array.isArray(preview.reference_files) && preview.reference_files.length > 0 && <section aria-label="Included reference files"><strong>Included reference text</strong>
+          {preview.reference_files.map(file => <div key={file.name}><p>{file.name} · {file.chars.toLocaleString()} characters</p>
+            {file.snippet && <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{file.snippet}</pre>}
+          </div>)}
+        </section>}
         {Array.isArray(preview.omissions) && preview.omissions.length > 0 && <><strong>Not imported</strong><ul>{preview.omissions.map((item, i) => <li key={i}>{omissionWords(item)}</li>)}</ul></>}
         <p>Imported text stays source material. Review it before asking Kel to act.</p>
       </section>}

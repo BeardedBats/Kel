@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 from pathlib import Path
 import shutil
 import subprocess
@@ -179,6 +180,69 @@ def child_env(provider, base=None, session=None):
 DEFAULT_EFFORT = object()  # "as before": Codex text runs at low effort, Claude uses its own default
 
 
+def _plain_schema_path(path, directory=False):
+    """Refuse redirection at every existing ancestor and at the final leaf."""
+    path = Path(path).absolute()
+    for item in (*reversed(path.parents), path):
+        info = item.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
+            raise RuntimeError('Structured correction path is linked.')
+    info = path.stat()
+    if directory:
+        if not stat.S_ISDIR(info.st_mode):
+            raise RuntimeError('Structured correction folder is invalid.')
+    elif not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise RuntimeError('Structured correction leaf is not a private plain file.')
+    return path
+
+
+def _schema_session(root, run_id, schema):
+    if not isinstance(schema, dict) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', str(run_id)):
+        raise RuntimeError('Invalid internal structured correction request.')
+    raw = json.dumps(schema, ensure_ascii=False, allow_nan=False).encode('utf-8')
+    if len(raw) > 32000:
+        raise RuntimeError('Structured correction schema is too large.')
+    base = _plain_schema_path(root, directory=True)
+    parent = base / 'sessions'
+    if not parent.exists():
+        parent.mkdir()
+    _plain_schema_path(parent, directory=True)
+    session = parent / str(run_id)
+    session.mkdir()  # An existing run is never reused for schema or final output.
+    _plain_schema_path(session, directory=True)
+    schema_path, final_path = session / 'correction-schema.json', session / 'correction-final.json'
+    with schema_path.open('xb') as handle:
+        handle.write(raw)
+    with final_path.open('xb'):
+        pass
+    _plain_schema_path(schema_path)
+    _plain_schema_path(final_path)
+    return session, schema_path, final_path
+
+
+def _schema_final(path):
+    path = _plain_schema_path(path)
+    before = path.stat()
+    if not 0 < before.st_size <= 256000:
+        raise RuntimeError('Structured correction final output is missing or too large.')
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_BINARY', 0))
+    with os.fdopen(descriptor, 'rb') as handle:
+        opened = os.fstat(handle.fileno())
+        if not stat.S_ISREG(opened.st_mode) or opened.st_nlink != 1 or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
+            raise RuntimeError('Structured correction final output changed.')
+        raw = handle.read(256001)
+    _plain_schema_path(path)
+    after = path.stat()
+    if (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) != (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns):
+        raise RuntimeError('Structured correction final output changed.')
+    if len(raw) > 256000:
+        raise RuntimeError('Structured correction final output is too large.')
+    text = raw.decode('utf-8', errors='strict')
+    if not text.strip():
+        raise RuntimeError('Structured correction final output is empty.')
+    return text
+
+
 class NativeAdapter:
     def __init__(self, provider, workspace, logs, timeout=100, model=None, effort=DEFAULT_EFFORT,
                  fallback_model=None, web=False):
@@ -263,23 +327,25 @@ class NativeAdapter:
             args += ['--resume', session_id]
         return args
 
-    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None):
+    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None):
         """Run one prompt. A per-model overlay (kel.overlays; none are registered today) is appended
         as a subordinate note and recorded on the result."""
         from .overlays import apply as apply_overlay
         prompt, overlay = apply_overlay(prompt, self.provider, self.model)
-        result = self._execute(prompt, run_id, session_id, cancel, process_observer, on_text)
+        result = self._execute(prompt, run_id, session_id, cancel, process_observer, on_text, output_schema)
         if overlay and isinstance(result, dict):
             result['overlay'] = overlay
         return result
 
-    def _execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None):
+    def _execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None):
         """`on_text(answer so far)` (D-75.1): Claude Code streams its words through stream-json.
         `codex exec --json` reports a message only once it is complete (checked live on 0.157.1:
         thread.started, turn.started, item.completed, turn.completed — no partial events), so a
         streamed Codex answer runs through Codex's app-server instead, whose
         `item/agentMessage/delta` notifications carry the words as they are written; if the
         app-server cannot start, the answer arrives whole from exec as before."""
+        if output_schema is not None and (self.provider != 'codex' or on_text is not None):
+            return dict(outcome='FAILED', error='Structured correction requires buffered Codex output.')
         if on_text is not None and self.provider == 'codex' and process_observer is None:
             streamed = self._codex_stream(prompt, run_id or uid(), session_id, cancel, on_text)
             if streamed is not None:
@@ -289,11 +355,24 @@ class NativeAdapter:
         streamed = {'offset': 0, 'text': '', 'rest': b''}
         stdout_path, stderr_path = self.logs/(run_id+'.stdout'), self.logs/(run_id+'.stderr')
         started = time.monotonic()
-        session = session_dir(self.logs.parent, run_id)
+        session = None
+        try:
+            if output_schema is not None:
+                session, schema_path, final_path = _schema_session(self.logs.parent, run_id, output_schema)
+            else:
+                session = session_dir(self.logs.parent, run_id)
+        except (OSError, ValueError, RuntimeError, TypeError):
+            return dict(outcome='FAILED', error='Structured correction could not create private output files.')
         env = child_env(self.provider, session=session)
         try:
+            argv = self.argv(session_id, stream=stream)
+            if output_schema is not None:
+                _plain_schema_path(schema_path)
+                _plain_schema_path(final_path)
+                exec_index = argv.index('exec') + 1
+                argv[exec_index:exec_index] = ['--output-schema', str(schema_path), '--output-last-message', str(final_path)]
             with stdout_path.open('wb') as out, stderr_path.open('wb') as err:
-                process = subprocess.Popen(self.argv(session_id, stream=stream), cwd=self.workspace, stdin=subprocess.PIPE,
+                process = subprocess.Popen(argv, cwd=self.workspace, stdin=subprocess.PIPE,
                     stdout=out, stderr=err, env=env, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
                 if process_observer:
                     try:process_observer(process.pid,stdout_path,self.timeout)
@@ -332,6 +411,15 @@ class NativeAdapter:
                     pass
                 return out
             result = self.parse(output, session_id)
+            if output_schema is not None and process.returncode == 0:
+                if result.get('outcome') == 'SUCCESS' and 'turn.completed' in result.get('native_events', []):
+                    try:
+                        result['text'] = _schema_final(final_path)
+                        result['structured_output'] = True
+                    except (OSError, ValueError, RuntimeError, UnicodeError):
+                        result.update(outcome='FAILED', text='', error='Structured correction final output is invalid.')
+                else:
+                    result.update(outcome='FAILED', text='', error='Structured correction native turn did not complete.')
             if process.returncode != 0:
                 reported = result.get('error') if result.get('outcome') == 'FAILED' else None
                 result.update(outcome='FAILED', error=f'Native CLI exited {process.returncode}; inspect local log {stderr_path.name}')
@@ -372,7 +460,8 @@ class NativeAdapter:
         finally:
             with self.lock:
                 self.processes.pop(run_id, None)
-            cleanup_session(session)
+            if session is not None:
+                cleanup_session(session)
 
     def appserver_argv(self):
         """Codex's app-server with the same limits as `argv()`'s exec run: read-only sandbox, never
