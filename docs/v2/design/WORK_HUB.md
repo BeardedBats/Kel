@@ -41,3 +41,27 @@ Source and isolated checks do not prove live provider quality.
 Unknown costs, unsupported continuation, microphone and physical-device limits remain explicit.
 Outcome instrumentation observes complete work; selection behavior remains unchanged without comparative evidence.
 Partial Windows read confinement remains a known limit. This increment does not expand autonomous access.
+
+## Implemented increment
+
+Request context status and planning reservations persist beside existing submissions.
+Planning cancellation fences admission and late results. Unknown usage stays distinct from estimates.
+Memory ranks relevant records before caps. Bounded source checks mark stale and unknown references.
+
+Projects support reviewed text and Kel transcript imports, scoped search, and exact output versions.
+Imports preserve external roles as reference labels. Native external-session continuation remains unsupported here.
+Recipes retain save-before-success and add exact-version review, retirement, and restoration.
+Only fresh checked work can support review or current Useful feedback.
+
+Home resumes durable work. Ramble prepares editable Project input with retained origin.
+Shared tabs, capture focus, setup focus, and static loading states follow existing Kel styling.
+Output and task records use stable disclosures. Routing observes outcomes without changing model selection.
+
+## Release evidence boundary
+
+One full engine run recorded 2030 passed, one compatibility failure, and one skip.
+The compatibility repair and planning cancellation checks then passed all 12 affected cases.
+One full desktop run recorded 1250 passed and 12 failed cases in six files.
+After repairs, all 117 cases in those files passed. Final controls and TypeScript checks passed.
+Package, installed rendering, and personal Data preservation are recorded outside Git in the execution report.
+Provider, microphone, physical-phone, and comparative routing acceptance remain separate flags.

@@ -308,4 +308,3 @@ export function ContextStatusFacts({ status }: { status: KelContextStatus }) {
     </p> : null)}
   </details>;
 }
-
