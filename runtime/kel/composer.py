@@ -12,6 +12,7 @@ import time
 
 from .core import PolicyError, digest
 from .projectmap import ensure_schema
+from .memory import retrieval_terms
 
 # Context-fencing + sanitizer adapted from NousResearch/hermes-agent (MIT license),
 # agent/memory_manager.py:167-177, inspected revision 40f2702b22a3. Injected context is
@@ -40,7 +41,7 @@ def fence(label, text):
 
 
 def _tokens(text):
-    return set(re.findall(r'[a-z0-9]{4,}', str(text).lower()))
+    return retrieval_terms(text)
 
 
 class Composer:
@@ -59,7 +60,7 @@ class Composer:
 
     def _add_memories(self, project_id, request, purpose, sources, omitted):
         wanted = _tokens(request)
-        candidates = self.memory.select(project_id, purpose=purpose, limit=30, max_chars=12000)
+        candidates = self.memory.select(project_id, purpose=purpose, limit=30, max_chars=12000, rank_for=request)
         selected = []
         for record in candidates:
             record_tokens = _tokens(record['topic']) | _tokens(record['summary']) | _tokens(record['value'])
@@ -72,7 +73,14 @@ class Composer:
             conflict_refs.add(c['memory_a'])
             conflict_refs.add(c['memory_b'])
         used = 0
-        for record in selected[:12]:
+        optional_count = 0
+        for record in selected:
+            mandatory = bool(record['user_confirmed'] and record['type'] in ('decision', 'preference'))
+            if not mandatory:
+                optional_count += 1
+            if not mandatory and optional_count > 12:
+                omitted.append({'kind': 'memories', 'ref': record['id'], 'reason': 'record cap'})
+                continue
             if record['id'] in conflict_refs:
                 reason = 'matches the request (open conflict: user choice pending)'
             elif record['user_confirmed'] and record['type'] in ('decision', 'preference'):
@@ -83,10 +91,10 @@ class Composer:
                                             TRUST_LABELS.get(record['trust'], 'unknown'))
             text = fence(label, '[%s] %s' % (record['topic'], record['summary']))
             used += len(text)
-            if used > 6000:
+            if used > 6000 and not mandatory:
                 omitted.append({'kind': 'memories', 'ref': record['id'], 'reason': 'size cap'})
                 continue
-            must = record['trust'] <= 2 or record['type'] == 'decision'
+            must = mandatory or record['trust'] <= 2 or record['type'] == 'decision'
             sources.append(self._source('memories', record['id'], text, record['trust'],
                                         reason, must=must))
         for record in self.memory.records(project_id, status='active', limit=200):
@@ -178,10 +186,20 @@ class Composer:
             raise PolicyError('A nonempty request is required')
         if type(budget_chars) is not int or not 1000 <= budget_chars <= 200000:
             raise PolicyError('Context budget must be 1000 to 200000 characters')
+        freshness = self._revalidate_sources(project_id)
         sources = [self._source('request', 'request', request, 1, 'the current request',
                                 must=True)]
         omitted = []
         self._add_memories(project_id, request, purpose, sources, omitted)
+        unknown_refs = {item['ref'] for item in freshness['unknown']}
+        for entry in sources:
+            if entry['kind'] == 'memories' and entry['ref'] in unknown_refs:
+                entry['freshness'] = 'unknown'
+                entry['text'] += '\n[source freshness: unknown; prior evidence only]'
+                entry['chars'] = len(entry['text'])
+                entry['digest'] = hashlib.sha256(entry['text'].encode()).hexdigest()[:16]
+        omitted.extend({'kind': 'memories', 'ref': mid, 'reason': 'source changed; confirmation pending'}
+                       for mid in freshness['stale'])
         if job:
             self._add_job(job, sources)
         self._add_map(project_id, sources, omitted)
@@ -191,8 +209,63 @@ class Composer:
                       'state': c['state']} for c in self.memory.conflicts(project_id)]
         packet = self._pack(project_id, purpose, conversation_id, job, sources, omitted,
                             conflicts, budget_chars)
+        packet['context_status'] = {'state': 'ready', 'packet_id': packet['packet_id'],
+                                    'omissions': list(packet['omitted']), 'freshness': freshness,
+                                    'error_code': None}
         self._persist(packet, job)
         return packet
+
+    def _revalidate_sources(self, project_id):
+        """Check only bounded, explicit project files; never interpret external references as permission."""
+        from pathlib import Path
+        from .core import digest
+        from .containment import sensitive_reason
+        with contextlib.closing(self.store.connect()) as db:
+            project = db.execute('SELECT root FROM projects WHERE id=?', (project_id,)).fetchone()
+            rows = db.execute("SELECT id,source_ref,source_digest,source_type FROM memories WHERE project_id=? "
+                              "AND status='active' AND source_digest IS NOT NULL", (project_id,)).fetchall()
+        current, unknown = {}, []
+        bytes_read = 0
+        root = Path(project['root']).resolve() if project and project['root'] else None
+        for row in rows:
+            ref = row['source_ref']
+            name = ref[5:] if ref.startswith('file:') else ref
+            try:
+                if not ref.startswith('file:') and row['source_type'] not in ('repo_inspection', 'config_inspection'):
+                    raise ValueError('not a file source')
+                if ':' in name and not Path(name).is_absolute():
+                    raise ValueError('opaque source reference')
+                stored_digest = row['source_digest']
+                hash_text = stored_digest[7:] if stored_digest.startswith('sha256:') else stored_digest
+                if not re.fullmatch(r'[0-9a-fA-F]{64}', hash_text):
+                    raise ValueError('unsupported source digest')
+                if ref in current:
+                    continue
+                if len(current) >= 32:
+                    raise ValueError('source check budget')
+                if root is None or not name or '://' in name:
+                    raise ValueError('not a project file')
+                source = (root / name).resolve()
+                if not source.is_relative_to(root) or source.is_symlink() or sensitive_reason(source, store=self.store):
+                    raise ValueError('outside project')
+                if not source.exists():
+                    current[ref] = 'missing'
+                elif source.is_file() and source.stat().st_size <= 2_000_000:
+                    size = source.stat().st_size
+                    if bytes_read + size > 8_000_000:
+                        raise ValueError('source check budget')
+                    measured_digest = digest(source.read_bytes())
+                    bytes_read += size
+                    current[ref] = ('sha256:' if stored_digest.startswith('sha256:') else '') + measured_digest
+                else:
+                    raise ValueError('unavailable file')
+            except (OSError, ValueError, RuntimeError):
+                unknown.append({'ref': row['id'], 'state': 'unknown'})
+        if current:
+            self.memory.revalidate(project_id, current)
+        with contextlib.closing(self.store.connect()) as db:
+            stale = [row['id'] for row in db.execute("SELECT id FROM memories WHERE project_id=? AND status='stale' ORDER BY id", (project_id,))]
+        return {'checked': len(current), 'stale': stale, 'unknown': unknown}
 
     def _pack(self, project_id, purpose, conversation_id, job, sources, omitted, conflicts,
               budget_chars):

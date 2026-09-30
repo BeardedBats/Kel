@@ -54,6 +54,20 @@ SOURCE_TRUST = {
 UNTRUSTED_SOURCES = ('external_document', 'web')
 AUTHORITATIVE_TYPES = ('decision', 'preference')
 
+
+def retrieval_terms(text):
+    """Small deterministic task vocabulary; no model call or permission inference."""
+    aliases = {'stop': 'cancel', 'stopped': 'cancel', 'cancellation': 'cancel',
+               'cancelled': 'cancel', 'canceling': 'cancel', 'cancelling': 'cancel',
+               'deployment': 'deploy', 'deploying': 'deploy', 'deployed': 'deploy',
+               'restarting': 'restart', 'restarted': 'restart',
+               'preferences': 'preference', 'decisions': 'decision'}
+    ignored = {'the', 'and', 'for', 'with', 'that', 'this', 'how', 'should', 'what', 'when',
+               'from', 'does', 'can', 'could', 'would', 'have', 'your', 'you', 'our',
+               'into', 'are', 'was', 'were', 'using', 'use'}
+    return {aliases.get(word, word) for word in re.findall(r'[a-z0-9]{3,}', str(text).lower())
+            if word not in ignored}
+
 _SECRET_PATTERNS = (
     ('anthropic-key', re.compile(r'sk-ant-[A-Za-z0-9\-_]{16,}')),
     ('api-key', re.compile(r'sk-[A-Za-z0-9]{20,}')),
@@ -908,7 +922,7 @@ class Memory:
         return [r['mid'] for r in rows]
 
     def select(self, project_id, *, purpose='context', query=None, types=None, topic=None,
-               limit=12, max_chars=6000, include_unconfirmed=False):
+               limit=12, max_chars=6000, include_unconfirmed=False, rank_for=None):
         """Authority-ordered, project-scoped selection for context assembly."""
         if not isinstance(purpose, str) or not purpose:
             raise PolicyError('Select needs a purpose')
@@ -941,11 +955,21 @@ class Memory:
                 else:
                     sql += ' AND id IN (' + ','.join('?' * len(ids)) + ')'
                     args += ids
-            sql += ' ORDER BY trust ASC, updated DESC, id ASC LIMIT 200'
+            sql += ' ORDER BY trust ASC, updated DESC, id ASC'
+            if rank_for is None:
+                sql += ' LIMIT 200'
             candidates = db.execute(sql, args).fetchall()
+        if rank_for is not None:
+            wanted = retrieval_terms(rank_for)
+            def rank(row):
+                mandatory = bool(row['user_confirmed'] and row['type'] in ('decision', 'preference'))
+                words = retrieval_terms(row['topic'] + ' ' + row['summary'] + ' ' + row['value'])
+                return (not mandatory, -len(wanted & words), row['trust'], -row['updated'], row['id'])
+            candidates = sorted(candidates, key=rank)
         chosen, used = [], 0
         for row in candidates:
-            if len(chosen) >= limit:
+            mandatory = rank_for is not None and row['user_confirmed'] and row['type'] in ('decision', 'preference')
+            if len(chosen) >= limit and not mandatory:
                 break
             # V2-10: a learning the person switched off never reaches model context. It stays in
             # the store (inspectable, reversible); only learning records carry the marker.
@@ -957,7 +981,7 @@ class Memory:
                     and value.get('enabled') is False:
                 continue
             size = len(row['summary']) + len(row['value'])
-            if chosen and used + size > max_chars:
+            if chosen and used + size > max_chars and not mandatory:
                 break
             used += size
             chosen.append(dict(row))

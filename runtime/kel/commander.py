@@ -1,6 +1,9 @@
 """Model proposals, deterministic validation, and a separate review context."""
 import json
 import time
+import contextlib
+import inspect
+import threading
 from .core import PolicyError, Conflict, uid, validate_contract
 from .engine import compile_document
 
@@ -49,6 +52,47 @@ class Commander:
     def __init__(self, model, alternates=None):
         self.model=model
         self.alternates=[a for a in (alternates or []) if a is not None and a is not model]
+        self._planning_local = threading.local()
+
+    @contextlib.contextmanager
+    def planning_scope(self, cancel, before_call=None, after_call=None):
+        previous = getattr(self._planning_local, 'scope', None)
+        self._planning_local.scope = {'cancel': cancel, 'before': before_call, 'after': after_call}
+        try:
+            yield
+        finally:
+            self._planning_local.scope = previous
+
+    def _execute_planner(self, candidate, prompt):
+        scope = getattr(self._planning_local, 'scope', None) or {}
+        cancel = scope.get('cancel')
+        if cancel is not None and cancel.is_set():
+            raise PolicyError('You stopped this planning request.')
+        try:
+            params = inspect.signature(candidate.execute).parameters
+            supports_cancel = 'cancel' in params or any(p.kind == p.VAR_KEYWORD for p in params.values())
+        except (TypeError, ValueError):
+            supports_cancel = False
+        call_id = scope['before'](candidate, supports_cancel) if scope.get('before') else None
+        if cancel is not None and cancel.is_set():
+            if scope.get('after'):
+                scope['after'](call_id, candidate,
+                               {'outcome': 'CANCELLED', 'execution_state': 'not_started',
+                                'usage': {'input_tokens': 0, 'output_tokens': 0}, 'cost_usd': 0}, 0)
+            raise PolicyError('You stopped this planning request.')
+        started = time.monotonic()
+        try:
+            result = candidate.execute(prompt, **({'cancel': cancel} if cancel is not None and supports_cancel else {}))
+            if not isinstance(result, dict):
+                result = {'outcome': 'FAILED', 'error': 'Invalid planner result'}
+        except Exception as exc:
+            result = {'outcome': 'FAILED', 'error': type(exc).__name__}
+        wall = int((time.monotonic() - started) * 1000)
+        if scope.get('after'):
+            scope['after'](call_id, candidate, result, wall)
+        if cancel is not None and cancel.is_set():
+            raise PolicyError('You stopped this planning request.')
+        return result, wall
 
     @staticmethod
     def _key(adapter):
@@ -125,15 +169,11 @@ class Commander:
                 continue
             seen.add(key)
             chain.append(candidate)
-        for candidate in chain:
-            started = time.monotonic()
-            try:
-                result = candidate.execute(prompt)
-            except Exception as exc:
-                result = {'outcome': 'FAILED', 'error': type(exc).__name__}
+        for candidate in chain[:3]:
+            result, wall = self._execute_planner(candidate, prompt)
             if on_result is not None:
                 try:
-                    on_result(candidate, result if isinstance(result, dict) else {}, int((time.monotonic() - started) * 1000))
+                    on_result(candidate, result if isinstance(result, dict) else {}, wall)
                 except Exception:
                     pass
             if result.get('outcome') != 'SUCCESS':
@@ -176,15 +216,11 @@ class Commander:
                 continue
             seen.add(key)
             chain.append(candidate)
-        for candidate in chain:
-            started = time.monotonic()
-            try:
-                result = candidate.execute(prompt)
-            except Exception as exc:
-                result = {'outcome': 'FAILED', 'error': type(exc).__name__}
+        for candidate in chain[:3]:
+            result, wall = self._execute_planner(candidate, prompt)
             if on_result is not None:
                 try:
-                    on_result(candidate, result if isinstance(result, dict) else {}, int((time.monotonic() - started) * 1000))
+                    on_result(candidate, result if isinstance(result, dict) else {}, wall)
                 except Exception:
                     pass
             if not isinstance(result, dict) or result.get('outcome') != 'SUCCESS':
@@ -225,15 +261,11 @@ class Commander:
                 continue
             seen.add(key);chain.append(candidate)
         result={'outcome':'FAILED','error':'No planner is available'};used=planner
-        for candidate in chain:
-            started=time.monotonic()
-            try:
-                result=candidate.execute(prompt)
-            except Exception as exc:
-                result={'outcome':'FAILED','error':type(exc).__name__}
+        for candidate in chain[:3]:
+            result, wall = self._execute_planner(candidate, prompt)
             if on_result is not None:
                 try:
-                    on_result(candidate,result if isinstance(result,dict) else {},int((time.monotonic()-started)*1000))
+                    on_result(candidate,result if isinstance(result,dict) else {},wall)
                 except Exception:
                     pass
             used=candidate

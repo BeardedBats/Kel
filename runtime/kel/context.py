@@ -18,11 +18,26 @@ class Context:
             CREATE TABLE IF NOT EXISTS attachments(id TEXT PRIMARY KEY,conversation_id TEXT,name TEXT,path TEXT,sha256 TEXT,size INTEGER,mime TEXT,created REAL);
             CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY,project_id TEXT,action_digest TEXT,expires REAL,revoked INTEGER DEFAULT 0,UNIQUE(project_id,action_digest));
             CREATE TABLE IF NOT EXISTS handoffs(run_id TEXT PRIMARY KEY,sha256 TEXT,data TEXT,created REAL);
+            CREATE TABLE IF NOT EXISTS submission_context(submission_id TEXT PRIMARY KEY,status TEXT NOT NULL,updated REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS request_calls(call_id TEXT PRIMARY KEY,submission_id TEXT NOT NULL,state TEXT NOT NULL,estimate TEXT NOT NULL,usage TEXT,cancellation_supported INTEGER NOT NULL,created REAL NOT NULL,updated REAL NOT NULL);
+            CREATE INDEX IF NOT EXISTS request_calls_submission ON request_calls(submission_id,created);
             ''')
             from .rewind import ensure
             ensure(db)  # D-75.2: rewound messages leave the history every handoff reads
             db.execute('INSERT OR IGNORE INTO projects VALUES(?,?,?,?,?)',('default','General',None,'',time.time()))
             db.execute('INSERT OR IGNORE INTO conversations VALUES(?,?,?,?)',('main','default','New conversation',time.time()))
+
+    def context_status(self, submission_id):
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT status FROM submission_context WHERE submission_id=?', (submission_id,)).fetchone()
+        return json.loads(row['status']) if row else None
+
+    def request_calls(self, submission_id):
+        with contextlib.closing(self.store.connect()) as db:
+            rows = db.execute('SELECT * FROM request_calls WHERE submission_id=? ORDER BY created,call_id', (submission_id,)).fetchall()
+        return [{**dict(row), 'estimate': json.loads(row['estimate']),
+                 'usage': json.loads(row['usage']) if row['usage'] else None,
+                 'cancellation_supported': bool(row['cancellation_supported'])} for row in rows]
 
     def project(self,name,root=None,notes='',project_id=None):
         if not isinstance(name,str) or not name.strip() or len(name)>120: raise PolicyError('Name must be 1 to 120 characters')

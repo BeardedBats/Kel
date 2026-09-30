@@ -582,7 +582,8 @@ class ACPHost:
                         if not text.strip():
                             return {'stopReason': 'end_turn'}
             sid = 'acp-' + uuid.uuid4().hex
-            self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments})
+            self.client.call('/api/send', {'id': sid, 'conversation': cid, 'text': text, 'attachments': attachments,
+                                          'donor_id': os.environ.get('AIONUI_CONVERSATION_ID')})
             seen = {m['seq'] for m in baseline['messages']}
             stream = {'ok': True, 'shown': ''}  # D-75.1: the reply's words already shown
             last_status = None

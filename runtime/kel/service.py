@@ -12,7 +12,7 @@ import sys
 import threading
 import time
 from urllib.parse import urlparse,parse_qs
-from .core import Store,PolicyError,Conflict,encode
+from .core import Store,PolicyError,Conflict,encode,digest
 from .context import Context
 from .engine import Engine,compile_document
 from .commander import Commander
@@ -185,6 +185,7 @@ class Service:
                     tx.execute("UPDATE submissions SET state='INTERRUPTED',error='Kel closed before this work started. Retry it from its card.' WHERE id=?",(row['id'],))
             # Planning is read-only: interrupted intake can be resumed without replaying worker effects.
             db.execute("UPDATE submissions SET state='INTERRUPTED',error='The app closed during planning. Retry this request.' WHERE state='PLANNING'")
+            db.execute("UPDATE request_calls SET state='interrupted',updated=? WHERE state='reserved'", (time.time(),))
         from .continuation import Continuation
         from .connections import Connections
         from .memory import Memory
@@ -278,6 +279,18 @@ class Service:
             raise PolicyError('Request must be 1 to 20000 characters')
         text=text.strip()
         if not text or len(text)>20000:raise PolicyError('Request must be 1 to 20000 characters')
+        transcript_origin = None
+        supplied_origin = data.get('transcriptOrigin')
+        if supplied_origin is None and data.get('donor_id'):
+            from .input_origins import InputOrigins
+            supplied_origin = InputOrigins(self.store).claim(data['donor_id'], self._project_of(cid), text)
+        if supplied_origin is not None:
+            if not isinstance(supplied_origin, dict) or not isinstance(supplied_origin.get('id'), str) or not supplied_origin['id'].strip():
+                raise PolicyError('Choose a saved transcript for this input.')
+            from .transcription import Transcription
+            saved = Transcription(self.store).transcript(supplied_origin['id'])
+            transcript_origin = {'id': saved['id'], 'name': saved['name'],
+                                 'source_digest': digest(saved['text']), 'edited': text != saved['text'].strip()}
         attachments=data.get('attachments',[])
         if not isinstance(attachments,list) or len(attachments)>10:raise PolicyError('Choose at most ten attachments')
         job_id=data.get('job_id')
@@ -296,6 +309,8 @@ class Service:
             result=classify(text)
             kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
         packet=self.context.handoff(cid,text,attachments)
+        if transcript_origin:
+            packet['transcript_origin'] = transcript_origin
         try:
             from .memory import Memory
             from .projectmap import ProjectMap
@@ -307,8 +322,13 @@ class Service:
                 packet['context_packet']=Composer(
                     self.store,Memory(self.store),ProjectMap(self.store)).build(
                     project_row['project_id'],text,conversation_id=cid,purpose='submit')
-        except Exception:
-            pass  # enrichment is additive; the handoff packet remains the fallback
+            packet['context_status'] = packet.get('context_packet', {}).get('context_status') or {
+                'state': 'degraded', 'packet_id': None, 'omissions': [], 'freshness': None,
+                'error_code': 'project_context_unavailable'}
+        except Exception as exc:
+            packet['context_status'] = {'state': 'degraded', 'packet_id': None,
+                'omissions': [{'kind': 'enrichment', 'reason': 'unavailable'}], 'freshness': None,
+                'error_code': type(exc).__name__, 'requires_attention': isinstance(exc, PolicyError)}
         packet['kind_source']=kind_source
         if origin:packet['schedule']=dict(origin)
         if job_id:packet['continuation']={'job_id':job_id}
@@ -324,9 +344,15 @@ class Service:
                 if old['conversation_id']!=cid or old['text']!=text:raise PolicyError('Request ID belongs to different content')
                 return sid
             db.execute('INSERT INTO submissions VALUES(?,?,?,?,?,?,?)',(sid,cid,text,'PLANNING',None,None,time.time()))
+            db.execute('INSERT INTO submission_context VALUES(?,?,?)',
+                       (sid, encode(packet['context_status']), time.time()))
             # D-53: the person's own message is the one a hand-off job keeps (user before acknowledgement).
             meta=encode({'kind':'scheduled','schedule_id':origin.get('id'),'name':origin.get('name'),
                          'slot':origin.get('slot')}) if origin else None
+            if transcript_origin:
+                details = json.loads(meta) if meta else {'kind': 'transcript'}
+                details['transcript_origin'] = transcript_origin
+                meta = encode(details)
             packet['intake_seq']=db.execute('INSERT INTO messages(conversation_id,role,text,at,meta) VALUES(?,?,?,?,?)',(cid,'user',text,time.time(),meta)).lastrowid
             db.execute('INSERT INTO submission_packets VALUES(?,?,?)',(sid,encode(packet),kind))
             for aid in attachments:db.execute('INSERT INTO message_files VALUES(?,?)',(sid,aid))
@@ -378,7 +404,7 @@ class Service:
             from .usage import record
             binding=getattr(model,'kel_binding',None) or {}
             asked=(binding.get('asked') or {}).get('model')
-            record(self.store,'%s:%s:%s'%(kind,sid or '-',secrets.token_hex(6)),kind=kind,
+            record(self.store,(result or {}).get('_request_call_id') or '%s:%s:%s'%(kind,sid or '-',secrets.token_hex(6)),kind=kind,
                    adapter=getattr(model,'provider',None),model=getattr(model,'model',None),
                    task_class=task_class or ('planning' if kind=='plan' else 'quick_answer'),
                    result=result if isinstance(result,dict) else {},wall=wall,
@@ -673,7 +699,7 @@ class Service:
                                'LEFT JOIN submission_acks a ON a.submission_id=s.id WHERE s.id=?',(sid,)).fetchone()
                 if not row or row['conversation_id']!=cid:
                     raise PolicyError('That message is not part of this conversation')
-                if row['acked'] or row['job_id']:
+                if row['job_id']:
                     return {'cancelled':False,'handed_off':True,'state':row['state']}
                 if row['state']!='PLANNING':
                     return {'cancelled':False,'handed_off':False,'state':row['state']}
@@ -696,6 +722,9 @@ class Service:
             with contextlib.closing(self.store.connect()) as db:
                 if not self._still_planning(db,sid):
                     return None  # stopped before it was picked up
+            if (packet.get('context_status') or {}).get('requires_attention'):
+                self._say(sid,cid,'Project context needs attention before I continue. Narrow this request or review the project decisions.')
+                return None
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
             code_floor=coding_verb or self._code_in_project(text,packet)
@@ -831,7 +860,8 @@ class Service:
             with self.store.transaction() as db:db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=? AND state='PLANNING'",(str(exc),sid))
         finally:
             with self._cancels_lock:
-                self._cancels.pop(sid,None)
+                if self._cancels.get(sid) is cancel:
+                    self._cancels.pop(sid,None)
             self.drafts.pop(sid,None)
             self.wake.set()
         return None
@@ -1006,6 +1036,8 @@ class Service:
 
     def _compile_work(self,sid,cid,text,packet,kind,greenfield_flag):
         """The work contract for one request (a file action, coding, research, or a planned document)."""
+        if (packet.get('context_status') or {}).get('requires_attention'):
+            raise PolicyError('Project context needs attention before work starts. Narrow this request or review the project decisions.')
         lower=text.lower().strip()
         coding_verb=lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)
         classified=(packet.get('classification') or {}).get('task_class')
@@ -1130,7 +1162,70 @@ class Service:
         except Exception:
             return contract
 
+    def _admit_planning_call(self, sid, model, supports_cancel):
+        from .budget import estimate, CEILINGS
+        model_id = getattr(model, 'model', None)
+        step = estimate(self.store, 'planning', model=model_id, reviewed=False)
+        with self.store.transaction() as db:
+            request = db.execute('SELECT state FROM submissions WHERE id=?', (sid,)).fetchone()
+            if request is None:
+                return None  # internal compiler callers have no submitted request
+            if request['state'] != 'PLANNING':
+                raise PolicyError('This planning request is no longer active.')
+            calls = db.execute('SELECT state,estimate,usage FROM request_calls WHERE submission_id=?', (sid,)).fetchall()
+            if len(calls) >= 3:
+                raise PolicyError('This request reached its three planning attempts. Start a new request to try again.')
+            totals = {'tokens': 0, 'ms': 0, 'cost': 0}
+            for call in calls:
+                held = json.loads(call['estimate'])
+                observed = json.loads(call['usage']) if call['usage'] else {}
+                # Unknown usage retains an estimate for admission; it remains unknown in the public record.
+                totals['tokens'] += observed.get('processed') if observed.get('processed') is not None else held['tokens']
+                totals['ms'] += observed.get('runtime_ms') if observed.get('runtime_ms') is not None else held['ms']
+                totals['cost'] += observed.get('cost_usd') if observed.get('cost_usd') is not None else held['cost']
+            ceiling = CEILINGS['standard']
+            if totals['tokens'] + step['tokens'] > ceiling['tokens'] or totals['ms'] + step['ms'] > ceiling['minutes'] * 60_000 or totals['cost'] + step['cost'] > ceiling['cost']:
+                raise PolicyError('This request reached its planning budget. Start a smaller request.')
+            call_id = 'plan:' + str(sid) + ':' + secrets.token_hex(8)
+            db.execute('INSERT INTO request_calls VALUES(?,?,?,?,?,?,?,?)',
+                       (call_id, sid, 'reserved', encode(step), None, int(supports_cancel), time.time(), time.time()))
+        return call_id
+
+    def _settle_planning_call(self, call_id, model, result, wall):
+        if not call_id:
+            return
+        from .usage import normalize
+        observed = normalize(result, model=getattr(model, 'model', None))
+        observed['runtime_ms'] = wall
+        if result.get('execution_state') == 'not_started':
+            observed['execution_state'] = 'not_started'
+        with self.store.transaction() as db:
+            request = db.execute('SELECT s.id,s.conversation_id FROM request_calls c JOIN submissions s ON s.id=c.submission_id WHERE c.call_id=?', (call_id,)).fetchone()
+            db.execute("UPDATE request_calls SET state='settled',usage=?,updated=? WHERE call_id=? AND state='reserved'",
+                       (encode(observed), time.time(), call_id))
+        result['_request_call_id'] = call_id
+        if request and result.get('execution_state') != 'not_started':
+            self._kel_usage('plan', request['id'], request['conversation_id'], model, result, wall, 'planning')
+
     def _start_work(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
+        cancel = threading.Event()
+        with self._cancels_lock:
+            self._cancels[sid] = cancel
+        scope = self.commander.planning_scope(cancel,
+                    lambda model, supported: self._admit_planning_call(sid, model, supported),
+                    self._settle_planning_call) if self.commander else contextlib.nullcontext()
+        try:
+            with scope:
+                with contextlib.closing(self.store.connect()) as db:
+                    if not self._still_planning(db, sid):
+                        return None
+                return self._start_work_scoped(sid,cid,text,packet,kind,greenfield_flag)
+        finally:
+            with self._cancels_lock:
+                if self._cancels.get(sid) is cancel:
+                    self._cancels.pop(sid, None)
+
+    def _start_work_scoped(self,sid,cid,text,packet,kind=None,greenfield_flag=False):
         """Planning-pool half of a hand-off: compile, create the job, link it; or say it failed.
 
         D-55: a change that arrives while this is still planning rewrites the submission's request;
@@ -1172,7 +1267,9 @@ class Service:
         except Exception as exc:
             reason=str(exc).strip().rstrip('.') or type(exc).__name__
             with self.store.transaction() as db:
-                db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=?",(str(exc),sid))
+                if not self._still_planning(db, sid):
+                    return None
+                db.execute("UPDATE submissions SET state='FAILED',error=? WHERE id=? AND state='PLANNING'",(str(exc),sid))
                 db.execute('INSERT INTO messages(conversation_id,role,text,at) VALUES(?,?,?,?)',
                            (cid,'assistant',"I wasn't able to get that started — "+reason+'. You can retry it from the card above.',time.time()))
             return None
@@ -1729,6 +1826,8 @@ class Service:
             # Older releases recorded completed direct answers as DISPATCHED without a job.
             # Normalize the read without rewriting preserved conversation history.
             for submission in submissions:
+                status = db.execute('SELECT status FROM submission_context WHERE submission_id=?', (submission['id'],)).fetchone()
+                submission['context_status'] = json.loads(status['status']) if status else None
                 if submission['state'] == 'DISPATCHED' and not submission['job_id']:
                     submission['state'] = 'SETTLED'
             approvals=[dict(r) for r in db.execute("SELECT a.*,x.action FROM approvals a JOIN approval_actions x ON x.approval_id=a.id WHERE a.status='PENDING'")]
@@ -1855,10 +1954,18 @@ class Service:
               'ack_seq':row['ack_seq'],'job_id':row['job_id'],'state':None,'verdict':None,
               'accepted':0,'total':0,'why':None,'next':None,'error':row['error'],
               'phase':'starting','can_stop':False,'can_retry':state in ('FAILED','INTERRUPTED')}
+        context = getattr(self, 'context', None)
+        view['context_status'] = context.context_status(sid) if context is not None else None
+        view['request_calls'] = context.request_calls(sid) if context is not None else []
+        attempts_exhausted = len(view['request_calls']) >= 3
+        if attempts_exhausted and not row['job_id']:
+            view['can_retry'] = False
+        if state == 'PLANNING' and not row['job_id']:
+            view['can_stop'] = True
         if not row['job_id']:
             if state in ('FAILED','INTERRUPTED'):
                 view.update(phase='failed_to_start',why=row['error'],
-                            next='Retry to start it again.')
+                            next='Start a new request to try again.' if attempts_exhausted else 'Retry to start it again.')
             elif state=='SETTLED':
                 view.update(phase='needs_look')
             return view
@@ -1980,6 +2087,9 @@ class Service:
     def action(self,path,data):
         with self.lifecycle_lock:
             if self.draining:raise PolicyError('Kel is restarting for an update. Try again after it opens.')
+            if path.startswith('/api/work-hub/'):
+                from .work_hub import WorkHub
+                return WorkHub(self).act(path, data)
             if path=='/api/shutdown-idle':
                 # FN-03: never wait behind a busy supervision pass for ever; D-74.4: work that only
                 # waits on Nick (paused, needs you, out of tries) is durable and does not keep the
@@ -2027,6 +2137,8 @@ class Service:
             with self.store.transaction() as db:
                 row=db.execute('SELECT s.*,p.packet,p.kind FROM submissions s JOIN submission_packets p ON p.id=s.id WHERE s.id=?',(self._required(data,'id','Pick a request to retry first.'),)).fetchone()
                 if not row or row['state'] not in ('FAILED','INTERRUPTED'):raise PolicyError('This request is not ready for retry')
+                if db.execute('SELECT COUNT(*) FROM request_calls WHERE submission_id=?', (row['id'],)).fetchone()[0] >= 3:
+                    raise PolicyError('This request reached its three planning attempts. Start a new request to try again.')
                 db.execute("UPDATE submissions SET state='PLANNING',error=NULL WHERE id=?",(row['id'],))
                 acked=db.execute('SELECT 1 FROM submission_acks WHERE submission_id=?',(row['id'],)).fetchone()
             packet=json.loads(row['packet'])
@@ -2802,6 +2914,9 @@ def serve(root,port=0):
                 if not self.authorized():self.reply(403,{'error':'Local session authorization required'});return
                 try:
                     query=parse_qs(parsed.query)
+                    if parsed.path.startswith('/api/work-hub/'):
+                        from .work_hub import WorkHub
+                        self.reply(200, WorkHub(service).get(parsed.path, {key: values[0] for key, values in query.items()}));return
                     if parsed.path=='/api/state':self.reply(200,service.state(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
                     if parsed.path=='/api/work':self.reply(200,service._work(query.get('conversation',['main'])[0],(query.get('project') or [None])[0]));return
                     if parsed.path=='/api/conversations':self.reply(200,service.conversations());return

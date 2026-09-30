@@ -621,6 +621,12 @@ class RecipeLibrary:
     def __init__(self, store):
         self.store = store
         ensure_schema(store)
+        with contextlib.closing(store.connect()) as db:
+            db.execute('CREATE TABLE IF NOT EXISTS recipe_procedures('
+                       'project_id TEXT NOT NULL,recipe_id TEXT NOT NULL,version TEXT NOT NULL,'
+                       'digest TEXT NOT NULL,state TEXT NOT NULL,evidence_job_id TEXT,'
+                       'review_note TEXT,reviewed_at REAL,updated REAL NOT NULL,'
+                       'PRIMARY KEY(project_id,recipe_id,version))')
 
     def _event(self, db, recipe_id, action, detail=None):
         aggregate = 'recipe:' + recipe_id
@@ -667,7 +673,7 @@ class RecipeLibrary:
             return None
         return max(rows, key=lambda row: self._version_key(row['recipe_version']))
 
-    def get(self, recipe_id, *, project_id=''):
+    def get(self, recipe_id, *, project_id='', version=None, include_retired=False):
         """Project recipes shadow builtins; both stay inspectable."""
         with contextlib.closing(self.store.connect()) as db:
             row = self._latest(db, recipe_id, 'project', project_id) if project_id else None
@@ -676,9 +682,104 @@ class RecipeLibrary:
                 row = self._latest(db, recipe_id, 'builtin', '')
         if row is None:
             raise PolicyError('Unknown recipe: %s' % recipe_id)
+        if version is not None:
+            with contextlib.closing(self.store.connect()) as db:
+                row = db.execute('SELECT * FROM recipes WHERE recipe_id=? AND recipe_version=? '
+                                 'AND scope=? AND project_id=?',
+                                 (recipe_id, version, row['scope'], row['project_id'])).fetchone()
+            if row is None:
+                raise PolicyError('Recipe version missing')
+        with contextlib.closing(self.store.connect()) as db:
+            procedure = db.execute('SELECT state FROM recipe_procedures WHERE project_id=? '
+                                   'AND recipe_id=? AND version=? AND digest=?',
+                                   (project_id, recipe_id, row['recipe_version'], row['digest'])).fetchone()
+        if procedure and procedure['state'] == 'retired' and not include_retired:
+            raise PolicyError('This procedure version is retired; restore it before use')
         return {'recipe': json.loads(row['data']), 'scope': row['scope'],
                 'project_id': row['project_id'], 'version': row['recipe_version'],
                 'digest': row['digest'], 'source': row['source'], 'shadowed': shadowed}
+
+    def procedure(self, project_id, recipe_id, version=None):
+        from .work_import import _project
+        if project_id:
+            with contextlib.closing(self.store.connect()) as db:
+                _project(db, project_id)
+        info = self.get(recipe_id, project_id=project_id, version=version, include_retired=True)
+        with contextlib.closing(self.store.connect()) as db:
+            row = db.execute('SELECT * FROM recipe_procedures WHERE project_id=? AND recipe_id=? '
+                             'AND version=? AND digest=?',
+                             (project_id, recipe_id, info['version'], info['digest'])).fetchone()
+        return (dict(row) if row else {'project_id': project_id, 'recipe_id': recipe_id,
+                'version': info['version'], 'digest': info['digest'], 'state': 'draft',
+                'evidence_job_id': None, 'review_note': '', 'reviewed_at': None})
+
+    def review_procedure(self, project_id, recipe_id, version, job_id, note='', confirm=False):
+        if confirm is not True:
+            raise PolicyError('Reviewing a procedure requires explicit confirmation')
+        from .work_import import _project
+        with contextlib.closing(self.store.connect()) as db:
+            _project(db, project_id)
+        _text('review note', note, 1000, empty=True)
+        from .memory import scan_secret
+        if scan_secret(note):
+            raise PolicyError('Remove secret-like review content')
+        if not isinstance(version, str) or not VERSION_RE.fullmatch(version):
+            raise PolicyError('Choose an exact procedure version')
+        self.procedure(project_id, recipe_id, version)
+        info = self.get(recipe_id, project_id=project_id, version=version, include_retired=True)
+        try:
+            job = self.store.get(job_id)
+        except KeyError as exc:
+            raise PolicyError('Evidence work missing') from exc
+        contract = job.get('contract') or {}
+        with contextlib.closing(self.store.connect()) as db:
+            conv = db.execute('SELECT project_id FROM conversations WHERE id=?',
+                              (job.get('conversation'),)).fetchone()
+        owner = conv['project_id'] if conv else contract.get('project_id')
+        if owner != project_id or job.get('state') != 'CLOSED' or job.get('verdict') != 'VERIFIED':
+            raise PolicyError('Procedure evidence needs checked work from this Project')
+        if self.store.assess(job_id) != 'VERIFIED':
+            raise PolicyError('Procedure evidence changed; check the work again')
+        binding = contract.get('recipe') or {}
+        exact = binding.get('id') == recipe_id and binding.get('version') == version and binding.get('digest') == info['digest']
+        original = info['recipe'].get('source') == 'from_job:' + job_id
+        if original:
+            proposed = self.propose_from_job(job_id)['recipe']
+            # Original work supports its own declarative draft, not later unrelated instructions.
+            original = info['recipe']['steps'] == proposed['steps'] and set(info['recipe']['permissions']) <= set(proposed['permissions'])
+        if not (exact or original):
+            raise PolicyError('Evidence does not match this procedure version')
+        with self.store.transaction() as db:
+            now = time.time()
+            db.execute('INSERT OR REPLACE INTO recipe_procedures VALUES(?,?,?,?,?,?,?,?,?)',
+                       (project_id, recipe_id, version, info['digest'], 'reviewed', job_id, note, now, now))
+            self._event(db, recipe_id, 'procedure_reviewed', {'project': project_id, 'version': version,
+                                                            'digest': info['digest'], 'job_id': job_id})
+        return self.procedure(project_id, recipe_id, version)
+
+    def retire_procedure(self, project_id, recipe_id, version, confirm=False):
+        return self._procedure_state(project_id, recipe_id, version, 'retired', confirm)
+
+    def restore_procedure(self, project_id, recipe_id, version, confirm=False):
+        return self._procedure_state(project_id, recipe_id, version, 'restore', confirm)
+
+    def _procedure_state(self, project_id, recipe_id, version, state, confirm):
+        if confirm is not True:
+            raise PolicyError('Changing procedure state requires explicit confirmation')
+        if not isinstance(version, str) or not VERSION_RE.fullmatch(version):
+            raise PolicyError('Choose an exact procedure version')
+        from .work_import import _project
+        with contextlib.closing(self.store.connect()) as db:
+            _project(db, project_id)
+        prior = self.procedure(project_id, recipe_id, version)
+        if state == 'restore':
+            state = 'reviewed' if prior['reviewed_at'] else 'draft'
+        with self.store.transaction() as db:
+            db.execute('INSERT OR REPLACE INTO recipe_procedures VALUES(?,?,?,?,?,?,?,?,?)',
+                       (project_id, recipe_id, version, prior['digest'], state, prior['evidence_job_id'],
+                        prior['review_note'], prior['reviewed_at'], time.time()))
+            self._event(db, recipe_id, 'procedure_' + state, {'project': project_id, 'version': version})
+        return self.procedure(project_id, recipe_id, version)
 
     def entries(self, *, project_id=''):
         with contextlib.closing(self.store.connect()) as db:
@@ -687,7 +788,7 @@ class RecipeLibrary:
         out = []
         for recipe_id in ids:
             try:
-                info = self.get(recipe_id, project_id=project_id)
+                info = self.get(recipe_id, project_id=project_id, include_retired=True)
             except PolicyError:
                 # A recipe that belongs to another project is simply not in this project's library.
                 # (Measured by the V2-07 suite: one project's recipe used to make every other
@@ -699,6 +800,7 @@ class RecipeLibrary:
                         'kind': recipe['kind'], 'digest': info['digest'],
                         'source': info['source'], 'category': recipe.get('category') or '',
                         'description': recipe.get('description') or ''})
+            out[-1]['procedure'] = self.procedure(project_id, recipe_id, info['version'])
         # V2-07: the library's own memory of a person's use — favourites, what they opened, and how
         # often a recipe ran. Additive fields on the existing entries; nothing else changes shape.
         with contextlib.closing(self.store.connect()) as db:
@@ -1016,7 +1118,8 @@ class RecipeLibrary:
             'recipe_id': 'job-' + job_id.replace('-', '')[:12],
             'recipe_version': '1.0.0',
             'name': name or 'Saved run',
-            'description': 'Saved from work Kel finished and checked.',
+            'description': ('Saved from work Kel finished and checked.' if job.get('state') == 'CLOSED'
+                            and job.get('verdict') == 'VERIFIED' else 'Saved from a work request; not yet proved.'),
             'source': 'from_job:' + job_id,
             'kind': kind,
             'inputs': [],
