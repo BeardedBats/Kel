@@ -105,8 +105,8 @@ describe('Kel messages in the chat', () => {
     renderText(text('Sure — here is a quick answer.'));
     expect(screen.queryByLabelText(/helpful/i)).toBeNull();
     expect(screen.queryByLabelText(/unhelpful/i)).toBeNull();
-    fireEvent.click(screen.getByLabelText('More reply actions'));
-    expect(screen.getByText('Copy')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy();
+    expect(screen.queryByLabelText('More reply actions')).toBeNull();
     expect(Object.keys(localStorage).filter((key) => key.startsWith('kel.chatReaction.'))).toEqual([]);
   });
 
@@ -120,7 +120,7 @@ describe('Kel messages in the chat', () => {
     renderText(text('You stopped this reply.', { kind: 'stopped', submission: 'acp-1' }));
     expect(screen.getByTestId('kel-message-note').textContent).toBe('You stopped this reply.');
     expect(screen.queryByTestId('message-text-content')).toBeNull();
-    expect(screen.queryByLabelText('More reply actions')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copy' })).toBeNull();
     expect(screen.queryByTestId('kel-message-details')).toBeNull();
   });
 

@@ -30,11 +30,13 @@ const KelDiagnostics = React.lazy(() => import('@renderer/pages/kel/diagnostics'
 const KelDogfoodFixes = React.lazy(() => import('@renderer/pages/kel/dogfood'));
 const KelConnections = React.lazy(() => import('@renderer/pages/kel/connections'));
 
-const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => (
-  <Suspense fallback={<AppLoader />}>
-    <Component />
-  </Suspense>
-);
+/**
+ * FIX-0023 (Nick): moving between pages (e.g. Settings → Appearance and System) must not flash a
+ * loading screen. Route changes run as transitions, and one Suspense boundary that is already on screen
+ * (around <Routes>) keeps the current page showing until the next one's code has loaded. A boundary per
+ * route would be new on every switch and show its spinner instead.
+ */
+const withRouteFallback = (Component: React.LazyExoticComponent<React.ComponentType>) => <Component />;
 
 /**
  * D-70 item 5: a page that moved keeps its old route as a redirect, query included, so older links
@@ -137,6 +139,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
   return (
     <HashRouter>
       <DocumentTitle />
+      <Suspense fallback={<AppLoader />}>
       <Routes>
         <Route path='/login' element={<SignInGate />} />
         <Route element={<ProtectedLayout layout={layout} />}>
@@ -219,6 +222,7 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
         </Route>
         <Route path='*' element={<CatchAllRedirect />} />
       </Routes>
+      </Suspense>
     </HashRouter>
   );
 };

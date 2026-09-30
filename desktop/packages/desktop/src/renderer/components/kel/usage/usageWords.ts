@@ -17,25 +17,13 @@ export const costAmount = (cost: number | null | undefined, basis?: string | nul
   return `${approx}$${cost.toFixed(2)}`;
 };
 
-/** The cost chip's words: the plan, the metered cost, or both; null when nothing is known. */
+/** The cost words: the plan, the metered cost, or both; null when nothing is known. */
 export const costWords = (usage: KelUsage | null | undefined): string | null => {
   if (!usage) return null;
   if (usage.billing === 'plan') return 'Included in your plan';
   const amount = costAmount(usage.cost, usage.cost_basis);
   if (usage.billing === 'mixed') return amount ? `${amount} + your plan` : 'Partly included in your plan';
   return amount;
-};
-
-/** What the cost chip's tooltip says (the basis in words). */
-export const costHint = (usage: KelUsage | null | undefined): string => {
-  if (!usage) return '';
-  if (usage.billing === 'plan') {
-    const equivalent = costAmount(usage.plan_cost_equivalent);
-    return `Ran on your subscription, so it costs nothing extra${equivalent ? ` (about ${equivalent} at API prices)` : ''}.`;
-  }
-  if (usage.cost_basis === 'estimated') return 'Approximate cost, estimated from the model’s list price.';
-  if (usage.cost_basis === 'reported') return 'Cost as the model’s service reported it.';
-  return 'Approximate cost.';
 };
 
 /** "1.4K tokens" — null when no count was reported. */
@@ -57,20 +45,18 @@ export const timeWords = (ms: number | null | undefined): string | null => {
   return rest ? `${hours} h ${rest} min` : `${hours} h`;
 };
 
-/** The chips under a reply, in order: cost, tokens, time, model. Empty when nothing is known. */
-export const usageChips = (usage: KelUsage | null | undefined): Array<{ key: string; text: string; hint?: string }> => {
-  if (!usage) return [];
-  const chips: Array<{ key: string; text: string; hint?: string }> = [];
-  const cost = costWords(usage);
-  if (cost) chips.push({ key: 'cost', text: cost, hint: costHint(usage) });
-  const tokens = tokenWords(usage.tokens);
-  if (tokens) chips.push({ key: 'tokens', text: tokens, hint: 'Tokens the model processed for this.' });
-  const time = timeWords(usage.ms);
-  if (time) chips.push({ key: 'time', text: time, hint: 'How long the model took.' });
+/**
+ * FIX-0026 (Nick): a reply's usage lives on its timestamp line — "6:00 PM · ChatGPT Luna · 3.6 s" —
+ * and the cost and tokens ("Included in your plan · 2.9K tokens") only in the hover tooltip.
+ * `shown` is what follows the time (model, then time); `hint` is the tooltip; either may be empty.
+ */
+export const replyUsageWords = (usage: KelUsage | null | undefined): { shown: string[]; hint: string | null } => {
+  if (!usage) return { shown: [], hint: null };
   const models = (usage.models ?? []).filter(Boolean);
   const model = usage.model_label || models[models.length - 1];
-  if (model) chips.push({ key: 'model', text: model, hint: models.length > 1 ? `Models used: ${models.join(', ')}` : 'The model that answered.' });
-  return chips;
+  const shown = [model, timeWords(usage.ms)].filter((part): part is string => Boolean(part));
+  const hidden = [costWords(usage), tokenWords(usage.tokens)].filter((part): part is string => Boolean(part));
+  return { shown, hint: hidden.length ? hidden.join(' · ') : null };
 };
 
 /** One line for a work card's detail header: "Included in your plan · 86K tokens · 3 min of model time". */

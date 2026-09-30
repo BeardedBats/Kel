@@ -136,19 +136,27 @@ const glides = new WeakMap<HTMLElement, { y: number; h: SpringHandle | null }>()
  * instead of jumping — "earlier messages FLIP up" (§10.1). Consecutive follows retarget one spring.
  * Only for the list's own follow, never for Nick's scrolling.
  */
-export const glide = (el: HTMLElement, dy: number): void => {
+export const glide = (el: HTMLElement, dy: number, opts: { clip?: HTMLElement | null } = {}): void => {
   if (isReducedMotion() || Math.abs(dy) < 0.5) return;
   const st = glides.get(el) ?? { y: 0, h: null };
   glides.set(el, st);
   const velocity = st.h && !st.h.done ? st.h.velocity : 0;
   st.h?.stop();
   st.y += dy;
+  // FIX-0025: a transform inside a scroll container adds to what it can scroll, and at the bottom the
+  // browser then clamps the scroll as the glide shrinks — cancelling the glide and jolting the thread.
+  // A clipping box between the two keeps the moving content out of the scroll range while it moves
+  // (the newest lines are revealed from the bottom edge as the thread settles).
+  const clip = opts.clip ?? null;
   const write = () =>
     frameWrite(el, () => {
-      el.style.transform = Math.abs(st.y) < 0.05 ? '' : `translateY(${st.y.toFixed(2)}px)`;
+      const moving = Math.abs(st.y) >= 0.05;
+      el.style.transform = moving ? `translateY(${st.y.toFixed(2)}px)` : '';
+      if (clip) clip.style.overflow = moving ? 'clip' : '';
     });
   write();
-  st.h = spring(st.y, 0, 'snappy', (v) => {
+  // `gentle` (0.15% overshoot): a long glide of the whole thread must not bob at the end.
+  st.h = spring(st.y, 0, 'gentle', (v) => {
     st.y = v;
     write();
   }, { velocity, eps: 0.05 });

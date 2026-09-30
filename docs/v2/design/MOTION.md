@@ -222,10 +222,16 @@ Each moment names the real component and classes, what exists today, and the pro
    placeholder returns. Earlier messages FLIP up (`snappy`).
 2. **Thinking** enters above the composer as an in-flow insert, with the mark, "Thinking…" and "0s"
    staggered 40 ms. Its pulse and shimmer are the one permitted loop.
-3. **Reply:** "Thinking…" and the seconds exit (110 ms). The **mark flies** from the Thinking row to the
-   new message's avatar slot (`morph` x, `gentle` y) and stops pulsing. The row collapses while messages
-   FLIP. The time enters. Words **stream**: each ~150 ms chunk fades in out of a 3 px blur (180 ms,
-   25 ms stagger), with no vertical movement so the lines never jiggle.
+3. **Reply:** the Thinking row fades out where it is (140 ms). The reply's mark and time fade in in
+   their own places (220 ms, a light blur, no movement) — FIX-0025 (Nick): the mark flying up from the
+   Thinking row read as a jump, so nothing flies. The thread glides (`gentle`) to make room: every
+   change in its height — Thinking leaving, the reply arriving, new lines — is shown where it was and
+   springs to its new place, inside a box that clips while it moves so the glide never changes the
+   scroll range (a transform inside a scroll container is added to what it can scroll, and the
+   browser's clamp then cancelled the glide and jolted the thread). The reply's actions row holds its
+   place while it streams, and its usage ("· ChatGPT Luna · 3.6 s", FIX-0026) settles into the
+   timestamp line, so finishing moves nothing. Words **stream**: each ~150 ms chunk fades in out of a
+   3 px blur (180 ms, 25 ms stagger), with no vertical movement so the lines never jiggle.
 
 ### 10.2 The hand-off
 *Today:* the in-thread `KelWorkCard` shows "Getting started…" and then swaps to `KelWorkLine` (`.kel-wl`)

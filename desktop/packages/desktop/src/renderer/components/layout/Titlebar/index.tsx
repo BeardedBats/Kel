@@ -317,10 +317,15 @@ const Titlebar: React.FC<TitlebarProps> = ({ workspaceAvailable }) => {
     return () => window.cancelAnimationFrame(frame);
   }, [useSiderHost, location.pathname]);
   const menuHost = !layout?.isMobile ? (layout?.titlebarMenuHost ?? (useSiderHost ? siderHeaderHost : null)) : null;
+  // FIX-0022 (Nick): with the sidebar hidden, the toggle, search and back/forward stay at the top left
+  // (where the sidebar's logo row had them), like other desktop chat apps — never beside the window
+  // controls — so "Show the sidebar" is always in the same place.
+  const floatingMenu = !layout?.isMobile && Boolean(layout?.siderCollapsed) && !menuHost;
   const menu = (
     <div
       ref={menuRef}
-      className={classNames('app-titlebar__menu', menuHost && menuHost === siderHeaderHost && 'app-titlebar__menu--sider')}
+      data-testid='titlebar-menu'
+      className={classNames('app-titlebar__menu', menuHost && menuHost === siderHeaderHost && 'app-titlebar__menu--sider', floatingMenu && 'app-titlebar__menu--floating')}
       style={menuHost ? undefined : menuStyle}
     >
       {showBackToChatButton && (

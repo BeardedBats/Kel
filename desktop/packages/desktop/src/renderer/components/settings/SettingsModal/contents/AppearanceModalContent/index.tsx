@@ -8,12 +8,10 @@ import ShellSourceCardHeader from '@renderer/components/kel/ShellSourceCardHeade
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ScaleControl from '@/renderer/components/settings/ScaleControl';
-import CssThemeSettings from '@renderer/pages/settings/AppearanceSettings/CssThemeSettings';
 import AionScrollArea from '@/renderer/components/base/AionScrollArea';
 import { FONT_SIZE_KEYS, FONT_SIZE_SPECS, FONT_SIZE_STEP, type FontSizeKey } from '@/common/config/fontSizes';
 import { useThemeContext } from '@renderer/hooks/context/ThemeContext';
 import { useSettingsViewMode } from '../../settingsViewContext';
-import ThemeColorsSection from '@renderer/components/kel/ThemeColorsSection';
 import FontSizeStepper from './FontSizeStepper';
 import FontFamilySelect from './FontFamilySelect';
 import FontWeightSelect from './FontWeightSelect';
@@ -70,15 +68,7 @@ const AppearanceModalContent: React.FC = () => {
       {/* 内容区域 / Content Area */}
       <AionScrollArea className='flex-1 min-h-0 pb-16px' disableOverflow={isPageMode}>
         <div className='space-y-16px kel-shell-appearance'>
-          {/* 主题画廊 / Theme Gallery */}
-          <div className='px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
-            <ShellSourceCardHeader title='Theme' />
-            <CssThemeSettings />
-          </div>
-
-          {/* 主题语义色 / Theme foundation colors */}
-          <ThemeColorsSection />
-
+          {/* D-82: Kel is dark only — no theme or colour choice here, only text size and zoom. */}
           {/* 字体（字族 + 字号）/ Fonts (family + size) */}
           <div className='kel-shell-appearance-type px-16px md:px-24px lg:px-28px py-14px md:py-16px bg-2 rd-8px'>
             <div className='kel-desktop-only'><ShellSourceCardHeader title='Text size and zoom' /></div>

@@ -1,7 +1,8 @@
 /**
- * VIS-10 / JR-26: the chat row menu, the composer's model picker, the attach menu and the reply ⋯
- * menu work from the keyboard like the project chip: a labelled trigger, focus moves into the menu,
- * arrows move between items, Escape closes and returns focus, and changing page closes the menu.
+ * VIS-10 / JR-26: the chat row menu, the composer's model picker and the attach menu work from the
+ * keyboard like the project chip: a labelled trigger, focus moves into the menu, arrows move between
+ * items, Escape closes and returns focus, and changing page closes the menu. (The reply ⋯ menu is gone:
+ * FIX-0027 made its actions plain icon buttons.)
  */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -26,7 +27,6 @@ vi.mock('@/renderer/components/kel/useKelLiveWork', () => ({ useKelLiveWork: () 
 vi.mock('@/renderer/pages/cron', () => ({ CronJobIndicator: () => null }));
 
 import ConversationRow from '@renderer/pages/conversation/GroupedHistory/ConversationRow';
-import { ReplyActions } from '@renderer/pages/conversation/Messages/components/MessageText';
 import FileAttachButton from '@renderer/components/media/FileAttachButton';
 import { KelModelPill } from '@renderer/components/kel/KelModelControl';
 import type { TChatConversation } from '@/common/config/storage';
@@ -118,13 +118,6 @@ describe('chat row menu', () => {
     row.focus();
     fireEvent.contextMenu(row);
     await waitFor(() => expect(document.activeElement?.textContent).toContain('conversation.history.pin'));
-  });
-});
-
-describe('reply ⋯ menu', () => {
-  it('has a labelled trigger and full keyboard support', async () => {
-    inRouter(<ReplyActions onCopy={vi.fn()} onFork={vi.fn()} />);
-    await expectKeyboardMenu(screen.getByRole('button', { name: 'More reply actions' }), 'Reply actions', 'Copy', 'messages.fork.action');
   });
 });
 

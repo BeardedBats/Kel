@@ -16,6 +16,7 @@ import { applicationLine, isApplied } from './changeApplication';
 import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
 import { KelWorkLine } from './workCards/KelWorkLine';
+import { lastHandoffViews } from './workCards/handoffMemory';
 import { answerApply } from './workCards/officeApi';
 import { refreshWorkCards } from './workCards/workCardEvents';
 import './KelWorkCard.css';
@@ -74,7 +75,15 @@ type Props = {
 export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pollMs = KEL_WORK_CARD_POLL_MS }) => {
   const navigate = useNavigate();
   const [engineCid, setEngineCid] = useState<string | null>(null);
-  const [view, setView] = useState<KelHandoff | null>(null);
+  // FIX-0025: a re-mounted card starts from the state it last showed (see handoffMemory).
+  const [view, setViewState] = useState<KelHandoff | null>(() => lastHandoffViews.get(submissionId) ?? null);
+  const setView = useCallback((next: KelHandoff | null | ((current: KelHandoff | null) => KelHandoff | null)) => {
+    setViewState((current) => {
+      const value = typeof next === 'function' ? next(current) : next;
+      if (value && submissionId) lastHandoffViews.set(submissionId, value);
+      return value;
+    });
+  }, [submissionId]);
   const [unavailable, setUnavailable] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);

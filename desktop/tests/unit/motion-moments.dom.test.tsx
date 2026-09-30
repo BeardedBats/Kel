@@ -24,12 +24,10 @@ import { resetProjectsForTests } from '@renderer/components/kel/activeProject';
 import type { OfficeItem, OfficeItemDetail, ScopingView } from '@renderer/components/kel/workCards/officeApi';
 import {
   MOTION,
-  THINKING_MARK,
   claimShared,
   motionClock,
   setReducedMotionOverride,
   setSceneSettledForTests,
-  takeSnapshot,
   useMessageArrival,
 } from '@renderer/motion';
 import { MIC, MIC_DETAIL, RECEIPTS, RECEIPTS_DETAIL } from './fixtures/kelOfficeFixtures';
@@ -102,7 +100,7 @@ const renderRow = () =>
   );
 
 describe('10.1 send → Thinking → reply', () => {
-  it('Thinking enters on arrival, and leaves its mark for the reply’s avatar to fly out of', () => {
+  it('Thinking enters on arrival, and fades out where it was when it leaves (FIX-0025)', () => {
     motionClock.setManual(true);
     const { container, unmount } = render(<KelThinkingIndicator label='Thinking…' meta='0s' />);
     const mark = container.querySelector<HTMLElement>('.kel-thinking__mark')!;
@@ -110,7 +108,11 @@ describe('10.1 send → Thinking → reply', () => {
     act(() => motionClock.advance(400));
     expect(mark.style.opacity).toBe('');
     unmount();
-    expect(takeSnapshot(THINKING_MARK)).not.toBeNull();
+    // One ghost of the whole row, fading in place — no flying mark.
+    const ghosts = document.querySelectorAll('.kel-motion-exit');
+    expect(ghosts.length).toBe(1);
+    expect(ghosts[0].classList.contains('kel-thinking')).toBe(true);
+    expect(document.querySelector('.kel-motion-fly')).toBeNull();
   });
 
   it('on first paint Thinking just shows', () => {
@@ -119,7 +121,7 @@ describe('10.1 send → Thinking → reply', () => {
     expect(container.querySelector<HTMLElement>('.kel-thinking__mark')!.style.opacity).toBe('');
   });
 
-  it('the reply’s avatar is hidden while the mark flies to it, then shows', () => {
+  it('the reply’s mark and time fade in in place — nothing flies to the avatar (FIX-0025)', () => {
     motionClock.setManual(true);
     const thinking = render(<KelThinkingIndicator label='Thinking…' />);
     thinking.unmount();
@@ -138,14 +140,16 @@ describe('10.1 send → Thinking → reply', () => {
       );
     };
     const { container } = render(<Turn />);
-    const avatar = container.querySelector<HTMLElement>('.kel-shell-message-avatar img')!;
-    expect(avatar.style.visibility).toBe('hidden');
-    expect(document.querySelector('.kel-motion-fly')).not.toBeNull();
-  });
-
-  it('the thread glides up when it follows new content (useAutoScroll uses glide)', () => {
-    const source = fs.readFileSync(path.join(renderer, 'pages/conversation/Messages/useAutoScroll.ts'), 'utf8');
-    expect(source).toMatch(/glide\(contentEl, scrollerEl\.scrollTop - before\)/);
+    const avatar = container.querySelector<HTMLElement>('.kel-shell-message-avatar')!;
+    const time = container.querySelector<HTMLElement>('time')!;
+    expect(avatar.querySelector('img')!.style.visibility).toBe('');
+    expect(document.querySelector('.kel-motion-fly')).toBeNull();
+    expect(Number(avatar.style.opacity)).toBe(0);
+    expect(Number(time.style.opacity)).toBe(0);
+    expect(avatar.style.transform ?? '').not.toMatch(/translate/);
+    act(() => motionClock.advance(400));
+    expect(avatar.style.opacity).toBe('');
+    expect(time.style.opacity).toBe('');
   });
 });
 

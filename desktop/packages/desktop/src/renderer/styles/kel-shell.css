@@ -3,7 +3,9 @@
 :root {
   --kel-shell-heading: var(--app-font-family, 'Instrument Sans'), 'Segoe UI', sans-serif;
   --kel-shell-body: var(--app-font-family, 'SF Pro Text'), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --kel-shell-content-width: 920px;
+  /* FIX-0024 (Nick): the chat's reading column is about half the window on wide screens (920 px at
+     least, 1280 px at most); the header, thread, composer and work cards all share it. */
+  --kel-shell-content-width: clamp(920px, 50vw, 1280px);
   --kel-status-positive-text: #14532d;
   --kel-status-attention-text: #8a4b12;
   --kel-shell-card-fill: linear-gradient(180deg, rgba(221,233,255,.02), transparent 30%), linear-gradient(var(--kel-figma-color-glass-card-blue), var(--kel-figma-color-glass-card-blue)), linear-gradient(var(--kel-figma-color-glass-card), var(--kel-figma-color-glass-card));
@@ -440,7 +442,7 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
   .kel-v2-shell *, .kel-v2-shell *::before, .kel-v2-shell *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 
-.kel-v2-shell .chat-layout-header { width: calc(100% - 48px); max-width: 920px; margin: 0 auto; padding: 22px 0 20px; }
+.kel-v2-shell .chat-layout-header { width: calc(100% - 48px); max-width: var(--kel-shell-content-width); margin: 0 auto; padding: 22px 0 20px; }
 .kel-shell-chat-heading { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .kel-shell-chat-heading > .group { border: 0; border-radius: 0; }
 .kel-shell-chat-heading > .group > .shrink-0 { display: none; }
@@ -582,7 +584,8 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
 @media (max-width: 350px) {
   .kel-v2-shell .kel-approval-card--action .kel-approval-card__remember { padding: 0 2px; font-size: 13px; white-space: nowrap; }
 }
-.kel-v2-shell [data-message-position='right'] .kel-shell-message-turn { max-width: 390px; }
+/* FIX-0024: Nick's messages take up to 60% of the reading column (390 px at the narrowest). */
+.kel-v2-shell [data-message-position='right'] .kel-shell-message-turn { max-width: max(390px, 60%); }
 .kel-shell-message-meta { display: flex; gap: 12px; align-items: center; font: 400 12px/16px var(--kel-shell-body); color: var(--kel-text-2); margin-bottom: 12px; }
 .kel-v2-shell .kel-shell-message-text { font: 400 16px/25px var(--chat-font-family, var(--kel-shell-body)); }
 .kel-v2-shell[data-theme='dark'] .kel-shell-message-meta,
@@ -595,8 +598,9 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
   .kel-v2-shell [data-message-position='left'] .kel-shell-message-meta { gap: 10px; margin-bottom: 10px; padding-bottom: 2px; }
   .kel-shell-message-avatar { display: flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; }
   .kel-shell-message-avatar > img { display: block; object-fit: contain; }
+  .kel-v2-shell .kel-message-list-clip { display: flex; flex-direction: column; min-height: 100%; }
   .kel-v2-shell [data-testid='message-list-content'] {
-    display: flex; flex-direction: column; justify-content: flex-end; min-height: 100%;
+    display: flex; flex-direction: column; justify-content: flex-end; min-height: 100%; flex: 1 0 auto;
     /* Reserve the desktop 24px thread inset, including its outer 10px padding. */
     box-sizing: border-box; padding-block: 12px 14px;
   }
@@ -614,6 +618,13 @@ html[data-theme='light'] select :is(option, optgroup) { background-color: #fffff
 .kel-shell-message-action:hover { background: var(--kel-shell-hover); }
 .kel-shell-message-action[aria-pressed='true'] { background: var(--kel-shell-hover); }
 .kel-v2-shell .kel-shell-message-actions { gap: 4px; }
+.kel-shell-message-actions__set { display: inline-flex; align-items: center; gap: 4px; }
+/* FIX-0026: the reply's action icons line up with the reply's text (the icon, not its hit area). */
+.kel-v2-shell .kel-shell-message-actions--reply { margin-left: -6px; }
+@media (max-width: 767px) { .kel-v2-shell .kel-shell-message-actions--reply { margin-left: -10px; } }
+/* FIX-0026: "· ChatGPT Luna · 3.6 s" after the reply's time; cost and tokens are in its tooltip. */
+.kel-shell-message-usage { display: inline-flex; align-items: center; gap: 6px; margin-left: -4px; color: var(--kel-text-3, #8fa9d6); font-weight: 400; white-space: nowrap; cursor: default; outline: none; }
+.kel-shell-message-usage:focus-visible { border-radius: 4px; box-shadow: 0 0 0 2px var(--kel-figma-color-control-focus, #9fdaff); }
 /* D-75.2: editing a sent message in place. */
 .kel-message-edit { min-width: min(420px, calc(100vw - 64px)); }
 .kel-message-edit-input { width: 100%; box-sizing: border-box; resize: vertical; border: 1px solid var(--kel-accent); border-radius: 8px; padding: 6px 8px; background: var(--kel-shell-surface, transparent); color: var(--text-primary); font: inherit; line-height: 1.45; outline: none; }
@@ -4017,12 +4028,15 @@ html[data-theme='light'] .kel-v2-shell .kel-shell-archive-delete.arco-btn { colo
 .kel-v2-shell .kel-shell-composer .arco-textarea { border: 0 !important; box-shadow: none !important; background: transparent !important; }
 .kel-v2-shell .kel-shell-composer textarea { padding-inline: 0 !important; }
 @media (min-width: 768px) {
-  .kel-v2-shell .kel-shell-composer { display: grid; grid-template-columns: 28px minmax(100px,1fr) auto; column-gap: 14px; row-gap: 12px; align-items: center; padding: 11px 18px !important; min-height: 60px; }
-  .kel-v2-shell .kel-shell-composer > .arco-textarea-wrapper, .kel-v2-shell .kel-shell-composer > textarea { grid-column: 2; grid-row: 1; min-width: 0; }
+  /* FIX-0021 (Nick): the +, model, mic and send sit on the bottom row and never move; only the text
+     grows, upward. Everything is bottom-aligned, and each bottom margin puts the control's centre on the
+     last text line's centre (25 px line, 28 px +, 36 px send) — the one-line box stays centred. */
+  .kel-v2-shell .kel-shell-composer { display: grid; grid-template-columns: 28px minmax(100px,1fr) auto; column-gap: 14px; row-gap: 12px; align-items: end; padding: 11px 18px !important; min-height: 60px; }
+  .kel-v2-shell .kel-shell-composer > .arco-textarea-wrapper, .kel-v2-shell .kel-shell-composer > textarea { grid-column: 2; grid-row: 1; min-width: 0; margin-bottom: 6.5px !important; }
   .kel-v2-shell .kel-shell-composer > .kel-shell-composer-spacer { display: none; }
   .kel-v2-shell .kel-shell-composer-actions { display: contents !important; }
-  .kel-v2-shell .kel-shell-composer-attach { grid-column: 1; grid-row: 1; }
-  .kel-v2-shell .kel-shell-composer-submit { grid-column: 3; grid-row: 1; }
+  .kel-v2-shell .kel-shell-composer-attach { grid-column: 1; grid-row: 1; margin-bottom: 5px; }
+  .kel-v2-shell .kel-shell-composer-submit { grid-column: 3; grid-row: 1; margin-bottom: 1px; }
   .kel-v2-shell .kel-shell-composer > :is(.flex-wrap, [role='progressbar']) { grid-column: 1 / -1; }
   .kel-v2-shell .sendbox-panel { box-sizing: border-box; min-height: 60px; padding: 11px 18px !important; }
 }
@@ -4170,6 +4184,15 @@ html[data-theme='light'] body .kel-v2-shell .conversation-item:not(.settings-sid
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; color: var(--kel-text-2, #c4d4e8); }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button:hover:not(:disabled) { background: var(--kel-shell-hover, rgba(191,216,255,.06)); color: var(--kel-text-1, #edf2fa); }
 .layout-sider-header > .app-titlebar__menu--sider .app-titlebar__button svg { width: 16px; height: 16px; }
+/* FIX-0022: the sidebar is hidden — the same controls hold the top-left corner, at the logo row's height. */
+.app-titlebar__menu--floating { position: fixed; top: 18px; left: 12px; z-index: 31; gap: 2px; -webkit-app-region: no-drag; }
+.app-titlebar__menu--floating .app-titlebar__button { width: 28px; height: 28px; min-width: 28px; border-radius: 8px; color: var(--kel-text-2, #c4d4e8); }
+.app-titlebar__menu--floating .app-titlebar__button:hover:not(:disabled) { background: var(--kel-shell-hover, rgba(191,216,255,.06)); color: var(--kel-text-1, #edf2fa); }
+.app-titlebar__menu--floating .app-titlebar__button svg { width: 16px; height: 16px; }
+/* In narrower windows the page heading starts left of 136 px, so it steps right of the controls. */
+@media (min-width: 768px) and (max-width: 1200px) {
+  .kel-v2-shell:has(.app-titlebar__menu--floating) :is(.chat-layout-header, .kel-shell-home-header, .kel-in-chat-frame__header) { box-sizing: border-box; padding-left: 124px; }
+}
 
 /* Confirm dialogs (273:12025): one glass panel — no inner body box, no title warning icon, 460px wide at y300. */
 body:has(.kel-v2-shell) .arco-modal-simple .arco-modal-content { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }

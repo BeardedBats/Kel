@@ -7,6 +7,7 @@
  */
 import React, { useLayoutEffect, useRef } from 'react';
 import { RollText, SwapIn, cardStateTransition, enter, frameWrite, isReducedMotion, offerShared, prepareEnter, spring, useArrival } from '@renderer/motion';
+import { revealedHandoffLines } from './handoffMemory';
 import type { KelHandoff } from '../kelApi';
 import { StatusDot, iconCheck, iconChevronDown, iconStopMuted, iconWarning } from './workCardIcons';
 import { openWorkCard } from './workCardEvents';
@@ -79,9 +80,13 @@ export const KelWorkLine: React.FC<Props> = ({ view }) => {
   const settling = cardStateTransition(state) === 'settling';
 
   // §10.2 step 1: a line that arrives while Nick watches reveals from its leading edge, its parts in order.
+  // Once per hand-off: when the thread re-renders the row (FIX-0025), the line is simply there again.
   useLayoutEffect(() => {
     const line = lineRef.current;
-    if (!arrived || !line) return;
+    const key = view.submission_id || job || '';
+    const seen = key !== '' && revealedHandoffLines.has(key);
+    if (key) revealedHandoffLines.add(key);
+    if (!arrived || !line || seen) return;
     const parts = Array.from(line.querySelectorAll<HTMLElement>(':scope > *'));
     prepareEnter(parts);
     if (!isReducedMotion()) {

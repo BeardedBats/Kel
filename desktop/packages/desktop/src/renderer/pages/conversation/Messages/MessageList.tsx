@@ -231,6 +231,7 @@ const MessageItem: React.FC<{
   isLastMessage?: boolean;
   hasForkAnchor?: boolean;
   turnTexts?: string[];
+  reserveActionsRow?: boolean;
 }> = React.memo(
   HOC((props) => {
     const { message, highlighted, rowWidthClass } = props as {
@@ -265,6 +266,7 @@ const MessageItem: React.FC<{
       isLastMessage,
       hasForkAnchor,
       turnTexts,
+      reserveActionsRow,
     }: {
       message: TMessage;
       highlighted?: boolean;
@@ -273,6 +275,7 @@ const MessageItem: React.FC<{
       isLastMessage?: boolean;
       hasForkAnchor?: boolean;
       turnTexts?: string[];
+      reserveActionsRow?: boolean;
     }) => {
       const { t } = useTranslation();
       switch (message.type) {
@@ -284,6 +287,7 @@ const MessageItem: React.FC<{
               isLastMessage={isLastMessage}
               hasForkAnchor={hasForkAnchor}
               turnTexts={turnTexts}
+              reserveActionsRow={reserveActionsRow}
             ></MessageText>
           );
         case 'tips':
@@ -347,6 +351,7 @@ const MessageItem: React.FC<{
     prev.showCopyRow === next.showCopyRow &&
     prev.isLastMessage === next.isLastMessage &&
     prev.hasForkAnchor === next.hasForkAnchor &&
+    prev.reserveActionsRow === next.reserveActionsRow &&
     // Compare by content: the map is rebuilt per render, so reference equality
     // would defeat the memo for the one row that carries the copy button.
     (prev.turnTexts === next.turnTexts ||
@@ -760,6 +765,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
         isLastMessage={message.id === lastMessageId}
         hasForkAnchor={forkAnchoredIds.has(message.id)}
         turnTexts={aiTurnTextsById.get(message.id)}
+        reserveActionsRow={isProcessing && message.id === lastMessageId}
       ></MessageItem>
     );
   };
@@ -788,6 +794,9 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
             onScroll={handleMessageListScroll}
             onWheel={handleWheel}
           >
+            {/* FIX-0025: the thread's glide happens inside this box, which clips while it moves so
+                the moving content never changes what the list can scroll. */}
+            <div className='kel-message-list-clip'>
             <div
               ref={setContentRef}
               data-testid='message-list-content'
@@ -802,6 +811,7 @@ const MessageList: React.FC<{ className?: string; emptySlot?: React.ReactNode }>
                 <React.Fragment key={getProcessedItemAnchorId(item) || index}>{renderItem(index, item)}</React.Fragment>
               ))}
               <div className='h-20px' />
+            </div>
             </div>
           </div>
         </ImagePreviewContext.Provider>

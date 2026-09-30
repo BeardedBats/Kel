@@ -2,9 +2,8 @@ import kelMark from '@renderer/assets/figma/kel-mark.png';
 import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
 import { KelMessageNote } from './KelMessageDetails';
 import { KelMessageCard } from '@renderer/components/kel/workCards/KelMessageCard';
-import { KelUsageChips } from '@renderer/components/kel/usage/KelUsageChips';
+import { replyUsageWords } from '@renderer/components/kel/usage/usageWords';
 import { isKelNoteMeta } from '@/common/chat/kelMessageMeta';
-import moreIcon from '@renderer/assets/figma/chat/more.svg';
 /**
  * @license
  * Copyright 2025 AionUi (aionui.com)
@@ -19,11 +18,11 @@ import { useConversationContextSafe } from '@/renderer/hooks/context/Conversatio
 import { useLayoutContext } from '@/renderer/hooks/context/LayoutContext';
 import { useLocalFilePreview } from '@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview';
 import { iconColors } from '@/renderer/styles/colors';
-import { Dropdown, Menu, Message, Tooltip } from '@arco-design/web-react';
+import { Message, Tooltip } from '@arco-design/web-react';
 import { Copy, Edit, Refresh } from '@icon-park/react';
 import classNames from 'classnames';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { useMessageArrival, useStreamFade } from '@renderer/motion';
+import { useArrival, useEntrance, useMessageArrival, useStreamFade } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 import { emitter } from '@/renderer/utils/emitter';
@@ -37,7 +36,7 @@ import { stripSkillSuggest, hasSkillSuggest } from '@renderer/utils/chat/skillSu
 import { isForkEnabled } from '@/common/chat/forkConversation';
 import { useForkConversation } from '@/renderer/hooks/chat/useForkConversation';
 import ForkBranchIcon from '@renderer/components/base/ForkBranchIcon';
-import { findByAttribute, useMenuKeyboard } from '@/renderer/hooks/ui/useMenuKeyboard';
+import type { KelUsage } from '@/common/chat/kelMessageMeta';
 
 /**
  * Format a timestamp for message display.
@@ -69,43 +68,50 @@ import { useTeammateColor } from '@/renderer/pages/team/identity/TeamIdentityCon
 const CODE_STYLE = { marginTop: 4, marginBlock: 4 };
 
 // D-59: replies carry Copy (and Fork when available) only; the old thumbs up/down wrote to local
-// storage and changed nothing, so they are gone.
+// storage and changed nothing, so they are gone. FIX-0027 (Nick): no ⋯ menu — "Answer again" and Copy
+// are icon buttons side by side (the menu only repeated them).
 export const ReplyActions: React.FC<{
-  onCopy: () => void;
-  directCopy?: React.ReactNode;
-  onFork?: () => void;
+  copyButton: React.ReactNode;
+  forkButton?: React.ReactNode;
   /** D-75.2: answer the last reply again. */
   onRegenerate?: () => void;
-}> = ({ onCopy, directCopy, onFork, onRegenerate }) => {
-  const { t } = useTranslation();
-  // VIS-10: keyboard like the project chip (focus in, arrows, Escape back to ⋯, closes on page change).
-  const [open, setOpen] = React.useState(false);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const menuId = React.useId();
-  useMenuKeyboard({
-    open,
-    onClose: () => setOpen(false),
-    getMenu: () => findByAttribute('data-kel-reply-menu', menuId),
-    triggerRef,
-  });
-  return <>
-    {directCopy}
+}> = ({ copyButton, forkButton, onRegenerate }) => (
+  <>
     {onRegenerate && <Tooltip content='Answer again'>
       <button type='button' aria-label='Answer again' className='kel-shell-message-action' style={{ lineHeight: 0 }}
         onClick={onRegenerate} data-testid='message-regenerate-button'>
         <Refresh theme='outline' size='16' fill={iconColors.secondary} />
       </button>
     </Tooltip>}
-    <Dropdown trigger='click' position='bl' popupVisible={open} onVisibleChange={setOpen} droplist={<Menu data-kel-reply-menu={menuId} aria-label='Reply actions'>
-      <Menu.Item key='copy' onClick={() => { setOpen(false); onCopy(); }}>{t('common.copy', { defaultValue: 'Copy' })}</Menu.Item>
-      {onRegenerate && <Menu.Item key='regenerate' onClick={() => { setOpen(false); onRegenerate(); }}>Answer again</Menu.Item>}
-      {onFork && <Menu.Item key='fork' onClick={() => { setOpen(false); onFork(); }}>{t('messages.fork.action')}</Menu.Item>}
-    </Menu>}>
-      <button ref={triggerRef} type='button' aria-label='More reply actions' aria-haspopup='menu' aria-expanded={open} className='kel-shell-message-action'>
-        <img src={moreIcon} alt='' width={16} height={16} />
-      </button>
-    </Dropdown>
-  </>;
+    {copyButton}
+    {forkButton}
+  </>
+);
+
+/**
+ * FIX-0026 (Nick): what the reply used, on its timestamp line after the time — "· ChatGPT Luna · 3.6 s" —
+ * with "Included in your plan · 2.9K tokens" in the hover tooltip only. It usually arrives when the reply
+ * finishes, so it settles in (D-78 §2.1) in its own place on the line; nothing else moves.
+ */
+const ReplyUsage: React.FC<{ usage: KelUsage }> = ({ usage }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEntrance(ref, useArrival(), { settle: true });
+  const { shown, hint } = replyUsageWords(usage);
+  if (!shown.length) return null;
+  const words = (
+    <span ref={ref} className='kel-shell-message-usage' data-testid='kel-reply-usage' tabIndex={hint ? 0 : undefined}
+      aria-label={hint ? [...shown, hint].join(' · ') : undefined}>
+      {shown.map((part) => <React.Fragment key={part}><span aria-hidden='true'>·</span><span>{part}</span></React.Fragment>)}
+    </span>
+  );
+  return hint ? <Tooltip content={hint} position='top'>{words}</Tooltip> : words;
+};
+
+/** Lets a row of actions that arrives after a reply finishes settle in rather than pop (D-78 §2.1). */
+const SettleOnArrival: React.FC<{ className: string; children: React.ReactNode }> = ({ className, children }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEntrance(ref, useArrival(), { settle: true });
+  return <span ref={ref} className={className}>{children}</span>;
 };
 
 type TeamContextResetNotice = {
@@ -155,7 +161,9 @@ const MessageText: React.FC<{
   /** All text segments of this message's turn, in order — the copy button
    * copies the whole reply, not just the segment it happens to sit on. */
   turnTexts?: string[];
-}> = ({ message, showCopyRow = true, isLastMessage = false, hasForkAnchor = false, actionsOnly = false, turnTexts }) => {
+  /** FIX-0025: the reply is still streaming — keep the actions row's space so nothing jumps when it arrives. */
+  reserveActionsRow?: boolean;
+}> = ({ message, showCopyRow = true, isLastMessage = false, hasForkAnchor = false, actionsOnly = false, turnTexts, reserveActionsRow = false }) => {
   const logos = useAgentLogos();
   // Filter think tags from content before rendering
   // 在渲染前过滤 think 标签
@@ -330,24 +338,28 @@ const MessageText: React.FC<{
     </Tooltip>
   ) : null;
 
-  const kelReplyActions = (
-    <ReplyActions key={message.id} onCopy={handleCopy}
-      directCopy={layout?.isMobile ? copyButton : null}
-      onRegenerate={regenerate}
-      onFork={showForkButton ? () => void forkConversation(message.msg_id ?? message.id) : undefined} />
-  );
-
   const cronMeta = message.content.cronMeta;
+  const kelReplyActions = <ReplyActions copyButton={copyButton} forkButton={forkButton} onRegenerate={regenerate} />;
+  const isKelReply = !isUserMessage && !isTeammateMessage && !cronMeta;
+
   const displaySenderName = senderName === 'team_system' ? t('team.systemNotice.sender') : senderName;
   const fallbackBackendLogo = senderAgentType ? resolveAgentLogo(logos, { backend: senderAgentType }) : null;
-  const actionsRow = showCopyRow && !editing && (
+  // FIX-0025: while the reply streams, its actions row already holds its place (empty), so the row
+  // arriving at the end fills the space instead of pushing the thread up.
+  const reserving = !showCopyRow && reserveActionsRow && isKelReply && !actionsOnly;
+  const actionsRow = (showCopyRow || reserving) && !editing && (
     <div
       className={classNames('kel-shell-message-actions h-32px flex items-center mt-4px gap-8px', {
         'flex-row-reverse': isUserMessage,
+        'kel-shell-message-actions--reply': isKelReply,
       })}
       data-reply-message-id={message.id}
+      data-reserved={reserving ? 'true' : undefined}
+      aria-hidden={reserving ? true : undefined}
     >
-      {!isUserMessage && !isTeammateMessage && !cronMeta ? kelReplyActions : <>{copyButton}{editButton}{forkButton}</>}
+      {showCopyRow && <SettleOnArrival className={classNames('kel-shell-message-actions__set', { 'flex-row-reverse': isUserMessage })}>
+        {isKelReply ? kelReplyActions : <>{copyButton}{editButton}{forkButton}</>}
+      </SettleOnArrival>}
     </div>
   );
 
@@ -359,6 +371,7 @@ const MessageText: React.FC<{
             ? <img src={kelMark} alt='Kel' width={22} height={22} />
             : <span className='kel-shell-message-avatar'><img src={kelMark} alt='Kel' width={22} height={23} /></span>)}
           <time dateTime={new Date(message.created_at).toISOString()}>{formatMessageTime(message.created_at, !layout?.isMobile)}</time>
+          {kelMeta?.usage && !engineFailure && !isUserMessage ? <ReplyUsage usage={kelMeta.usage} /> : null}
         </div>}
         {cronMeta && <MessageCronBadge meta={cronMeta} />}
         {isTeammateMessage && displaySenderName && (
@@ -497,8 +510,6 @@ const MessageText: React.FC<{
         {/* CP-14: who answered and what the checks found, only when the person asks. */}
         {/* D-70: a scoping card, or a result's done card when its work has a top card. */}
         {kelMeta && !engineFailure && <KelMessageCard meta={kelMeta} conversationId={message.conversation_id} />}
-        {/* D-72: what this reply used — cost (or "Included in your plan"), tokens, time, model. */}
-        {kelMeta?.usage && !engineFailure && !actionsOnly ? <KelUsageChips usage={kelMeta.usage} /> : null}
         {isPendingDelivery && (
           <div className='text-12px text-t-secondary mt-4px select-none' data-testid='message-status-badge'>
             {t('messages.delivery.pending', { defaultValue: 'Unread' })}

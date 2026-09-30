@@ -61,12 +61,18 @@ let layerEl: HTMLDivElement | null = null;
 
 /** One fixed layer over the window for surfaces and flights (viewport coordinates). */
 export const motionLayer = (): HTMLDivElement => {
-  if (layerEl && layerEl.isConnected) return layerEl;
-  layerEl = document.createElement('div');
-  layerEl.className = 'kel-motion-layer';
-  layerEl.setAttribute('aria-hidden', 'true');
-  layerEl.dataset.testid = 'kel-motion-layer';
-  document.body.appendChild(layerEl);
+  // FIX-0023: the layer lives inside the app shell, so a ghost (a copy of a page or row that is
+  // leaving) keeps the shell's styles. In <body> it lost every `.kel-v2-shell …` rule and flashed
+  // as a different, unstyled page (Settings → Appearance showed its hidden rows and plain cards).
+  const host = document.querySelector<HTMLElement>('.kel-v2-shell') ?? document.body;
+  if (layerEl && layerEl.isConnected && layerEl.parentElement === host) return layerEl;
+  if (!layerEl) {
+    layerEl = document.createElement('div');
+    layerEl.className = 'kel-motion-layer';
+    layerEl.setAttribute('aria-hidden', 'true');
+    layerEl.dataset.testid = 'kel-motion-layer';
+  }
+  host.appendChild(layerEl);
   return layerEl;
 };
 

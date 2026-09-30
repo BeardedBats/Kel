@@ -279,11 +279,12 @@ describe('5c — one live view in the thread', () => {
       [{ phase: 'stopped', state: 'CANCELLED', office_state: 'stopped' }, 'Stopped', '— see it above'],
       [{ phase: 'needs_you', office_state: 'needs_you' }, 'Needs you', '— follow it above'],
     ];
-    for (const [over, words, pointer] of states) {
+    for (const [index, [over, words, pointer]] of states.entries()) {
       extra = (route) => (route.startsWith('/api/handoff') ? handoff(over) : undefined);
+      // A separate hand-off each time: a re-mounted card starts from what it last showed (FIX-0025).
       const view = render(
         <MemoryRouter>
-          <KelWorkCard submissionId='sub-mic' conversationId='app-morning' pollMs={30} />
+          <KelWorkCard submissionId={`sub-mic-${index}`} conversationId='app-morning' pollMs={30} />
         </MemoryRouter>
       );
       const state = await view.findByTestId('kel-work-line-state');
@@ -291,6 +292,26 @@ describe('5c — one live view in the thread', () => {
       expect(view.getByTestId('kel-work-line').textContent).toContain(pointer);
       view.unmount();
     }
+  });
+
+  it('a card the thread re-renders comes back as it was — no "Getting started…" flash (FIX-0025)', async () => {
+    install();
+    extra = (route) => (route.startsWith('/api/handoff') ? handoff({ phase: 'done', state: 'CLOSED', verdict: 'VERIFIED', office_state: 'done', accepted: 5 }) : undefined);
+    const first = render(
+      <MemoryRouter>
+        <KelWorkCard submissionId='sub-remount' conversationId='app-morning' pollMs={30} />
+      </MemoryRouter>
+    );
+    expect((await first.findByTestId('kel-work-line-state')).textContent).toBe('Done and checked');
+    first.unmount();
+    extra = (route) => (route.startsWith('/api/handoff') ? new Promise(() => undefined) : undefined);
+    const again = render(
+      <MemoryRouter>
+        <KelWorkCard submissionId='sub-remount' conversationId='app-morning' pollMs={30} />
+      </MemoryRouter>
+    );
+    expect(again.getByTestId('kel-work-line-state').textContent).toBe('Done and checked');
+    expect(again.queryByText('Getting started…')).toBeNull();
   });
 
   it('old work without a card keeps today’s work card', async () => {

@@ -60,6 +60,9 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
   const initialScrollDoneRef = useRef(false);
   const pendingAutoFollowFrameRef = useRef<number | null>(null);
   const userInputActiveRef = useRef(false);
+  // FIX-0025: where the first message sat in the list's viewport after the last change (layout
+  // position, unaffected by the glide's transform).
+  const anchorRef = useRef<{ el: HTMLElement; top: number } | null>(null);
 
   const markProgrammaticScroll = useCallback(() => {
     lastProgrammaticScrollTimeRef.current = Date.now();
@@ -95,6 +98,33 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     [itemCount, markProgrammaticScroll, scrollerEl]
   );
 
+  const measureAnchor = useCallback((): { el: HTMLElement; top: number } | null => {
+    if (!scrollerEl || !contentEl) return null;
+    const el = contentEl.querySelector<HTMLElement>(':scope > .message-item');
+    if (!el) return null;
+    // Both boxes carry the glide's transform, so their difference is the layout offset.
+    return { el, top: el.getBoundingClientRect().top - contentEl.getBoundingClientRect().top - scrollerEl.scrollTop };
+  }, [contentEl, scrollerEl]);
+
+  /**
+   * Keep the thread on its newest line and make every movement of it a glide (FIX-0025, D-78 §8.1).
+   * Called from the ResizeObserver, which runs after layout and before paint, so a displaced frame is
+   * never painted: when the thread follows the bottom — by scrolling, or, in a short chat, because the
+   * list is bottom-aligned and grows upward — the old messages are shown where they were and spring to
+   * their new place. The same holds when the Thinking row leaves and the list gets taller.
+   */
+  const followNow = useCallback(() => {
+    if (!scrollerEl) return;
+    const before = anchorRef.current;
+    if (!userScrolledRef.current && getBottomGap(scrollerEl) > 2) scrollToBottom('auto');
+    const now = measureAnchor();
+    anchorRef.current = now;
+    if (!before || !now || before.el !== now.el || userScrolledRef.current) return;
+    const moved = now.top - before.top;
+    // D-78: the list glides to its new place, never jumps (never on first paint).
+    if (contentEl && initialScrollDoneRef.current && isArrivalTime()) glide(contentEl, -moved, { clip: contentEl.parentElement });
+  }, [contentEl, measureAnchor, scrollToBottom, scrollerEl]);
+
   const scheduleAutoFollow = useCallback(() => {
     if (!scrollerEl || userScrolledRef.current) return;
 
@@ -105,16 +135,9 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     pendingAutoFollowFrameRef.current = requestAnimationFrame(() => {
       pendingAutoFollowFrameRef.current = null;
       if (!scrollerEl || userScrolledRef.current) return;
-
-      const gap = getBottomGap(scrollerEl);
-      if (gap > 2) {
-        const before = scrollerEl.scrollTop;
-        scrollToBottom('auto');
-        // D-78: the list follows new content by gliding up, not jumping (never on first paint).
-        if (contentEl && initialScrollDoneRef.current && isArrivalTime()) glide(contentEl, scrollerEl.scrollTop - before);
-      }
+      followNow();
     });
-  }, [contentEl, scrollerEl, scrollToBottom]);
+  }, [followNow, scrollerEl]);
 
   const handleScrollerRef = useCallback((ref: HTMLDivElement | null) => {
     setScrollerEl(ref);
@@ -148,6 +171,9 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
       const delta = currentScrollTop - lastScrollTopRef.current;
       const bottomGap = getBottomGap(target);
       const pinnedToBottom = bottomGap <= FOLLOW_BOTTOM_THRESHOLD_PX;
+      // A scroll that lands on the bottom with no input from Nick is the browser clamping after the
+      // thread got shorter; the resize that caused it glides it (followNow), so keep the anchor.
+      const byNick = userInputActiveRef.current || !pinnedToBottom;
 
       if (
         !pinnedToBottom &&
@@ -164,9 +190,11 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
       }
 
       lastScrollTopRef.current = currentScrollTop;
+      // Nick's own scrolling is never replayed as a glide.
+      if (byNick) anchorRef.current = measureAnchor();
       updateBottomState(target);
     },
-    [updateBottomState]
+    [measureAnchor, updateBottomState]
   );
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
@@ -183,7 +211,7 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     if (!scrollerEl || !contentEl) return;
 
     const observer = new ResizeObserver(() => {
-      scheduleAutoFollow();
+      followNow();
       updateBottomState(scrollerEl);
     });
 
@@ -191,7 +219,7 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     observer.observe(contentEl);
 
     return () => observer.disconnect();
-  }, [contentEl, scheduleAutoFollow, scrollerEl, updateBottomState]);
+  }, [contentEl, followNow, scrollerEl, updateBottomState]);
 
   useEffect(() => {
     if (!scrollerEl || initialScrollDoneRef.current || itemCount === 0) return;
@@ -235,13 +263,11 @@ export function useAutoScroll({ messages, itemCount }: UseAutoScrollOptions): Us
     userScrolledRef.current = false;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const before = scrollerEl?.scrollTop ?? 0;
-        scrollToBottom('auto');
         // D-78 §10.1: earlier messages glide up as Nick's message lands.
-        if (scrollerEl && contentEl && initialScrollDoneRef.current && isArrivalTime()) glide(contentEl, scrollerEl.scrollTop - before);
+        followNow();
       });
     });
-  }, [messages, scheduleAutoFollow, scrollToBottom, scrollerEl, contentEl]);
+  }, [messages, scheduleAutoFollow, followNow]);
 
   useEffect(() => {
     return () => {

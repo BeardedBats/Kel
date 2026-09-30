@@ -6,7 +6,7 @@
   box-sizing: border-box;
   flex: none;
   width: calc(100% - 48px);
-  max-width: 920px;
+  max-width: var(--kel-shell-content-width, 920px);
   /* Figma: the row starts 12px under the title row (the header block ends 10px lower). */
   margin: -10px auto 8px;
   font-family: var(--kel-wc-font);

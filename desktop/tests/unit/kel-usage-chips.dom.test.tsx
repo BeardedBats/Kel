@@ -1,15 +1,15 @@
 /**
- * D-72 — what Kel's replies and work used: the usage chips under a reply (composer footer chip
- * style), the cost and time in a work card's detail header, and the engine route that reads both.
- * A subscription call says "Included in your plan", never "$0.00"; unknown numbers are left out.
+ * D-72 — what Kel's replies and work used: the model and time on a reply's timestamp line with the cost
+ * and tokens in its tooltip (FIX-0026), the cost and time in a work card's detail header, and the engine
+ * route that reads both. A subscription call says "Included in your plan", never "$0.00"; unknown
+ * numbers are left out.
  */
 import React from 'react';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { shownKelMeta } from '@/common/chat/kelMessageMeta';
 import { rendererKelRequestRefusal } from '@/process/services/kel/kelRequestGuard';
-import { KelUsageChips } from '@renderer/components/kel/usage/KelUsageChips';
-import { costWords, timeWords, tokenWords, usageChips, usageHeaderLine } from '@renderer/components/kel/usage/usageWords';
+import { costWords, replyUsageWords, timeWords, tokenWords, usageHeaderLine } from '@renderer/components/kel/usage/usageWords';
 import { KelOfficeDetail } from '@renderer/components/kel/workCards/KelOfficeDetail';
 import { RECEIPTS, RECEIPTS_DETAIL } from './fixtures/kelOfficeFixtures';
 
@@ -35,33 +35,21 @@ describe('usage words', () => {
     expect(timeWords(42000)).toBe('42 s');
     expect(timeWords(5 * 60000)).toBe('5 min');
     expect(timeWords(65 * 60000)).toBe('1 h 5 min');
-    expect(usageChips({ billing: 'metered', cost: null, tokens: null, ms: null }).length).toBe(0);
+    expect(replyUsageWords({ billing: 'metered', cost: null, tokens: null, ms: null })).toEqual({ shown: [], hint: null });
     expect(usageHeaderLine(PLAN)).toBe('Included in your plan  ·  1.4K tokens  ·  3.4 s of model time');
   });
 });
 
-describe('usage chips under a reply', () => {
-  it('shows cost, tokens, time and model in order', () => {
-    render(<KelUsageChips usage={METERED} />);
-    const chips = screen.getByTestId('kel-usage-chips');
-    expect([...chips.querySelectorAll('.kel-usage-chip')].map((chip) => chip.textContent)).toEqual([
-      '$0.02',
-      '980 tokens',
-      '1.2 s',
-      'DeepSeek Flash',
-    ]);
-    expect(chips.querySelector('[data-chip="cost"]')?.getAttribute('title')).toBe('Cost as the model’s service reported it.');
+describe('a reply’s usage (FIX-0026)', () => {
+  it('shows the model and time after the reply’s time, cost and tokens only in the tooltip', () => {
+    expect(replyUsageWords(METERED)).toEqual({ shown: ['DeepSeek Flash', '1.2 s'], hint: '$0.02 · 980 tokens' });
+    expect(replyUsageWords({ ...PLAN, ms: 3600, tokens: 2900 })).toEqual({ shown: ['ChatGPT Luna', '3.6 s'], hint: 'Included in your plan · 2.9K tokens' });
   });
 
-  it('never shows $0.00 for a subscription reply', () => {
-    render(<KelUsageChips usage={PLAN} />);
-    expect(screen.getByTestId('kel-usage-chips').textContent).toContain('Included in your plan');
-    expect(screen.getByTestId('kel-usage-chips').textContent).not.toContain('$0.00');
-  });
-
-  it('renders nothing without usage', () => {
-    const { container } = render(<KelUsageChips usage={null} />);
-    expect(container.innerHTML).toBe('');
+  it('never says $0.00 for a subscription reply, and leaves unknowns out', () => {
+    expect(replyUsageWords(PLAN).hint).not.toContain('$0.00');
+    expect(replyUsageWords({ billing: 'plan', models: ['Codex'], ms: null })).toEqual({ shown: ['Codex'], hint: 'Included in your plan' });
+    expect(replyUsageWords(null)).toEqual({ shown: [], hint: null });
   });
 
   it('a plain reply keeps only its usage through the chat’s filter', () => {
