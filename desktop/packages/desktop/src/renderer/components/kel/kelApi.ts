@@ -16,7 +16,7 @@ export interface KelImportPreview {
   title: string;
   message_count: number;
   snippet: string;
-  omissions: string[];
+  omissions: Array<string | { name: string; reason: string }>;
   continuation_supported: false;
 }
 

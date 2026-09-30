@@ -7,6 +7,16 @@ import { jobRouteFor } from './needsAttention';
 import { openWorkCard } from './workCards/workCardEvents';
 import { failureSentence } from './engineFailure';
 
+const omissionWords = (item: unknown): string => {
+  if (typeof item === 'string') return item;
+  if (item && typeof item === 'object') {
+    const detail = item as Record<string, unknown>;
+    const parts = [detail.name, detail.reason].filter((value): value is string => typeof value === 'string' && Boolean(value.trim()));
+    if (parts.length) return parts.join(': ');
+  }
+  return 'Some source material was omitted.';
+};
+
 /** Import always starts with review. Pasted content never becomes an instruction automatically. */
 export function WorkImport({ projectId }: { projectId: string }) {
   const navigate = useNavigate();
@@ -46,18 +56,20 @@ export function WorkImport({ projectId }: { projectId: string }) {
     <details><summary>Import a transcript</summary>
       <p>Paste text or a Kel transcript. Kel saves a separate chat in this Project. External sessions do not resume here.</p>
       <div className="kel-row">
-        <label>Source <select className="kel-select" disabled={busy} value={source} onChange={e => { invalidate(); setSource(e.target.value); }}>
+        <label>Source <select className="kel-select" disabled={busy || format === 'codex-exec-jsonl'} value={source} onChange={e => { invalidate(); setSource(e.target.value); }}>
           {['other', 'codex', 'claude', 'deepseek'].map(value => <option key={value} value={value}>{value === 'other' ? 'Other' : value}</option>)}
         </select></label>
-        <label>Format <select className="kel-select" disabled={busy} value={format} onChange={e => { invalidate(); setFormat(e.target.value); }}>
+        <label>Format <select className="kel-select" disabled={busy} value={format} onChange={e => { invalidate(); setFormat(e.target.value); if (e.target.value === 'codex-exec-jsonl') setSource('codex'); }}>
           <option value="text">Plain text</option><option value="kel-transcript">Kel transcript JSON</option>
+          <option value="codex-exec-jsonl">Codex CLI output JSONL</option>
         </select></label>
       </div>
+      {format === 'codex-exec-jsonl' && <p>Imports completed assistant output from Codex CLI JSONL. Original prompts, tool work, and attachment contents are omitted. Kel does not resume the original session.</p>}
       <label>Transcript<textarea className="kel-input" rows={6} style={{ width: '100%' }} disabled={busy} value={content}
         onChange={e => { invalidate(); setContent(e.target.value); }} /></label>
-      {preview && <section aria-label="Import review"><h3>{preview.title}</h3><p>{preview.message_count} messages</p>
+      {preview && <section aria-label="Import review"><h3>{preview.title}</h3><p>{preview.message_count} {preview.message_count === 1 ? 'message' : 'messages'}</p>
         <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{preview.snippet}</pre>
-        {preview.omissions.length > 0 && <><strong>Not imported</strong><ul>{preview.omissions.map((item, i) => <li key={i}>{typeof item === 'string' ? item : JSON.stringify(item)}</li>)}</ul></>}
+        {Array.isArray(preview.omissions) && preview.omissions.length > 0 && <><strong>Not imported</strong><ul>{preview.omissions.map((item, i) => <li key={i}>{omissionWords(item)}</li>)}</ul></>}
         <p>Imported text stays source material. Review it before asking Kel to act.</p>
       </section>}
       {error && <p role="alert">{error}</p>}

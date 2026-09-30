@@ -3,6 +3,7 @@ import contextlib
 import json
 import re
 import time
+import uuid
 
 from .core import PolicyError, digest, encode, uid
 from .memory import scan_secret
@@ -43,6 +44,73 @@ def _visible(db, conversation):
     return bool(db.execute('SELECT 1 FROM conversations WHERE id=?', (conversation,)).fetchone())
 
 
+def _codex_output(content):
+    """Read the documented exec JSONL message subset; never interpret it as a session lease.
+
+    Schema evidence: https://developers.openai.com/codex/noninteractive/
+    Existing Kel native.py also consumes thread.started and completed agent_message records.
+    This original adapter copies no upstream implementation and reads no vendor storage.
+    """
+    lines = [line for line in content.splitlines() if line.strip()]
+    if len(lines) > 1000:
+        raise PolicyError('Codex output supports at most 1000 event records')
+    messages, ids, thread_ids, skipped = [], set(), set(), {}
+    terminal = None
+    for number, line in enumerate(lines, 1):
+        try:
+            record = json.loads(line.lstrip('\ufeff'))
+        except ValueError as exc:
+            raise PolicyError('Invalid Codex JSONL record %d' % number) from exc
+        if not isinstance(record, dict) or not isinstance(record.get('type'), str):
+            raise PolicyError('Codex JSONL record %d needs an event type' % number)
+        # Scan every decoded record, even omitted events, before any source can persist.
+        if scan_secret(encode(record)):
+            raise PolicyError('Remove secret-like content before importing')
+        kind = record['type']
+        if kind == 'thread.started':
+            terminal = None
+            tid = _text(record.get('thread_id'), 200, 'Codex thread ID')
+            try:
+                uuid.UUID(tid)
+            except ValueError as exc:
+                raise PolicyError('Codex thread ID must be a UUID') from exc
+            thread_ids.add(tid)
+            if len(thread_ids) > 1:
+                raise PolicyError('Import one Codex thread at a time')
+        elif kind == 'item.completed':
+            item = record.get('item')
+            if not isinstance(item, dict) or not isinstance(item.get('type'), str):
+                raise PolicyError('Completed Codex item needs its item type')
+            if item['type'] == 'agent_message':
+                mid = _text(item.get('id'), 200, 'Codex item ID')
+                text = _text(item.get('text'), MAX_CHARS, 'Codex message')
+                if mid in ids:
+                    raise PolicyError('Duplicate completed Codex message ID')
+                ids.add(mid)
+                messages.append({'id': mid, 'role': 'assistant', 'text': text})
+                if len(messages) > 500:
+                    raise PolicyError('Codex output supports at most 500 completed messages')
+            else:
+                omitted_kind = 'item.' + item['type'][:80]
+                skipped[omitted_kind] = skipped.get(omitted_kind, 0) + 1
+        elif kind == 'turn.started':
+            terminal = None
+        elif kind in ('turn.completed', 'turn.failed'):
+            terminal = kind
+        else:
+            omitted_kind = kind[:80]
+            skipped[omitted_kind] = skipped.get(omitted_kind, 0) + 1
+    if not thread_ids or not messages:
+        raise PolicyError('Codex output needs thread.started and a completed agent_message')
+    omissions = [{'name': 'Original prompt and attachments',
+                  'reason': 'Codex exec output does not contain the full conversation or attachment contents'}]
+    omissions.extend({'name': kind, 'reason': '%d source event(s) omitted; no tools or source reasoning were adopted' % count}
+                     for kind, count in sorted(skipped.items()))
+    if terminal != 'turn.completed':
+        omissions.append({'name': 'Source completion', 'reason': 'The source turn failed or has no completion record; imported output is reference only'})
+    return messages, omissions, next(iter(thread_ids)), terminal
+
+
 class WorkImports:
     def __init__(self, store):
         self.store = store
@@ -61,6 +129,12 @@ class WorkImports:
         omissions = []
         if format == 'text':
             messages = [{'id': '', 'role': 'transcript', 'text': content}]
+        elif format == 'codex-exec-jsonl':
+            if source not in ('codex', 'other'):
+                raise PolicyError('Codex CLI output must use the Codex source')
+            messages, omissions, thread_id, terminal = _codex_output(content)
+            source = 'codex'
+            source_id = source_id or thread_id
         elif format == 'kel-transcript':
             try:
                 parsed = json.loads(content)
@@ -91,11 +165,14 @@ class WorkImports:
                 omissions.append({'name': _text(attachment['name'], 200, 'Attachment'),
                                   'reason': 'Attachment contents were not imported'})
         else:
-            raise PolicyError('Supported formats: text, kel-transcript')
+            raise PolicyError('Supported formats: text, kel-transcript, codex-exec-jsonl')
         data = {'project_id': project_id, 'source': source, 'source_id': source_id,
                 'format': format, 'title': title.strip() or 'Imported work',
                 'messages': messages, 'omissions': omissions, 'trust': 'external-untrusted',
                 'continuation_supported': False}
+        if format == 'codex-exec-jsonl':
+            data['source_thread_id'] = thread_id
+            data['source_completion'] = terminal or 'unknown'
         # JSON escape sequences can hide credentials from the raw input scan.
         # Scan decoded fields before either the preview or the transcript can persist.
         if scan_secret(encode(data)):

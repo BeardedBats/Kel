@@ -31,6 +31,7 @@ it('requires review and exact confirmation before adopting an imported conversat
   expect(await screen.findByRole('region', { name: 'Import review' })).toBeTruthy();
   expect(api.confirm).not.toHaveBeenCalled();
   expect(screen.getByText('Attachments')).toBeTruthy();
+  expect(screen.getByText('1 message')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Confirm import and open chat' }));
   await waitFor(() => expect(screen.getByTestId('route').textContent).toBe('/conversation/desktop-chat'));
   expect(api.confirm).toHaveBeenCalledWith('p', expect.objectContaining({ preview_id: 'preview', digest: 'digest' }));
@@ -49,6 +50,20 @@ it('invalidates review when the user changes source text and retains it on failu
   fireEvent.click(screen.getByRole('button', { name: 'Review import' }));
   await screen.findByRole('alert');
   expect((screen.getByLabelText('Transcript') as HTMLTextAreaElement).value).toBe('Changed');
+});
+
+it('imports Codex CLI output with honest omissions and fixed source attribution', async () => {
+  render(<MemoryRouter><WorkImport projectId="p" /></MemoryRouter>);
+  fireEvent.click(screen.getByText('Import a transcript'));
+  fireEvent.change(screen.getByLabelText('Format'), { target: { value: 'codex-exec-jsonl' } });
+  expect((screen.getByLabelText('Source') as HTMLSelectElement).value).toBe('codex');
+  expect((screen.getByLabelText('Source') as HTMLSelectElement).disabled).toBe(true);
+  expect(screen.getByText(/Original prompts, tool work, and attachment contents are omitted/)).toBeTruthy();
+  fireEvent.change(screen.getByLabelText('Transcript'), { target: { value: '{"type":"item.completed"}' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Review import' }));
+  await screen.findByRole('button', { name: 'Confirm import and open chat' });
+  expect(api.preview).toHaveBeenCalledWith('p', expect.objectContaining({ source: 'codex', format: 'codex-exec-jsonl' }));
+  expect(api.confirm).not.toHaveBeenCalled();
 });
 
 it('chooses named evidence and suppresses an old procedure mutation after project changes', async () => {
