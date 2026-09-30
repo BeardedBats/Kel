@@ -83,7 +83,7 @@
   .kel-v2-shell .sendbox-inline-actions { flex-shrink: 0; }
   @container kel-composer (max-width: 420px) {
     .sendbox-input-row { flex-wrap: wrap; }
-    .sendbox-input-row .sendbox-highlight-container--single { order: -1; flex: 1 0 100% !important; margin-bottom: 4px !important; }
+    .sendbox-input-row .sendbox-highlight-container { order: -1; flex: 1 0 100% !important; margin-bottom: 4px !important; }
     .sendbox-input-row .sendbox-inline-actions { margin-left: auto; }
     .sendbox-inline-actions .kel-desktop-model-trigger { max-width: 84px; padding-inline: 6px; font-size: 12px; }
     .sendbox-input-row .sendbox-left-tool-group button { width: 28px !important; min-width: 28px !important; height: 28px !important; padding: 0 !important; }
@@ -4046,6 +4046,12 @@ html[data-theme='light'] .kel-v2-shell .kel-shell-archive-delete.arco-btn { colo
 .kel-v2-shell .sendbox-input-row { gap: 14px !important; }
 .kel-v2-shell .sendbox-inline-actions, .kel-v2-shell .sendbox-actions { gap: 14px !important; }
 .kel-v2-shell .sendbox-inline-actions > *, .kel-v2-shell .sendbox-actions > * { margin: 0 !important; }
+/* FIX-0021 (chat composer): one row on desktop, like the home composer. Everything is bottom-aligned and
+   each bottom margin puts the control's centre on the last text line's centre (25 px line + 5.5, 28 px +
+   + 4, 36 px send) — the one-line box is unchanged, and more lines only grow the text upward. */
+.kel-v2-shell .sendbox-input-row--pinned > .sendbox-tools { margin-bottom: 4px; }
+.kel-v2-shell .sendbox-input-row--pinned > .sendbox-highlight-container { margin-bottom: 5.5px !important; }
+.kel-v2-shell .sendbox-input-row--pinned textarea { padding-block: 0 !important; min-height: 25px !important; }
 /* Attach: 28px box, 22px Figma plus glyph (FIX-0008). */
 html body .kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionrs-attach-folder-btn']) { width: 28px !important; min-width: 28px !important; height: 28px !important; padding: 0 !important; border-radius: 8px !important; color: var(--kel-text-1) !important; }
 .kel-v2-shell :is([data-testid='file-upload-btn'], [data-testid='aionrs-attach-folder-btn']) svg {

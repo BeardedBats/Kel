@@ -346,6 +346,12 @@ const SendBox: React.FC<{
   const { t, i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isSingleLine, setIsSingleLine] = useState(!effectiveDefaultMultiLine);
+  // FIX-0021 / D-78 (Nick): on desktop the composer keeps ONE row — +, text, model, mic, send — like the
+  // home composer. Only the text grows (upward, same left edge); the controls never move or remount.
+  // Phones keep the older single-line / multi-line switch.
+  const pinnedRow = !isMobile;
+  const rowLayout = isSingleLine || pinnedRow;
+  const singleLineInput = isSingleLine && !pinnedRow;
   const [isInputFocused, setIsInputFocused] = useState(false);
   const isInputActive = isInputFocused;
   const { activeBorderColor, inactiveBorderColor, activeShadow } = useInputFocusRing();
@@ -2108,9 +2114,15 @@ const SendBox: React.FC<{
         </div>
         <UploadProgressBar source='sendbox' />
         <div
-          className={isSingleLine ? 'sendbox-input-row flex items-center gap-2 w-full min-w-0 overflow-hidden' : 'w-full overflow-hidden'}
+          className={
+            pinnedRow
+              ? 'sendbox-input-row sendbox-input-row--pinned flex items-end gap-2 w-full min-w-0 overflow-hidden'
+              : singleLineInput
+                ? 'sendbox-input-row flex items-center gap-2 w-full min-w-0 overflow-hidden'
+                : 'w-full overflow-hidden'
+          }
         >
-          {isSingleLine && (
+          {rowLayout && (
             <div
               className={
                 isMobileCompact
@@ -2127,20 +2139,20 @@ const SendBox: React.FC<{
             </div>
           )}
           <div
-            className={`sendbox-highlight-container ${isSingleLine ? 'sendbox-highlight-container--single' : ''}`}
+            className={`sendbox-highlight-container ${singleLineInput ? 'sendbox-highlight-container--single' : ''}`}
             style={{
-              width: isSingleLine ? 'auto' : '100%',
-              flex: isSingleLine ? 1 : 'none',
+              width: rowLayout ? 'auto' : '100%',
+              flex: rowLayout ? 1 : 'none',
               minWidth: 0,
               maxWidth: '100%',
-              marginBottom: isSingleLine ? 0 : '8px',
-              minHeight: isSingleLine ? '20px' : '40px',
+              marginBottom: rowLayout ? 0 : '8px',
+              minHeight: rowLayout ? '20px' : '40px',
             }}
           >
             <div
               ref={highlightScrollRef}
               aria-hidden='true'
-              className={`sendbox-highlight-layer text-14px ${isMobile ? 'sendbox-input--mobile' : ''} ${isSingleLine ? 'sendbox-highlight-layer--single' : ''}`}
+              className={`sendbox-highlight-layer text-14px ${isMobile ? 'sendbox-input--mobile' : ''} ${singleLineInput ? 'sendbox-highlight-layer--single' : ''}`}
               data-testid='sendbox-highlight-layer'
               style={!shouldUseHighlightOverlay ? { visibility: 'hidden' } : undefined}
             >
@@ -2163,19 +2175,19 @@ const SendBox: React.FC<{
               data-testid='sendbox-input'
               style={{
                 width: '100%',
-                flex: isSingleLine ? 1 : 'none',
+                flex: singleLineInput ? 1 : 'none',
                 minWidth: 0,
                 maxWidth: '100%',
                 marginLeft: 0,
                 marginRight: 0,
                 marginBottom: 0,
-                height: isSingleLine ? (isMobile ? '22px' : '20px') : 'auto',
-                minHeight: isSingleLine ? (isMobile ? '22px' : '20px') : '40px',
-                overflowY: isSingleLine ? 'hidden' : 'auto',
+                height: singleLineInput ? (isMobile ? '22px' : '20px') : 'auto',
+                minHeight: singleLineInput ? (isMobile ? '22px' : '20px') : pinnedRow ? '25px' : '40px',
+                overflowY: singleLineInput ? 'hidden' : 'auto',
                 overflowX: 'hidden',
-                whiteSpace: isSingleLine ? 'nowrap' : 'pre-wrap',
-                textOverflow: isSingleLine ? 'ellipsis' : 'clip',
-                wordBreak: isSingleLine ? 'normal' : 'break-word',
+                whiteSpace: singleLineInput ? 'nowrap' : 'pre-wrap',
+                textOverflow: singleLineInput ? 'ellipsis' : 'clip',
+                wordBreak: singleLineInput ? 'normal' : 'break-word',
                 overflowWrap: 'break-word',
               }}
               onChange={handleTextAreaChange}
@@ -2195,7 +2207,7 @@ const SendBox: React.FC<{
                 syncHighlightScroll(event.currentTarget);
               }}
               {...compositionHandlers}
-              autoSize={isSingleLine ? false : { minRows: 1, maxRows: 10 }}
+              autoSize={singleLineInput ? false : { minRows: 1, maxRows: 10 }}
               onKeyDown={createKeyDownHandler(handlePrimaryAction, (event) => {
                 return (
                   handleAddToDraftShortcut(event) ||
@@ -2207,7 +2219,7 @@ const SendBox: React.FC<{
               })}
             ></Input.TextArea>
           </div>
-          {isSingleLine && (
+          {rowLayout && (
             <div className='sendbox-inline-actions flex items-center gap-1'>
               {!isMobileCompact && renderedRightTools}
               {renderedSpeechButton}
@@ -2216,7 +2228,7 @@ const SendBox: React.FC<{
             </div>
           )}
         </div>
-        {!isSingleLine && (
+        {!rowLayout && (
           <div className='flex items-center justify-between gap-2 w-full'>
             <div
               className={
