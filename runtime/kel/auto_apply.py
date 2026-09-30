@@ -118,6 +118,8 @@ def protected_reason(store, job, paths):
 
 def why_wait(store, job):
     """None when Kel may apply on its own; otherwise the reason it waits for Nick."""
+    if job.get('contract', {}).get('context', {}).get('kibble'):
+        return 'a Kel update needs your review before it changes the source'
     from . import authority
     if not authority.is_full(store):
         return ASK_REASON

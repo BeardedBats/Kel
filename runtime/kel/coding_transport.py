@@ -59,10 +59,14 @@ class DurableCodingConnection:
     def __init__(self,store,run_id,workspace):
         self.store,self.run_id=store,run_id
         self.workspace=str(Path(workspace).resolve());init(store)
+        with contextlib.closing(store.connect()) as db:
+            run=db.execute('SELECT job_id FROM runs WHERE id=?',(run_id,)).fetchone()
+        job=store.get(run['job_id']) if run else {}
+        host_timeout=1200 if (job.get('contract',{}).get('context') or {}).get('kibble') else 420
         with store.transaction() as db:
             row=db.execute('SELECT * FROM coding_hosts WHERE run_id=?',(run_id,)).fetchone()
             if row and row['workspace']!=self.workspace:raise PolicyError('Native workspace changed')
-            if not row:db.execute("INSERT INTO coding_hosts VALUES(?,?,NULL,NULL,'STARTING',?)",(run_id,self.workspace,time.time()+420))
+            if not row:db.execute("INSERT INTO coding_hosts VALUES(?,?,NULL,NULL,'STARTING',?)",(run_id,self.workspace,time.time()+host_timeout))
         if not row:
             logs=store.root/'native-logs'/run_id;logs.mkdir(parents=True,exist_ok=True)
             argv=[sys.executable] if getattr(sys,'frozen',False) else [sys.executable,'-X','utf8','-m','kel.coding_transport']

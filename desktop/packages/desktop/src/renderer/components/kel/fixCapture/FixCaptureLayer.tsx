@@ -13,6 +13,7 @@ import type { Rect } from './captureTarget';
 import { desktopPanelPlacement, panelPlacement } from './captureTarget';
 import recordingDot from '@renderer/assets/figma/fix-capture/recording-dot.svg';
 import { useFixCapture } from './useFixCapture';
+import { kelDogfood } from '../kelApi';
 import styles from './fixCapture.module.css';
 
 const PANEL_SIZE = { width: 340, height: 250 };
@@ -27,8 +28,7 @@ const rectOf = (element: Element | null): Rect | null => {
   return { x: box.left, y: box.top, width: box.width, height: box.height };
 };
 
-const clock = (seconds: number): string =>
-  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+const clock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
 const FixCaptureLayer: React.FC = () => {
   const location = useLocation();
@@ -44,7 +44,7 @@ const FixCaptureLayer: React.FC = () => {
   const capture = useFixCapture(context);
   const api = useRef(capture);
   api.current = capture;
-  const { state, begin, cancel, stop, again, retry, save, dismiss, setDraft } = capture;
+  const { state, cancel, stop, again, retry, save, dismiss, setDraft } = capture;
   const phase = state.phase;
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -54,6 +54,25 @@ const FixCaptureLayer: React.FC = () => {
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const desktop = viewport.width >= 768;
   const [panelHeight, setPanelHeight] = useState(PANEL_SIZE.height);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  useEffect(() => {
+    setSendError(null);
+  }, [state.savedId]);
+  const sendSaved = async () => {
+    if (!state.savedId || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      await kelDogfood.sendToKel(state.savedId);
+      dismiss();
+      navigate('/dogfood');
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Kel could not start work. Open Kibble to try again.');
+    } finally {
+      setSending(false);
+    }
+  };
   useEffect(() => {
     const resize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener('resize', resize);
@@ -62,7 +81,9 @@ const FixCaptureLayer: React.FC = () => {
   useEffect(() => {
     if (!desktop || phase === 'idle' || phase === 'saved') return;
     document.body.dataset.kelFixCapture = 'active';
-    return () => { delete document.body.dataset.kelFixCapture; };
+    return () => {
+      delete document.body.dataset.kelFixCapture;
+    };
   }, [desktop, phase]);
   useEffect(() => {
     const panel = panelRef.current;
@@ -109,14 +130,20 @@ const FixCaptureLayer: React.FC = () => {
     const onMove = (event: MouseEvent) => {
       const element = captureElement(document.elementFromPoint(event.clientX, event.clientY));
       setHover(rectOf(element));
-      setHoverLabel(element?.getAttribute('aria-label') || element?.textContent?.trim().slice(0, 90) || element?.tagName.toLowerCase() || '');
+      setHoverLabel(
+        element?.getAttribute('aria-label') ||
+          element?.textContent?.trim().slice(0, 90) ||
+          element?.tagName.toLowerCase() ||
+          ''
+      );
     };
     const onClick = (event: MouseEvent) => {
       // The overlay is transparent to the pointer, so the event target is the element the person
       // clicked; elementFromPoint stays as a fallback for synthetic events.
       const element = captureElement(
         (event.target instanceof Element ? event.target : null) ??
-        document.elementFromPoint(event.clientX, event.clientY));
+          document.elementFromPoint(event.clientX, event.clientY)
+      );
       if (!element) return;
       event.preventDefault();
       event.stopPropagation();
@@ -155,7 +182,10 @@ const FixCaptureLayer: React.FC = () => {
     ? (desktop ? desktopPanelPlacement : panelPlacement)(
         state.target.rect,
         viewport,
-        { width: desktop ? (phase === 'recording' || phase === 'stopping' ? 380 : 420) : PANEL_SIZE.width, height: panelHeight },
+        {
+          width: desktop ? (phase === 'recording' || phase === 'stopping' ? 380 : 420) : PANEL_SIZE.width,
+          height: panelHeight,
+        },
         desktop ? (phase === 'recording' || phase === 'stopping' ? 51 : 90) : 12
       )
     : null;
@@ -169,11 +199,28 @@ const FixCaptureLayer: React.FC = () => {
             {(hover || state.target?.rect) && (
               <div
                 className={styles.highlight}
-                style={{ top: (hover || state.target!.rect).y - (desktop ? 6 : 0), left: (hover || state.target!.rect).x - (desktop ? 6 : 0), width: (hover || state.target!.rect).width + (desktop ? 12 : 0), height: (hover || state.target!.rect).height + (desktop ? 12 : 0) }}
+                style={{
+                  top: (hover || state.target!.rect).y - (desktop ? 6 : 0),
+                  left: (hover || state.target!.rect).x - (desktop ? 6 : 0),
+                  width: (hover || state.target!.rect).width + (desktop ? 12 : 0),
+                  height: (hover || state.target!.rect).height + (desktop ? 12 : 0),
+                }}
               />
             )}
-            {phase === 'selecting' && <div className={styles.hint}>Click the part of Kel that bothers you. Esc cancels.</div>}
-            {phase === 'selecting' && desktop && hover && hoverLabel && <div className={styles.targetLabel} style={{ top: Math.max(4, hover.y - 29), left: Math.max(8, Math.min(hover.x - 19, viewport.width - 200)) }}>{hoverLabel}</div>}
+            {phase === 'selecting' && (
+              <div className={styles.hint}>Click the part of Kel that bothers you. Esc cancels.</div>
+            )}
+            {phase === 'selecting' && desktop && hover && hoverLabel && (
+              <div
+                className={styles.targetLabel}
+                style={{
+                  top: Math.max(4, hover.y - 29),
+                  left: Math.max(8, Math.min(hover.x - 19, viewport.width - 200)),
+                }}
+              >
+                {hoverLabel}
+              </div>
+            )}
           </div>,
           document.body
         )}
@@ -194,12 +241,18 @@ const FixCaptureLayer: React.FC = () => {
               <>
                 <div className={styles.head}>
                   {desktop && <img src={recordingDot} alt='' />}
-                  <p className={styles.heading}>{phase === 'recording' ? (desktop ? 'Recording' : 'Recording fix…') : 'Finishing the transcript…'}</p>
+                  <p className={styles.heading}>
+                    {phase === 'recording' ? (desktop ? 'Recording' : 'Recording fix…') : 'Finishing the transcript…'}
+                  </p>
                   <p className={styles.timer}>{clock(state.seconds)}</p>
                 </div>
                 <div className={styles.liveBox}>
-                  {desktop && <p className={styles.liveLabel}>{phase === 'recording' ? 'Listening' : 'Transcribing'}</p>}
-                  <p className={styles.live} data-testid='fix-capture-live'>{state.live || (phase === 'recording' ? 'Listening…' : 'One moment…')}</p>
+                  {desktop && (
+                    <p className={styles.liveLabel}>{phase === 'recording' ? 'Listening' : 'Transcribing'}</p>
+                  )}
+                  <p className={styles.live} data-testid='fix-capture-live'>
+                    {state.live || (phase === 'recording' ? 'Listening…' : 'One moment…')}
+                  </p>
                 </div>
                 {targetLabel && <p className={styles.target}>on “{targetLabel}”</p>}
                 <div className={styles.actions}>
@@ -216,16 +269,33 @@ const FixCaptureLayer: React.FC = () => {
                     Stop
                   </button>
                 </div>
-                <p className={styles.hintLine}>
-                  Ctrl+Shift+F or a click stops · Esc cancels
-                </p>
+                <p className={styles.hintLine}>Ctrl+Shift+F or a click stops · Esc cancels</p>
               </>
             ) : phase === 'saving' ? (
               <p className={styles.heading}>Saving…</p>
             ) : phase === 'saved' ? (
               <>
                 <p className={styles.heading}>Saved as {state.savedId}.</p>
+                {!state.draft.trim() && (
+                  <p className={styles.note}>Open Kibble to add what went wrong before sending.</p>
+                )}
+                {sendError && (
+                  <p className={styles.noteStrong} role='alert'>
+                    {sendError}
+                  </p>
+                )}
                 <div className={styles.actions}>
+                  <button
+                    type='button'
+                    className={styles.primary}
+                    disabled={sending || !state.draft.trim()}
+                    onClick={() => void sendSaved()}
+                  >
+                    {sending ? 'Sending…' : 'Send to Kel'}
+                  </button>
+                  <button type='button' className={styles.quiet} disabled={sending} onClick={dismiss}>
+                    Done
+                  </button>
                   <button
                     type='button'
                     className={styles.primary}
@@ -246,6 +316,7 @@ const FixCaptureLayer: React.FC = () => {
                 </div>
                 {targetLabel && <p className={styles.target}>on “{targetLabel}”</p>}
                 <textarea
+                  aria-label='What went wrong?'
                   className={styles.transcript}
                   value={state.draft}
                   onChange={(event) => setDraft(event.target.value)}
@@ -253,12 +324,11 @@ const FixCaptureLayer: React.FC = () => {
                   rows={4}
                   data-testid='fix-capture-transcript'
                 />
-                {desktop && <p className={styles.note}>Kel saves the screenshot, the spot you clicked and this note.</p>}
+                {desktop && (
+                  <p className={styles.note}>Kel saves the screenshot, the spot you clicked and this note.</p>
+                )}
                 {state.note && (
-                  <p
-                    className={state.retryable ? styles.noteStrong : styles.note}
-                    data-testid='fix-capture-note'
-                  >
+                  <p className={state.retryable ? styles.noteStrong : styles.note} data-testid='fix-capture-note'>
                     {state.note}
                   </p>
                 )}

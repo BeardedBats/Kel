@@ -1096,6 +1096,11 @@ class Service:
         else:
             contract=self._document_contract(text,packet,sid,cid)
         contract['context']=packet
+        # Kibble owns this association; a renderer cannot turn an ordinary job into a self-update.
+        with contextlib.closing(self.store.connect()) as db:
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='kibble_work'").fetchone():
+                finding=db.execute('SELECT fix_id FROM kibble_work WHERE submission_id=?',(sid,)).fetchone()
+                if finding:contract['context']['kibble']={'fix_id':finding['fix_id']}
         if packet.get('classification'):
             contract['classification']=dict(packet['classification'])  # staffing reads the class and tier
         if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
@@ -2573,6 +2578,27 @@ class Service:
         action=data.get('action')
         if action=='list':return service.list(data.get('status') or None)
         if action=='get':return service.get(self._required(data,'id','Pick a fix first.'))
+        if action=='send_to_kel':
+            from .kibble_work import send
+            return send(self,service,self._required(data,'id','Pick a fix first.'))
+        if action=='apply_work':
+            from .kibble_work import apply_work
+            return apply_work(self,service,self._required(data,'id','Pick a fix first.'))
+        if action=='build_update':
+            from .kibble_release import start
+            fix_id=self._required(data,'id','Pick a fix first.')
+            start(self,fix_id)
+            return service.get(fix_id)
+        if action=='retry_work':
+            fix_id=self._required(data,'id','Pick a fix first.')
+            work=service.get(fix_id).get('work')
+            if not work or work.get('job_id') or work['state'] not in ('FAILED','INTERRUPTED'):
+                raise PolicyError('This finding is not ready to retry. Open its work first.')
+            self.action('/api/retry',{'id':work['submission_id']})
+            return service.get(fix_id)
+        if action=='set_note':
+            with self.handoff_lock:
+                return service.set_note(self._required(data,'id','Pick a fix first.'),data.get('transcript',''))
         if action=='save':
             return service.save(data.get('transcript',''),screenshot=data.get('screenshot'),
                                 route=data.get('route'),page_title=data.get('page_title'),

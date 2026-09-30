@@ -792,6 +792,7 @@ class CodingAdapter:
         Builder's reasons and who judges them.
         """
         command=contract['test_command']
+        test_timeout=600 if (contract.get('context') or {}).get('kibble') else 100
         plan=original_tests_plan(baseline,after,command)
         check={k:v for k,v in plan.items() if k!='needed'}
         def done(state,**extra):
@@ -812,7 +813,7 @@ class CodingAdapter:
             check['edits']=test_edits(workspace,base,baseline,after,command)
             if not (resumed and _rpc_recorded(self.store,run_id,EXISTING_TESTS_KEY)):
                 build_original_tests_copy(workspace,target,base,baseline,after,command)
-            receipt=connection.call('command/exec',run_params(command,target),timeout=100,key=EXISTING_TESTS_KEY)
+            receipt=connection.call('command/exec',run_params(command,target),timeout=test_timeout,key=EXISTING_TESTS_KEY)
         except (PolicyError,RuntimeError,TimeoutError,OSError) as exc:
             return done('error',ran=True,exit_code=None,failing=[],error=str(exc)[:300])
         finally:
@@ -845,7 +846,7 @@ class CodingAdapter:
             try:
                 if not (resumed and _rpc_recorded(self.store,run_id,CHANGED_TESTS_KEY)):
                     build_changed_tests_copy(workspace,target,base,baseline,after,command)
-                changed=dict(connection.call('command/exec',run_params(command,target),timeout=100,key=CHANGED_TESTS_KEY),ran=True)
+                changed=dict(connection.call('command/exec',run_params(command,target),timeout=test_timeout,key=CHANGED_TESTS_KEY),ran=True)
             except (PolicyError,RuntimeError,TimeoutError,OSError) as exc:
                 return done('error',error=str(exc)[:300])
             finally:
@@ -914,6 +915,10 @@ class CodingAdapter:
             raise PolicyError('Workspace changed before pending checks resumed')
         if phase and phase['phase'] in ('TURN_DISPATCHED','TESTS_DISPATCHED') and not host_alive(self.store,run_id):
             raise PolicyError('Native transport lost; unresolved effects cannot be replayed')
+        from .kibble_work import stage_images
+        input_images=stage_images(self.store,contract,run_id)
+        if input_images:
+            prompt+='\nRecorded screenshots copied into this run\'s temporary input folder. Inspect them: '+encode(input_images)
         connection=DurableCodingConnection(self.store,run_id,workspace)
         # D-67: a staffed step runs on its role's model and reasoning level. Codex takes both per
         # turn; Kel's Claude Code host takes them once per thread (--model/--fallback-model/--effort).
@@ -1013,7 +1018,8 @@ class CodingAdapter:
                     changed=db.execute("UPDATE coding_phases SET phase='TESTS_DISPATCHED',result=?,at=? WHERE run_id=? AND phase='TURN_COMPLETED'",(encode(result),time.time(),run_id)).rowcount
                     if changed!=1:raise PolicyError('Tests already dispatched; refusing duplicate execution')
             watch=runtime_guard.Watch(self.store.root,workspace,run_id)  # the project's own test code too
-            tests=connection.call('command/exec',run_params(contract['test_command'],workspace),timeout=100)
+            test_timeout=600 if (contract.get('context') or {}).get('kibble') else 100
+            tests=connection.call('command/exec',run_params(contract['test_command'],workspace),timeout=test_timeout)
             after=file_manifest(workspace)
             existing=self._original_tests(connection,run_id,contract,workspace,base,baseline,after,tests,
                                           resumed=bool(phase and phase['phase']=='TESTS_DISPATCHED'))

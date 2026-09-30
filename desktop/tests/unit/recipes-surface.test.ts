@@ -35,7 +35,7 @@ describe('recipe contract (D10)', () => {
   it('the client speaks the same three actions', () => {
     expect(kelApi).toContain("action: 'propose_from_job'");
     expect(kelApi).toContain("action: 'run'");
-    expect(kelApi).toContain("action: 'save', recipe, confirm: true");
+    expect(kelApi).toMatch(/action: 'save',\s*recipe,\s*confirm: true/);
   });
 });
 

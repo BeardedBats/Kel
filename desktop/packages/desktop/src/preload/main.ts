@@ -131,6 +131,7 @@ contextBridge.exposeInMainWorld('kelAPI', {
   },
   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
+  kibbleInstaller: (fixId: string, reveal = false) => ipcRenderer.invoke('kel:kibble-installer', fixId, reveal),
   // D-57: a scheduled run's engine conversation as an app chat (made on first use), and a nudge
   // that brings the chat list in step right after a schedule changes.
   openEngineConversation: (cid: string) => ipcRenderer.invoke('kel:open-engine-conversation', cid),
@@ -147,22 +148,15 @@ contextBridge.exposeInMainWorld('kelAPI', {
     remove: (provider: string) => ipcRenderer.invoke('kel:credential-delete', provider),
     // V2-02: use a connection's stored credential for one check. The value is decrypted in the main
     // process and never comes back here — only the result of the check does.
-    testConnection: (connectionId: string) =>
-      ipcRenderer.invoke('kel:connection-test', connectionId),
+    testConnection: (connectionId: string) => ipcRenderer.invoke('kel:connection-test', connectionId),
     // V2-04: do one thing with a connection. Same rule as the check — the value is decrypted in the main
     // process for that one request and the service's answer comes back, never a credential.
-    runConnection: (
-      connectionId: string,
-      actionId: string,
-      params?: Record<string, unknown>,
-      confirmed?: boolean
-    ) => ipcRenderer.invoke('kel:connection-run', connectionId, actionId, params, confirmed),
+    runConnection: (connectionId: string, actionId: string, params?: Record<string, unknown>, confirmed?: boolean) =>
+      ipcRenderer.invoke('kel:connection-run', connectionId, actionId, params, confirmed),
     // V2-04b: the account sign-in runs in the main process end to end (it holds the custody); the
     // renderer only asks for it and receives the outcome — never a token.
-    oauthConnect: (connectionId: string) =>
-      ipcRenderer.invoke('kel:connection-oauth-connect', connectionId),
-    oauthRevoke: (connectionId: string) =>
-      ipcRenderer.invoke('kel:connection-oauth-revoke', connectionId),
+    oauthConnect: (connectionId: string) => ipcRenderer.invoke('kel:connection-oauth-connect', connectionId),
+    oauthRevoke: (connectionId: string) => ipcRenderer.invoke('kel:connection-oauth-revoke', connectionId),
   },
   // Fix Capture (V2.0 preflight): the window screenshot + metrics come from the main process, and
   // the path handed back is relative to the engine data root. The view can read one saved screenshot

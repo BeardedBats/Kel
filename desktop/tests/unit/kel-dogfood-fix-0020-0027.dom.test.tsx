@@ -13,7 +13,9 @@ import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-li
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview', () => ({ useLocalFilePreview: () => undefined }));
+vi.mock('@/renderer/pages/conversation/Preview/hooks/useLocalFilePreview', () => ({
+  useLocalFilePreview: () => undefined,
+}));
 vi.mock('@/renderer/hooks/chat/useForkConversation', () => ({ useForkConversation: () => vi.fn() }));
 vi.mock('@/renderer/utils/model/agentLogo', () => ({ useAgentLogos: () => ({}), resolveAgentLogo: () => null }));
 vi.mock('@renderer/components/Markdown', () => ({
@@ -47,8 +49,12 @@ vi.mock('@/renderer/utils/platform', async (importOriginal) => ({
   isElectronDesktop: () => true,
   isMacOS: () => false,
 }));
-vi.mock('@renderer/components/layout/WindowControls', () => ({ default: () => <span data-testid='window-controls' /> }));
-vi.mock('@/renderer/components/layout/WindowControls', () => ({ default: () => <span data-testid='window-controls' /> }));
+vi.mock('@renderer/components/layout/WindowControls', () => ({
+  default: () => <span data-testid='window-controls' />,
+}));
+vi.mock('@/renderer/components/layout/WindowControls', () => ({
+  default: () => <span data-testid='window-controls' />,
+}));
 
 import MessageText from '@renderer/pages/conversation/Messages/components/MessageText';
 import { ConversationProvider } from '@/renderer/hooks/context/ConversationContext';
@@ -80,11 +86,19 @@ const reply = (content: string, kel_meta?: KelMessageMeta): IMessageText =>
     type: 'text',
     position: 'left',
     conversation_id: 'donor',
-    created_at: new Date(2026, 8, 29, 18, 0).getTime(),
+    created_at: new Date().setHours(18, 0, 0, 0),
     content: kel_meta ? { content, kel_meta } : { content },
   }) as IMessageText;
 
-const PLAN = { calls: 1, tokens: 2900, ms: 3600, cost: null, billing: 'plan', model_label: 'ChatGPT Luna', models: ['ChatGPT Luna'] };
+const PLAN = {
+  calls: 1,
+  tokens: 2900,
+  ms: 3600,
+  cost: null,
+  billing: 'plan',
+  model_label: 'ChatGPT Luna',
+  models: ['ChatGPT Luna'],
+};
 
 const renderReply = (message: IMessageText, props: Partial<React.ComponentProps<typeof MessageText>> = {}) =>
   render(
@@ -110,8 +124,12 @@ describe('FIX-0021 the composer’s controls stay on its bottom row', () => {
     expect(grid).toMatch(/align-items: end/);
     // Centres on the last text line: 25 px text + 6.5, 28 px + + 5, 36 px send + 1 → all 19 px up.
     expect(css).toMatch(/\.kel-v2-shell \.kel-shell-composer > textarea \{[^}]*margin-bottom: 6\.5px/);
-    expect(css).toMatch(/\.kel-v2-shell \.kel-shell-composer-attach \{ grid-column: 1; grid-row: 1; margin-bottom: 5px; \}/);
-    expect(css).toMatch(/\.kel-v2-shell \.kel-shell-composer-submit \{ grid-column: 3; grid-row: 1; margin-bottom: 1px; \}/);
+    expect(css).toMatch(
+      /\.kel-v2-shell \.kel-shell-composer-attach \{ grid-column: 1; grid-row: 1; margin-bottom: 5px; \}/
+    );
+    expect(css).toMatch(
+      /\.kel-v2-shell \.kel-shell-composer-submit \{ grid-column: 3; grid-row: 1; margin-bottom: 1px; \}/
+    );
   });
 });
 
@@ -165,8 +183,12 @@ describe('FIX-0024 the reading column', () => {
   it('is about half the window on wide screens, and Nick’s messages widen with it', () => {
     expect(css).toMatch(/--kel-shell-content-width: clamp\(920px, 50vw, 1280px\)/);
     expect(css).toMatch(/\.chat-layout-header \{[^}]*max-width: var\(--kel-shell-content-width\)/);
-    expect(css).toMatch(/\[data-message-position='right'\] \.kel-shell-message-turn \{ max-width: max\(390px, 60%\); \}/);
-    expect(read('components/kel/workCards/KelWorkCards.css')).toMatch(/max-width: var\(--kel-shell-content-width, 920px\)/);
+    expect(css).toMatch(
+      /\[data-message-position='right'\] \.kel-shell-message-turn \{ max-width: max\(390px, 60%\); \}/
+    );
+    expect(read('components/kel/workCards/KelWorkCards.css')).toMatch(
+      /max-width: var\(--kel-shell-content-width, 920px\)/
+    );
   });
 });
 
@@ -224,12 +246,20 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       setReducedMotionOverride(false);
       setSceneSettledForTests(true);
       motionClock.setManual(true);
-      vi.stubGlobal('ResizeObserver', class {
-        constructor(cb: () => void) { observe = cb; }
-        observe() {}
-        disconnect() {}
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          constructor(cb: () => void) {
+            observe = cb;
+          }
+          observe() {}
+          disconnect() {}
+        }
+      );
+      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+        cb(0);
+        return 1;
       });
-      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 1; });
       vi.stubGlobal('cancelAnimationFrame', () => undefined);
       (Element.prototype as unknown as { scrollTo: () => void }).scrollTo = () => undefined;
     });
@@ -238,7 +268,12 @@ describe('FIX-0025 a reply arrives without jumps', () => {
     const Harness: React.FC<{ messages: TMessage[] }> = ({ messages }) => {
       const scroll = useAutoScroll({ messages, itemCount: messages.length });
       return (
-        <div ref={scroll.handleScrollerRef} data-testid='scroller' onScroll={scroll.handleScroll} onWheel={scroll.handleWheel}>
+        <div
+          ref={scroll.handleScrollerRef}
+          data-testid='scroller'
+          onScroll={scroll.handleScroll}
+          onWheel={scroll.handleWheel}
+        >
           <div data-testid='clip'>
             <div ref={scroll.handleContentRef} data-testid='content'>
               <div className='message-item' data-testid='first' />

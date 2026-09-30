@@ -28,6 +28,7 @@ import {
 import { registerKelCredentialIpc } from './kelCredentialIpc';
 import { MUSE_ENV, MUSE_FIELD, MUSE_PROVIDER, syncMuseCustody } from './museCustody';
 import { registerKelDogfoodIpc } from './kelDogfoodIpc';
+import { checkedKibbleInstaller, openKibbleInstaller } from './kibbleInstaller';
 import { ChatLinks, chatStoreOverride } from './chatLinks';
 import { migrateToOneChatStore } from './chatStoreMigration';
 import { getDataPath } from '../../utils/utils';
@@ -339,7 +340,8 @@ export async function initializeKel(port: number): Promise<void> {
   if (!connected) {
     const child = spawnEngine(root);
     console.log('[KEL-BOOT] initializeKel spawned engine child');
-    if (!(await waitForEngineReady(child, descriptorPath))) throw new Error('Kel engine did not start. See desktop.log.');
+    if (!(await waitForEngineReady(child, descriptorPath)))
+      throw new Error('Kel engine did not start. See desktop.log.');
   }
   console.log('[KEL-BOOT] initializeKel engine ready');
   startEngineSupervision(root, descriptorPath);
@@ -414,7 +416,10 @@ export async function initializeKel(port: number): Promise<void> {
     }
     console.log('[KEL-BOOT] initializeKel connection custody pushed (' + pushed + ')');
   } catch (error) {
-    console.warn('[Kel] Connection custody push failed; the assistant will ask again when a credential changes.', error);
+    console.warn(
+      '[Kel] Connection custody push failed; the assistant will ask again when a credential changes.',
+      error
+    );
   }
   // D-75.3: the key Ramble saved before moves into custody once; the engine holds the custody key.
   await syncMuseCustody(kelRequest, { get: getCredential, set: setCredential })
@@ -506,7 +511,12 @@ export async function initializeKel(port: number): Promise<void> {
         type: 'acp',
         name: conversation.title,
         assistant: { id: 'kel' },
-        extra: { workspace, custom_workspace: Boolean(project?.root), kel_conversation_id: cid, kel_project_id: conversation.project_id },
+        extra: {
+          workspace,
+          custom_workspace: Boolean(project?.root),
+          kel_conversation_id: cid,
+          kel_project_id: conversation.project_id,
+        },
       });
       await links.adopt(donor.id, cid);
       history[donor.id] = (existing.messages || []).map((message: KelMessage) => historyRow(donor.id, message));
@@ -557,13 +567,17 @@ export async function initializeKel(port: number): Promise<void> {
     history[id] = recoverHistory(id, (history[id] || []) as HistoryMessage[], current.messages, native);
     // D-53: a hand-off's live card was streamed once; a conversation reopened later (or a stream
     // that dropped) still shows exactly one card beside its acknowledgement.
-    history[id] = ensureWorkCards(history[id] as HistoryMessage[], current.submissions || [], native, id, current.messages);
+    history[id] = ensureWorkCards(
+      history[id] as HistoryMessage[],
+      current.submissions || [],
+      native,
+      id,
+      current.messages
+    );
     // In-chat approvals (V1.6): one card anchored to the message Kel posted, so the
     // conversation shows the decision where it belongs - pending and settled alike.
     try {
-      const approvals = (await kelRequest(
-        '/api/approvals?conversation=' + encodeURIComponent(cid)
-      )) as {
+      const approvals = (await kelRequest('/api/approvals?conversation=' + encodeURIComponent(cid))) as {
         items?: Array<{
           id: string;
           kind: 'access' | 'action';
@@ -645,15 +659,17 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:history-search', (event, query: string) => {
     assertTrustedSender(event);
     if (typeof query !== 'string' || query.trim().length < 1) return [];
-    return Object.values(history)
-      .flat()
-      // A details overlay repeats a streamed row that the chat's own search already finds.
-      .filter((row) => !(row as HistoryMessage).kel_overlay)
-      .filter((row) =>
-        String((row as { content: { content?: string } }).content.content || '')
-          .toLocaleLowerCase()
-          .includes(query.toLocaleLowerCase())
-      );
+    return (
+      Object.values(history)
+        .flat()
+        // A details overlay repeats a streamed row that the chat's own search already finds.
+        .filter((row) => !(row as HistoryMessage).kel_overlay)
+        .filter((row) =>
+          String((row as { content: { content?: string } }).content.content || '')
+            .toLocaleLowerCase()
+            .includes(query.toLocaleLowerCase())
+        )
+    );
   });
   ipcMain.removeHandler('kel:history');
   ipcMain.handle('kel:history', async (event, id: string) => {
@@ -729,7 +745,8 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.removeHandler('kel:open-engine-conversation');
   ipcMain.handle('kel:open-engine-conversation', async (event, cid: string) => {
     assertTrustedSender(event);
-    if (typeof cid !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(cid)) throw new Error('That conversation is not one Kel knows');
+    if (typeof cid !== 'string' || !/^[a-zA-Z0-9_-]{1,128}$/.test(cid))
+      throw new Error('That conversation is not one Kel knows');
     await mergeLiveMap();
     return adoptEngineConversation(cid);
   });
@@ -787,7 +804,8 @@ export async function initializeKel(port: number): Promise<void> {
   ipcMain.handle('kel:schedules-changed', async (event, change?: { hidden?: unknown }) => {
     assertTrustedSender(event);
     const hidden = Array.isArray(change?.hidden) ? change.hidden : [];
-    for (const cid of hidden) if (typeof cid === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(cid)) hiddenToRemove.add(cid);
+    for (const cid of hidden)
+      if (typeof cid === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(cid)) hiddenToRemove.add(cid);
     await scheduleSweep();
     return { ok: true };
   });
@@ -864,8 +882,20 @@ export async function initializeKel(port: number): Promise<void> {
     shell.showItemInFolder(target);
     return { ok: true };
   });
-  // OS-backed credential custody (V1.4 Gate 6): values are encrypted with safeStorage (DPAPI on
-  // Windows) in the main process; the engine only ever receives metadata, and no IPC returns a value.
+  ipcMain.removeHandler('kel:kibble-installer');
+  ipcMain.handle('kel:kibble-installer', async (event, fixId: string, reveal = false) => {
+    assertTrustedSender(event);
+    if (typeof fixId !== 'string' || !/^FIX-\d+$/.test(fixId)) throw new Error('Pick a saved finding first.');
+    const fix = (await kelRequest('/api/dogfood', { action: 'get', id: fixId })) as { work?: { release?: unknown } };
+    const installer = checkedKibbleInstaller(fix.work?.release, path.resolve(dataRoot(), '..', '..', 'Temp'));
+    if (reveal) shell.showItemInFolder(installer);
+    else {
+      await openKibbleInstaller(installer, path.resolve(dataRoot(), '..', '..', 'App'));
+    }
+    return { opened: true, installed: false };
+  });
+  // OS-backed credential custody: values are encrypted with safeStorage (DPAPI on Windows)
+  // in the main process; the engine receives metadata, and no IPC returns a value.
   // Credential custody IPC (Campaign C AUD-MAJOR-002): the trio now runs the shared sender
   // guard like every other privileged channel; the engine sync stays best-effort.
   // V2-01: the same custody holds Connections' credentials, and the sync is routed to the store that

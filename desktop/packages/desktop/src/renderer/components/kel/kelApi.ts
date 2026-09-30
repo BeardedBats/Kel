@@ -121,11 +121,7 @@ declare global {
         status: () => Promise<{ available: boolean; providers: Record<string, string[]> }>;
         /** V2-01: what the OS store holds for Connections — field names only, never values. */
         connectionStatus?: () => Promise<Record<string, string[]>>;
-        set: (
-          provider: string,
-          field: string,
-          value: string
-        ) => Promise<{ provider: string; fields: string[] }>;
+        set: (provider: string, field: string, value: string) => Promise<{ provider: string; fields: string[] }>;
         remove: (provider: string) => Promise<{ provider: string; removed: number }>;
         /** V2-02: check a connection using its stored credential. Returns the record, not a value. */
         testConnection?: (connectionId: string) => Promise<KelConnection>;
@@ -137,9 +133,7 @@ declare global {
           confirmed?: boolean
         ) => Promise<KelConnectionRun>;
         /** V2-04b: finish the account sign-in in the main process; tokens never come back here. */
-        oauthConnect?: (
-          connectionId: string
-        ) => Promise<{ state: string; note?: string; fields?: string[] }>;
+        oauthConnect?: (connectionId: string) => Promise<{ state: string; note?: string; fields?: string[] }>;
         oauthRevoke?: (connectionId: string) => Promise<{ state?: string; note?: string }>;
       };
       /**
@@ -158,6 +152,7 @@ declare global {
       };
       /** Reveal a store-relative path in the OS file manager (best effort on the remote surface). */
       revealArtifact?: (relpath: string) => Promise<unknown>;
+      kibbleInstaller?: (fixId: string, reveal?: boolean) => Promise<unknown>;
       /**
        * D-57: the app chat for an engine conversation (a scheduled run's), made on first use.
        * Null when the engine no longer has that conversation. Absent on the remote surface.
@@ -176,12 +171,11 @@ declare global {
 // gets a sentence. Unknown codes fall back to the engine's own message, never to a raw string.
 
 /** One engine call with the bridge/gateway fallback rules; for feature modules that own a route. */
-export const kelRequest = <T,>(route: string, body?: unknown): Promise<T> => call<T>(route, body);
+export const kelRequest = <T>(route: string, body?: unknown): Promise<T> => call<T>(route, body);
 const GATEWAY_FAILURE_TEXT: Record<string, string> = {
   KEL_ENGINE_UNAVAILABLE:
     "Kel isn't running on the computer that serves this page right now. Open Kel there, then try again.",
-  KEL_ENGINE_UNREACHABLE:
-    'Kel stopped answering on that computer. Your work is kept — try again in a moment.',
+  KEL_ENGINE_UNREACHABLE: 'Kel stopped answering on that computer. Your work is kept — try again in a moment.',
 };
 
 /**
@@ -191,7 +185,9 @@ const GATEWAY_FAILURE_TEXT: Record<string, string> = {
  */
 type CaptureFixture = (route: string, body?: unknown) => unknown;
 const captureFixture = (): CaptureFixture | undefined =>
-  typeof window === 'undefined' ? undefined : (window as unknown as { __kelCaptureFixture?: CaptureFixture }).__kelCaptureFixture;
+  typeof window === 'undefined'
+    ? undefined
+    : (window as unknown as { __kelCaptureFixture?: CaptureFixture }).__kelCaptureFixture;
 
 async function call<T>(route: string, body?: unknown): Promise<T> {
   const scripted = captureFixture()?.(route, body);
@@ -207,9 +203,7 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
   try {
     response = await fetch(`/kel${route}`, {
       method: hasBody ? 'POST' : 'GET',
-      ...(hasBody
-        ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
-        : {}),
+      ...(hasBody ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}),
     });
   } catch {
     // The browser itself could not reach the page's own origin — a network drop, not a Kel fault.
@@ -218,9 +212,7 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
   const payload = (await response.json().catch((): null => null)) as unknown;
   if (!response.ok) {
     const code =
-      payload && typeof payload === 'object' && 'error' in payload
-        ? String((payload as { error: unknown }).error)
-        : '';
+      payload && typeof payload === 'object' && 'error' in payload ? String((payload as { error: unknown }).error) : '';
     throw new Error(GATEWAY_FAILURE_TEXT[code] ?? `Kel is not answering right now (${response.status}).`);
   }
   return payload as T;
@@ -231,7 +223,12 @@ async function call<T>(route: string, body?: unknown): Promise<T> {
 // expose them (older preload), the helpers degrade honestly to "connected, nothing to report"
 // rather than inventing an incident.
 // ---------------------------------------------------------------------------------------------
-const DEFAULT_ENGINE_FRAME = (): EngineStateFrame => ({ state: 'connected', attempts: 0, maxAttempts: 2, at: Date.now() });
+const DEFAULT_ENGINE_FRAME = (): EngineStateFrame => ({
+  state: 'connected',
+  attempts: 0,
+  maxAttempts: 2,
+  at: Date.now(),
+});
 
 export async function engineState(): Promise<EngineStateFrame> {
   const api = typeof window === 'undefined' ? undefined : window.kelAPI;
@@ -537,7 +534,7 @@ export const CONNECTION_CHECK_LABELS: Record<string, string> = {
 export const connectionCheckSentence = (connection: KelConnection, when: string): string | null => {
   if (!connection.last_test_at) return null;
   const label = connection.last_test_state
-    ? CONNECTION_CHECK_LABELS[connection.last_test_state] ?? 'Checked'
+    ? (CONNECTION_CHECK_LABELS[connection.last_test_state] ?? 'Checked')
     : 'Checked';
   const detail = connection.last_test_note || 'Kel did not record a result.';
   return `${label} — checked ${when}. ${detail}`;
@@ -546,8 +543,7 @@ export const connectionCheckSentence = (connection: KelConnection, when: string)
 export const kelConnections = {
   list: () => call<KelConnectionList>('/api/connections', { action: 'list' }),
   /** V2-03: the services Kel already knows how to talk to, as data. */
-  knownServices: () =>
-    call<{ services: KelKnownService[] }>('/api/connections', { action: 'catalogue' }),
+  knownServices: () => call<{ services: KelKnownService[] }>('/api/connections', { action: 'catalogue' }),
   /** V2-04: what Kel can do with one connection, as data. */
   actions: (id: string) =>
     call<{ connection: string; actions: KelConnectionAction[] }>('/api/connections', {
@@ -570,8 +566,7 @@ export const kelConnections = {
     test_endpoint?: string;
     notes?: string;
   }) => call<KelConnection>('/api/connections', { action: 'save', ...draft }),
-  remove: (id: string) =>
-    call<{ id: string; removed: boolean }>('/api/connections', { action: 'remove', id }),
+  remove: (id: string) => call<{ id: string; removed: boolean }>('/api/connections', { action: 'remove', id }),
   /** Metadata only: which field names exist and a pointer — the value never leaves the shell. */
   setCredential: (id: string, fields: string[]) =>
     call<KelConnection>('/api/connections', {
@@ -580,8 +575,7 @@ export const kelConnections = {
       fields,
       credential_ref: `kel:connection:${id}`,
     }),
-  deleteCredential: (id: string) =>
-    call<KelConnection>('/api/connections', { action: 'delete_credential', id }),
+  deleteCredential: (id: string) => call<KelConnection>('/api/connections', { action: 'delete_credential', id }),
 };
 
 export interface KelMapSection {
@@ -636,8 +630,7 @@ export interface KelWork {
 export type KelScope = { conversation: string } | { project: string };
 
 /** A bare string is a conversation id (the older call shape). */
-const scopeBody = (scope: string | KelScope): KelScope =>
-  typeof scope === 'string' ? { conversation: scope } : scope;
+const scopeBody = (scope: string | KelScope): KelScope => (typeof scope === 'string' ? { conversation: scope } : scope);
 
 const scopeQuery = (scope: string | KelScope): string => {
   const body = scopeBody(scope);
@@ -652,36 +645,52 @@ const GENERAL_SCOPE: KelScope = { project: 'default' };
 export const kelWork = (scope: string | KelScope = GENERAL_SCOPE) => call<KelWork>(`/api/work?${scopeQuery(scope)}`);
 
 export const kelMemoryAction = (
-  action:
-    | 'confirm'
-    | 'retract'
-    | 'forget'
-    | 'correct'
-    | 'accept_proposal'
-    | 'reject_proposal'
-    | 'defer_proposal',
+  action: 'confirm' | 'retract' | 'forget' | 'correct' | 'accept_proposal' | 'reject_proposal' | 'defer_proposal',
   id: string,
   extra: Record<string, unknown> = {},
   scope: string | KelScope = GENERAL_SCOPE
 ) => call<Record<string, unknown>>('/api/memory', { action, id, ...scopeBody(scope), ...extra });
 
-export const kelMapAction = (action: string, scope: string | KelScope = GENERAL_SCOPE, extra: Record<string, unknown> = {}) =>
-  call<Record<string, unknown>>('/api/map', { action, ...scopeBody(scope), ...extra });
+export const kelMapAction = (
+  action: string,
+  scope: string | KelScope = GENERAL_SCOPE,
+  extra: Record<string, unknown> = {}
+) => call<Record<string, unknown>>('/api/map', { action, ...scopeBody(scope), ...extra });
 
 export const kelRecipes = (scope: string | KelScope = GENERAL_SCOPE) =>
   call<Record<string, unknown>>('/api/recipes', { action: 'list', ...scopeBody(scope) });
 
 export const kelRecipeGet = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ recipe: { recipe_id: string; name: string; description?: string; inputs: KelRecipeInput[]; steps: Array<{ id: string; title: string; objective?: string }> } }>('/api/recipes', {
-    action: 'get', recipe_id: recipeId, ...scopeBody(scope),
+  call<{
+    recipe: {
+      recipe_id: string;
+      name: string;
+      description?: string;
+      inputs: KelRecipeInput[];
+      steps: Array<{ id: string; title: string; objective?: string }>;
+    };
+  }>('/api/recipes', {
+    action: 'get',
+    recipe_id: recipeId,
+    ...scopeBody(scope),
   });
 
 /**
  * Compile a recipe without running it — the engine's preview/dry-run path. A recipe that needs a
  * project detail answers `needs_project` with the `project_id` and what is `missing`.
  */
-export const kelRecipePreview = (recipeId: string, inputs: Record<string, unknown> = {}, scope: string | KelScope = GENERAL_SCOPE) =>
-  call<Record<string, unknown> & { needs_project?: boolean; project_id?: string; missing?: Array<'folder' | 'test_command'> }>('/api/recipes', {
+export const kelRecipePreview = (
+  recipeId: string,
+  inputs: Record<string, unknown> = {},
+  scope: string | KelScope = GENERAL_SCOPE
+) =>
+  call<
+    Record<string, unknown> & {
+      needs_project?: boolean;
+      project_id?: string;
+      missing?: Array<'folder' | 'test_command'>;
+    }
+  >('/api/recipes', {
     action: 'preview',
     recipe_id: recipeId,
     inputs,
@@ -703,14 +712,22 @@ export const kelRecipeRun = (
   recipeId: string,
   inputs: Record<string, unknown> = {},
   scope: string | KelScope = GENERAL_SCOPE
-) => call<{ submission: string; conversation?: string }>('/api/recipes', { action: 'run', recipe_id: recipeId, inputs, ...scopeBody(scope) });
+) =>
+  call<{ submission: string; conversation?: string }>('/api/recipes', {
+    action: 'run',
+    recipe_id: recipeId,
+    inputs,
+    ...scopeBody(scope),
+  });
 
 /** Save a project recipe. The engine refuses unless confirmation is explicit. */
 export const kelRecipeSave = (recipe: Record<string, unknown>, scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ saved: boolean; digest: string; recipe_id?: string; version?: string; reason?: string }>(
-    '/api/recipes',
-    { action: 'save', recipe, confirm: true, ...scopeBody(scope) }
-  );
+  call<{ saved: boolean; digest: string; recipe_id?: string; version?: string; reason?: string }>('/api/recipes', {
+    action: 'save',
+    recipe,
+    confirm: true,
+    ...scopeBody(scope),
+  });
 
 /** One run of a recipe — the engine reads these from the jobs it already keeps. */
 export interface KelRecipeRun {
@@ -733,17 +750,21 @@ export const kelRecipeHistory = (recipeId: string, scope: string | KelScope = GE
 
 /** The one-line answer to "what happened last time I ran this?" */
 export const kelRecipeLastResult = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ recipe_id: string; state: string; sentence: string } & Record<string, unknown>>(
-    '/api/recipes',
-    { action: 'last_result', recipe_id: recipeId, ...scopeBody(scope) }
-  );
+  call<{ recipe_id: string; state: string; sentence: string } & Record<string, unknown>>('/api/recipes', {
+    action: 'last_result',
+    recipe_id: recipeId,
+    ...scopeBody(scope),
+  });
 
 /** The library's own controls (V2-07): search, categories, favourites, recent, duplicate. */
 export const kelRecipeSearch = (query: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ entries: KelRecipeEntry[] }>('/api/recipes', { action: 'search', query, ...scopeBody(scope) });
 
 export const kelRecipeCategories = (scope: string | KelScope = GENERAL_SCOPE) =>
-  call<{ categories: Array<{ name: string; count: number }> }>('/api/recipes', { action: 'categories', ...scopeBody(scope) });
+  call<{ categories: Array<{ name: string; count: number }> }>('/api/recipes', {
+    action: 'categories',
+    ...scopeBody(scope),
+  });
 
 export const kelRecipeRecent = (limit = 5, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recent: KelRecipeEntry[] }>('/api/recipes', { action: 'recent', limit, ...scopeBody(scope) });
@@ -772,7 +793,13 @@ export const kelRecipeUpdate = (
   recipeId: string,
   changes: { name?: string; description?: string; steps?: KelRecipeStepDraft[] },
   scope: string | KelScope = GENERAL_SCOPE
-) => call<{ saved: boolean; reason?: string }>('/api/recipes', { action: 'update', recipe_id: recipeId, ...changes, ...scopeBody(scope) });
+) =>
+  call<{ saved: boolean; reason?: string }>('/api/recipes', {
+    action: 'update',
+    recipe_id: recipeId,
+    ...changes,
+    ...scopeBody(scope),
+  });
 
 export const kelRecipeDuplicate = (recipeId: string, scope: string | KelScope = GENERAL_SCOPE) =>
   call<{ recipe_id?: string; id?: string } & Record<string, unknown>>('/api/recipes', {
@@ -895,7 +922,8 @@ const parseMaybeJson = (value: unknown): unknown => {
 const truthy = (value: unknown, fallback: boolean): boolean =>
   value === undefined || value === null ? fallback : value === true || value === 1 || value === '1' || value === 'true';
 
-const numberOrNull = (value: unknown): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+const numberOrNull = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null;
 
 const normalizeCadence = (value: unknown): KelScheduleCadence | null => {
   const raw = parseMaybeJson(value) as Record<string, unknown> | null;
@@ -978,7 +1006,8 @@ export const normalizeSchedule = (value: unknown): KelSchedule | null => {
     conversation_id: typeof raw.conversation_id === 'string' && raw.conversation_id ? raw.conversation_id : null,
     model: normalizeModel(raw.model),
     model_label: typeof raw.model_label === 'string' && raw.model_label ? raw.model_label : null,
-    conversation_title: typeof raw.conversation_title === 'string' && raw.conversation_title ? raw.conversation_title : null,
+    conversation_title:
+      typeof raw.conversation_title === 'string' && raw.conversation_title ? raw.conversation_title : null,
     timezone_label: typeof raw.timezone_label === 'string' && raw.timezone_label ? raw.timezone_label : null,
     skip_if_running: truthy(raw.skip_if_running, true),
     enabled: truthy(raw.enabled, true),
@@ -1014,7 +1043,7 @@ export const normalizeScheduleHistory = (payload: unknown): KelScheduleRun[] =>
     .map(normalizeRun)
     .filter((item): item is KelScheduleRun => item !== null);
 
-const scheduleAction = <T,>(action: string, body: Record<string, unknown> = {}) =>
+const scheduleAction = <T>(action: string, body: Record<string, unknown> = {}) =>
   call<T>('/api/schedules', { action, ...body });
 
 const oneSchedule = (payload: unknown): KelSchedule | null =>
@@ -1035,8 +1064,12 @@ export const kelSchedules = {
    * runs still going are kept (`kept_open`).
    */
   remove: (id: string, conversations: 'keep' | 'delete') =>
-    scheduleAction<{ ok?: boolean; id?: string; hidden?: string[]; kept_open?: string[] }>('delete', { id, conversations }),
-  runNow: (id: string) => scheduleAction<{ submission?: string; conversation?: string } & Record<string, unknown>>('run_now', { id }),
+    scheduleAction<{ ok?: boolean; id?: string; hidden?: string[]; kept_open?: string[] }>('delete', {
+      id,
+      conversations,
+    }),
+  runNow: (id: string) =>
+    scheduleAction<{ submission?: string; conversation?: string } & Record<string, unknown>>('run_now', { id }),
   history: (id: string) => scheduleAction<unknown>('history', { id }).then(normalizeScheduleHistory),
   preview: (cadence: KelScheduleCadence, timezone?: string | null) =>
     scheduleAction<KelSchedulePreview>('preview', { cadence, ...(timezone ? { timezone } : {}) }),
@@ -1071,11 +1104,18 @@ const normalizeProjectList = (payload: unknown): { projects: KelProject[]; activ
   if (Array.isArray(payload)) return { projects: payload as KelProject[] };
   const body = (payload ?? {}) as { projects?: unknown; active?: unknown; active_project?: unknown };
   const active =
-    typeof body.active === 'string' ? body.active : typeof body.active_project === 'string' ? body.active_project : undefined;
-  return { projects: Array.isArray(body.projects) ? (body.projects as KelProject[]) : [], ...(active ? { active } : {}) };
+    typeof body.active === 'string'
+      ? body.active
+      : typeof body.active_project === 'string'
+        ? body.active_project
+        : undefined;
+  return {
+    projects: Array.isArray(body.projects) ? (body.projects as KelProject[]) : [],
+    ...(active ? { active } : {}),
+  };
 };
 
-const projectAction = <T,>(action: string, body: Record<string, unknown> = {}) =>
+const projectAction = <T>(action: string, body: Record<string, unknown> = {}) =>
   call<T>('/api/project', { action, ...body });
 
 export const kelProjects = {
@@ -1092,12 +1132,16 @@ export const kelProjects = {
   restore: (id: string) => projectAction<Record<string, unknown>>('restore', { id }),
   /** Only a project that owns nothing can be deleted; the engine says what to do otherwise. */
   remove: (id: string) => projectAction<Record<string, unknown>>('delete', { id }),
-  setActive: (id: KelActiveProject) => projectAction<{ active?: string } & Record<string, unknown>>('set_active', { id }),
+  setActive: (id: KelActiveProject) =>
+    projectAction<{ active?: string } & Record<string, unknown>>('set_active', { id }),
   /** Tie a chat (by its app conversation id) to a project before its first message reaches Kel. */
   bind: (donor: string, project: string) => projectAction<Record<string, unknown>>('bind', { donor, project }),
   /** The project a chat belongs to; `pending` while Kel has not seen its first message yet. */
   of: (target: { conversation?: string; donor?: string }) =>
-    projectAction<{ project?: string | (Partial<KelProject> & { id: string }) | null; pending?: boolean }>('of', target),
+    projectAction<{ project?: string | (Partial<KelProject> & { id: string }) | null; pending?: boolean }>(
+      'of',
+      target
+    ),
 };
 
 export interface KelProviderStatus {
@@ -1166,7 +1210,14 @@ export const kelProviders = {
   list: () => call<{ providers: KelProviderStatus[] }>('/api/providers', { action: 'list' }),
   readiness: (capability = 'text', prefer = '') =>
     call<{
-      chosen: { provider: string; model: string; label: string; model_label?: string; status: string; auth_mode: string } | null;
+      chosen: {
+        provider: string;
+        model: string;
+        label: string;
+        model_label?: string;
+        status: string;
+        auth_mode: string;
+      } | null;
       chain: string[];
       reasons: string[];
       reason: string;
@@ -1186,10 +1237,10 @@ export const kelProviders = {
   deleteCredential: (provider: string) =>
     call<Record<string, unknown>>('/api/providers', { action: 'delete_credential', provider }),
   usage: (provider?: string) =>
-    call<{ usage: Array<{ provider: string; at: number; data: Record<string, unknown> }> }>(
-      '/api/providers',
-      { action: 'usage', provider }
-    ),
+    call<{ usage: Array<{ provider: string; at: number; data: Record<string, unknown> }> }>('/api/providers', {
+      action: 'usage',
+      provider,
+    }),
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -1232,6 +1283,38 @@ export interface KelFix {
   conversation?: string | null;
   version?: string | null;
   prompt_id?: string | null;
+  work?: KelFixWork | null;
+}
+
+/** Durable Kibble work. A completed job is not an installed update. */
+export interface KelFixWork {
+  submission_id: string;
+  conversation: string;
+  job_id: string | null;
+  state: string;
+  error: string | null;
+  updated: number;
+  messages: Array<{ seq: number; role: string; text: string; at: number }>;
+  events: Array<{ seq: number; type: string; at: number }>;
+  verification: string | null;
+  application: {
+    state: string | null;
+    decision: string | null;
+    waiting_reason?: string | null;
+    [key: string]: unknown;
+  } | null;
+  milestones: Array<{ id: string; state: string; error?: string | null }>;
+  activity: Array<{ seq: number; at: number; kind: string; text: string; state: string }>;
+  installed: boolean;
+  release?: {
+    state: string;
+    stage: string;
+    error: string | null;
+    installer_path: string | null;
+    candidate_path: string;
+    log: string[];
+    installed: boolean;
+  } | null;
 }
 
 export interface KelFixList {
@@ -1250,8 +1333,12 @@ export interface KelFixCapture {
 }
 
 export const kelDogfood = {
-  list: (status?: KelFixStatus) =>
-    call<KelFixList>('/api/dogfood', status ? { action: 'list', status } : undefined),
+  applyWork: (id: string) => call<KelFix>('/api/dogfood', { action: 'apply_work', id }),
+  buildUpdate: (id: string) => call<KelFix>('/api/dogfood', { action: 'build_update', id }),
+  retryWork: (id: string) => call<KelFix>('/api/dogfood', { action: 'retry_work', id }),
+  setNote: (id: string, transcript: string) => call<KelFix>('/api/dogfood', { action: 'set_note', id, transcript }),
+  sendToKel: (id: string) => call<KelFix>('/api/dogfood', { action: 'send_to_kel', id }),
+  list: (status?: KelFixStatus) => call<KelFixList>('/api/dogfood', status ? { action: 'list', status } : undefined),
   get: (id: string) => call<KelFix>(`/api/dogfood?action=get&id=${encodeURIComponent(id)}`),
   save: (body: {
     transcript: string;
@@ -1265,13 +1352,12 @@ export const kelDogfood = {
     /** e.g. `{ voice: 'none' | 'partial' }` when the words did not (fully) come through. */
     diagnostics?: Record<string, unknown> | null;
   }) => call<KelFix>('/api/dogfood', { action: 'save', ...body }),
-  setStatus: (id: string, status: KelFixStatus) =>
-    call<KelFix>('/api/dogfood', { action: 'set_status', id, status }),
+  setStatus: (id: string, status: KelFixStatus) => call<KelFix>('/api/dogfood', { action: 'set_status', id, status }),
   preparePrompt: (fixIds?: string[]) =>
-    call<{ prompt: string; prompt_id: string; path: string; fix_ids: string[]; marked: string }>(
-      '/api/dogfood',
-      { action: 'prepare_prompt', ...(fixIds && fixIds.length ? { fix_ids: fixIds } : {}) }
-    ),
+    call<{ prompt: string; prompt_id: string; path: string; fix_ids: string[]; marked: string }>('/api/dogfood', {
+      action: 'prepare_prompt',
+      ...(fixIds && fixIds.length ? { fix_ids: fixIds } : {}),
+    }),
   /**
    * One window capture, written by the main process into the data root. Returns null on surfaces
    * that cannot read Kel's window (the remote browser) so the caller can say so honestly.
@@ -1298,15 +1384,13 @@ export const kelDogfood = {
 };
 
 export const kelAutonomy = {
-  leases: (jobId?: string) =>
-    call<{ leases: KelLease[] }>('/api/autonomy', { action: 'leases', job_id: jobId }),
+  leases: (jobId?: string) => call<{ leases: KelLease[] }>('/api/autonomy', { action: 'leases', job_id: jobId }),
   requests: (leaseId?: string) =>
     call<{ requests: KelBoundaryRequest[] }>('/api/autonomy', { action: 'requests', lease_id: leaseId }),
   guardrails: () =>
-    call<{ rules: Array<{ rule: string; text: string; test: string }>; digest: string }>(
-      '/api/autonomy',
-      { action: 'guardrails' }
-    ),
+    call<{ rules: Array<{ rule: string; text: string; test: string }>; digest: string }>('/api/autonomy', {
+      action: 'guardrails',
+    }),
   check: (leaseId: string, kind: string, target = '', tool = '') =>
     call<{ allowed: boolean; rule: string; reason: string }>('/api/autonomy', {
       action: 'check',
@@ -1318,10 +1402,9 @@ export const kelAutonomy = {
   revoke: (leaseId: string, reason = '') =>
     call<Record<string, unknown>>('/api/autonomy', { action: 'revoke', lease_id: leaseId, reason }),
   emergencyStop: () =>
-    call<{ stopped: string[]; count: number; paused_jobs: string[]; paused_count: number }>(
-      '/api/autonomy',
-      { action: 'emergency_stop' }
-    ),
+    call<{ stopped: string[]; count: number; paused_jobs: string[]; paused_count: number }>('/api/autonomy', {
+      action: 'emergency_stop',
+    }),
   resolveRequest: (requestId: string, allow: boolean, grantKind: 'once' | 'project' = 'once') =>
     call<Record<string, unknown>>('/api/autonomy', {
       action: 'resolve',
@@ -1372,10 +1455,11 @@ export interface KelMemoryFolderState {
 
 export const kelMemoryFolder = {
   get: async (): Promise<KelMemoryFolderState | null> =>
-    ((await call<KelAuthorityState & { memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'mode' })).memory ??
-      null),
+    (await call<KelAuthorityState & { memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'mode' })).memory ??
+    null,
   /** Codex's stronger Windows sandbox: Windows shows ONE admin prompt (for OpenAI's setup helper). */
-  setupCodexSandbox: () => call<{ started: boolean; memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'codex_sandbox_setup' }),
+  setupCodexSandbox: () =>
+    call<{ started: boolean; memory?: KelMemoryFolderState }>('/api/autonomy', { action: 'codex_sandbox_setup' }),
 };
 
 export interface KelDiagnosticsSnapshot {
@@ -1436,18 +1520,15 @@ export const kelDiagnostics = {
       first_reply?: { latest_ms: number; median_ms: number; samples: number; basis: string } | null;
       basis: string;
     }>('/api/diagnostics', { action: 'performance' }),
-  retention: () =>
-    call<{ retention_days: Record<string, number> }>('/api/diagnostics', { action: 'retention' }),
+  retention: () => call<{ retention_days: Record<string, number> }>('/api/diagnostics', { action: 'retention' }),
   purge: () =>
-    call<{ removed: Record<string, number>; retention_days: Record<string, number> }>(
-      '/api/diagnostics',
-      { action: 'purge' }
-    ),
+    call<{ removed: Record<string, number>; retention_days: Record<string, number> }>('/api/diagnostics', {
+      action: 'purge',
+    }),
   compact: () =>
-    call<{ before_bytes: number; after_bytes: number; integrity: string; backup: string }>(
-      '/api/diagnostics',
-      { action: 'compact' }
-    ),
+    call<{ before_bytes: number; after_bytes: number; integrity: string; backup: string }>('/api/diagnostics', {
+      action: 'compact',
+    }),
   export: () => call<Record<string, unknown>>('/api/diagnostics', { action: 'export' }),
   report: (note: string) =>
     call<{ path: string; bytes: number; redacted: boolean; excluded: string[] }>('/api/diagnostics', {
@@ -1461,13 +1542,12 @@ export const kelTeam = {
     call<{ assignments: KelAssignment[] }>('/api/team', { action: 'office', project_id: projectId }),
   roster: () => call<{ roles: KelRole[]; departments: string[] }>('/api/team', { action: 'roster' }),
   seed: () => call<{ created: string[] }>('/api/team', { action: 'seed' }),
-  role: (templateId: string) =>
-    call<KelRoleDetail>('/api/team', { action: 'role', template_id: templateId }),
+  role: (templateId: string) => call<KelRoleDetail>('/api/team', { action: 'role', template_id: templateId }),
   history: (templateId: string) =>
-    call<{ versions: Array<{ version: number; digest: string; author: string; created: number }> }>(
-      '/api/team',
-      { action: 'history', template_id: templateId }
-    ),
+    call<{ versions: Array<{ version: number; digest: string; author: string; created: number }> }>('/api/team', {
+      action: 'history',
+      template_id: templateId,
+    }),
   rollback: (templateId: string, to: number) =>
     call<{ version: number }>('/api/team', { action: 'rollback', template_id: templateId, to }),
   timeline: (assignmentId: string) =>
@@ -1506,7 +1586,9 @@ export const kelState = (conversation = 'main', project?: KelActiveProject) =>
     draining?: boolean;
     /** D6: the engine's recorded restore outcome (audit PER-02); null when never attempted. */
     restore?: { ok: boolean; detail?: string; at?: number } | null;
-  }>(`/api/state?conversation=${encodeURIComponent(conversation)}${project ? `&project=${encodeURIComponent(project)}` : ''}`);
+  }>(
+    `/api/state?conversation=${encodeURIComponent(conversation)}${project ? `&project=${encodeURIComponent(project)}` : ''}`
+  );
 
 export const kelControl = (job: string, action: 'pause' | 'resume' | 'cancel') =>
   call<{ ok: boolean }>('/api/control', { job, action });
@@ -1666,7 +1748,12 @@ export interface KelOfficeDetail extends KelOfficeItem {
   next: string | null;
   staff: KelOfficeStaff[];
   steps: { id: string; label: string; state: string; at: number | null; attempts: number | null }[];
-  review: { verdict: string | null; checked_by: string | null; independence: string | null; findings: KelOfficeFinding[] };
+  review: {
+    verdict: string | null;
+    checked_by: string | null;
+    independence: string | null;
+    findings: KelOfficeFinding[];
+  };
   oracle: {
     state: 'not_needed' | 'waiting' | 'running' | 'done' | 'could_not_run';
     why: string | null;
@@ -1703,7 +1790,8 @@ export const kelUsage = (scope: { conversation: string } | { job: string }) =>
 /** The work cards for one chat, one project, or everything (`'*'`). */
 export const kelOffice = (scope: { conversation: string } | { project: string } | '*' = '*') => {
   if (scope === '*') return call<KelOfficeList>('/api/office?project=*');
-  if ('conversation' in scope) return call<KelOfficeList>(`/api/office?conversation=${encodeURIComponent(scope.conversation)}`);
+  if ('conversation' in scope)
+    return call<KelOfficeList>(`/api/office?conversation=${encodeURIComponent(scope.conversation)}`);
   return call<KelOfficeList>(`/api/office?project=${encodeURIComponent(scope.project || '*')}`);
 };
 

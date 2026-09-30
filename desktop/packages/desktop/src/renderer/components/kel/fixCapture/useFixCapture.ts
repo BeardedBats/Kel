@@ -22,7 +22,6 @@ import {
 declare const __APP_VERSION__: string;
 
 const LIVE_POLL_MS = 900;
-const SAVED_DISMISS_MS = 2400;
 /** Below this the engine is not asked to transcribe at all — a stray click is not feedback. */
 const MIN_AUDIO_MS = 400;
 /** The one sentence a person reads when Muse could not transcribe their recording. */
@@ -166,25 +165,28 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
    * Cancel audio + live session. An explicit cancel (Esc, Cancel) also throws the capture away; an
    * unmount keeps the screenshot and the stored draft so the next start can still save the fix.
    */
-  const teardown = useCallback((keepCapture = false) => {
-    epochRef.current += 1;
-    stopTimers();
-    const capture = captureRef.current;
-    captureRef.current = null;
-    try {
-      capture?.cancel();
-    } catch {
-      /* already gone */
-    }
-    endSession();
-    if (pendingRef.current && !keepCapture) {
-      discardCapture(pendingRef.current);
-    }
-    pendingRef.current = null;
-    if (!keepCapture) draftStore.clear();
-    // Cancel/Esc throws the recording away too: nothing is left to retry or save.
-    audioRef.current = null;
-  }, [discardCapture, endSession, stopTimers]);
+  const teardown = useCallback(
+    (keepCapture = false) => {
+      epochRef.current += 1;
+      stopTimers();
+      const capture = captureRef.current;
+      captureRef.current = null;
+      try {
+        capture?.cancel();
+      } catch {
+        /* already gone */
+      }
+      endSession();
+      if (pendingRef.current && !keepCapture) {
+        discardCapture(pendingRef.current);
+      }
+      pendingRef.current = null;
+      if (!keepCapture) draftStore.clear();
+      // Cancel/Esc throws the recording away too: nothing is left to retry or save.
+      audioRef.current = null;
+    },
+    [discardCapture, endSession, stopTimers]
+  );
 
   /** Start (or restart) one live recording: microphone first, then the engine session. */
   const startSession = useCallback(async () => {
@@ -411,7 +413,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
       dispatch({ type: 'saved', id: saved.id });
       pendingRef.current = null;
       audioRef.current = null;
-      dismissRef.current = window.setTimeout(() => dispatch({ type: 'dismiss' }), SAVED_DISMISS_MS);
+      // Keep the saved report visible so the person can send it directly to Kel.
     } catch (error) {
       dispatch({
         type: 'save-failed',

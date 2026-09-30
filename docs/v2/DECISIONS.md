@@ -1071,3 +1071,19 @@ appearance customisations (currently the app background #282a34, and any other c
 already saved in his settings) stay exactly as they are. No update, migration, reset or D-82 cleanup may
 change, remove or override them, even though the colour controls are gone from Appearance. New work must
 render correctly on top of them.
+
+## D-91 — Send Kibble findings to Kel and see its work
+
+**Requested by Nick 2026-09-30.** A recorded Kibble finding can be sent directly to Kel, including
+from the saved capture panel. Kibble shows its durable request, work stages, public activity,
+checks, errors, and update build log. Work survives closing and reopening the view.
+
+This supersedes D-86's capture-only limit for an explicitly sent finding. Builders change an isolated
+source copy. Verified changes require an explicit Apply source changes action. Build update prepares
+a separate candidate and installer. Install update opens that exact hashed installer; opening it is
+not proof of installation. A matching marker and a newly launched canonical App engine establish
+installed status. Neither a finished worker nor installed status automatically marks the original
+finding Fixed. Saved appearance, user data, and credential custody remain protected.
+
+Implemented source and isolated checks are recorded in the September 30 audit. Live provider repair,
+physical-phone, microphone, and future installer journeys require their own evidence.

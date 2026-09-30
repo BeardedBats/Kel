@@ -321,7 +321,7 @@ describe('Fix Capture — where it is reachable from', () => {
   });
 
   it('says the prompt never starts development by itself', () => {
-    expect(dogfoodPage).toMatch(/it never\s+starts development on its own/);
+    expect(dogfoodPage).toMatch(/it never\s+starts\s+development\s+on\s+its\s+own/);
   });
 });
 

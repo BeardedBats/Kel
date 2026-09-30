@@ -442,7 +442,9 @@ class Engine:
                             staff_record=self._staff_record(role, binding, route, model)
                             if staff_record['asked'].get('model_arg') is not None or staff_record.get('uses_role_model'):
                                 model=staff_record['asked'].get('model_arg') or model
-                        run = self.store.claim(job['id'], mid, route['selected'], timeout=420 if code_step(job, spec) else 190,route=route,model=model,staff=staff_record,reservation=reservation)
+                        timeout=(1200 if code_step(job,spec) and (job['contract'].get('context') or {}).get('kibble')
+                                 else 420 if code_step(job,spec) else 190)
+                        run = self.store.claim(job['id'], mid, route['selected'], timeout=timeout,route=route,model=model,staff=staff_record,reservation=reservation)
                     except PolicyError as exc:
                         if 'budget exhausted' in str(exc) and not self._job_active(job['id']):
                             self.store.wait_for_route(job['id'], STUCK_WAIT+OUT_OF_TRIES)

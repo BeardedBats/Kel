@@ -179,6 +179,8 @@ class Dogfood:
             'prompt_id': row['prompt_id'],
         }
         item['has_screenshot'] = bool(item['screenshot']) and (self.root / item['screenshot']).is_file()
+        from .kibble_work import progress
+        item['work'] = progress(self.store, item['id'])
         return item
 
     def list(self, status=None):
@@ -291,6 +293,29 @@ class Dogfood:
             if not row:
                 raise PolicyError('That fix was not found.')
             db.execute('UPDATE dogfood_fixes SET status=?, updated=? WHERE id=?', (value, time.time(), str(fix_id)))
+        return self.get(fix_id)
+
+    def set_note(self, fix_id, transcript):
+        """Recover an untranscribed capture before it becomes worker evidence."""
+        text = str(transcript or '').strip()
+        if not text:
+            raise PolicyError('Add what went wrong first.')
+        if len(text) > MAX_TRANSCRIPT:
+            raise PolicyError('Keep the note under 8000 characters.')
+        item = self.get(fix_id)
+        if item.get('work'):
+            raise PolicyError('Kel already received this finding. Capture a new note to change it.')
+        from .transcription import Transcription
+        if not Transcription(self.store).practice_mode() and _is_practice_text(text):
+            raise PolicyError("That is Kel's practice text, not your words — record again.")
+        diagnostics = dict(item['diagnostics']) if isinstance(item['diagnostics'], dict) else {}
+        diagnostics['voice'] = 'typed'
+        with self.store.transaction() as db:
+            # A Send racing this edit must not change the evidence it already received.
+            if _table(db, 'kibble_work') and db.execute('SELECT 1 FROM kibble_work WHERE fix_id=?', (fix_id,)).fetchone():
+                raise PolicyError('Kel already received this finding. Capture a new note to change it.')
+            db.execute('UPDATE dogfood_fixes SET transcript=?,diagnostics=?,updated=? WHERE id=?',
+                       (text, _json(diagnostics), time.time(), fix_id))
         return self.get(fix_id)
 
     # -- prompts ----------------------------------------------------------------------------------
