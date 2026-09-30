@@ -164,6 +164,32 @@ class FullAccessTests(AutoApplyBase):
         self.assertIsNone(card['waiting_reason'])
 
 
+class KelSourceTests(AutoApplyBase):
+    def register_source(self, root):
+        with self.s.transaction() as db:
+            db.execute('CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY,name TEXT NOT NULL,root TEXT,'
+                       'context TEXT,updated REAL)')
+            db.execute('INSERT INTO projects(id,name,root,updated) VALUES(?,?,?,?)',
+                       ('kel-self-update', 'Kel updates', str(root), time.time()))
+
+    def test_ordinary_verified_source_chat_waits_for_explicit_apply(self):
+        self.register_source(self.root)
+        self.assertEqual(authority.mode(self.s), 'full')
+        self.assertEqual(self.s.assess(self.j), 'VERIFIED')
+        self.assertFalse(self.s.get(self.j)['contract'].get('context', {}).get('kibble'))
+        self.assertEqual(settle(self.s, self.j), 'waiting')
+        self.untouched()
+        self.assertIsNone(application(self.s, self.j))
+        self.assertIn('needs your review', decision(self.s, self.j)['reason'])
+        apply_checked(self.s, self.j)
+        self.applied()
+
+    def test_nonmatching_regular_project_still_applies_automatically(self):
+        self.register_source(self.root.parent / 'kel-source')
+        self.assertEqual(settle(self.s, self.j), 'applied')
+        self.applied()
+
+
 class AskFirstTests(AutoApplyBase):
     def test_ask_first_waits_and_the_card_asks_apply_or_leave_it(self):
         from kel import needs_answer

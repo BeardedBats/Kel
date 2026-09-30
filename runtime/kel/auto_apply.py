@@ -120,6 +120,14 @@ def why_wait(store, job):
     """None when Kel may apply on its own; otherwise the reason it waits for Nick."""
     if job.get('contract', {}).get('context', {}).get('kibble'):
         return 'a Kel update needs your review before it changes the source'
+    # Follow-up chats have no finding association. The registered source root still needs review.
+    with contextlib.closing(store.connect()) as db:
+        project = None
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='projects'").fetchone():
+            project = db.execute("SELECT root FROM projects WHERE id='kel-self-update'").fetchone()
+    if project and project['root'] and job.get('contract', {}).get('root'):
+        if Path(project['root']).resolve() == Path(job['contract']['root']).resolve():
+            return 'a Kel update needs your review before it changes the source'
     from . import authority
     if not authority.is_full(store):
         return ASK_REASON
