@@ -53,13 +53,13 @@ import { collectChatFileRefs, splitChatFileRefs } from '@/renderer/utils/file/me
 import { type ChatFileRef, uploadFileRef } from '@/common/types/chatFile';
 import { Button, Message, Tag } from '@arco-design/web-react';
 import { Brain, Lightning, MagicHat, Shield } from '@icon-park/react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { KelMobileModelPicker } from '@renderer/components/kel/KelMobileModelPicker';
 import { classifyConversationBusyError } from '../conversationBusyError';
 import { buildSendFailureError } from './buildSendFailureError';
-import { useAcpInitialMessage } from './useAcpInitialMessage';
+import { useAcpInitialMessage, type InitialDraft } from './useAcpInitialMessage';
 import type { UseAcpMessageReturn } from './useAcpMessage';
 
 const configErrorMessageKey = (error: unknown) => {
@@ -243,6 +243,16 @@ const AcpSendBox: React.FC<{
   const setContentRef = useLatestRef(setContent);
   const contentRef = useLatestRef(content);
   const atPathRef = useLatestRef(atPath);
+  const initialOrigin = useRef<InitialDraft['transcriptOrigin']>(undefined);
+  const uploadRef = useLatestRef(uploadFile);
+  useEffect(() => { initialOrigin.current = undefined; }, [conversation_id]);
+  const restoreInitialDraft = useCallback((draft: InitialDraft) => {
+    initialOrigin.current = draft.transcriptOrigin;
+    if (!contentRef.current) setContentRef.current(draft.input);
+    const refs = splitChatFileRefs(draft.files ?? []);
+    setUploadFile([...new Set([...uploadRef.current, ...refs.uploadFiles])]);
+    setAtPath([...atPathRef.current, ...refs.atPath.filter(path => !atPathRef.current.includes(path))]);
+  }, [setContentRef, contentRef, setUploadFile, setAtPath, uploadRef, atPathRef]);
 
   const addOrUpdateMessage = useAddOrUpdateMessage(); // Move this here so it's available in useEffect
   const addOrUpdateMessageRef = useLatestRef(addOrUpdateMessage);
@@ -295,6 +305,7 @@ const AcpSendBox: React.FC<{
     markSendFailed,
     checkAndUpdateTitle,
     addOrUpdateMessage: addOrUpdateMessageRef.current,
+    restoreInitialDraft,
   });
 
   const executeCommand = useCallback(
@@ -319,11 +330,14 @@ const AcpSendBox: React.FC<{
           input,
           conversation_id,
           files,
+          ...(backend === 'kel' && initialOrigin.current ? { transcriptOrigin: initialOrigin.current } : {}),
           // `@@` references. Dropping this here is a silent failure: the agent
           // simply never receives the session block.
           sessions,
         });
         markSendAccepted(result.turn_id, result.runtime, result.msg_id);
+        initialOrigin.current = undefined;
+        sessionStorage.removeItem(`acp_initial_draft_${conversation_id}`);
         emitter.emit('chat.history.refresh');
       } catch (error: unknown) {
         const errorMsg =

@@ -7,6 +7,111 @@ import type { KelUsage } from '@/common/chat/kelMessageMeta';
 
 export type { KelUsage };
 
+export interface KelImportPreview {
+  preview_id: string;
+  digest: string;
+  project_id: string;
+  source: string;
+  source_id: string;
+  title: string;
+  message_count: number;
+  snippet: string;
+  omissions: string[];
+  continuation_supported: false;
+}
+
+export interface KelImportedWork {
+  import_id: string;
+  conversation_id: string;
+  duplicate: boolean;
+  mode: 'import';
+  link: { kind: 'conversation'; id: string };
+}
+
+export const kelWorkImports = {
+  preview: (projectId: string, input: { content: string; format?: string; source?: string; source_id?: string; title?: string }) =>
+    call<KelImportPreview>('/api/work-hub/imports', { action: 'preview', project_id: projectId, ...input }),
+  confirm: (projectId: string, preview: Pick<KelImportPreview, 'preview_id' | 'digest'>) =>
+    call<KelImportedWork>('/api/work-hub/imports', { action: 'confirm', project_id: projectId, ...preview, confirm: true }),
+  list: (projectId: string) => call<{ entries: Array<Record<string, unknown>> }>(`/api/work-hub/imports?project_id=${encodeURIComponent(projectId)}`),
+};
+
+export interface KelProcedure {
+  recipe_id: string;
+  version: string;
+  digest: string;
+  state: 'draft' | 'reviewed' | 'retired';
+  evidence_job_id?: string | null;
+  review_note?: string | null;
+  reviewed_at?: number | null;
+}
+
+export const kelProcedures = {
+  get: (projectId: string, recipeId: string, version?: string) => call<KelProcedure>(`/api/work-hub/procedures?project_id=${encodeURIComponent(projectId)}&recipe_id=${encodeURIComponent(recipeId)}${version === undefined ? '' : `&version=${encodeURIComponent(version)}`}`),
+  review: (projectId: string, recipeId: string, version: string, jobId: string, note = '') =>
+    call<KelProcedure>('/api/work-hub/procedures', { action: 'review', project_id: projectId, recipe_id: recipeId, version, job_id: jobId, note, confirm: true }),
+  retire: (projectId: string, recipeId: string, version: string) =>
+    call<KelProcedure>('/api/work-hub/procedures', { action: 'retire', project_id: projectId, recipe_id: recipeId, version, confirm: true }),
+  restore: (projectId: string, recipeId: string, version: string) =>
+    call<KelProcedure>('/api/work-hub/procedures', { action: 'restore', project_id: projectId, recipe_id: recipeId, version, confirm: true }),
+};
+
+export interface KelTaskOutcome {
+  job_id: string;
+  project_id: string;
+  state: string;
+  verdict?: string;
+  feedback: { response: 'useful' | 'revision_requested'; at: number; revision_requests: number } | null;
+  feedback_current: boolean;
+  accepted_by_user: boolean;
+  worker_retries: number;
+  elapsed_ms: number | null;
+  model_call_ms: number | null;
+  call_count: number;
+  costs: { reported: number | null; estimated: number | null; subscription_equivalent: number | null; unknown_calls: number; complete: boolean };
+  selection_changed: false;
+  why: string;
+}
+
+export const kelTaskOutcomes = {
+  get: (projectId: string, jobId: string) => call<KelTaskOutcome>(`/api/work-hub/outcomes?project_id=${encodeURIComponent(projectId)}&job_id=${encodeURIComponent(jobId)}`),
+  feedback: (projectId: string, jobId: string, response: 'useful' | 'revision_requested') =>
+    call<KelTaskOutcome>('/api/work-hub/outcomes', { project_id: projectId, job_id: jobId, response }),
+};
+
+/** Encode punctuation that encodeURIComponent intentionally leaves literal. */
+const hubQueryValue = (value: string) => encodeURIComponent(value).replace(/[!'()*]/g, character => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+
+export const kelHubSearch = (projectId: string, query: string) =>
+  call<Record<string, unknown>>(`/api/work-hub/search?project_id=${hubQueryValue(projectId)}&query=${hubQueryValue(query)}`);
+
+export interface KelArtifactVersion {
+  id: string;
+  project_id: string;
+  conversation_id: string;
+  job_id: string;
+  milestone_id: string;
+  filename: string;
+  sha256: string;
+  created: number;
+  supersedes?: string | null;
+  superseded_by?: string | null;
+}
+
+export const kelArtifacts = {
+  versions: (jobId: string) => call<{ versions: KelArtifactVersion[] }>(`/api/lineage?job=${encodeURIComponent(jobId)}`),
+  read: (versionId: string) => call<string>(`/api/artifact?lineage=${encodeURIComponent(versionId)}`),
+};
+
+export interface KelContextStatus {
+  state: 'ready' | 'degraded';
+  packet_id?: string | null;
+  omissions?: Array<Record<string, unknown>>;
+  freshness?: Record<string, unknown> | null;
+  error_code?: string | null;
+  requires_attention?: boolean;
+}
+
 export interface KelAssignment {
   assignment_id: string;
   job_id: string;
@@ -1646,6 +1751,7 @@ export interface KelHandoff {
   phase: KelHandoffPhase;
   can_stop: boolean;
   can_retry: boolean;
+  context_status?: KelContextStatus | null;
   /** D-65: coding work only. */
   application?: KelChangeApplication | null;
 }

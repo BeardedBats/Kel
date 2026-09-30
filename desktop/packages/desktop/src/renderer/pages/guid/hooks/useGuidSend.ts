@@ -32,6 +32,7 @@ const bindNewChat = async (conversationId: string, projectId: string) => {
 };
 
 export type GuidSendDeps = {
+  transcriptOrigin?: { id: string; name?: string };
   // Input state
   input: string;
   setInput: React.Dispatch<React.SetStateAction<string>>;
@@ -84,6 +85,7 @@ export type GuidSendResult = {
  */
 export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
   const {
+    transcriptOrigin,
     input,
     setInput,
     files,
@@ -290,6 +292,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       if (input.trim()) {
         const initialMessage = {
           input,
+          ...(assistantBackend === 'kel' && transcriptOrigin ? { transcriptOrigin: { ...transcriptOrigin, project_id: projectId } } : {}),
           files: files.length > 0 ? files : undefined,
         };
         sessionStorage.setItem(`acp_initial_message_${conversation.id}`, JSON.stringify(initialMessage));
@@ -302,6 +305,7 @@ export const useGuidSend = (deps: GuidSendDeps): GuidSendResult => {
       throw error;
     }
   }, [
+    transcriptOrigin,
     input,
     files,
     dir,

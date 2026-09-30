@@ -381,3 +381,7 @@
     flex-shrink: 0;
   }
 }
+.modelOptions { position: relative; font-size: 14px; }
+.modelOptions > summary { cursor: pointer; color: var(--kel-figma-color-text-secondary, #9fc3ff); padding: 8px; list-style: none; }
+.modelOptions > summary::-webkit-details-marker { display: none; }
+.modelOptionsPanel { position: absolute; right: 0; bottom: calc(100% + 8px); padding: 8px; border-radius: 10px; border: 1px solid var(--kel-figma-color-glass-edge); background: var(--color-bg-popup); min-width: 180px; z-index: 40; }

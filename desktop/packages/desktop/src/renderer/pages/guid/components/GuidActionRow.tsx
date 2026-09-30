@@ -34,7 +34,7 @@ import {
   Shield,
   UploadOne,
 } from '@icon-park/react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from '../index.module.css';
 import sendIcon from '@renderer/assets/figma/send.svg';
@@ -158,6 +158,17 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [skillQuery, setSkillQuery] = useState('');
   const [mcpQuery, setMcpQuery] = useState('');
+  const optionsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (!optionsRef.current?.open || !(event.target instanceof Element)) return;
+      // Model dropdowns use portals, so their own controls remain inside this interaction.
+      if (event.target.closest('.arco-trigger-popup, .arco-select-popup, .arco-dropdown, .kel-model-menu')) return;
+      if (!optionsRef.current.contains(event.target)) optionsRef.current.open = false;
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, []);
 
   const handlePlusDropdownVisibleChange = useCallback((visible: boolean) => {
     setIsPlusDropdownOpen(visible);
@@ -624,7 +635,15 @@ const GuidActionRow: React.FC<GuidActionRowProps> = ({
         {/* Desktop keeps the inline model/permission selectors; on mobile they move into the sheet. */}
         {!isMobile && configOptionCount > 0 && (
           <div className={styles.actionConfigGroup} data-mobile={isMobile ? 'true' : undefined}>
-            {modelSelectorNode}
+            <details ref={optionsRef} className={styles.modelOptions} onKeyDown={event => {
+              if (event.key === 'Escape' && optionsRef.current?.open) {
+                event.stopPropagation(); optionsRef.current.open = false;
+                optionsRef.current.querySelector('summary')?.focus();
+              }
+            }}>
+              <summary>Options</summary>
+              <div className={styles.modelOptionsPanel}>{modelSelectorNode}</div>
+            </details>
 
 
           </div>

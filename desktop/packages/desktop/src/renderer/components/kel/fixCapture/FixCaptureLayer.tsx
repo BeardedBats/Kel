@@ -51,6 +51,8 @@ const FixCaptureLayer: React.FC = () => {
   const [hover, setHover] = useState<Rect | null>(null);
   const [hoverLabel, setHoverLabel] = useState('');
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const previousPhase = useRef(phase);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const desktop = viewport.width >= 768;
   const [panelHeight, setPanelHeight] = useState(PANEL_SIZE.height);
@@ -95,6 +97,16 @@ const FixCaptureLayer: React.FC = () => {
     return () => observer.disconnect();
   }, [phase]);
 
+  useEffect(() => {
+    if (phase === 'idle' && previousPhase.current !== 'idle') {
+      if (returnFocus.current?.isConnected) returnFocus.current.focus({ preventScroll: true });
+      returnFocus.current = null;
+    } else if (phase !== 'selecting' && phase !== 'idle') {
+      panelRef.current?.querySelector<HTMLElement>('textarea, button:not(:disabled)')?.focus({ preventScroll: true });
+    }
+    previousPhase.current = phase;
+  }, [phase]);
+
   // Ctrl+Shift+F begins a capture, or stops one that is recording; Esc always cancels.
   //
   // The chord is deliberately claimed in the CAPTURE phase: the donor's conversation-search modal
@@ -107,6 +119,7 @@ const FixCaptureLayer: React.FC = () => {
       if (isPrimaryApplicationShortcut(event, { key: 'f', shiftKey: true, targetGuard: 'embedded-editor' })) {
         event.preventDefault();
         event.stopPropagation();
+        if (phaseRef.current === 'idle') returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         if (phaseRef.current === 'idle') api.current.begin();
         else if (phaseRef.current === 'recording') api.current.stop();
         return;
@@ -149,8 +162,31 @@ const FixCaptureLayer: React.FC = () => {
       event.stopPropagation();
       void api.current.pick(element);
     };
+    const onSelectionKey = (event: KeyboardEvent) => {
+      if (!['Tab', 'ArrowRight', 'ArrowLeft', 'Enter', ' '].includes(event.key)) return;
+      const targets = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select, [role="button"], [tabindex]'))
+        .filter((element) => !element.closest('[data-testid="fix-capture-panel"], [aria-hidden="true"]') &&
+          !element.matches(':disabled, [aria-disabled="true"]') && rectOf(element) &&
+          getComputedStyle(element).visibility !== 'hidden' && getComputedStyle(element).display !== 'none');
+      if (!targets.length) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const current = targets.indexOf(document.activeElement as HTMLElement);
+      if (event.key === 'Enter' || event.key === ' ') {
+        void api.current.pick(targets[current < 0 ? 0 : current]);
+        return;
+      }
+      const backwards = event.key === 'ArrowLeft' || (event.key === 'Tab' && event.shiftKey);
+      const next = current < 0 ? (backwards ? targets.length - 1 : 0)
+        : (current + (backwards ? -1 : 1) + targets.length) % targets.length;
+      const element = targets[next];
+      element.focus({ preventScroll: true });
+      setHover(rectOf(element));
+      setHoverLabel(element.getAttribute('aria-label') || element.textContent?.trim().slice(0, 90) || element.tagName.toLowerCase());
+    };
     window.addEventListener('mousemove', onMove, true);
     window.addEventListener('click', onClick, true);
+    window.addEventListener('keydown', onSelectionKey, true);
     // The overlay itself stays transparent to the pointer (hit-testing needs the real element), so
     // the cursor is set on the document for as long as selecting lasts.
     const previousCursor = document.documentElement.style.cursor;
@@ -158,6 +194,7 @@ const FixCaptureLayer: React.FC = () => {
     return () => {
       window.removeEventListener('mousemove', onMove, true);
       window.removeEventListener('click', onClick, true);
+      window.removeEventListener('keydown', onSelectionKey, true);
       document.documentElement.style.cursor = previousCursor;
     };
   }, [phase]);
@@ -193,6 +230,7 @@ const FixCaptureLayer: React.FC = () => {
 
   return (
     <>
+      {phase === 'selecting' && <p className='sr-only' role='status'>Choose the part of Kel to report. Use Tab to move, Enter to select, or Escape to cancel.</p>}
       {(phase === 'selecting' || (desktop && ACTIVE_PHASES.has(phase))) &&
         createPortal(
           <div className={styles.overlay} aria-hidden data-testid='fix-capture-overlay'>
@@ -208,7 +246,7 @@ const FixCaptureLayer: React.FC = () => {
               />
             )}
             {phase === 'selecting' && (
-              <div className={styles.hint}>Click the part of Kel that bothers you. Esc cancels.</div>
+              <div className={styles.hint}>Click a target, or use Tab and Enter. Esc cancels.</div>
             )}
             {phase === 'selecting' && desktop && hover && hoverLabel && (
               <div
@@ -236,6 +274,13 @@ const FixCaptureLayer: React.FC = () => {
             aria-label='Kibble'
             data-testid='fix-capture-panel'
             data-phase={phase}
+            onKeyDown={(event) => {
+              if (event.key !== 'Tab') return;
+              const controls = Array.from(panelRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), textarea, input, a[href]') ?? []);
+              const first = controls[0], last = controls[controls.length - 1];
+              if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+              else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+            }}
           >
             {phase === 'recording' || phase === 'stopping' ? (
               <>

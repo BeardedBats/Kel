@@ -258,6 +258,11 @@ export const auth = {
 // Conversation — REST + WS
 // ---------------------------------------------------------------------------
 
+const sendConversationMessage = httpPost<ISendMessageResult, ISendMessageParams>(
+  (p) => `/api/conversations/${p.conversation_id}/messages`,
+  (p) => ({ content: p.input, files: p.files, sessions: p.sessions, loading_id: p.loading_id, inject_skills: p.inject_skills })
+);
+
 export const conversation = {
   create: withResponseMap(
     httpPost<TChatConversation, ICreateConversationParams>('/api/conversations', (p) => buildCreateConversationBody(p)),
@@ -359,19 +364,19 @@ export const conversation = {
     () => undefined
   ),
   activeCount: httpGet<{ count: number }>('/api/conversations/active-count'),
-  sendMessage: httpPost<ISendMessageResult, ISendMessageParams>(
-    (p) => `/api/conversations/${p.conversation_id}/messages`,
-    (p) => ({
-      content: p.input,
-      files: p.files,
-      // `@@` session references. Omitting this silently breaks the feature end
-      // to end: the backend's send-boundary resolver would always see an empty
-      // list and neither side would report an error.
-      sessions: p.sessions,
-      loading_id: p.loading_id,
-      inject_skills: p.inject_skills,
-    })
-  ),
+  sendMessage: {
+    ...sendConversationMessage,
+    invoke: async (p: ISendMessageParams): Promise<ISendMessageResult> => {
+      if (p.transcriptOrigin) {
+        if (typeof window === 'undefined' || !window.kelAPI?.request) throw new Error('Kel cannot retain this transcript origin on this device.');
+        await window.kelAPI.request('/api/work-hub/origin', {
+          project_id: p.transcriptOrigin.project_id, donor_id: p.conversation_id,
+          transcript_id: p.transcriptOrigin.id, text: p.input,
+        });
+      }
+      return sendConversationMessage.invoke(p);
+    },
+  },
   getSlashCommands: httpGet<AcpSlashCommandApiItem[], { conversation_id: string }>(
     (p) => `/api/conversations/${p.conversation_id}/slash-commands`
   ),
@@ -1579,6 +1584,7 @@ interface ISendMessageParams {
   /** Conversations the user referenced with `@@`. Ids only — the backend
    *  resolves the (mutable) name from the id. */
   sessions?: SessionRef[];
+  transcriptOrigin?: { id: string; name?: string; project_id: string };
 }
 
 // Server-assigned identifier for the newly created user message. Clients must

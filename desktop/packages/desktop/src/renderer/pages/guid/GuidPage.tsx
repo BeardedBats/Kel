@@ -22,6 +22,7 @@ import GuidActionRow from './components/GuidActionRow';
 import GuidInputCard from './components/GuidInputCard';
 import ShellWorkspaceLink from '@renderer/components/kel/ShellWorkspaceLink';
 import KelResumptionBrief from './components/KelResumptionBrief';
+import { HomeResume } from '@renderer/components/kel/WorkHubControls';
 import GuidModelSelector from './components/GuidModelSelector';
 import { useGuidAssistantSelection } from './hooks/useGuidAssistantSelection';
 import { HOME_DRAFT_ID, useGuidInput } from './hooks/useGuidInput';
@@ -47,6 +48,7 @@ import { donorAutoInjectSkills, kelVisibleSkills } from '@renderer/components/ke
 import styles from './index.module.css';
 
 type GuidNavigationState = {
+  transcriptOrigin?: { id: string; name?: string };
   resetAssistant?: boolean;
   selectedAssistantId?: string;
   prefillPrompt?: string;
@@ -256,6 +258,7 @@ const GuidPage: React.FC = () => {
   );
 
   const send = useGuidSend({
+    transcriptOrigin: navState?.transcriptOrigin,
     // Input state
     input: guidInput.input,
     setInput: guidInput.setInput,
@@ -734,8 +737,7 @@ const GuidPage: React.FC = () => {
             slashCommandMenu={slashCommandMenuNode}
             modeSelector={<AgentModeSelector compact backend={agentSelection.selectedAssistantBackend} initialMode={agentSelection.selectedMode} dynamicModes={agentSelection.currentAgentModeOptions} onModeSelect={setGuidSelectedMode} />}
           />
-
-
+          <HomeResume />
         </div>
       </div>
     </ConfigProvider>

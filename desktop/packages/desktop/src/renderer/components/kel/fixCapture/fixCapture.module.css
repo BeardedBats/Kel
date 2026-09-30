@@ -22,7 +22,7 @@
   border-radius: var(--kel-radius-card);
   background: var(--kel-accent-soft);
   opacity: 0.55;
-  transition: all var(--kel-dur-state) var(--kel-ease);
+  transition: none;
 }
 
 .hint {

@@ -9,8 +9,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ProgressFill, RollText, SwapIn, cardStateTransition, fillTone, measure, playFlip, snapshotGhost, stepTickTransition, type Point, type Snapshot } from '@renderer/motion';
 import { answeredMorph, panelHeightEase } from './workCardMotion';
-import { kelControl, kelHandoff, type KelChangeApplication } from '../kelApi';
+import { kelControl, kelHandoff, type KelChangeApplication, type KelContextStatus } from '../kelApi';
 import { applicationLine } from '../changeApplication';
+import { ContextStatusFacts, OutputVersions, ResultFeedback, TaskOutcomeFacts } from '../WorkHubControls';
 import type { OfficeItem, OfficeItemDetail, OfficeStaff, OfficeStep } from './officeApi';
 import { officeItem } from './officeApi';
 import { KelAnsweredLine, KelNeedsAnswer, type AnsweredNote } from './KelNeedsAnswer';
@@ -200,12 +201,18 @@ export const KelOfficeDetail: React.FC<Props> = ({
 
   const view: OfficeItemDetail = { ...item, ...detail } as OfficeItemDetail;
   const finished = isFinished(view.state);
+  const [contextStatus, setContextStatus] = useState<KelContextStatus | null>(null);
   const running = !finished;
   const coding = (view.kind ?? item.kind) === 'code';
 
   // D-65: the engine's hand-off view knows whether a checked change was applied and can be undone.
   const submission = view.links?.submission_id ?? view.submission_id;
   const conversation = view.links?.conversation_id ?? view.conversation_id;
+  useEffect(() => {
+    let alive = true; setContextStatus(null);
+    if (submission && conversation) kelHandoff(conversation, submission).then(value => { if (alive) setContextStatus(value.context_status ?? null); }).catch(() => {});
+    return () => { alive = false; };
+  }, [submission, conversation]);
   useEffect(() => {
     if (!finished || !coding || view.application !== undefined || !submission || !conversation) return;
     let alive = true;
@@ -491,9 +498,13 @@ export const KelOfficeDetail: React.FC<Props> = ({
               {appliedLine ? <RollText className='kel-wd-meta' value={appliedLine} settle={undone} flipSiblings={false} testId='kel-office-applied' /> : null}
             </div>
             {resultText ? <p>{resultText}</p> : null}
+            {view.state === 'done' && <OutputVersions key={`outputs-${view.job_id}`} jobId={view.job_id} />}
+            {view.project_id && <TaskOutcomeFacts key={`facts-${view.job_id}`} projectId={view.project_id} jobId={view.job_id} />}
+            {view.state === 'done' && view.project_id && <ResultFeedback key={`feedback-${view.job_id}`} projectId={view.project_id} jobId={view.job_id} onRevise={() => onTalk(item)} />}
             {attention && attentionText ? <p className='kel-wd-result__why'>{attentionText}</p> : null}
           </section>
         ) : null}
+        {contextStatus && <ContextStatusFacts status={contextStatus} />}
         {detail === null && unreadable ? <p className='kel-wd-loading'>Kel couldn’t read the details just now. It will try again.</p> : null}
         {detail === null && !unreadable ? <p className='kel-wd-loading'>Reading the details…</p> : null}
         {detail ? (

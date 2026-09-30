@@ -2,7 +2,7 @@
  * Kel design-system primitives (Direction "Desk").
  * Class names come from renderer/styles/kel-tokens.css — components never carry ad-hoc values.
  */
-import React, { useRef } from 'react';
+import React, { useId, useRef } from 'react';
 import { EdgePill } from '@renderer/motion';
 import ShellSourceCardHeader, { sourceCard } from './ShellSourceCardHeader';
 import { workWords, type WorkFacts } from './workLanguage';
@@ -95,26 +95,30 @@ export const KelButton: React.FC<
     onClick?: () => void;
     disabled?: boolean;
     ariaLabel?: string;
+    ariaPressed?: boolean;
+    type?: 'button' | 'submit';
   }>
-> = ({ variant = 'secondary', onClick, disabled, ariaLabel, children }) => (
+> = ({ variant = 'secondary', onClick, disabled, ariaLabel, ariaPressed, type = 'button', children }) => (
   <button
-    type="button"
+    type={type}
     className={`kel-btn kel-btn--${variant}`}
     onClick={onClick}
     disabled={disabled}
     aria-label={ariaLabel}
+    aria-pressed={ariaPressed}
   >
     {children}
   </button>
 );
 
 export const KelTabs: React.FC<{
-  tabs: Array<{ id: string; label: string }>;
+  tabs: Array<{ id: string; label: string; panelId?: string }>;
   active: string;
   onSelect: (id: string) => void;
 }> = ({ tabs, active, onSelect }) => {
   // D-78 §10.11: the selected tab's highlight is one pill that stretches to the next tab.
   const tabsRef = useRef<HTMLDivElement>(null);
+  const groupId = useId();
   return (
     <div ref={tabsRef} className="kel-tabs" role="tablist">
       <EdgePill containerRef={tabsRef} active=".kel-tab--on" trigger={active} axis="x" className="kel-plain-tab-pill" />
@@ -123,9 +127,22 @@ export const KelTabs: React.FC<{
           key={tab.id}
           type="button"
           role="tab"
+          id={`${groupId}-${tab.id}`}
           aria-selected={tab.id === active}
+          aria-controls={tab.panelId}
+          tabIndex={tab.id === active ? 0 : -1}
           className={`kel-tab${tab.id === active ? ' kel-tab--on' : ''}`}
           onClick={() => onSelect(tab.id)}
+          onKeyDown={(event) => {
+            const current = tabs.findIndex((item) => item.id === tab.id);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+              : event.key === 'ArrowRight' ? (current + 1) % tabs.length
+              : event.key === 'ArrowLeft' ? (current - 1 + tabs.length) % tabs.length : null;
+            if (next === null) return;
+            event.preventDefault();
+            onSelect(tabs[next].id);
+            tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+          }}
         >
           {tab.label}
         </button>

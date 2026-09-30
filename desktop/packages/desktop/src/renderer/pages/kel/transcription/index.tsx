@@ -544,13 +544,14 @@ const saveName = useCallback(async () => {
   }, [combineSource, refresh, selected]);
 
   const sendToChat = useCallback(() => {
-    if (!selected) return;
-    try {
-      window.sessionStorage.setItem('kel.transcription.draft', selected.text || '');
-    } catch {
-      /* the draft is a convenience; chat still opens */
-    }
-    navigate('/guid');
+    if (!selected?.text.trim()) return;
+    navigate('/guid', { state: {
+      prefillPrompt: selected.text,
+      preservePrefillDraft: true,
+      focusPrefill: true,
+      projectNote: `From Ramble: ${selected.name}. Review the draft before sending it to Kel.`,
+      transcriptOrigin: { id: selected.id, name: selected.name },
+    } });
   }, [navigate, selected]);
 
   const onRowDragStart = useCallback((event: React.DragEvent<HTMLElement>, item: Transcript) => {
@@ -971,6 +972,7 @@ const statusCopy =
                 {/* Authoritative IA: the donor's four actions come first and keep the weight; Kel's
                     additions stay available but quieter, so the document footer still reads as before. */}
                 <div className={styles.documentActions}>
+                  <Button onClick={sendToChat} disabled={!selected.text.trim()} data-testid='send-transcript-to-kel'>Send to Kel</Button>
                   <Button icon={<img src={transcriptFileIcon} alt='' width='16' height='16' />} onClick={() => void copyTranscript()} data-testid='copy-transcript'>
                     <span className='kel-shell-ramble-desktop-label'>Copy Transcript</span><span className='kel-shell-ramble-mobile-label'>Copy transcript</span>
                   </Button>

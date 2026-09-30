@@ -10,7 +10,7 @@ import type { TConversationRuntimeSummary } from '@/common/config/storage';
 import { parseError, uuid } from '@/common/utils';
 import { emitter } from '@/renderer/utils/emitter';
 import { type ChatFileRef, isChatFileRef, uploadFileRef } from '@/common/types/chatFile';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getConversationRuntimeWorkspaceErrorMessage } from '../../utils/conversationCreateError';
 import type { ConversationRuntimeSendFailure } from '../../runtime/conversationRuntimeViewStore';
@@ -18,6 +18,7 @@ import { classifyConversationBusyError } from '../conversationBusyError';
 import { buildSendFailureError } from './buildSendFailureError';
 
 type UseAcpInitialMessageParams = {
+  restoreInitialDraft?: (draft: InitialDraft) => void;
   conversation_id: string;
   backend: string;
   setAiProcessing: (value: boolean) => void;
@@ -28,6 +29,7 @@ type UseAcpInitialMessageParams = {
   checkAndUpdateTitle: (conversation_id: string, input: string) => void;
   addOrUpdateMessage: (message: TMessage, prepend?: boolean) => void;
 };
+export type InitialDraft = { input: string; files: ChatFileRef[]; transcriptOrigin?: { id: string; name?: string; project_id: string } };
 
 /**
  * Side-effect-only hook that checks sessionStorage for an initial message
@@ -43,19 +45,28 @@ export const useAcpInitialMessage = ({
   markSendFailed,
   checkAndUpdateTitle,
   addOrUpdateMessage,
+  restoreInitialDraft,
 }: UseAcpInitialMessageParams): void => {
   const { t } = useTranslation();
+  const restoreDraftRef = useRef(restoreInitialDraft);
+  restoreDraftRef.current = restoreInitialDraft;
 
   useEffect(() => {
     const storageKey = `acp_initial_message_${conversation_id}`;
     const storedMessage = sessionStorage.getItem(storageKey);
-
-    if (!storedMessage) return;
+    const recoveryKey = `acp_initial_draft_${conversation_id}`;
+    if (!storedMessage) {
+      const recovery = sessionStorage.getItem(recoveryKey);
+      if (recovery) { try { restoreDraftRef.current?.(JSON.parse(recovery)); } catch { /* A malformed draft is never sent. */ } }
+      return;
+    }
 
     // Clear immediately to prevent duplicate sends (e.g., if component remounts while sendMessage is pending)
     sessionStorage.removeItem(storageKey);
+    let alive = true;
 
     const sendInitialMessage = async () => {
+      let draft: InitialDraft | undefined;
       try {
         const initialMessage = JSON.parse(storedMessage);
         const input = typeof initialMessage.input === 'string' ? initialMessage.input : '';
@@ -69,6 +80,7 @@ export const useAcpInitialMessage = ({
               .map((f: unknown) => (typeof f === 'string' ? uploadFileRef(f) : f))
               .filter(isChatFileRef)
           : [];
+        draft = { input, files, ...(backend === 'kel' && initialMessage.transcriptOrigin?.id ? { transcriptOrigin: initialMessage.transcriptOrigin } : {}) };
 
         markSendStarted?.();
         setAiProcessing(true);
@@ -78,12 +90,16 @@ export const useAcpInitialMessage = ({
           input,
           conversation_id: conversation_id,
           files,
+          ...(backend === 'kel' && initialMessage.transcriptOrigin?.id ? { transcriptOrigin: initialMessage.transcriptOrigin } : {}),
         });
         markSendAccepted?.(result.turn_id, result.runtime, result.msg_id);
+        sessionStorage.removeItem(recoveryKey);
 
         // Initial message sent successfully
         emitter.emit('chat.history.refresh');
       } catch (error) {
+        if (draft) { sessionStorage.setItem(recoveryKey, JSON.stringify(draft)); if (alive) restoreDraftRef.current?.(draft); }
+        if (!alive) return;
         const errorMessageText =
           getConversationRuntimeWorkspaceErrorMessage(error, t) || parseError(error) || t('common.unknownError');
         const busyError = classifyConversationBusyError(error);
@@ -134,6 +150,7 @@ export const useAcpInitialMessage = ({
     sendInitialMessage().catch((error) => {
       console.error('Failed to send initial message:', error);
     });
+    return () => { alive = false; };
   }, [
     addOrUpdateMessage,
     backend,

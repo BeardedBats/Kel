@@ -10,7 +10,7 @@ import { announceProjectsChanged, setActiveProject, useProjects } from '@rendere
  * Shown once on a genuinely fresh install — no completion flag and no conversations. Migrated
  * installs never see it. Every claim on these screens is read from the engine, not asserted.
  */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { configService } from '@/common/config/configService';
 import {
@@ -64,6 +64,7 @@ export default function KelOnboardingPage() {
   const [engine, setEngine] = useState<string>('');
   const [error, setError] = useState<unknown>(null);
   const [finishError, setFinishError] = useState(false);
+  const mainRef = useRef<HTMLElement | null>(null);
 
 
   useEffect(() => {
@@ -110,6 +111,12 @@ export default function KelOnboardingPage() {
   const selectStep = (selected: Step) => {
     setStep(selected);
     navigate('/onboarding', { replace: true, state: { ...setupState, setupStep: selected } });
+    const section = mainRef.current?.querySelectorAll<HTMLElement>('.kel-card')[STEPS.indexOf(selected)];
+    if (section) {
+      section.tabIndex = -1;
+      section.focus({ preventScroll: true });
+      section.scrollIntoView?.({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
   };
   /** A chosen folder becomes a project (the one already using it, or a new one named after it). */
   const chooseProjectFolder = async () => {
@@ -141,7 +148,7 @@ export default function KelOnboardingPage() {
       <a className='kel-skip' href='#kel-onboarding-main'>
         Skip to main content
       </a>
-      <main className='kel-page kel-shell-onboarding' id='kel-onboarding-main' tabIndex={-1}>
+      <main ref={mainRef} className='kel-page kel-shell-onboarding' id='kel-onboarding-main' tabIndex={-1}>
         <div className='kel-page__head'>
           <div>
             <ShellWorkspaceLink />

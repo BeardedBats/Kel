@@ -51,6 +51,7 @@ import {
 } from '@renderer/components/kel/kelApi';
 import { VERDICT_TEXT } from '@renderer/components/kel/workLanguage';
 import RecipeEditor, { stepLabel, type RecipeEditorValue } from './RecipeEditor';
+import { ProcedureStatus, ProjectWorkSearch, WorkImport } from '@renderer/components/kel/WorkHubControls';
 
 type View = 'knowledge' | 'map' | 'recipes';
 
@@ -248,7 +249,8 @@ export default function KelProjectsPage() {
         loading: false,
       } : current);
     } catch (err) {
-      setMobileRecipeDetail((current) => current?.id === recipeId ? null : current);
+      // Keep lifecycle controls reachable when the engine refuses a retired recipe preview.
+      setMobileRecipeDetail((current) => current?.id === recipeId ? { ...current, loading: false } : current);
       setNote(`Could not open this recipe. ${failureSentence(err, 'The engine did not answer — try again.')}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -369,6 +371,15 @@ export default function KelProjectsPage() {
   const entries = work?.recipes.entries ?? [];
   // The engine lists recipes without a category under "Uncategorized"; their entries carry ''.
   const categoryOf = (entry: { category?: string | null }) => entry.category || 'Uncategorized';
+  const moveRecipeTab = (event: React.KeyboardEvent<HTMLButtonElement>, setTab: (value: string) => void) => {
+    const buttons = Array.from(event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]') ?? []);
+    const current = buttons.indexOf(event.currentTarget);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+      : event.key === 'ArrowRight' ? (current + 1) % buttons.length
+      : event.key === 'ArrowLeft' ? (current - 1 + buttons.length) % buttons.length : null;
+    if (next === null || !buttons[next]) return;
+    event.preventDefault(); setTab(buttons[next].textContent ?? 'All'); buttons[next].focus();
+  };
   const mobileListed = (found ?? entries).filter((entry) => mobileRecipeTab === 'All'
     || (mobileRecipeTab === 'Favorites' ? entry.favourite : categoryOf(entry) === mobileRecipeTab));
   const desktopListed = (found ?? entries).filter((entry) => desktopRecipeTab === 'All'
@@ -431,6 +442,8 @@ export default function KelProjectsPage() {
 
         {!error && work && !libraryView && (
           <>
+            {!allMode && <WorkImport key={active} projectId={active} />}
+            {!allMode && <ProjectWorkSearch key={`search-${active}`} projectId={active} />}
             <KelCard id="project-knowledge" title="Knowledge">
               {records.length === 0 ? (
                 <KelEmpty title="No saved knowledge in this project yet." />
@@ -441,7 +454,7 @@ export default function KelProjectsPage() {
                 <KelTable
                   head={['Topic', 'Type', isMobile ? 'Trust' : 'Trust rank', 'Status', 'Source', 'Updated', 'Actions']}
                   rows={group.records.map((record) => [
-                    <span className="kel-strong" key={`${record.id}-topic`}>
+                    <span id={`knowledge-${record.id}`} tabIndex={-1} className="kel-strong" key={`${record.id}-topic`}>
                       {record.topic || record.summary.slice(0, 40)}
                     </span>,
                     <span className="kel-meta" key={`${record.id}-type`}>
@@ -643,6 +656,7 @@ export default function KelProjectsPage() {
                       <EdgePill containerRef={recipeTabsRef} active="button[aria-selected='true']" trigger={desktopRecipeTab} axis="x" className="kel-underline-pill" />
                       {['All', 'Favorites', ...categories.map((category) => category.name)].map((tab) => (
                         <button key={tab} type="button" role="tab" aria-selected={desktopRecipeTab === tab}
+                          tabIndex={desktopRecipeTab === tab ? 0 : -1} onKeyDown={event => moveRecipeTab(event, setDesktopRecipeTab)}
                           onClick={() => setDesktopRecipeTab(tab)}>{tab}</button>
                       ))}
                     </div>
@@ -699,6 +713,7 @@ export default function KelProjectsPage() {
                           onSave={saveEditor} onCancel={() => setEditor(null)} />
                       )}
                       {expanded && !preparing && !(editor?.mode === 'edit' && editor.recipeId === recipeId) && <div className="kel-recipe-desktop-expanded">
+                        {!isMobile && entry.source !== 'builtin' && <ProcedureStatus key={`${entry.project_id ?? active}:${recipeId}`} projectId={entry.project_id ?? active} recipeId={recipeId} />}
                         <div className="kel-recipe-desktop-expanded-label">What Kel will do</div>
                         {mobileRecipeDetail.loading ? <p>Loading recipe…</p> : <ol>
                           {mobileRecipeDetail.steps.map((step) => <li key={step.id}>{stepLabel(step)}</li>)}
@@ -737,6 +752,7 @@ export default function KelProjectsPage() {
                   <div className="kel-recipe-mobile-tabs" role="tablist" aria-label="Recipe filters">
                     {['All', 'Favorites', ...categories.map((category) => category.name)].map((tab) => (
                       <button key={tab} type="button" role="tab" aria-selected={mobileRecipeTab === tab}
+                        tabIndex={mobileRecipeTab === tab ? 0 : -1} onKeyDown={event => moveRecipeTab(event, setMobileRecipeTab)}
                         onClick={() => setMobileRecipeTab(tab)}>{tab}</button>
                     ))}
                   </div>
@@ -745,6 +761,7 @@ export default function KelProjectsPage() {
                     const expanded = mobileRecipeDetail?.id === recipeId;
                     return <div className="kel-recipe-mobile-entry" key={recipeId}>
                       {expanded ? <div className="kel-recipe-mobile-preview">
+                        {isMobile && entry.source !== 'builtin' && <ProcedureStatus key={`${entry.project_id ?? active}:${recipeId}`} projectId={entry.project_id ?? active} recipeId={recipeId} />}
                         <div className="kel-recipe-mobile-row">
                           <button className="kel-recipe-mobile-star" type="button" disabled={busy !== null}
                             aria-label={entry.favourite ? 'Remove from favorites' : 'Add to favorites'}

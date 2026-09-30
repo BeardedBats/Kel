@@ -20,6 +20,8 @@ const ROUTE =
  */
 const SHELL_ONLY_SCHEDULE_ACTIONS = new Set(['import']);
 
+const WORK_HUB_ROUTE = /^\/api\/work-hub\/(?:imports|search|procedures|outcomes|origin)(?:\?(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*(?:&(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*)*)?$/;
+
 /**
  * D-75.3: the Muse (Ramble) key is managed in Settings → Providers through the main process's custody;
  * no page saves, clears, supplies or reads it through the engine directly.
@@ -40,7 +42,7 @@ const carriesCredentials = (value: unknown, depth = 0): boolean => {
 
 /** Null when the renderer may send this request; otherwise the reason it is refused. */
 export const rendererKelRequestRefusal = (route: unknown, body?: unknown): string | null => {
-  if (typeof route !== 'string' || !ROUTE.test(route)) return 'Unknown Kel action';
+  if (typeof route !== 'string' || route.length > 2048 || (!ROUTE.test(route) && !WORK_HUB_ROUTE.test(route))) return 'Unknown Kel action';
   if (carriesCredentials(body)) return 'Credentials are handled by Kel, not by this page';
   if (route === '/api/connections') {
     const action = body && typeof body === 'object' ? (body as { action?: unknown }).action : undefined;

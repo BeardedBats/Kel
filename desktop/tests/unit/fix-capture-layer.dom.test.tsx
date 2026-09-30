@@ -122,6 +122,23 @@ afterEach(() => {
 });
 
 describe('Fix Capture — when transcription cannot produce the words', () => {
+  it('selects a target with the keyboard without activating it, then returns focus on cancel', async () => {
+    renderLayer();
+    const target = screen.getByTestId('app-target');
+    const activate = vi.fn(); target.addEventListener('click', activate);
+    const box = vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ x: 12, y: 20, left: 12, top: 20, width: 80, height: 32, right: 92, bottom: 52, toJSON: () => ({}) });
+    target.focus(); hotkey();
+    await screen.findByTestId('fix-capture-overlay');
+    fireEvent.keyDown(window, { key: 'Tab', bubbles: true });
+    expect(document.activeElement).toBe(target);
+    fireEvent.keyDown(window, { key: 'Enter', bubbles: true });
+    await waitFor(() => expect(screen.getByTestId('fix-capture-panel').getAttribute('data-phase')).toBe('recording'));
+    expect(activate).not.toHaveBeenCalled();
+    fireEvent.keyDown(window, { key: 'Escape', bubbles: true });
+    await waitFor(() => expect(screen.queryByTestId('fix-capture-panel')).toBeNull());
+    expect(document.activeElement).toBe(target);
+    box.mockRestore();
+  });
   const captureAndStop = async () => {
     renderLayer();
     hotkey();
