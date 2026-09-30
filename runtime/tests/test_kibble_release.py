@@ -173,6 +173,40 @@ class ReleaseTests(unittest.TestCase):
   runner.assert_called_once();self.assertEqual(release.status(self.store,'FIX-0001')['state'],'FAILED')
   self.validator.assert_not_called()
 
+ def resource_directory_case(self):
+  candidate=self.stage();source=self.root/'resource';source.mkdir()
+  (candidate/'win-unpacked/resources').mkdir(parents=True)
+  config=candidate/'builder-config.json';config.write_text(json.dumps({'extraResources':[{'from':str(source),'to':'resource'}]}))
+  self.validate.stop()
+  return candidate,source,config
+
+ def test_missing_empty_resource_subtree_is_accepted(self):
+  candidate,source,config=self.resource_directory_case();(source/'empty/nested').mkdir(parents=True)
+  with patch.object(release,'_run') as runner:
+   release._validate_candidate(self.root,candidate,config,candidate/'build.log')
+  runner.assert_called_once()
+  (candidate/'win-unpacked/resources/resource').write_bytes(b'wrong target kind')
+  with patch.object(release,'_run') as runner:
+   with self.assertRaises(PolicyError):release._validate_candidate(self.root,candidate,config,candidate/'build.log')
+  runner.assert_not_called()
+
+ def test_missing_populated_resource_subtree_is_rejected(self):
+  candidate,source,config=self.resource_directory_case();(source/'payload').write_bytes(b'needed')
+  with patch.object(release,'_run') as runner:
+   with self.assertRaises(PolicyError):release._validate_candidate(self.root,candidate,config,candidate/'build.log')
+  runner.assert_not_called()
+
+ def test_linked_empty_resource_ancestor_is_rejected(self):
+  candidate,source,config=self.resource_directory_case();outside=self.base/'empty-source';outside.mkdir()
+  linked=source/'linked'
+  if os.name=='nt':
+   subprocess.run(['cmd','/c','mklink','/J',str(linked),str(outside)],capture_output=True,check=True)
+   self.addCleanup(lambda:os.rmdir(linked))
+  else:linked.symlink_to(outside,target_is_directory=True)
+  with patch.object(release,'_run') as runner:
+   with self.assertRaises(PolicyError):release._validate_candidate(self.root,candidate,config,candidate/'build.log')
+  runner.assert_not_called()
+
  def test_old_running_engine_never_claims_new_marker_installed(self):
   candidate=self.stage()
   with patch.object(release,'_run',side_effect=self.fake):release._build(self.store,'FIX-0001','abc123')

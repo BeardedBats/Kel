@@ -260,6 +260,13 @@ def _validate_candidate(root, candidate, config, log, repair=False):
             raise PolicyError('A candidate resource is missing or linked.')
         with path.open('rb') as handle:
             return hashlib.file_digest(handle, 'sha256').hexdigest()
+    def empty_directory(path):
+        # Electron-builder omits empty directory trees. They contain no payload bytes.
+        for child in path.rglob('*'):
+            plain_path(child, candidate if child.is_relative_to(candidate) else root)
+            if not child.is_dir():
+                return False
+        return True
     resources = candidate / 'win-unpacked/resources'
     if not resources.resolve().is_relative_to(candidate.resolve()):
         raise PolicyError('A candidate resource folder leaves its candidate.')
@@ -268,7 +275,7 @@ def _validate_candidate(root, candidate, config, log, repair=False):
         target = resources / entry['to']
         plain_path(source, candidate if source.is_relative_to(candidate) else root)
         plain_path(target, candidate)
-        if source.is_dir() and not target.is_dir():
+        if source.is_dir() and not target.is_dir() and (target.exists() or not empty_directory(source)):
             raise PolicyError('A candidate resource folder is missing.')
         files = source.rglob('*') if source.is_dir() else [source]
         for source_file in files:
@@ -276,7 +283,7 @@ def _validate_candidate(root, candidate, config, log, repair=False):
             plain_path(source_file, candidate if source_file.is_relative_to(candidate) else root)
             plain_path(destination, candidate)
             if source_file.is_dir():
-                if not destination.is_dir():
+                if not destination.is_dir() and (destination.exists() or not empty_directory(source_file)):
                     raise PolicyError('A candidate resource folder is missing.')
                 continue
             if not destination.resolve().is_relative_to(candidate.resolve()):
