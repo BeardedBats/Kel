@@ -1,7 +1,7 @@
 // Proof required before the one permitted EBUSY packaging recovery.
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { createRequire } = require('module');
-const [rootArg, candidateArg, repair] = process.argv.slice(2);
+const [rootArg, candidateArg, repair, installerArg] = process.argv.slice(2);
 const root = path.resolve(rootArg), candidate = path.resolve(candidateArg);
 const desktop = path.join(root, 'desktop'), packed = path.join(candidate, 'win-unpacked');
 const resources = path.join(packed, 'resources'), archive = path.join(resources, 'app.asar');
@@ -86,6 +86,50 @@ function version(exe) {
     const expected = Object.entries(integrity).map(([file, value]) => ({ file: path.win32.normalize(file), alg: value.algorithm, value: value.hash }));
     if (!old || JSON.stringify(JSON.parse(Buffer.from(old.bin).toString('utf8').replace(/\0+$/, ''))) !== JSON.stringify(expected))
       throw Error('Executable ASAR integrity differs');
+  }
+  if (repair === '--installer') {
+    const installer = path.resolve(installerArg); bounded(installer);
+    if (path.dirname(installer) !== candidate || !/^Kel-Kibble-Update-.*\.exe$/.test(path.basename(installer))) throw Error('Invalid installer artifact');
+    const tool = await lib('./out/toolsets/7zip.js').getPath7za();
+    const proofDir = path.join(candidate, 'installer-proof-' + crypto.randomBytes(4).toString('hex'));
+    fs.mkdirSync(proofDir); bounded(proofDir);
+    const proof = {};
+    for (const relative of ['resources/kel-engine/KelEngine.exe', 'resources/kibble-installed-update.json', 'resources/app.asar']) {
+      const expected = path.join(packed, relative); bounded(expected);
+      const size = fs.statSync(expected).size;
+      const outputPath = path.join(proofDir, path.basename(relative));
+      const fd = fs.openSync(outputPath, 'wx'); bounded(outputPath);
+      const digest = crypto.createHash('sha256'); let received = 0;
+      try {
+        await new Promise((resolve, reject) => {
+          const process = require('child_process').spawn(tool, ['x', '-so', installer, relative.replaceAll('/', path.sep)], { windowsHide: true });
+          let note = '', failed = false;
+          const timer = setTimeout(() => { failed = true; process.kill(); reject(Error('Installer proof timed out')); }, 5 * 60 * 1000);
+          process.stdout.on('data', block => {
+            if (failed) return;
+            received += block.length;
+            if (received > size) { failed = true; process.kill(); reject(Error('Installer payload exceeds checked size')); return; }
+            try { digest.update(block); fs.writeSync(fd, block); }
+            catch (error) { failed = true; process.kill(); reject(error); }
+          });
+          process.stderr.on('data', block => { note = (note + block.toString()).slice(-16000); });
+          process.on('error', error => { clearTimeout(timer); failed = true; reject(error); });
+          process.on('close', code => {
+            clearTimeout(timer);
+            // NSIS appends its uninstaller after the 7z data; 7za returns warning 1 for this tail.
+            if (!failed && (code === 0 || code === 1)) resolve();
+            else reject(Error('Installer payload extraction failed: ' + note));
+          });
+        });
+      } finally { fs.closeSync(fd); }
+      const actual = digest.digest('hex');
+      if (received !== size || actual !== hash(fs.readFileSync(expected))) throw Error('Installer contains stale or missing payload: ' + relative);
+      proof[relative] = { size, sha256: actual };
+    }
+    const proofPath = path.join(candidate, 'installer-payload-proof.json');
+    if (fs.existsSync(proofPath)) bounded(proofPath);
+    fs.writeFileSync(proofPath, JSON.stringify({ installerSha256: hash(fs.readFileSync(installer)), files: proof }, null, 2));
+    console.log(JSON.stringify({ installerPayload: 'MATCH', files: proof }));
   }
   console.log(JSON.stringify({ outFilesChecked: checked, nativeModules: native, branding: 'Kel', integrity: true }));
 })().catch(error => { console.error(error.stack); process.exitCode = 1; });

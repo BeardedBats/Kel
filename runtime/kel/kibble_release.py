@@ -312,8 +312,27 @@ def _package(root, candidate, config, log):
         if 'EBUSY' not in attempt:
             raise
         _validate_candidate(root, candidate, config, log, repair=True)
+        _quarantine_package_cache(candidate)
         _run(command + ['--prepackaged', str(candidate / 'win-unpacked')], root / 'desktop', log)
     _validate_candidate(root, candidate, config, log)
+
+
+def _quarantine_package_cache(candidate):
+    """A repaired executable must never reuse an earlier installer payload."""
+    if candidate.resolve() != candidate.absolute():
+        raise PolicyError('A linked candidate cannot recover packaging.')
+    quarantine = candidate / ('packaging-quarantine-' + secrets.token_hex(4))
+    quarantine.mkdir()
+    for pattern in ('*.nsis.7z', '*.nsis.zip', 'Kel-Kibble-Update-*.exe'):
+        for artifact in candidate.glob(pattern):
+            if artifact.is_symlink() or artifact.resolve().parent != candidate.resolve() or not artifact.is_file():
+                raise PolicyError('A linked packaging cache cannot be reused.')
+            artifact.rename(quarantine / artifact.name)
+
+
+def _validate_installer(root, candidate, installer, log):
+    _run(['node', str(root / 'runtime/tools/validate_kibble_candidate.cjs'),
+          str(root), str(candidate), '--installer', str(installer)], root / 'desktop', log)
 
 
 def _checks(root, candidate, log):
@@ -380,6 +399,9 @@ def _build(store, fix_id, release_id):
             if len(installers) != 1 or not all(p.is_file() for p in required):
                 raise PolicyError('The build did not produce a complete Kel candidate and installer.')
             installer = installers[0]
+            _validate_installer(root, candidate, installer, log)
+            if fingerprint(root)[1] != data['source_fingerprint']:
+                raise PolicyError('Kel source changed during installer checks. This candidate is not ready.')
             with installer.open('rb') as artifact:
                 digest = hashlib.file_digest(artifact, 'sha256').hexdigest()
             manifest = {k: data[k] for k in ('release_id', 'fix_id', 'job_id', 'source_sha', 'source_fingerprint')}

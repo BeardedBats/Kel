@@ -36,7 +36,7 @@ class ReleaseTests(unittest.TestCase):
   data=release.status(self.store,'FIX-0001');self.assertEqual(data['state'],'READY');self.assertFalse(data['installed'])
   self.assertTrue(Path(data['installer_path']).is_file());self.assertEqual(len(data['installer_sha256']),64)
   self.assertIn('fake process output',data['log']);self.assertFalse((self.base/'App').exists())
-  self.assertTrue((candidate/'kibble-candidate.json').is_file());self.assertEqual(run.call_count,6)
+  self.assertTrue((candidate/'kibble-candidate.json').is_file());self.assertEqual(run.call_count,7)
   self.assertNotIn('build-with-builder.js',run.call_args_list[-1].args[0])
  def test_source_conflict_refuses_before_build(self):
   self.stage();(self.root/'source.txt').write_text('changed')
@@ -122,6 +122,27 @@ class ReleaseTests(unittest.TestCase):
   self.assertEqual(runner.call_count,2)
   self.assertTrue(self.validator.call_args_list[0].kwargs['repair'])
   self.assertEqual(self.validator.call_count,2)
+
+ def test_busy_recovery_quarantines_only_its_cached_payload_and_stub(self):
+  candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'
+  payload=candidate/'Kel-1.7.0.nsis.7z';payload.write_bytes(b'stale')
+  stub=candidate/'Kel-Kibble-Update-old.exe';stub.write_bytes(b'partial')
+  keep=candidate/'unrelated.zip';keep.write_bytes(b'keep')
+  def run(command,cwd,log):
+   if '--prepackaged' not in command:
+    log.write_text('EBUSY');raise PolicyError('tool failed')
+   self.assertFalse(payload.exists());self.assertFalse(stub.exists());self.assertTrue(keep.exists())
+  with patch.object(release,'_run',side_effect=run):release._package(self.root,candidate,config,log)
+  quarantine=next(candidate.glob('packaging-quarantine-*'))
+  self.assertEqual((quarantine/payload.name).read_bytes(),b'stale');self.assertEqual((quarantine/stub.name).read_bytes(),b'partial')
+
+ def test_installer_payload_failure_never_records_ready(self):
+  self.stage()
+  def fake(command,cwd,log,**kwargs):
+   self.fake(command,cwd,log,**kwargs)
+   if '--installer' in command:raise PolicyError('Installer contains stale engine.')
+  with patch.object(release,'_run',side_effect=fake):release._build(self.store,'FIX-0001','abc123')
+  data=release.status(self.store,'FIX-0001');self.assertEqual(data['state'],'FAILED');self.assertIsNone(data['installer_path'])
 
  def test_busy_incomplete_candidate_never_retries(self):
   candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'
