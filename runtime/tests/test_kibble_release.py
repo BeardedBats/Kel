@@ -110,6 +110,7 @@ class ReleaseTests(unittest.TestCase):
   self.assertTrue({'kibble-installed-update.json','kel-engine','bundled-aioncore','hub'}.issubset(names))
   self.assertIsNone(config['publish']);self.assertEqual(Path(config['directories']['output']),candidate)
   self.assertTrue(config['win']['signAndEditExecutable'])
+  self.assertEqual(Path(config['nsis']['include']),self.root/'desktop/resources/windows/windows-installer-x64.nsh')
 
  def test_busy_recovery_requires_validation_and_runs_once(self):
   candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'

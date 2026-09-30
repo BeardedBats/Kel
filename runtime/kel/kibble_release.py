@@ -239,7 +239,8 @@ def _config(root, candidate):
                               'buildResources': str(root / 'desktop/resources')},
               'extraResources': resources, 'publish': None,
               'win': {'target': ['nsis'], 'signAndEditExecutable': True},
-              'nsis': {'artifactName': 'Kel-Kibble-Update-${version}-${arch}.${ext}'}}
+              'nsis': {'artifactName': 'Kel-Kibble-Update-${version}-${arch}.${ext}',
+                       'include': str(root / 'desktop/resources/windows/windows-installer-x64.nsh')}}
     path = candidate / 'builder-config.json'
     path.write_text(json.dumps(config, indent=2), encoding='utf-8')
     return path
