@@ -16,7 +16,7 @@ import time
 
 from .core import PolicyError
 
-ACTIVE = ('QUEUED', 'BUILDING_ENGINE', 'BUILDING_DESKTOP', 'PACKAGING')
+ACTIVE = ('QUEUED', 'CHECKING', 'BUILDING_ENGINE', 'BUILDING_DESKTOP', 'PACKAGING')
 BUILD_TIMEOUT = 30 * 60
 _build_lock = threading.Lock()
 _LOADED_AT = time.time()
@@ -198,7 +198,7 @@ def _launch(store, fix_id, release_id):
                      name='kel-kibble-release', daemon=True).start()
 
 
-def _run(command, cwd, log):
+def _run(command, cwd, log, trusted_env=None):
     # Build tools do not need provider keys. Keep their stdout away from credential custody.
     env = {k: v for k, v in os.environ.items() if not
            any(token in k.upper() for token in ('API_KEY', 'ACCESS_TOKEN', 'CLIENT_SECRET', 'MUSE_KEY'))}
@@ -206,6 +206,8 @@ def _run(command, cwd, log):
     env = {k: v for k, v in env.items() if not SECRET_SHAPE.search(k)}
     env['PYTHONDONTWRITEBYTECODE'] = '1'
     env['CSC_IDENTITY_AUTO_DISCOVERY'] = 'false'
+    if trusted_env:
+        env.update(trusted_env)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     if os.name == 'nt':
         # A dedicated lifetime group kills only this build's descendants on timeout/engine exit.
@@ -236,11 +238,94 @@ def _config(root, candidate):
               'directories': {'output': str(candidate), 'app': str(root / 'desktop'),
                               'buildResources': str(root / 'desktop/resources')},
               'extraResources': resources, 'publish': None,
-              'win': {'target': ['nsis'], 'signAndEditExecutable': False},
+              'win': {'target': ['nsis'], 'signAndEditExecutable': True},
               'nsis': {'artifactName': 'Kel-Kibble-Update-${version}-${arch}.${ext}'}}
     path = candidate / 'builder-config.json'
     path.write_text(json.dumps(config, indent=2), encoding='utf-8')
     return path
+
+
+def _validate_candidate(root, candidate, config, log, repair=False):
+    """No recovery can skip final source, resource, native, and executable proof."""
+    def plain_path(path, base):
+        if not path.absolute().is_relative_to(base.absolute()):
+            raise PolicyError('A candidate resource path leaves its allowed folder.')
+        current = path
+        while current != base.parent:
+            if current.is_symlink() or current.resolve() != current.absolute():
+                raise PolicyError('A candidate resource path is linked.')
+            current = current.parent
+    def file_hash(path):
+        if path.is_symlink() or not path.is_file():
+            raise PolicyError('A candidate resource is missing or linked.')
+        with path.open('rb') as handle:
+            return hashlib.file_digest(handle, 'sha256').hexdigest()
+    resources = candidate / 'win-unpacked/resources'
+    if not resources.resolve().is_relative_to(candidate.resolve()):
+        raise PolicyError('A candidate resource folder leaves its candidate.')
+    for entry in json.loads(config.read_text(encoding='utf-8'))['extraResources']:
+        source = Path(entry['from'])
+        target = resources / entry['to']
+        plain_path(source, candidate if source.is_relative_to(candidate) else root)
+        plain_path(target, candidate)
+        if source.is_dir() and not target.is_dir():
+            raise PolicyError('A candidate resource folder is missing.')
+        files = source.rglob('*') if source.is_dir() else [source]
+        for source_file in files:
+            destination = target / source_file.relative_to(source) if source.is_dir() else target
+            plain_path(source_file, candidate if source_file.is_relative_to(candidate) else root)
+            plain_path(destination, candidate)
+            if source_file.is_dir():
+                if not destination.is_dir():
+                    raise PolicyError('A candidate resource folder is missing.')
+                continue
+            if not destination.resolve().is_relative_to(candidate.resolve()):
+                raise PolicyError('A candidate resource path leaves its candidate.')
+            if file_hash(source_file) != file_hash(destination):
+                raise PolicyError('A candidate resource differs from the checked build.')
+    command = ['node', str(root / 'runtime/tools/validate_kibble_candidate.cjs'),
+               str(root), str(candidate)]
+    if repair:
+        command.append('--repair-branding')
+    _run(command, root / 'desktop', log)
+
+
+def _package(root, candidate, config, log):
+    command = ['node', 'node_modules/electron-builder/cli.js', '--config', str(config),
+               '--win', 'nsis', '--x64', '--publish', 'never']
+    # Only errors from this exact attempt qualify. An older EBUSY line proves nothing.
+    offset = log.stat().st_size if log.exists() else 0
+    try:
+        _run(command, root / 'desktop', log)
+    except PolicyError:
+        with log.open('rb') as handle:
+            handle.seek(offset)
+            attempt = handle.read().decode('utf-8', errors='replace')
+        if 'EBUSY' not in attempt:
+            raise
+        _validate_candidate(root, candidate, config, log, repair=True)
+        _run(command + ['--prepackaged', str(candidate / 'win-unpacked')], root / 'desktop', log)
+    _validate_candidate(root, candidate, config, log)
+
+
+def _checks(root, candidate, log):
+    scratch = candidate / 'checks'
+    scratch.mkdir(exist_ok=True)
+    env = {'KEL_TURN_MODEL': 'none', 'KEL_GENERAL_ROOT': 'none', 'KEL_CLI_WEB': '0',
+           'KEL_MEMORY_MIRROR': '0', 'KEL_TASTE': '0',
+           'KEL_PROJECTS_ROOT': str(scratch / 'Projects'), 'KEL_MEMORY_ROOT': str(scratch / 'Memory'),
+           'KEL_DATA_DIR': str(scratch / 'engine'), 'AIONUI_DATA_DIR': str(scratch / 'desktop'),
+           'KEL_HOST_DATA_DIR': str(scratch / 'desktop'),
+           'APPDATA': str(scratch / 'AppData'), 'LOCALAPPDATA': str(scratch / 'LocalAppData'),
+           'TEMP': str(scratch / 'Temp'), 'TMP': str(scratch / 'Temp')}
+    (scratch / 'Projects').mkdir(exist_ok=True)
+    for name in ('AppData', 'LocalAppData', 'Temp'):
+        (scratch / name).mkdir(exist_ok=True)
+    _run(['python', '-m', 'pytest', '-q', 'tests', '--basetemp', str(scratch / 'pytest-temp'),
+          '-o', 'cache_dir=' + str(scratch / 'pytest-cache')], root / 'runtime', log, trusted_env=env)
+    _run(['node', 'node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=1', '--cache=false'],
+         root / 'desktop', log, trusted_env=env)
+    _run(['node', 'node_modules/typescript/bin/tsc', '--noEmit', '--incremental', 'false'], root / 'desktop', log, trusted_env=env)
 
 
 def _build(store, fix_id, release_id):
@@ -263,6 +348,8 @@ def _build(store, fix_id, release_id):
             cleanup.callback(build_lock.close)
             if fingerprint(root)[1] != data['source_fingerprint']:
                 raise PolicyError('Kel source changed while this build waited. Build it again.')
+            _save(store, fix_id, release_id, state='CHECKING', stage='Checking the update')
+            _checks(root, candidate, log)
             _save(store, fix_id, release_id, state='BUILDING_ENGINE', stage='Building Kel engine')
             _run(['python', '-m', 'PyInstaller', '--noconfirm', '--clean',
                   '--distpath', str(root / 'dist/runtime'), '--workpath', str(root / 'dist/pyinstaller-work'),
@@ -275,8 +362,7 @@ def _build(store, fix_id, release_id):
             (candidate / 'kibble-installed-update.json').write_text(json.dumps(marker, indent=2), encoding='utf-8')
             config = _config(root, candidate)
             # Direct CLI argument array avoids the wrapper's shell interpolation and process killing.
-            _run(['node', 'node_modules/electron-builder/cli.js', '--config', str(config),
-                  '--win', 'nsis', '--x64', '--publish', 'never'], root / 'desktop', log)
+            _package(root, candidate, config, log)
             if fingerprint(root)[1] != data['source_fingerprint']:
                 raise PolicyError('Kel source changed during the build. This candidate is not ready.')
             installers = list(candidate.glob('Kel-Kibble-Update-*.exe'))

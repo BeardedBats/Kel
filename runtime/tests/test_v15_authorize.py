@@ -370,9 +370,11 @@ class ServiceIdentityTests(unittest.TestCase):
 
     def test_greenfield_project_creation_crosses_the_boundary(self):
         home = self.root / 'home'
-        (home / 'Documents' / 'Kel Projects').mkdir(parents=True)
+        projects_root = home / 'Documents' / 'Kel Projects'
+        projects_root.mkdir(parents=True)
         packet = {'project': {'root': None, 'id': None}, 'files': []}
-        with mock.patch.object(Path, 'home', return_value=home):
+        with mock.patch.object(Path, 'home', return_value=home), \
+                mock.patch.dict(os.environ, {'KEL_PROJECTS_ROOT': str(projects_root)}):
             started = self.service._plan('sid-allow', 'main', 'create a tiny app', dict(packet),
                                          kind='coding', greenfield_flag=True)
             # D-53: work is acknowledged first and started on the planning pool.
@@ -391,6 +393,7 @@ class ServiceIdentityTests(unittest.TestCase):
                        ('sid-deny', 'main', 'create another tiny app', 'PLANNING', None, None,
                         time.time()))
         with mock.patch.object(Path, 'home', return_value=home), \
+                mock.patch.dict(os.environ, {'KEL_PROJECTS_ROOT': str(projects_root)}), \
                 mock.patch('kel.authorize.project_creation_root',
                            return_value=(home / 'elsewhere').resolve()):
             started = self.service._plan('sid-deny', 'main', 'create another tiny app', dict(packet),

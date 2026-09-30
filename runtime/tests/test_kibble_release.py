@@ -17,13 +17,14 @@ class ReleaseTests(unittest.TestCase):
   self.service=Mock(store=self.store,handoff_lock=threading.RLock())
   self.job={'id':'job-1','verdict':'VERIFIED','contract':{'root':str(self.root),'context':{'kibble':{'fix_id':'FIX-0001'}}}}
   self.store.get=Mock(return_value=self.job)
+  self.validate=patch.object(release,'_validate_candidate');self.validator=self.validate.start();self.addCleanup(self.validate.stop)
  def stage(self):
   from kel.runner import process_identity
   sha,stamp=release.fingerprint(self.root);candidate=self.base/'Temp/Candidate-abc123';candidate.mkdir(parents=True)
   data={'release_id':'abc123','fix_id':'FIX-0001','job_id':'job-1','source_root':str(self.root),'source_sha':sha,'source_fingerprint':stamp,'state':'QUEUED','stage':'Queued','candidate_path':str(candidate),'installer_path':None,'installed':False,'created':1,'updated':1,'pid':os.getpid(),'owner':process_identity(os.getpid()),'error':None}
   with self.store.transaction() as db:db.execute('INSERT OR REPLACE INTO kibble_releases VALUES(?,?,?)',('FIX-0001','abc123',json.dumps(data)))
   return candidate
- def fake(self,command,cwd,log):
+ def fake(self,command,cwd,log,**kwargs):
   with log.open('a') as out:out.write('fake process output\n')
   if 'nsis' in command:
    candidate=Path(json.loads(Path(command[command.index('--config')+1]).read_text())['directories']['output'])
@@ -35,7 +36,7 @@ class ReleaseTests(unittest.TestCase):
   data=release.status(self.store,'FIX-0001');self.assertEqual(data['state'],'READY');self.assertFalse(data['installed'])
   self.assertTrue(Path(data['installer_path']).is_file());self.assertEqual(len(data['installer_sha256']),64)
   self.assertIn('fake process output',data['log']);self.assertFalse((self.base/'App').exists())
-  self.assertTrue((candidate/'kibble-candidate.json').is_file());self.assertEqual(run.call_count,3)
+  self.assertTrue((candidate/'kibble-candidate.json').is_file());self.assertEqual(run.call_count,6)
   self.assertNotIn('build-with-builder.js',run.call_args_list[-1].args[0])
  def test_source_conflict_refuses_before_build(self):
   self.stage();(self.root/'source.txt').write_text('changed')
@@ -43,7 +44,7 @@ class ReleaseTests(unittest.TestCase):
   self.assertEqual(release.status(self.store,'FIX-0001')['state'],'FAILED');run.assert_not_called()
  def test_mid_build_conflict_never_becomes_ready(self):
   self.stage()
-  def fake(command,cwd,log):
+  def fake(command,cwd,log,**kwargs):
    self.fake(command,cwd,log)
    if 'nsis' in command:(self.root/'source.txt').write_text('concurrent edit')
   with patch.object(release,'_run',side_effect=fake):release._build(self.store,'FIX-0001','abc123')
@@ -108,6 +109,69 @@ class ReleaseTests(unittest.TestCase):
   names={entry['to'] for entry in config['extraResources']}
   self.assertTrue({'kibble-installed-update.json','kel-engine','bundled-aioncore','hub'}.issubset(names))
   self.assertIsNone(config['publish']);self.assertEqual(Path(config['directories']['output']),candidate)
+  self.assertTrue(config['win']['signAndEditExecutable'])
+
+ def test_busy_recovery_requires_validation_and_runs_once(self):
+  candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'
+  def run(command,cwd,log):
+   if '--prepackaged' not in command:
+    log.write_text('Error: EBUSY copy resource');raise PolicyError('tool failed')
+  with patch.object(release,'_run',side_effect=run) as runner:
+   release._package(self.root,candidate,config,log)
+  self.assertEqual(runner.call_count,2)
+  self.assertTrue(self.validator.call_args_list[0].kwargs['repair'])
+  self.assertEqual(self.validator.call_count,2)
+
+ def test_busy_incomplete_candidate_never_retries(self):
+  candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'
+  def run(*args):log.write_text('EBUSY');raise PolicyError('tool failed')
+  self.validator.side_effect=PolicyError('candidate resource mismatch')
+  with patch.object(release,'_run',side_effect=run) as runner:
+   with self.assertRaises(PolicyError):release._package(self.root,candidate,config,log)
+  self.assertEqual(runner.call_count,1)
+
+ def test_old_busy_or_other_failure_does_not_retry(self):
+  candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log';log.write_text('old EBUSY\n')
+  with patch.object(release,'_run',side_effect=PolicyError('other failure')) as runner:
+   with self.assertRaises(PolicyError):release._package(self.root,candidate,config,log)
+  self.assertEqual(runner.call_count,1);self.validator.assert_not_called()
+
+ def test_busy_retry_failure_stops_without_third_attempt(self):
+  candidate=self.stage();config=release._config(self.root,candidate);log=candidate/'build.log'
+  def run(*args):log.write_text('EBUSY');raise PolicyError('tool failed')
+  with patch.object(release,'_run',side_effect=run) as runner:
+   with self.assertRaises(PolicyError):release._package(self.root,candidate,config,log)
+  self.assertEqual(runner.call_count,2)
+
+ def test_real_resource_hash_mismatch_blocks_node_and_retry(self):
+  candidate=self.stage();source=self.root/'resource.bin';source.write_bytes(b'new')
+  dest=candidate/'win-unpacked/resources/resource.bin';dest.parent.mkdir(parents=True);dest.write_bytes(b'old')
+  config=candidate/'builder-config.json';config.write_text(json.dumps({'extraResources':[{'from':str(source),'to':'resource.bin'}]}))
+  self.validate.stop()
+  with patch.object(release,'_run') as runner:
+   with self.assertRaises(PolicyError):release._validate_candidate(self.root,candidate,config,candidate/'build.log',repair=True)
+  runner.assert_not_called()
+
+ def test_full_checks_precede_build_and_use_isolated_guards(self):
+  candidate=self.stage()
+  with patch.object(release,'_run',side_effect=self.fake) as runner:release._build(self.store,'FIX-0001','abc123')
+  calls=runner.call_args_list
+  self.assertEqual(calls[0].args[0][:5],['python','-m','pytest','-q','tests'])
+  self.assertIn('--basetemp',calls[0].args[0]);self.assertIn('--cache=false',calls[1].args[0])
+  self.assertIn('--maxWorkers=1',calls[1].args[0]);self.assertIn('--noEmit',calls[2].args[0])
+  self.assertIn('PyInstaller',calls[3].args[0])
+  env=calls[0].kwargs['trusted_env'];self.assertEqual(env['KEL_TURN_MODEL'],'none')
+  self.assertEqual(env['KEL_GENERAL_ROOT'],'none');self.assertEqual(env['KEL_CLI_WEB'],'0')
+  self.assertTrue(Path(env['AIONUI_DATA_DIR']).is_relative_to(candidate));self.assertTrue(Path(env['KEL_MEMORY_ROOT']).is_relative_to(candidate))
+  for name in ('APPDATA','LOCALAPPDATA','TEMP','TMP','KEL_HOST_DATA_DIR'):
+   self.assertTrue(Path(env[name]).is_relative_to(candidate))
+
+ def test_failed_full_check_prevents_build_and_package(self):
+  self.stage()
+  with patch.object(release,'_run',side_effect=PolicyError('A full check failed.')) as runner:
+   release._build(self.store,'FIX-0001','abc123')
+  runner.assert_called_once();self.assertEqual(release.status(self.store,'FIX-0001')['state'],'FAILED')
+  self.validator.assert_not_called()
 
  def test_old_running_engine_never_claims_new_marker_installed(self):
   candidate=self.stage()
