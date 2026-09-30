@@ -1063,3 +1063,11 @@ checks ran but not all, or their result could not be confirmed. Neither is ever 
 works out which case applies from its data (e.g. `verification.result` "not_run", or no check recorded);
 where the data cannot tell the two apart, it says "Incomplete". Replaces "Couldn't fully check", "not fully
 checked" and "not fully verified".
+
+## D-90 — Nick's custom look is fixed
+
+**Decided by Nick 2026-09-29: "I have a custom UI that I don't want to change at all."** Nick's own
+appearance customisations (currently the app background #282a34, and any other custom CSS or colour values
+already saved in his settings) stay exactly as they are. No update, migration, reset or D-82 cleanup may
+change, remove or override them, even though the colour controls are gone from Appearance. New work must
+render correctly on top of them.
