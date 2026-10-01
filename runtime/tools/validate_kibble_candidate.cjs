@@ -40,6 +40,8 @@ function version(exe) {
   let checked = 0;
   for (const file of walk(path.join(desktop, 'out'))) {
     const relative = path.relative(desktop, file);
+    // The build wrapper's incremental cache is not part of the shipped runtime.
+    if (relative === path.join('out', '.build-hash')) continue;
     if (hash(fs.readFileSync(file)) !== hash(asar.extractFile(archive, relative))) throw Error('Candidate out differs: ' + relative);
     checked++;
   }
