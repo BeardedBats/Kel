@@ -1,5 +1,6 @@
 """Image correction routing uses local request receipts, never imported dialogue."""
 import contextlib
+import json
 import tempfile
 import threading
 import unittest
@@ -19,10 +20,14 @@ class ImageDialogueTests(unittest.TestCase):
         self.store=self.service.store=Store(Path(self.tmp.name)/'engine')
         self.service._cancels={};self.service._cancels_lock=threading.RLock()
         self.service.drafts={};self.service.wake=threading.Event()
+        self.service.lifecycle_lock=threading.RLock();self.service.draining=False
+        self.service.requests=Mock();self.service.planning=Mock()
         with self.store.transaction() as db:
             db.execute('CREATE TABLE submissions(id TEXT PRIMARY KEY,conversation_id TEXT,text TEXT,state TEXT,error TEXT,job_id TEXT,created REAL)')
             db.execute('CREATE TABLE submission_packets(id TEXT PRIMARY KEY,packet TEXT,kind TEXT)')
             db.execute('CREATE TABLE IF NOT EXISTS project_tests(project_id TEXT PRIMARY KEY,command TEXT)')
+            db.execute('CREATE TABLE request_calls(submission_id TEXT)')
+            db.execute('CREATE TABLE submission_acks(submission_id TEXT PRIMARY KEY)')
 
     def record(self,sid,text,kind='document',cid='main',packet=None,jid=None):
         with self.store.transaction() as db:
@@ -134,3 +139,57 @@ class ImageDialogueTests(unittest.TestCase):
             with self.assertRaisesRegex(PolicyError,'This project needs a test command'):
                 self.service._compile_work('component','main',text,packet,classify(text)['kind'],False)
         image.assert_not_called()
+
+    def legacy_chain(self):
+        original='Make me an infographic showing how kel works to my staff'
+        self.record('original',original,'conversation',packet={'kind_source':'router'},jid='image-job')
+        self.record('status-old','Where is the image?','conversation',packet={'kind_source':'router'})
+        self.record('fix-old','Fix this.','conversation',packet={'kind_source':'router'})
+        self.record('fix-current','Fix this.','conversation',packet={'kind_source':'router','classification':{'task_class':'coding'}})
+        with self.store.transaction() as db:
+            db.execute("UPDATE submissions SET state='SETTLED' WHERE id='status-old'")
+            db.execute("UPDATE submissions SET state='FAILED',error='This project needs a test command.' WHERE id IN ('fix-old','fix-current')")
+        return original
+
+    def test_legacy_failed_short_corrections_and_status_do_not_block_image_reference(self):
+        original=self.legacy_chain()
+        self.assertEqual(self.service._image_followup('main','Fix this.')['request'],original)
+        self.assertEqual(self.service._image_followup('main','Where is the image?')['job_id'],'image-job')
+
+    def test_retry_rebinds_legacy_receipt_before_self_and_future_with_no_model_call(self):
+        for acked in (False,True):
+            with self.subTest(acked=acked):
+                # A separate conversation gives each retry its own original receipt.
+                cid='retry-'+str(acked)
+                original='Generate an infographic about the original facts'
+                target='fix-'+str(acked)
+                self.record('image-'+str(acked),original,'conversation',cid,{'kind_source':'router'})
+                self.record(target,'Fix this.','conversation',cid,{'kind_source':'router','classification':{'task_class':'coding'}})
+                self.record('future-'+str(acked),'Generate an image about unrelated future facts','image',cid)
+                with self.store.transaction() as db:
+                    db.execute("UPDATE submissions SET state='FAILED' WHERE id=?",(target,))
+                    if acked:db.execute('INSERT INTO submission_acks VALUES(?)',(target,))
+                self.service.action('/api/retry',{'id':target})
+                executor=self.service.planning if acked else self.service.requests
+                args=executor.submit.call_args.args
+                self.assertEqual(args[5],'image')
+                self.assertEqual(args[4]['image_request']['request'],original)
+                self.assertEqual(args[3],original if acked else 'Fix this.')
+                with contextlib.closing(self.store.connect()) as db:
+                    row=db.execute('SELECT packet,kind FROM submission_packets WHERE id=?',(target,)).fetchone()
+                    self.assertEqual(row['kind'],'image')
+                    self.assertEqual(json.loads(row['packet'])['classification']['task_class'],'image')
+
+    def test_legacy_skipping_stops_at_substantive_or_explicit_client_coding(self):
+        for sid,text,kind,packet in (
+                ('substantive','Fix parser.py','conversation',{'kind_source':'router'}),
+                ('explicit','Fix this.','coding',{'kind_source':'client'})):
+            with self.subTest(sid=sid):
+                cid=sid
+                self.record('image-'+sid,'Generate an image about Kel','image',cid)
+                self.record(sid,text,kind,cid,packet)
+                with self.store.transaction() as db:
+                    db.execute("UPDATE submissions SET state='FAILED' WHERE id=?",(sid,))
+                self.assertIsNone(self.service._image_followup(cid,'Fix this.'))
+                self.service.action('/api/retry',{'id':sid})
+                self.assertEqual(self.service.requests.submit.call_args.args[5],kind)

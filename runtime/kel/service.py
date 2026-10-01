@@ -275,7 +275,7 @@ class Service:
                 try:handoff.follow_up(self.store)
                 except Exception:pass  # a missed notice is retried on the next pass; never stop supervision
 
-    def _image_followup(self,cid,text):
+    def _image_followup(self,cid,text,before=None):
         """Only local request receipts can carry image intent into a short correction."""
         import re
         normalized=re.sub(r'[^a-z0-9 ]',' ',str(text).lower())
@@ -288,17 +288,32 @@ class Service:
             'no i asked for an image','i asked for an image')
         if not status and not correction:return None
         with contextlib.closing(self.store.connect()) as db:
-            rows=db.execute('SELECT s.id,s.text,s.job_id,p.kind,p.packet FROM submissions s '
-                'LEFT JOIN submission_packets p ON p.id=s.id WHERE s.conversation_id=? '
-                'ORDER BY s.created DESC,s.rowid DESC LIMIT 16',(cid,)).fetchall()
+            boundary='';args=[cid]
+            if before:
+                anchor=db.execute('SELECT created,rowid FROM submissions WHERE id=? AND conversation_id=?',(before,cid)).fetchone()
+                if not anchor:return None
+                boundary=' AND (s.created<? OR (s.created=? AND s.rowid<?))'
+                args.extend((anchor['created'],anchor['created'],anchor['rowid']))
+            rows=db.execute('SELECT s.id,s.text,s.state,s.job_id,p.kind,p.packet FROM submissions s '
+                'LEFT JOIN submission_packets p ON p.id=s.id WHERE s.conversation_id=? '+boundary+
+                ' ORDER BY s.created DESC,s.rowid DESC LIMIT 16',args).fetchall()
         for row in rows:
             packet=json.loads(row['packet']) if row['packet'] else {}
+            if row['kind']=='coding' and packet.get('kind_source')=='client':return None
             previous=packet.get('image_request') or {}
             if previous.get('mode')=='status':continue
             if row['kind']=='image' or image_generation_intent(row['text']):
                 request=previous.get('request') or row['text']
                 return {'mode':'status' if status else 'generate','request':request,
                         'source_submission':row['id'],'job_id':row['job_id']}
+            if packet.get('kind_source')=='router' and not row['job_id']:
+                previous_text=' '.join(re.sub(r'[^a-z0-9 ]',' ',row['text'].lower()).split())
+                if row['state'] in ('FAILED','INTERRUPTED') and previous_text in (
+                        'fix this','fix it','try again','generate it','make it an image'):
+                    continue
+                if row['state']=='SETTLED' and previous_text in (
+                        'where is the image','where s the image','where is my image','show me the image','where is it'):
+                    continue
             # An intervening substantive request ends this reference. Imported messages
             # never create these local submission receipts.
             return None
@@ -2378,14 +2393,28 @@ class Service:
                 db.execute("UPDATE submissions SET state='PLANNING',error=NULL WHERE id=?",(row['id'],))
                 acked=db.execute('SELECT 1 FROM submission_acks WHERE submission_id=?',(row['id'],)).fetchone()
             packet=json.loads(row['packet'])
+            kind=row['kind'];request=row['text']
+            if not (kind=='coding' and packet.get('kind_source')=='client'):
+                image_reference=self._image_followup(row['conversation_id'],request,before=row['id'])
+                if image_reference and image_reference['mode']=='generate':
+                    kind='image'
+                    packet['image_request']=image_reference
+                    packet['output_contract']={'kind':'image'}
+                    packet['classification']={'task_class':'image','source':'image-retry'}
+                    with self.store.transaction() as db:
+                        db.execute('UPDATE submission_packets SET packet=?,kind=? WHERE id=?',
+                                   (encode(packet),kind,row['id']))
             if acked:
                 # D-53: the hand-off was already acknowledged in the chat; retrying starts the work
                 # again without a second acknowledgement or a second routing decision.
                 from .router import classify
                 greenfield=bool(classify(row['text']).get('greenfield')) if packet.get('kind_source')!='client' else False
-                self.planning.submit(self._start_work,row['id'],row['conversation_id'],row['text'],packet,row['kind'],greenfield)
+                if kind=='image' and packet.get('image_request'):
+                    request=self._rewrite_request(row['id'],packet['image_request']['request'])
+                    greenfield=False
+                self.planning.submit(self._start_work,row['id'],row['conversation_id'],request,packet,kind,greenfield)
             else:
-                self.requests.submit(self._plan,row['id'],row['conversation_id'],row['text'],packet,row['kind'])
+                self.requests.submit(self._plan,row['id'],row['conversation_id'],request,packet,kind)
             return {'id':row['id']}
         if path=='/api/conversation':
             # D-54: explicit project → the shell's binding for its chat (`donor`) → active → General.
