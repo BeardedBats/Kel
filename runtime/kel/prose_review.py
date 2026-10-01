@@ -88,11 +88,17 @@ class AdmittedModel:
 
 
 def executor(service,sid):
-    from .usage import rows
-    calls=[row for row in rows(service.store,submission_id=sid) if row.get('outcome')=='SUCCESS' and row.get('task_class')!='review']
-    if not calls:
+    with contextlib.closing(service.store.connect()) as db:
+        row=None
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='provider_usage'").fetchone():
+            row=db.execute("SELECT data FROM provider_usage WHERE json_extract(data,'$.submission_id')=? "
+                           "AND json_extract(data,'$.event')='run' "
+                           "AND json_extract(data,'$.outcome')='SUCCESS' "
+                           "AND COALESCE(json_extract(data,'$.task_class'),'')!='review' "
+                           "ORDER BY seq DESC LIMIT 1",(sid,)).fetchone()
+    if not row:
         raise PolicyError('The prose model identity could not be confirmed. No unchecked reply was posted.')
-    actual=calls[-1]
+    actual=json.loads(row['data'])
     if not family(actual.get('adapter'),actual.get('raw_model')):
         raise PolicyError('The prose model family could not be confirmed. No unchecked reply was posted.')
     return {'provider':actual['adapter'],'model':actual['raw_model']}
@@ -236,7 +242,9 @@ def review(service,sid,cid,text,limit,cancel):
 
 
 def assert_bound(db,sid,text,limit,bound):
-    row=db.execute('SELECT text,state FROM submissions WHERE id=?',(sid,)).fetchone()
+    row=db.execute('SELECT text,state,created FROM submissions WHERE id=?',(sid,)).fetchone()
+    if row and time.time()-row['created']>=SECONDS:
+        raise PolicyError('This prose reply reached its time limit. No unchecked reply was posted.')
     receipt=db.execute('SELECT subject,state,verdict FROM prose_reviews WHERE submission_id=?',(sid,)).fetchone()
     if (not row or row['state']!='PLANNING' or not receipt or receipt['state']!='FINISHED' or receipt['verdict']!='VERIFIED'
             or receipt['subject']!=bound or subject(row['text'],text,limit,source_context(db,sid))!=bound):
