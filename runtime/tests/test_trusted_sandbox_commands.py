@@ -84,7 +84,7 @@ class TrustedSandboxCommandTests(unittest.TestCase):
     def test_receipt_keeps_read_and_network_limits(self):
         process=Mock();process.poll.return_value=0;process.returncode=0
         with patch.object(self.connection,'_trusted_test_argv',return_value=(['codex.exe','sandbox'],False)),\
-             patch('kel.host_runtime.subprocess.Popen',return_value=process) as launch:
+             patch('kel.host_runtime.launch_trusted_command',return_value=process) as launch:
             result=self.connection.call('command/exec',{'command':['python','-V']})
         self.assertEqual(launch.call_args.args[0],['codex.exe','sandbox'])
         fact=result['_kel_execution'];self.assertTrue(fact['sandbox']);self.assertFalse(fact['complete_read_confinement'])
@@ -96,7 +96,7 @@ class TrustedSandboxCommandTests(unittest.TestCase):
         process=Mock();process.poll.return_value=0;process.returncode=0
         with patch('kel.host_runtime.normalize_installed_npm',return_value=None) as normalize,\
              patch.object(self.connection,'_trusted_test_argv',return_value=(['codex.exe','sandbox'],False)),\
-             patch('kel.host_runtime.subprocess.Popen',return_value=process):
+             patch('kel.host_runtime.launch_trusted_command',return_value=process):
             self.connection.call('command/exec',{'cwd':str(original),'command':['python','-V']})
         self.assertIn(Path(self.connection.workspace),normalize.call_args.args[1])
 
@@ -105,7 +105,7 @@ class TrustedSandboxCommandTests(unittest.TestCase):
         def launch(*args,**kwargs):
             kwargs['stdout'].write(b'x'*2_000_001);kwargs['stdout'].flush();return process
         with patch.object(self.connection,'_trusted_test_argv',return_value=(['codex.exe','sandbox'],False)),\
-             patch('kel.host_runtime.subprocess.Popen',side_effect=launch) as spawned,\
+             patch('kel.host_runtime.launch_trusted_command',side_effect=launch) as spawned,\
              patch.object(self.connection,'_stop_test_process') as stop:
             with self.assertRaisesRegex(PolicyError,'output budget'):
                 self.connection.call('command/exec',{'command':['python','-V']})
@@ -115,7 +115,7 @@ class TrustedSandboxCommandTests(unittest.TestCase):
         process=Mock();process.poll.return_value=None
         def launch(*args,**kwargs):self.connection._tests_closed=True;return process
         with patch.object(self.connection,'_trusted_test_argv',return_value=(['codex.exe','sandbox'],False)),\
-             patch('kel.host_runtime.subprocess.Popen',side_effect=launch),\
+             patch('kel.host_runtime.launch_trusted_command',side_effect=launch),\
              patch.object(self.connection,'_stop_test_process') as stop:
             with self.assertRaisesRegex(PolicyError,'stopped during execution'):
                 self.connection.call('command/exec',{'command':['python','-V']})

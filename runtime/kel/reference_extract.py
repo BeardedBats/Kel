@@ -14,6 +14,7 @@ from pathlib import Path
 import subprocess
 import sys
 import threading
+import time
 
 MAX_BYTES = 5_000_000
 MAX_TEXT = 30_000
@@ -37,7 +38,7 @@ def _kind(name, raw):
     raise ValueError('Choose a PDF, PNG, JPEG, GIF or WebP file with matching content.')
 
 
-def _pdf(raw):
+def _pdf(raw, *, allow_ocr=False):
     from pypdf import PdfReader
     logging.getLogger('pypdf').setLevel(logging.CRITICAL)
     reader = PdfReader(io.BytesIO(raw), strict=True)
@@ -47,17 +48,22 @@ def _pdf(raw):
         raise ValueError('Choose a PDF with at most 20 pages.')
     text = []
     size = 0
+    missing = []
     for page in reader.pages:
         content = page.get_contents()
         if content is not None and len(content.get_data()) > 8_000_000:
             raise ValueError('This PDF page is too large to extract safely.')
         part = page.extract_text() or ''
         if not part.strip():
-            raise ValueError('This PDF has a page without readable text. Add its text or a page image for OCR.')
+            missing.append(len(text))
         size += len(part) + (2 if text else 0)
         if size > MAX_TEXT:
             raise ValueError('Extracted reference text can contain at most 30,000 characters.')
         text.append(part.strip())
+    if missing:
+        if not allow_ocr:
+            raise ValueError('This PDF has a page without readable text. Add its text or a page image for OCR.')
+        return {'needs_ocr': True, 'page_texts': text, 'missing_pages': missing, 'pages': len(text)}
     return {'text': '\n\n'.join(text), 'kind': 'pdf', 'extraction': 'pdf-text', 'pages': len(reader.pages)}
 
 
@@ -71,7 +77,7 @@ def worker_main():
         raw = base64.b64decode(payload['content'], validate=True)
         if _kind(payload['name'], raw) != 'pdf':
             raise ValueError('The PDF worker accepts PDF bytes only.')
-        result = _pdf(raw)
+        result = _pdf(raw, allow_ocr=True)
         sys.stdout.write(json.dumps(result, ensure_ascii=True))
         return 0
     except ValueError as error:
@@ -83,7 +89,10 @@ def worker_main():
     return 1
 
 
-def _bounded_worker(command, payload):
+def _bounded_worker(command, payload, *, timeout=20, allow_ocr=False):
+    if timeout <= 0:
+        raise ValueError('Reading this reference timed out. Choose a smaller file or add its text.')
+    deadline = time.monotonic() + timeout
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     close_job = None
@@ -112,7 +121,7 @@ def _bounded_worker(command, payload):
         writer = threading.Thread(target=send_input, daemon=True)
         reader.start(); writer.start()
         try:
-            process.wait(timeout=20)
+            process.wait(timeout=max(0, deadline-time.monotonic()))
         except subprocess.TimeoutExpired:
             raise ValueError('Reading this reference timed out. Choose a smaller file or add its text.')
         reader.join(timeout=2); writer.join(timeout=2)
@@ -130,6 +139,17 @@ def _bounded_worker(command, payload):
         if process.returncode:
             error = result.get('error')
             raise ValueError(error if isinstance(error, str) and len(error) <= 250 else 'Kel could not read this reference.')
+        if allow_ocr and result.get('needs_ocr') is True:
+            parts, missing, pages = result.get('page_texts'), result.get('missing_pages'), result.get('pages')
+            if (set(result) != {'needs_ocr', 'page_texts', 'missing_pages', 'pages'} or
+                    type(pages) is not int or not 1 <= pages <= MAX_PAGES or
+                    not isinstance(parts, list) or len(parts) != pages or
+                    any(not isinstance(part, str) for part in parts) or
+                    len('\n\n'.join(parts)) > MAX_TEXT or not isinstance(missing, list) or not missing or
+                    any(type(index) is not int for index in missing) or
+                    missing != [index for index, part in enumerate(parts) if not part.strip()]):
+                raise ValueError('Kel could not validate the PDF pages for local OCR.')
+            return result
         text = result.get('text')
         if not isinstance(text, str) or not text.strip() or len(text) > MAX_TEXT:
             raise ValueError('No bounded readable text was found. Add the text instead.')
@@ -152,6 +172,7 @@ def extract_reference(name, raw):
     if not _slot.acquire(blocking=False):
         raise ValueError('Kel is reading another reference. Try this file again shortly.')
     try:
+        deadline = time.monotonic() + 20
         payload = {'name': name, 'content': base64.b64encode(raw).decode('ascii')}
         if kind == 'pdf':
             command = [sys.executable, '--reference-extract-worker'] if getattr(sys, 'frozen', False) else [sys.executable, '-B', str(Path(__file__).resolve().parents[1] / 'kel_backend_entry.py'), '--reference-extract-worker']
@@ -160,7 +181,17 @@ def extract_reference(name, raw):
                 raise ValueError('Local image text extraction requires Windows. Add the image text instead.')
             system_root = os.environ.get('SystemRoot', r'C:\Windows')
             command = [str(Path(system_root) / 'System32/WindowsPowerShell/v1.0/powershell.exe'), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(Path(__file__).with_name('reference_ocr.ps1'))]
-        result = _bounded_worker(command, payload)
+        result = _bounded_worker(command, payload, timeout=deadline-time.monotonic(), allow_ocr=kind == 'pdf')
+        if result.get('needs_ocr') is True:
+            if os.name != 'nt':
+                raise ValueError('Local scanned PDF text extraction requires Windows. Add the PDF text instead.')
+            system_root = os.environ.get('SystemRoot', r'C:\Windows')
+            command = [str(Path(system_root) / 'System32/WindowsPowerShell/v1.0/powershell.exe'), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(Path(__file__).with_name('reference_pdf_ocr.ps1'))]
+            payload.update(page_texts=result['page_texts'], missing_pages=result['missing_pages'], pages=result['pages'])
+            result = _bounded_worker(command, payload, timeout=deadline-time.monotonic())
+            if (result.get('extraction') != 'pdf-ocr' or type(result.get('pages')) is not int or
+                    result['pages'] != payload['pages'] or not isinstance(result.get('language'), str)):
+                raise ValueError('Kel could not validate the scanned PDF text.')
         result['kind'] = kind
         if kind == 'image':
             result['extraction'] = 'image-ocr'

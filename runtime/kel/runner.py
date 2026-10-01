@@ -318,15 +318,17 @@ def run_broker(store,run_id):
                     images.append({'mime':f['mime'],'data':base64.b64encode(raw).decode()})
                 if images:kwargs['images']=images
             started=time.monotonic()
+            from .native import local_session_id
+            native_session=local_session_id(provider,row['session_id'])
             if web_blocked:
                 result=web_blocked
             elif provider in ('claude-web','codex-web'):
                 result=adapter.execute(RESEARCH_BRIEF.format(date=time.strftime('%Y-%m-%d',time.gmtime()))+row['prompt'],
-                                       run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
+                                       run_id=run_id,session_id=native_session,cancel=cancel,**kwargs)
                 from .research import settle_cli_research
                 result=settle_cli_research(store,run_id,result,provider.split('-')[0])
             else:
-                result=adapter.execute(row['prompt'],run_id=run_id,session_id=row['session_id'],cancel=cancel,**kwargs)
+                result=adapter.execute(row['prompt'],run_id=run_id,session_id=native_session,cancel=cancel,**kwargs)
             if isinstance(result,dict):
                 # Routing 2 §5.2: every run's wall-clock is measured here, so coding runs report one too
                 # (and the router's per-runtime latency is a measurement, not a guess).

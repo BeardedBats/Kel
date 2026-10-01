@@ -151,6 +151,19 @@ def executable(provider):
     raise ValueError('Unknown native provider')
 
 
+def require_ephemeral_codex(command=None):
+    """Non-model compatibility check before app-server can create a thread."""
+    command = command or executable('codex')
+    observed = version_of(command[0]) if command else None
+    if not isinstance(observed,str) or not re.match(r'^codex(?:-cli)?\s',observed) or not parse_version(observed) or parse_version(observed) < (0,159,2,1):
+        raise RuntimeError('This Codex runtime cannot confirm private temporary sessions. Update Codex before using it in Kel.')
+
+
+def local_session_id(provider, session_id):
+    """Internal callers replay their durable prompt; old Codex IDs remain local receipts only."""
+    return None if provider in ('codex','codex-web','codex-code') else session_id
+
+
 _NATIVE_PROVIDER_CREDENTIALS = {
     'codex': ('OPENAI_API_KEY',),
     'claude': ('ANTHROPIC_API_KEY',),
@@ -342,7 +355,8 @@ class NativeAdapter:
 
     def argv(self, session_id=None, stream=False):
         if self.provider == 'codex':
-            args = executable('codex') + ['exec', '--ignore-user-config', '--skip-git-repo-check', '--json',
+            if session_id:raise RuntimeError('Kel cannot resume a stored Codex session. Use the current Kel context in a new request.')
+            args = executable('codex') + ['exec', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check', '--json',
                     '-c', 'approval_policy="never"', '-c', 'web_search="%s"' % ('live' if self.web else 'disabled')]
             effort = 'low' if self.effort is DEFAULT_EFFORT else self.effort
             if effort:
@@ -354,10 +368,8 @@ class NativeAdapter:
                             'hooks', 'memories', 'browser_use', 'computer_use', 'image_generation',
                             'workspace_dependencies', 'goals', 'in_app_browser', 'browser_use_external'):
                 args += ['--disable', feature]
-            if session_id:
-                args += ['resume', session_id, '-']
-            else:
-                args += ['-s', 'read-only', '-']
+            # Kel owns conversation history. Never reopen a user's persistent Codex thread.
+            args += ['-s', 'read-only', '-']
             return args
         tools = ['--tools', 'WebSearch,WebFetch', '--allowedTools', 'WebSearch,WebFetch'] if self.web else ['--tools', '']
         # stream-json (one JSON record per line, the last is the same result record `json` gives) is
@@ -396,6 +408,8 @@ class NativeAdapter:
         streamed Codex answer runs through Codex's app-server instead, whose
         `item/agentMessage/delta` notifications carry the words as they are written; if the
         app-server cannot start, the answer arrives whole from exec as before."""
+        if self.provider == 'codex' and session_id:
+            return dict(outcome='FAILED',error='Kel cannot resume a stored Codex session. Use the current Kel context in a new request.')
         if output_schema is not None and (self.provider != 'codex' or on_text is not None):
             return dict(outcome='FAILED', error='Structured correction requires buffered Codex output.')
         if images is not None and (self.provider!='codex' or not images):
@@ -558,8 +572,12 @@ class NativeAdapter:
         Also keeps the turn's tokens (`thread/tokenUsage/updated`) and the plan's limits
         (`account/rateLimits/updated`)."""
         import queue as _queue
+        if session_id:
+            return self._stream_failed('Kel cannot resume a stored Codex session. Use the current Kel context in a new request.',None,time.monotonic())
         started = time.monotonic()
         factory = connection_factory or self.connection_factory
+        try:require_ephemeral_codex()
+        except RuntimeError as exc:return self._stream_failed(str(exc),None,started)
         try:
             if factory is not None:
                 connection = factory(self)
@@ -582,12 +600,13 @@ class NativeAdapter:
                     pass  # showing words early is additive; the run's result is unchanged
 
         try:
-            thread = {'cwd': str(self.workspace), 'sandbox': 'read-only', 'approvalPolicy': 'never'}
+            thread = {'cwd': str(self.workspace), 'sandbox': 'read-only', 'approvalPolicy': 'never', 'ephemeral': True}
             if self.model:
                 thread['model'] = self.model
             try:
-                response = connection.call('thread/resume', dict(thread, threadId=session_id)) if session_id \
-                    else connection.call('thread/start', thread)
+                response = connection.call('thread/start', thread)
+                if ((response or {}).get('thread') or {}).get('ephemeral') is not True:
+                    raise RuntimeError('Codex did not confirm a private temporary session. No Kel prompt was sent.')
             except RuntimeError as exc:
                 return self._stream_failed(str(exc), session_id, started)
             thread_id = ((response or {}).get('thread') or {}).get('id') or session_id

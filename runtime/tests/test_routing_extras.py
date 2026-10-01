@@ -12,6 +12,7 @@ import queue
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from kel import overlays, quota, role_models, router, staff, task_routing, usage
@@ -83,7 +84,7 @@ class FakeConnection:
         if method == self.fail_on:
             raise RuntimeError("{'message': \"The 'gpt-6-luna' model requires a newer version of Codex\"}")
         if method in ('thread/start', 'thread/resume'):
-            return {'thread': {'id': params.get('threadId') or 'th-1'}}
+            return {'thread': {'id': params.get('threadId') or 'th-1', 'ephemeral': True}}
         if method == 'turn/start':
             for note in self.notifications:
                 self.events.put(note)
@@ -106,6 +107,9 @@ class CodexStreamingTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
+        version = patch('kel.native.version_of', return_value='codex-cli 0.159.2')
+        version.start()
+        self.addCleanup(version.stop)
 
     def adapter(self, connection):
         adapter = NativeAdapter('codex', Path(self.tmp.name) / 'ws', Path(self.tmp.name) / 'logs',

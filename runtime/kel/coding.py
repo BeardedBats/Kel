@@ -990,6 +990,7 @@ class CodingAdapter:
                               'only these files; do not create, change or delete any other file (Kel refuses a change outside them).')
                     elif integrating:
                         head+='\n'+note
+                    from .native import local_session_id
                     result=connection.run(head+' '+TEST_RULES+' '
                     'Do not change the source checkout. '
                     'Do not delete caches or clean the workspace. Kel runs tests after your turn. Avoid generating bytecode. '
@@ -997,7 +998,7 @@ class CodingAdapter:
                     +('\nThis is a brand-new empty project: create the complete application source AND a smoke test file that the configured test command runs and passes. '
                       'Keep everything inside the project root. Prefer the Python standard library; only add dependencies the project can install and document them.' if contract.get('greenfield') else '')
                     +'\nContext:\n'+prompt,
-                    session_id=session_id,cancel=cancel,on_event=progress,
+                    session_id=local_session_id(run['provider'],session_id),cancel=cancel,on_event=progress,
                     on_approval=lambda m,p:self.approval(run,m,p,cancel),**run_options)
             result.update(observed)
             tokens.apply(result)

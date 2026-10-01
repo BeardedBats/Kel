@@ -17,6 +17,12 @@ from .core import PolicyError
 # copy inside this run's log folder; it is the only other folder a trusted test run may use.
 ORIGINAL_TESTS_DIR = 'original-tests'
 
+def launch_trusted_command(argv,**kwargs):
+    if os.name=='nt':
+        from .windows_command import launch_windows_command
+        return launch_windows_command(argv,**kwargs)
+    return subprocess.Popen(argv,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0),**kwargs)
+
 
 def test_command_env():
     """Environment for the configured test command: provider authentication is not needed."""
@@ -272,6 +278,10 @@ class HostConnection(CodexConnection):
         return args,elevated
 
     def _stop_test_process(self,process):
+        if getattr(process,'_kel_lifetime_group',False) is True:
+            process.kill()
+            process.wait(timeout=5)
+            return
         if process.poll() is not None:return
         if os.name=='nt':
             try:subprocess.run([str(Path(os.environ.get('SystemRoot','C:/Windows'))/'System32'/'taskkill.exe'),
@@ -291,6 +301,7 @@ class HostConnection(CodexConnection):
         if method=='initialize' and self.provider=='claude':
             params['apiKey']=os.environ.get('ANTHROPIC_API_KEY')
         if method in ('thread/start','thread/resume'):
+            if self.provider=='codex':params['ephemeral']=True
             params.update(approvalPolicy='never',developerInstructions=
                 'You are a Kel worker with user-authorized native computer access. Use installed tools as needed for the requested task. '
                 'Use the assigned repository copy for code changes. '+boundary(self._memory())+
@@ -319,19 +330,24 @@ class HostConnection(CodexConnection):
         if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped before execution.')
         sandbox_argv,elevated=self._trusted_test_argv(cwd,argv)
         if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped before execution.')
+        transport=getattr(self,'process',None)
+        if transport is not None and transport.poll() is not None:
+            raise PolicyError('The native transport ended before trusted checks. No unchecked command ran.')
         name='host-original-tests' if original else 'host-tests'
         out=self.logs/(name+'.stdout');err=self.logs/(name+'.stderr')
         env=test_command_env()
         env['PATH']=sandbox_path(env.get('PATH',''))
         with out.open('wb') as stdout,err.open('wb') as stderr:
-            try:process=subprocess.Popen(sandbox_argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env,
-                creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+            try:process=launch_trusted_command(sandbox_argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env)
             except OSError as error:
                 raise PolicyError('The Codex sandbox could not start trusted checks. No unchecked command ran.') from error
             self._test_process=process
             deadline=time.monotonic()+min(100,max(1,params.get('timeoutMs',90000)/1000))
             try:
                 while process.poll() is None:
+                    if transport is not None and transport.poll() is not None:
+                        self._stop_test_process(process)
+                        raise PolicyError('The native transport ended during trusted checks; no passing receipt was recorded.')
                     if getattr(self,'_tests_closed',False):
                         self._stop_test_process(process)
                         raise PolicyError('Trusted checks stopped during execution; no passing receipt was recorded.')
@@ -340,12 +356,18 @@ class HostConnection(CodexConnection):
                         raise PolicyError('Native test execution exceeded its time or output budget; no passing receipt was recorded')
                     time.sleep(.05)
                 if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped; no passing receipt was recorded.')
-            finally:self._test_process=None
+                if transport is not None and transport.poll() is not None:
+                    raise PolicyError('The native transport ended; no passing receipt was recorded.')
+            finally:
+                try:
+                    if getattr(process,'_kel_lifetime_group',False) is True:process.close_tree()
+                finally:self._test_process=None
         return {'exitCode':process.returncode,'stdout':out.read_text(encoding='utf-8',errors='replace'),
             'stderr':err.read_text(encoding='utf-8',errors='replace'),
             '_kel_execution':{'runtime':'native-host','argv':argv,'cwd':str(cwd),'sandbox':True,
                 'original_command':params['command'],'executed_argv':argv,'normalization':normalization,
                 'sandbox_runtime':'codex','configured_mode':'elevated' if elevated else 'unelevated',
+                'command_lifetime':'windows-job-tree' if getattr(process,'_kel_lifetime_group',False) is True else 'platform-process',
                 'read_coverage':'partial-deny-list' if elevated else 'unconfined',
                 'complete_read_confinement':False,'network_requested':self.network,
                 'loopback_network':'allowed-in-synthetic-probe','external_network':'unverified'}}

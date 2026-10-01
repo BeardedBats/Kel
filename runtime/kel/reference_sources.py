@@ -55,7 +55,7 @@ class ReferenceSources:
         _reference_files([{'name':name, 'text':text}], '')
         if type(source_bytes) is not bytes or not 0 < len(source_bytes) <= MAX_BYTES:
             raise PolicyError('Reference originals support 1 byte to 5 MB')
-        if (kind, extraction) not in (('pdf','pdf-text'), ('image','image-ocr')):
+        if (kind, extraction) not in (('pdf','pdf-text'), ('pdf','pdf-ocr'), ('image','image-ocr')):
             raise PolicyError('Unsupported reference extraction')
         if type(pages) is not int or not 1 <= pages <= 100:
             raise PolicyError('Reference extraction supports 1 to 100 pages')

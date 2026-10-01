@@ -11,7 +11,7 @@ import subprocess
 import threading
 import time
 from .internal import child_env
-from .native import executable
+from .native import executable, require_ephemeral_codex
 
 
 class CodexConnection:
@@ -33,6 +33,7 @@ class CodexConnection:
                         'browser_use','computer_use','image_generation','goals','in_app_browser','browser_use_external'):
             args += ['--disable', feature]
         if process_argv is not None:args=process_argv
+        self._private_codex_command=args[:1]
         env = child_env(keep=('OPENAI_API_KEY',))  # the trusted Codex child's own credential (R7.C)
         self.process = subprocess.Popen(args, cwd=self.workspace, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=self.err, text=True, encoding='utf-8', env=env,
@@ -73,6 +74,15 @@ class CodexConnection:
             self.process.stdin.flush()
 
     def call(self,method,params,timeout=25):
+        private_thread = getattr(self,'provider','codex') == 'codex' and method in ('thread/start','thread/resume')
+        if private_thread:
+            if method=='thread/resume':
+                raise RuntimeError('Kel cannot resume a stored Codex session. Use the current Kel context in a new request.')
+            require_ephemeral_codex(getattr(self,'_private_codex_command',None))
+            params=dict(params)
+            for key in ('threadId','path','history','persistExtendedHistory'):
+                params.pop(key,None)
+            params['ephemeral']=True
         waiter=queue.Queue()
         with self.lock:
             self.next_id+=1
@@ -82,7 +92,10 @@ class CodexConnection:
             self.send({'id':rid,'method':method,'params':params})
             reply=waiter.get(timeout=timeout)
             if 'error' in reply: raise RuntimeError(str(reply['error']))
-            return reply.get('result',{})
+            result=reply.get('result',{})
+            if private_thread and (not isinstance(result,dict) or not isinstance(result.get('thread'),dict) or result['thread'].get('ephemeral') is not True):
+                raise RuntimeError('Codex did not confirm a private temporary session. No Kel prompt was sent.')
+            return result
         finally:
             with self.lock: self.pending.pop(rid,None)
 
@@ -104,6 +117,8 @@ class CodexConnection:
         """`model`/`effort` (D-67): the role's model and Codex's per-turn reasoning level (`effort=None`
         keeps the model's own default). Kel's Claude Code host takes its reasoning level once per
         thread (`thread_effort`, its --effort flag) and its own --fallback-model alias."""
+        if session_id and getattr(self,'provider','codex')=='codex':
+            raise RuntimeError('Kel cannot resume a stored Codex session. Use the current Kel context in a new request.')
         params={'cwd':self.workspace,'sandbox':sandbox,'approvalPolicy':'on-request',
                 'approvalsReviewer':'user','developerInstructions':
                 'You are one Kel worker. Do only the requested work in the assigned folder. '

@@ -6,6 +6,8 @@ from .core import PolicyError
 
 _NUMBERS = {word:index for index,word in enumerate(('one','two','three','four','five','six','seven','eight','nine','ten'),1)}
 _COUNT = r'(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten)'
+_PARAGRAPH_NOUN = r'(?:(?:short|brief|concise)\s+)?paragraphs?'
+_PARAGRAPH_PHRASE = _COUNT + r'\s+' + _PARAGRAPH_NOUN
 
 
 def paragraph_count(text):
@@ -15,13 +17,13 @@ def paragraph_count(text):
 def _paragraph_limit(text):
     if re.search(r'\b(?:in|as|use|using|with|include|add|create|make|write)\s+(?:(?:a|an|the|only)\s+)?(?:(?:numbered|bulleted|ordered|unordered|markdown)\s+)?(?:bullets?|bullet points?|lists?|tables?|headings?)\b',text,re.I):
         return None  # Explicit structured formats are not prose paragraph constraints.
-    if len(re.findall(r'\b'+_COUNT+r'(?:\s+|-)paragraphs?\b',text,re.I)) != 1:
+    if len(re.findall(r'\b'+_COUNT+r'(?:\s+|-)' + _PARAGRAPH_NOUN + r'\b',text,re.I)) != 1:
         return None
-    if re.search(r'\b(?:each|per)\s+paragraph\b|\bparagraphs?\s+each\b',text,re.I):
+    if re.search(r'\b(?:each|per)\s+' + _PARAGRAPH_NOUN + r'\b|\bparagraphs?\s+each\b',text,re.I):
         return None
-    if re.search(r'\b(?:about|roughly|approximately|around|at least|between)\s+'+_COUNT+r'\s+(?:and\s+'+_COUNT+r'\s+)?paragraphs?\b|\b'+_COUNT+r'\s*(?:-|to|or)\s*'+_COUNT+r'\s+paragraphs?\b',text,re.I):
+    if re.search(r'\b(?:about|roughly|approximately|around|at least|between)\s+(?:'+_COUNT+r'\s+and\s+)?'+_PARAGRAPH_PHRASE+r'\b|\b'+_COUNT+r'\s*(?:-|to|or)\s*'+_PARAGRAPH_PHRASE+r'\b',text,re.I):
         return None
-    matches = list(re.finditer(r'\b(?:in|as|use|using|write|draft|rewrite|revise|make|create|return|produce|give(?:\s+me)?)\s+(?:only\s+)?(?:exactly\s+)?('+_COUNT+r')\s+paragraphs?\b|\b('+_COUNT+r')-paragraph\s+(?:reply|response|summary|description|explanation|answer|draft)\b',text,re.I))
+    matches = list(re.finditer(r'\b(?:in|as|use|using|write|draft|rewrite|revise|make|create|return|produce|give(?:\s+me)?)\s+(?:only\s+)?(?:exactly\s+)?('+_COUNT+r')\s+'+_PARAGRAPH_NOUN+r'\b|\b('+_COUNT+r')-paragraph\s+(?:reply|response|summary|description|explanation|answer|draft)\b',text,re.I))
     if len(matches) != 1:
         return None
     value = (matches[0].group(1) or matches[0].group(2)).lower()
@@ -37,7 +39,7 @@ def parse(request):
     text = re.sub(r'```[\s\S]*?(?:```|$)|`[^`]*(?:`|$)|"[^"]*(?:"|$)|“[^”]*(?:”|$)|(?<!\w)\x27[^\x27\n]*\x27(?!\w)|(?<!\w)‘[^’\n]*’(?!\w)', ' ', text)
     if not re.match(r'^\s*(?:(?:please|can you|could you|would you)\s+)*(?:write|draft|rewrite|revise|summarize|summarise|explain|answer|describe|make|give|create)\b', text, re.I):
         return None
-    if re.search(r'\b(?:each|per)\s+paragraph\b|\bwords?\s+each\b',text,re.I):
+    if re.search(r'\b(?:each|per)\s+'+_PARAGRAPH_NOUN+r'\b|\bwords?\s+each\b',text,re.I):
         return None  # Per-part counts are not a total reply count.
     paragraphs = _paragraph_limit(text)
     if re.search(r'\b(?:about|roughly|approximately|around|at least)\s+\d+\s*-?\s*words?\b|\bbetween\s+\d+\s+(?:and|to)\s+\d+\s+words?\b', text, re.I):

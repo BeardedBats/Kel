@@ -39,7 +39,7 @@ export const kelWorkImports = {
 
 export interface KelReferenceSource {
   id: string; name: string; source_sha256: string; source_bytes: number; text_sha256: string;
-  text_chars: number; kind: 'pdf' | 'image'; extraction: 'pdf-text' | 'image-ocr'; pages: number;
+  text_chars: number; kind: 'pdf' | 'image'; extraction: 'pdf-text' | 'pdf-ocr' | 'image-ocr'; pages: number;
   language: string | null; trust: 'external-untrusted'; state: 'staged' | 'adopted'; snippet: string;
   text?: string;
 }

@@ -173,13 +173,13 @@ export function WorkImport({ projectId }: { projectId: string }) {
       <input ref={fileInput} type="file" hidden multiple disabled={busy} aria-label="Reference files" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp"
         onChange={event => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ''; void addFiles(files); }} />
       <div className="kel-row"><KelButton disabled={busy || referenceFiles.length + extractedFiles.length >= 10} onClick={() => fileInput.current?.click()}>Add reference files</KelButton></div>
-      <p className="kel-meta">Text, PDF text and image OCR stay with the transcript. Review extracted text for errors. Layout, diagrams and external attachments are not reconstructed.</p>
+      <p className="kel-meta">Text, PDF text, PDF OCR and image OCR stay with the transcript. Review extracted text for errors. Layout, diagrams and external attachments are not reconstructed.</p>
       {referenceFiles.length > 0 && <ul>{referenceFiles.map(file => <li key={file.name}>
         <span>{file.name} · {file.text.length.toLocaleString()} characters </span>
         <KelButton variant="quiet" disabled={busy} ariaLabel={`Remove ${file.name}`} onClick={() => { invalidate(); setReferenceFiles(current => current.filter(item => item.name !== file.name)); }}>Remove</KelButton>
       </li>)}</ul>}
       {extractedFiles.length > 0 && <ul>{extractedFiles.map(file => <li key={file.id}>
-        <span>{file.name} · {file.kind === 'pdf' ? 'PDF text' : 'Image text · OCR'} · {file.text_chars.toLocaleString()} characters </span>
+        <span>{file.name} · {file.kind === 'pdf' ? (file.extraction === 'pdf-ocr' ? 'PDF text · OCR' : 'PDF text') : 'Image text · OCR'} · {file.text_chars.toLocaleString()} characters </span>
         <KelButton variant="quiet" disabled={busy} onClick={() => void original(file)}>Save original</KelButton>
         <KelButton variant="quiet" disabled={busy} ariaLabel={`Remove ${file.name}`} onClick={() => void removeExtracted(file)}>Remove</KelButton>
         <details><summary>Review all extracted text</summary><pre tabIndex={0} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 280, overflow: 'auto' }}>{file.text}</pre></details>

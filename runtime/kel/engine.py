@@ -141,7 +141,8 @@ class Engine:
                 previous=db.execute("SELECT native_session FROM runs WHERE job_id=? AND milestone_id=? AND provider=? AND state!='ORPHANED' AND native_session IS NOT NULL ORDER BY rowid DESC LIMIT 1",
                                     (run['job_id'],run['milestone_id'],run['provider'])).fetchone()
             started = time.monotonic()
-            result = adapter.execute(prompt, run_id=run['id'], session_id=previous['native_session'] if previous else None, cancel=cancel)
+            from .native import local_session_id
+            result = adapter.execute(prompt, run_id=run['id'], session_id=local_session_id(run['provider'],previous['native_session'] if previous else None), cancel=cancel)
             if isinstance(result, dict):
                 result.setdefault('wall_ms', int((time.monotonic() - started) * 1000))
                 result.setdefault('duration', round(result['wall_ms'] / 1000, 3))
