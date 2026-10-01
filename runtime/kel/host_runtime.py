@@ -1,9 +1,12 @@
 """User-authorized native host execution, bounded to the run's working copy (FN-01, `runtime_guard`)."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import re
+import stat
 import time
 from .appserver import CodexConnection
 from .native import executable
@@ -47,6 +50,65 @@ def sandbox_path(path):
                            if p and not p.replace('/','\\').rstrip('\\').lower().endswith('\\microsoft\\windowsapps'))
 
 
+def plain_test_path(path):
+    """Validate lexical command scope before a profile can grant it writes."""
+    path=Path(os.path.abspath(path))
+    for part in (path,*path.parents):
+        try:info=part.lstat()
+        except OSError as error:raise PolicyError('The trusted check folder is unavailable.') from error
+        if part.is_symlink() or getattr(info,'st_file_attributes',0)&0x400:
+            raise PolicyError('Trusted checks cannot use a linked folder.')
+    if not path.is_dir():raise PolicyError('The trusted check folder is unavailable.')
+    return path
+
+
+NPM_SHIM_HASHES={
+    'npm':'21b46c69ad6e2f231f02a9e120f4ba6c8e75fef5a45637103002eab99f888ab8',
+    'npx':'4dd3574f4396fc3b45c52b6ac80fd52be2dd2660d2a153b4cc807dbbfeefa7a0'}
+
+
+def normalize_installed_npm(command,owned_roots):
+    """Recognized installed npm shims only; never executes a shim or prefix shell."""
+    if not command or not all(isinstance(p,str) and p and '\0' not in p for p in command):
+        raise PolicyError('Invalid native test command')
+    shim=Path(os.path.abspath(shutil.which(command[0]) or command[0]))
+    tool=shim.stem.lower()
+    if shim.suffix.lower()!='.cmd' or tool not in NPM_SHIM_HASHES:return None
+    refusal='This npm shim cannot run as a trusted check. Use the installed Node executable and npm entry point.'
+    def installed_file(path):
+        path=Path(os.path.abspath(path))
+        if any(path.is_relative_to(Path(os.path.abspath(root))) for root in owned_roots):raise PolicyError(refusal)
+        plain_test_path(path.parent)
+        try:info=path.lstat()
+        except OSError as error:raise PolicyError(refusal) from error
+        if not stat.S_ISREG(info.st_mode) or path.is_symlink() or getattr(info,'st_file_attributes',0)&0x400:
+            raise PolicyError(refusal)
+        return path
+    shim=installed_file(shim)
+    node=installed_file(shim.parent/'node.exe')
+    selected=shutil.which('node')
+    if not selected or Path(os.path.abspath(selected))!=node:raise PolicyError(refusal)
+    with shim.open('rb') as source:body=source.read(8193)
+    if len(body)>8192 or hashlib.sha256(body).hexdigest()!=NPM_SHIM_HASHES[tool]:raise PolicyError(refusal)
+    package=installed_file(shim.parent/'node_modules'/'npm'/'package.json')
+    def unique(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:raise ValueError('duplicate key')
+            result[key]=value
+        return result
+    try:
+        with package.open('rb') as source:body=source.read(65537)
+        if len(body)>65536:raise ValueError('package too large')
+        metadata=json.loads(body,object_pairs_hook=unique)
+        version=metadata.get('version')
+        if metadata.get('name')!='npm' or not isinstance(version,str) or not re.fullmatch(r'\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?',version) or len(version)>60:
+            raise ValueError('invalid package')
+    except (ValueError,UnicodeError,AttributeError):raise PolicyError(refusal) from None
+    entry=installed_file(package.parent/'bin'/(tool+'-cli.js'))
+    return [str(node),str(entry),*command[1:]],{'kind':'adjacent-installed-npm','tool':tool,'package_version':version}
+
+
 def boundary(memory):
     """D-81: the words every worker gets about where it may work (enforced separately, not by trust)."""
     return ('You work only inside the assigned working copy and inside Kel\'s Memory folder (%s). You may read and write '
@@ -76,6 +138,9 @@ class HostConnection(CodexConnection):
     def __init__(self,workspace,logs,provider='codex'):
         from . import runtime_guard
         self.provider=provider
+        self._trusted_workspace=plain_test_path(workspace)
+        info=self._trusted_workspace.stat()
+        self._trusted_workspace_identity=(info.st_dev,info.st_ino)
         logs=Path(logs)
         # The run's logs live at <engine root>/native-logs/<run id>.
         self.engine_root=logs.parent.parent
@@ -176,6 +241,51 @@ class HostConnection(CodexConnection):
             self.memory=memory_root(getattr(self,'engine_root',None))
         return self.memory
 
+    def _trusted_test_argv(self,cwd,command):
+        from . import memory_folder, runtime_guard
+        try:codex=executable('codex')
+        except Exception as error:
+            raise PolicyError('Trusted checks need the installed Codex sandbox. No unchecked command ran.') from error
+        elevated=memory_folder.codex_elevated(self.engine_root)
+        if elevated:
+            probe=None
+            try:
+                if self.provider=='codex':
+                    status=super().call('windowsSandbox/readiness',{},timeout=10).get('status')
+                else:
+                    args=codex+['app-server','--stdio',*runtime_guard.codex_config(
+                        self.network,codex,cwd,self.engine_root,self.temp,True)]
+                    probe=CodexConnection(cwd,self.logs,process_argv=args)
+                    status=probe.call('windowsSandbox/readiness',{},timeout=10).get('status')
+            except Exception:status='unknown'
+            finally:
+                if probe is not None:probe.close()
+            if status!='ready':
+                memory_folder.codex_not_ready(self.engine_root,status)
+                raise PolicyError('Trusted checks could not confirm the stronger Windows sandbox. No weaker command ran.')
+        if isinstance(command,str):
+            # host_command already validated and quoted the Windows batch command.
+            command=[os.environ.get('COMSPEC','cmd.exe'),'/d','/s','/c',command.split(' /d /s /c ',1)[1]]
+        args=codex+['sandbox','--permission-profile',runtime_guard.CODEX_PROFILE,
+            *runtime_guard.codex_config(self.network,codex,cwd,self.engine_root,self.temp,elevated),
+            '-C',str(cwd),'--',*command]
+        return args,elevated
+
+    def _stop_test_process(self,process):
+        if process.poll() is not None:return
+        if os.name=='nt':
+            try:subprocess.run([str(Path(os.environ.get('SystemRoot','C:/Windows'))/'System32'/'taskkill.exe'),
+                '/PID',str(process.pid),'/T','/F'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5)
+            except (OSError,subprocess.TimeoutExpired):pass
+        if process.poll() is None:process.kill()
+        process.wait(timeout=5)
+
+    def close(self):
+        self._tests_closed=True
+        process=getattr(self,'_test_process',None)
+        if process is not None:self._stop_test_process(process)
+        super().close()
+
     def call(self,method,params,timeout=25):
         params=dict(params)
         if method=='initialize' and self.provider=='claude':
@@ -195,22 +305,47 @@ class HostConnection(CodexConnection):
             # Likewise a per-turn `sandboxPolicy` (it would also make the whole machine temp writable).
             params.pop('sandboxPolicy',None)
         if method!='command/exec':return super().call(method,params,timeout)
-        cwd=Path(params.get('cwd',self.workspace)).resolve()
-        original=cwd==(Path(self.logs)/ORIGINAL_TESTS_DIR).resolve()
-        if cwd!=Path(self.workspace).resolve() and not original:raise PolicyError('Trusted tests changed their working directory')
-        argv=host_command(params['command'])
+        cwd=Path(os.path.abspath(params.get('cwd',self.workspace)))
+        owned=Path(os.path.abspath(getattr(self,'_trusted_workspace',self.workspace)))
+        original=cwd==Path(os.path.abspath(Path(self.logs)/ORIGINAL_TESTS_DIR))
+        if cwd!=owned and not original:raise PolicyError('Trusted tests changed their working directory')
+        cwd=plain_test_path(cwd)
+        if not original and hasattr(self,'_trusted_workspace_identity'):
+            info=cwd.stat()
+            if (info.st_dev,info.st_ino)!=self._trusted_workspace_identity:
+                raise PolicyError('The trusted check folder changed before execution.')
+        normalized=normalize_installed_npm(params['command'],[cwd,owned,self.engine_root,self.temp,self._memory()])
+        argv,normalization=normalized if normalized else (host_command(params['command']),None)
+        if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped before execution.')
+        sandbox_argv,elevated=self._trusted_test_argv(cwd,argv)
+        if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped before execution.')
         name='host-original-tests' if original else 'host-tests'
         out=self.logs/(name+'.stdout');err=self.logs/(name+'.stderr')
         env=test_command_env()
+        env['PATH']=sandbox_path(env.get('PATH',''))
         with out.open('wb') as stdout,err.open('wb') as stderr:
-            process=subprocess.Popen(argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env,
+            try:process=subprocess.Popen(sandbox_argv,cwd=cwd,stdout=stdout,stderr=stderr,env=env,
                 creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+            except OSError as error:
+                raise PolicyError('The Codex sandbox could not start trusted checks. No unchecked command ran.') from error
+            self._test_process=process
             deadline=time.monotonic()+min(100,max(1,params.get('timeoutMs',90000)/1000))
-            while process.poll() is None:
-                if time.monotonic()>deadline or out.stat().st_size+err.stat().st_size>2_000_000:
-                    process.kill();process.wait(timeout=5)
-                    raise PolicyError('Native test execution exceeded its time or output budget; no passing receipt was recorded')
-                time.sleep(.05)
+            try:
+                while process.poll() is None:
+                    if getattr(self,'_tests_closed',False):
+                        self._stop_test_process(process)
+                        raise PolicyError('Trusted checks stopped during execution; no passing receipt was recorded.')
+                    if time.monotonic()>deadline or out.stat().st_size+err.stat().st_size>2_000_000:
+                        self._stop_test_process(process)
+                        raise PolicyError('Native test execution exceeded its time or output budget; no passing receipt was recorded')
+                    time.sleep(.05)
+                if getattr(self,'_tests_closed',False):raise PolicyError('Trusted checks stopped; no passing receipt was recorded.')
+            finally:self._test_process=None
         return {'exitCode':process.returncode,'stdout':out.read_text(encoding='utf-8',errors='replace'),
             'stderr':err.read_text(encoding='utf-8',errors='replace'),
-            '_kel_execution':{'runtime':'native-host','argv':argv,'cwd':str(cwd),'sandbox':False}}
+            '_kel_execution':{'runtime':'native-host','argv':argv,'cwd':str(cwd),'sandbox':True,
+                'original_command':params['command'],'executed_argv':argv,'normalization':normalization,
+                'sandbox_runtime':'codex','configured_mode':'elevated' if elevated else 'unelevated',
+                'read_coverage':'partial-deny-list' if elevated else 'unconfined',
+                'complete_read_confinement':False,'network_requested':self.network,
+                'loopback_network':'allowed-in-synthetic-probe','external_network':'unverified'}}

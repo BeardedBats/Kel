@@ -1,6 +1,10 @@
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
+# This child accepts only selected bytes through stdin. It never opens Kel data.
+if sys.argv[1:] == ['--reference-extract-worker']:
+    from kel.reference_extract import worker_main
+    raise SystemExit(worker_main())
 from kel import service
 from kel.runner import run_broker
 from kel.core import Store

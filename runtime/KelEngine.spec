@@ -19,6 +19,8 @@ a = Analysis(
         (str(BASE / 'kel' / 'host_claude.mjs'), 'kel'),
         # FN-01: the Claude Code PreToolUse guard (keeps workers out of Kel's data, app and credentials).
         (str(BASE / 'kel' / 'guard_hook.mjs'), 'kel'),
+        (str(BASE / 'kel' / 'reference_ocr.ps1'), 'kel'),
+        (str(BASE.parent / 'third_party' / 'PYPDF-LICENSE.txt'), 'licenses'),
     # D-57: IANA time zone data for scheduled tasks (Windows has no system zoneinfo database;
     # without it the engine falls back to the computer's own zone). See runtime/requirements.txt.
     ] + collect_data_files('tzdata'),

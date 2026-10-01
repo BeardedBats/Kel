@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { KelButton, KelCard } from './KelPrimitives';
-import { KEL_ALL_CONVERSATIONS, kelArtifacts, kelHubSearch, kelOffice, kelProcedures, kelState, kelTaskOutcomes, kelWorkImports, type KelArtifactVersion, type KelContextStatus, type KelImportPreview, type KelProcedure, type KelOfficeItem, type KelTaskOutcome } from './kelApi';
+import { KEL_ALL_CONVERSATIONS, kelArtifacts, kelHubSearch, kelOffice, kelProcedures, kelReferences, kelState, kelTaskOutcomes, kelWorkImports, type KelArtifactVersion, type KelContextStatus, type KelImportPreview, type KelProcedure, type KelOfficeItem, type KelTaskOutcome, type KelReferenceSource } from './kelApi';
 import { ALL_PROJECTS, useProjects } from './activeProject';
 import { jobRouteFor } from './needsAttention';
 import { openWorkCard } from './workCards/workCardEvents';
@@ -26,6 +26,9 @@ export function WorkImport({ projectId }: { projectId: string }) {
   const [source, setSource] = useState('other');
   const [format, setFormat] = useState('text');
   const [referenceFiles, setReferenceFiles] = useState<Array<{ name: string; text: string }>>([]);
+  const [extractedFiles, setExtractedFiles] = useState<KelReferenceSource[]>([]);
+  const [savedSources, setSavedSources] = useState<KelReferenceSource[]>([]);
+  const [sourcesError, setSourcesError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<KelImportPreview | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,7 +36,11 @@ export function WorkImport({ projectId }: { projectId: string }) {
   const generation = useRef(0);
   useEffect(() => {
     generation.current += 1; setPreview(null); setError(''); setBusy(false);
-    return () => { generation.current += 1; };
+    setReferenceFiles([]); setExtractedFiles([]); setSavedSources([]); setContent(''); setTranscriptName('');
+    setSourcesError(''); let alive = true;
+    kelReferences.list(projectId).then(value => { if (alive) setSavedSources(value.entries.filter(item => item.state === 'adopted')); })
+      .catch(failure => { if (alive) setSourcesError(failureSentence(failure, 'Saved reference originals could not be listed.')); });
+    return () => { alive = false; generation.current += 1; };
   }, [projectId]);
   const run = async (confirm: boolean) => {
     if (busy) return;
@@ -41,7 +48,7 @@ export function WorkImport({ projectId }: { projectId: string }) {
     setBusy(true); setError('');
     try {
       if (!confirm) {
-        const result = await kelWorkImports.preview(projectId, { content, source, format, title: transcriptName, reference_files: referenceFiles });
+        const result = await kelWorkImports.preview(projectId, { content, source, format, title: transcriptName, reference_files: referenceFiles, extraction_ids: extractedFiles.map(item => item.id) });
         if (epoch === generation.current) setPreview(result);
       } else if (preview) {
         const imported = await kelWorkImports.confirm(projectId, preview);
@@ -67,7 +74,7 @@ export function WorkImport({ projectId }: { projectId: string }) {
       if (!text.trim() || text.length > 100000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) {
         throw new Error('Choose a readable UTF-8 transcript with at most 100,000 characters.');
       }
-      if (text.length + referenceFiles.reduce((size, item) => size + item.name.length + item.text.length, 0) > 100000) {
+      if (text.length + referenceFiles.reduce((size, item) => size + item.name.length + item.text.length, 0) + extractedFiles.reduce((size, item) => size + item.name.length + item.text_chars, 0) > 100000) {
         throw new Error('The transcript and reference files can contain at most 100,000 characters together.');
       }
       if (epoch === generation.current) { setContent(text); setTranscriptName(file.name); }
@@ -80,58 +87,102 @@ export function WorkImport({ projectId }: { projectId: string }) {
     invalidate();
     const epoch = generation.current;
     setBusy(true);
+    const staged: KelReferenceSource[] = [];
     try {
-      if (files.length + referenceFiles.length > 10) throw new Error('Choose at most 10 reference files.');
-      const names = new Set(referenceFiles.map(file => file.name.toLocaleLowerCase()));
+      if (files.length + referenceFiles.length + extractedFiles.length > 10) throw new Error('Choose at most 10 reference files.');
+      const names = new Set([...referenceFiles, ...extractedFiles].map(file => file.name.toLocaleLowerCase()));
       for (const file of files) {
-        if (!/\.(txt|md|csv|json|jsonl|log|yaml|yml)$/i.test(file.name)) throw new Error('Choose UTF-8 text files, such as TXT, Markdown, CSV or JSON.');
-        if (file.size > 120000) throw new Error('Each reference file can contain at most 30,000 characters.');
+        if (!/\.(txt|md|csv|json|jsonl|log|yaml|yml|pdf|png|jpe?g|gif|webp)$/i.test(file.name)) throw new Error('Choose a text file, PDF, PNG, JPEG, GIF or WebP image.');
+        if (file.name.length > 200) throw new Error('Choose a reference with a shorter filename.');
+        if (/\.(pdf|png|jpe?g|gif|webp)$/i.test(file.name) ? file.size > 5000000 : file.size > 120000) throw new Error('Each PDF or image can contain at most 5 MB. Text files can contain at most 30,000 characters.');
         const name = file.name.toLocaleLowerCase();
         if (names.has(name)) throw new Error('Each reference file needs a different name.');
         names.add(name);
       }
-      const added = await Promise.all(files.map(async file => {
-        const text = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      const added: Array<{ name: string; text: string }> = [];
+      for (const file of files) {
+        if (epoch !== generation.current) throw new Error('The import was closed or its Project changed.');
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (epoch !== generation.current) throw new Error('The import was closed or its Project changed.');
+        if (/\.(pdf|png|jpe?g|gif|webp)$/i.test(file.name)) {
+          let binary = '';
+          for (let start = 0; start < bytes.length; start += 32768) binary += String.fromCharCode(...bytes.subarray(start, start + 32768));
+          staged.push(await kelReferences.extract(projectId, file.name, btoa(binary)));
+          continue;
+        }
+        const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
         if (!text.trim() || text.length > 30000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) {
           throw new Error('Choose readable text files with at most 30,000 characters each.');
         }
-        return { name: file.name, text };
-      }));
+        added.push({ name: file.name, text });
+      }
       const next = [...referenceFiles, ...added];
-      if (content.length + next.reduce((size, file) => size + file.name.length + file.text.length, 0) > 100000) {
+      const nextExtracted = [...extractedFiles, ...staged];
+      if (content.length + next.reduce((size, file) => size + file.name.length + file.text.length, 0) + nextExtracted.reduce((size, file) => size + file.name.length + file.text_chars, 0) > 100000) {
         throw new Error('The transcript and reference files can contain at most 100,000 characters together.');
       }
-      if (epoch === generation.current) setReferenceFiles(next);
+      if (epoch === generation.current) { setReferenceFiles(next); setExtractedFiles(nextExtracted); }
+      else await Promise.allSettled(staged.map(item => kelReferences.discard(projectId, item.id)));
     } catch (failure) {
+      await Promise.allSettled(staged.map(item => kelReferences.discard(projectId, item.id)));
       if (epoch === generation.current) setError(failure instanceof TypeError ? 'Choose text files saved as UTF-8.' : failureSentence(failure, 'Kel could not read these files.'));
     } finally { if (epoch === generation.current) setBusy(false); }
+  };
+  const original = async (item: KelReferenceSource) => {
+    if (busy) return;
+    const epoch = generation.current; setBusy(true); setError('');
+    try {
+      const result = await kelReferences.original(projectId, item.id);
+      if (epoch !== generation.current) return;
+      const decoded = atob(result.content);
+      const bytes = Uint8Array.from(decoded, char => char.charCodeAt(0));
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+      try { const link = document.createElement('a'); link.href = url; link.download = result.metadata.name; link.click(); }
+      finally { setTimeout(() => URL.revokeObjectURL(url), 1000); }
+    } catch (failure) { if (epoch === generation.current) setError(failureSentence(failure, 'The reference original could not be read.')); }
+    finally { if (epoch === generation.current) setBusy(false); }
+  };
+  const removeExtracted = async (item: KelReferenceSource) => {
+    if (busy) return;
+    invalidate(); const epoch = generation.current; setBusy(true);
+    try { await kelReferences.discard(projectId, item.id); if (epoch === generation.current) setExtractedFiles(current => current.filter(file => file.id !== item.id)); }
+    catch (failure) { if (epoch === generation.current) setError(failureSentence(failure, 'The reference could not be removed.')); }
+    finally { if (epoch === generation.current) setBusy(false); }
   };
   return <KelCard title="Bring work into Kel">
     <details><summary>Import a transcript</summary>
       <p>Paste or choose a transcript. Kel saves a separate chat in this Project. External sessions do not resume here.</p>
       <div className="kel-row">
-        <label>Source <select className="kel-select" disabled={busy || format === 'codex-exec-jsonl'} value={source} onChange={e => { invalidate(); setSource(e.target.value); }}>
+        <label>Source <select className="kel-select" disabled={busy || format === 'codex-exec-jsonl' || format === 'claude-code-output'} value={source} onChange={e => { invalidate(); setSource(e.target.value); }}>
           {['other', 'codex', 'claude', 'deepseek'].map(value => <option key={value} value={value}>{value === 'other' ? 'Other' : value}</option>)}
         </select></label>
-        <label>Format <select className="kel-select" disabled={busy} value={format} onChange={e => { invalidate(); setFormat(e.target.value); if (e.target.value === 'codex-exec-jsonl') setSource('codex'); }}>
+        <label>Format <select className="kel-select" disabled={busy} value={format} onChange={e => { invalidate(); setFormat(e.target.value); if (e.target.value === 'codex-exec-jsonl') setSource('codex'); if (e.target.value === 'claude-code-output') setSource('claude'); }}>
           <option value="text">Plain text</option><option value="kel-transcript">Kel transcript JSON</option>
           <option value="codex-exec-jsonl">Codex CLI output JSONL</option>
+          <option value="claude-code-output">Claude Code output JSON / JSONL</option>
         </select></label>
       </div>
       {format === 'codex-exec-jsonl' && <p>Imports completed assistant output from Codex CLI JSONL. Original prompts, tool work, and attachment contents are omitted. Kel does not resume the original session.</p>}
+      {format === 'claude-code-output' && <p>Imports the final successful Claude Code result. Original prompts, tool work, reasoning and attachments are omitted. Kel does not resume the original session.</p>}
       <input ref={transcriptInput} type="file" hidden disabled={busy} aria-label="Transcript file" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml"
         onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; void chooseTranscript(file); }} />
       <div className="kel-row"><KelButton disabled={busy} onClick={() => transcriptInput.current?.click()}>Choose transcript file</KelButton></div>
       {transcriptName && <p className="kel-meta">{transcriptName} · Check the format above before reviewing.</p>}
       <label>Transcript<textarea className="kel-input" rows={6} style={{ width: '100%' }} disabled={busy} value={content}
         onChange={e => { invalidate(); setContent(e.target.value); setTranscriptName(''); }} /></label>
-      <input ref={fileInput} type="file" hidden multiple disabled={busy} aria-label="Reference text files" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml"
+      <input ref={fileInput} type="file" hidden multiple disabled={busy} aria-label="Reference files" accept=".txt,.md,.csv,.json,.jsonl,.log,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.gif,.webp"
         onChange={event => { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ''; void addFiles(files); }} />
-      <div className="kel-row"><KelButton disabled={busy || referenceFiles.length >= 10} onClick={() => fileInput.current?.click()}>Add text files</KelButton></div>
-      <p className="kel-meta">Add reference text you want Kel to keep with this transcript. Images and other attachment contents are not restored.</p>
+      <div className="kel-row"><KelButton disabled={busy || referenceFiles.length + extractedFiles.length >= 10} onClick={() => fileInput.current?.click()}>Add reference files</KelButton></div>
+      <p className="kel-meta">Text, PDF text and image OCR stay with the transcript. Review extracted text for errors. Layout, diagrams and external attachments are not reconstructed.</p>
       {referenceFiles.length > 0 && <ul>{referenceFiles.map(file => <li key={file.name}>
         <span>{file.name} · {file.text.length.toLocaleString()} characters </span>
         <KelButton variant="quiet" disabled={busy} ariaLabel={`Remove ${file.name}`} onClick={() => { invalidate(); setReferenceFiles(current => current.filter(item => item.name !== file.name)); }}>Remove</KelButton>
+      </li>)}</ul>}
+      {extractedFiles.length > 0 && <ul>{extractedFiles.map(file => <li key={file.id}>
+        <span>{file.name} · {file.kind === 'pdf' ? 'PDF text' : 'Image text · OCR'} · {file.text_chars.toLocaleString()} characters </span>
+        <KelButton variant="quiet" disabled={busy} onClick={() => void original(file)}>Save original</KelButton>
+        <KelButton variant="quiet" disabled={busy} ariaLabel={`Remove ${file.name}`} onClick={() => void removeExtracted(file)}>Remove</KelButton>
+        <details><summary>Review all extracted text</summary><pre tabIndex={0} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', maxHeight: 280, overflow: 'auto' }}>{file.text}</pre></details>
       </li>)}</ul>}
       {preview && <section aria-label="Import review"><h3>{preview.title}</h3><p>{preview.message_count} {preview.message_count === 1 ? 'message' : 'messages'}</p>
         <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{preview.snippet}</pre>
@@ -148,6 +199,10 @@ export function WorkImport({ projectId }: { projectId: string }) {
         {busy ? 'Working…' : preview ? 'Confirm import and open chat' : 'Review import'}
       </KelButton>
     </details>
+    {savedSources.length > 0 && <details><summary>Saved reference originals</summary><ul>{savedSources.map(file => <li key={file.id}>
+      <span>{file.name} </span><KelButton variant="quiet" disabled={busy} onClick={() => void original(file)}>Save original</KelButton>
+    </li>)}</ul></details>}
+    {sourcesError && <p role="status">{sourcesError}</p>}
   </KelCard>;
 }
 

@@ -2,3 +2,5 @@
 # Install before building: python -m pip install -r runtime/requirements.txt
 # D-57: IANA time zone data for scheduled tasks (Windows has no system zoneinfo database).
 tzdata==2025.3
+# Selected PDF reference text; parsing runs in a bounded child process.
+pypdf==6.9.2

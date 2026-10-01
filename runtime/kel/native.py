@@ -8,6 +8,8 @@ import json
 import os
 import re
 import stat
+import base64
+import hashlib
 from pathlib import Path
 import shutil
 import subprocess
@@ -196,12 +198,9 @@ def _plain_schema_path(path, directory=False):
     return path
 
 
-def _schema_session(root, run_id, schema):
-    if not isinstance(schema, dict) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', str(run_id)):
-        raise RuntimeError('Invalid internal structured correction request.')
-    raw = json.dumps(schema, ensure_ascii=False, allow_nan=False).encode('utf-8')
-    if len(raw) > 32000:
-        raise RuntimeError('Structured correction schema is too large.')
+def _input_session(root, run_id):
+    if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', str(run_id)):
+        raise RuntimeError('Invalid internal private input request.')
     base = _plain_schema_path(root, directory=True)
     parent = base / 'sessions'
     if not parent.exists():
@@ -210,6 +209,16 @@ def _schema_session(root, run_id, schema):
     session = parent / str(run_id)
     session.mkdir()  # An existing run is never reused for schema or final output.
     _plain_schema_path(session, directory=True)
+    return session
+
+
+def _schema_session(root, run_id, schema):
+    if not isinstance(schema, dict):
+        raise RuntimeError('Invalid internal structured correction request.')
+    raw = json.dumps(schema, ensure_ascii=False, allow_nan=False).encode('utf-8')
+    if len(raw) > 32000:
+        raise RuntimeError('Structured correction schema is too large.')
+    session = _input_session(root, run_id)
     schema_path, final_path = session / 'correction-schema.json', session / 'correction-final.json'
     with schema_path.open('xb') as handle:
         handle.write(raw)
@@ -218,6 +227,49 @@ def _schema_session(root, run_id, schema):
     _plain_schema_path(schema_path)
     _plain_schema_path(final_path)
     return session, schema_path, final_path
+
+
+def _stage_image_inputs(session, images):
+    from .context import image_mime
+    if not isinstance(images,list) or not 1<=len(images)<=10:
+        raise RuntimeError('Use one to ten verified image inputs.')
+    decoded=[]
+    for image in images:
+        if not isinstance(image,dict) or set(image)!={'mime','data','sha256'} or not isinstance(image['data'],str) or len(image['data'])>6_666_668:
+            raise RuntimeError('Invalid verified image input.')
+        raw=base64.b64decode(image['data'],validate=True)
+        media=image_mime(raw)
+        if not 0<len(raw)<=5_000_000 or media is None or media!=image['mime'] or hashlib.sha256(raw).hexdigest()!=image['sha256']:
+            raise RuntimeError('Image input bytes or type do not match selection.')
+        decoded.append((raw,media,image['sha256']))
+    paths=[]
+    for index,(raw,media,sha) in enumerate(decoded,1):
+        _plain_schema_path(session,directory=True)
+        path=session/('image-%d.%s' % (index,{'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp'}[media]))
+        with path.open('xb') as handle:
+            handle.write(raw)
+        _plain_schema_path(path)
+        _verify_image_leaf(path,sha,len(raw))
+        paths.append(path)
+    return paths
+
+
+def _verify_image_leaf(path, sha, size):
+    path=_plain_schema_path(path)
+    before=path.stat()
+    if before.st_size!=size or not 0<size<=5_000_000:
+        raise RuntimeError('Staged image input changed.')
+    descriptor=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_BINARY',0))
+    with os.fdopen(descriptor,'rb') as source:
+        opened=os.fstat(source.fileno())
+        if opened.st_nlink!=1 or (opened.st_dev,opened.st_ino)!=(before.st_dev,before.st_ino):
+            raise RuntimeError('Staged image input changed.')
+        raw=source.read(5_000_001)
+    _plain_schema_path(path)
+    after=path.stat()
+    if ((after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns)!=(before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)
+            or len(raw)!=size or hashlib.sha256(raw).hexdigest()!=sha):
+        raise RuntimeError('Staged image input changed.')
 
 
 def _schema_final(path):
@@ -327,17 +379,17 @@ class NativeAdapter:
             args += ['--resume', session_id]
         return args
 
-    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None):
+    def execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None, images=None):
         """Run one prompt. A per-model overlay (kel.overlays; none are registered today) is appended
         as a subordinate note and recorded on the result."""
         from .overlays import apply as apply_overlay
         prompt, overlay = apply_overlay(prompt, self.provider, self.model)
-        result = self._execute(prompt, run_id, session_id, cancel, process_observer, on_text, output_schema)
+        result = self._execute(prompt, run_id, session_id, cancel, process_observer, on_text, output_schema, images)
         if overlay and isinstance(result, dict):
             result['overlay'] = overlay
         return result
 
-    def _execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None):
+    def _execute(self, prompt, run_id=None, session_id=None, cancel=None, process_observer=None, on_text=None, output_schema=None, images=None):
         """`on_text(answer so far)` (D-75.1): Claude Code streams its words through stream-json.
         `codex exec --json` reports a message only once it is complete (checked live on 0.157.1:
         thread.started, turn.started, item.completed, turn.completed — no partial events), so a
@@ -346,7 +398,9 @@ class NativeAdapter:
         app-server cannot start, the answer arrives whole from exec as before."""
         if output_schema is not None and (self.provider != 'codex' or on_text is not None):
             return dict(outcome='FAILED', error='Structured correction requires buffered Codex output.')
-        if on_text is not None and self.provider == 'codex' and process_observer is None:
+        if images is not None and (self.provider!='codex' or not images):
+            return dict(outcome='FAILED',error='Selected native model does not support these image inputs.')
+        if on_text is not None and self.provider == 'codex' and process_observer is None and images is None:
             streamed = self._codex_stream(prompt, run_id or uid(), session_id, cancel, on_text)
             if streamed is not None:
                 return streamed
@@ -359,13 +413,27 @@ class NativeAdapter:
         try:
             if output_schema is not None:
                 session, schema_path, final_path = _schema_session(self.logs.parent, run_id, output_schema)
+            elif images is not None:
+                session = _input_session(self.logs.parent,run_id)
             else:
                 session = session_dir(self.logs.parent, run_id)
+            image_paths = _stage_image_inputs(session,images) if images is not None else []
         except (OSError, ValueError, RuntimeError, TypeError):
-            return dict(outcome='FAILED', error='Structured correction could not create private output files.')
+            if session is not None:
+                try:
+                    _plain_schema_path(session,directory=True)
+                    cleanup_session(session)
+                except (OSError,RuntimeError):
+                    pass
+            return dict(outcome='FAILED', error='Private native inputs could not be verified or created.')
         env = child_env(self.provider, session=session)
         try:
             argv = self.argv(session_id, stream=stream)
+            if image_paths:
+                exec_index=argv.index('exec')+1
+                for path,image in reversed(list(zip(image_paths,images))):
+                    _verify_image_leaf(path,image['sha256'],len(base64.b64decode(image['data'],validate=True)))
+                    argv[exec_index:exec_index]=['--image',str(path)]
             if output_schema is not None:
                 _plain_schema_path(schema_path)
                 _plain_schema_path(final_path)
@@ -440,6 +508,8 @@ class NativeAdapter:
             if result.get('outcome') == 'SUCCESS':
                 result.setdefault('reasoning_used', self.reasoning())
             result.update(duration=round(time.monotonic()-started, 3), logs=str(stdout_path), provider=self.provider)
+            if image_paths:
+                result['image_inputs']={'count':len(image_paths),'buffered':True}
             result.setdefault('runtime_version', runtime_version(self.provider))
             if self.provider == 'codex' and result.get('session_id') and 'rate_limits' not in result:
                 try:

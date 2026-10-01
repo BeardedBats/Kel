@@ -18,7 +18,7 @@ export interface KelImportPreview {
   snippet: string;
   omissions: Array<string | { name: string; reason: string }>;
   continuation_supported: false;
-  reference_files?: Array<{ name: string; chars: number; sha256: string; status: 'included-reference'; snippet?: string }>;
+  reference_files?: Array<{ name: string; chars: number; sha256: string; status: 'included-reference'; snippet?: string; source?: Pick<KelReferenceSource, 'id' | 'source_sha256' | 'source_bytes' | 'text_sha256' | 'kind' | 'extraction' | 'pages' | 'language'> }>;
 }
 
 export interface KelImportedWork {
@@ -30,11 +30,25 @@ export interface KelImportedWork {
 }
 
 export const kelWorkImports = {
-  preview: (projectId: string, input: { content: string; format?: string; source?: string; source_id?: string; title?: string; reference_files?: Array<{ name: string; text: string }> }) =>
+  preview: (projectId: string, input: { content: string; format?: string; source?: string; source_id?: string; title?: string; reference_files?: Array<{ name: string; text: string }>; extraction_ids?: string[] }) =>
     call<KelImportPreview>('/api/work-hub/imports', { action: 'preview', project_id: projectId, ...input }),
   confirm: (projectId: string, preview: Pick<KelImportPreview, 'preview_id' | 'digest'>) =>
     call<KelImportedWork>('/api/work-hub/imports', { action: 'confirm', project_id: projectId, preview_id: preview.preview_id, digest: preview.digest, confirm: true }),
   list: (projectId: string) => call<{ entries: Array<Record<string, unknown>> }>(`/api/work-hub/imports?project_id=${encodeURIComponent(projectId)}`),
+};
+
+export interface KelReferenceSource {
+  id: string; name: string; source_sha256: string; source_bytes: number; text_sha256: string;
+  text_chars: number; kind: 'pdf' | 'image'; extraction: 'pdf-text' | 'image-ocr'; pages: number;
+  language: string | null; trust: 'external-untrusted'; state: 'staged' | 'adopted'; snippet: string;
+  text?: string;
+}
+
+export const kelReferences = {
+  extract: (projectId: string, name: string, content: string) => call<KelReferenceSource>('/api/work-hub/references', { action: 'extract', project_id: projectId, name, content }),
+  list: (projectId: string) => call<{ entries: KelReferenceSource[] }>(`/api/work-hub/references?project_id=${encodeURIComponent(projectId)}`),
+  original: (projectId: string, id: string) => call<{ metadata: KelReferenceSource; content: string }>('/api/work-hub/references', { action: 'original', project_id: projectId, id }),
+  discard: (projectId: string, id: string) => call<{ discarded: boolean }>('/api/work-hub/references', { action: 'discard', project_id: projectId, id }),
 };
 
 export interface KelProcedure {

@@ -5,12 +5,14 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { WorkImport } from '@renderer/components/kel/WorkHubControls';
 
 const api = vi.hoisted(() => ({ preview: vi.fn(), confirm: vi.fn() }));
-vi.mock('@renderer/components/kel/kelApi', () => ({ kelWorkImports: api }));
+const references = vi.hoisted(() => ({ list: vi.fn() }));
+vi.mock('@renderer/components/kel/kelApi', () => ({ kelWorkImports: api, kelReferences: references }));
 vi.mock('@renderer/components/kel/activeProject', () => ({ ALL_PROJECTS: '*', useProjects: () => ({ active: 'p', loaded: true }) }));
 vi.mock('@renderer/components/kel/ShellSourceCardHeader', () => ({ default: () => null, sourceCard: () => null }));
 vi.mock('@renderer/motion', () => ({ EdgePill: () => null }));
 beforeEach(() => {
   vi.resetAllMocks();
+  references.list.mockResolvedValue({ entries: [] });
   api.preview.mockResolvedValue({ preview_id: 'preview', digest: 'digest', title: 'Imported note', message_count: 1,
     snippet: 'Original text', omissions: [{ name: 'image.png', reason: 'Attachment contents were not imported' }],
     reference_files: [{ name: 'notes.md', chars: 11, sha256: 'hash', status: 'included-reference', snippet: 'Extra facts' }] });
@@ -30,7 +32,7 @@ const open = () => {
 
 it('reviews selected text with original missing attachments and requires confirmation', async () => {
   open();
-  fireEvent.change(screen.getByLabelText('Reference text files'), { target: { files: [file('notes.md', 'Extra facts')] } });
+  fireEvent.change(screen.getByLabelText('Reference files'), { target: { files: [file('notes.md', 'Extra facts')] } });
   await screen.findByRole('button', { name: 'Remove notes.md' });
   fireEvent.click(screen.getByRole('button', { name: 'Review import' }));
   await screen.findByRole('region', { name: 'Included reference files' });
@@ -45,12 +47,12 @@ it('reviews selected text with original missing attachments and requires confirm
 
 it('rejects binary and duplicate selections without dropping earlier text', async () => {
   open();
-  fireEvent.change(screen.getByLabelText('Reference text files'), { target: { files: [file('notes.md', 'Extra facts')] } });
+  fireEvent.change(screen.getByLabelText('Reference files'), { target: { files: [file('notes.md', 'Extra facts')] } });
   await screen.findByRole('button', { name: 'Remove notes.md' });
-  fireEvent.change(screen.getByLabelText('Reference text files'), { target: { files: [file('Notes.MD', 'Changed')] } });
+  fireEvent.change(screen.getByLabelText('Reference files'), { target: { files: [file('Notes.MD', 'Changed')] } });
   await screen.findByRole('alert');
   expect(screen.getByText('Each reference file needs a different name.')).toBeTruthy();
-  fireEvent.change(screen.getByLabelText('Reference text files'), { target: { files: [file('bad.txt', 'bad\u0000bytes')] } });
+  fireEvent.change(screen.getByLabelText('Reference files'), { target: { files: [file('bad.txt', 'bad\u0000bytes')] } });
   await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('readable text files'));
   expect(screen.getByRole('button', { name: 'Remove notes.md' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Remove bad.txt' })).toBeNull();
@@ -61,13 +63,14 @@ it('discards a file read completed after switching Projects', async () => {
   let resolve!: (value: ArrayBuffer) => void;
   const pending = new File(['Later'], 'later.txt', { type: 'text/plain' });
   Object.defineProperty(pending, 'arrayBuffer', { value: () => new Promise<ArrayBuffer>(done => { resolve = done; }) });
-  fireEvent.change(screen.getByLabelText('Reference text files'), { target: { files: [pending] } });
+  fireEvent.change(screen.getByLabelText('Reference files'), { target: { files: [pending] } });
   view.rerender(<MemoryRouter><WorkImport projectId="other" /></MemoryRouter>);
   resolve(new TextEncoder().encode('Later').buffer as ArrayBuffer);
   await waitFor(() => expect(screen.getByRole('button', { name: 'Review import' })).toBeTruthy());
   expect(screen.queryByRole('button', { name: 'Remove later.txt' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Review import' }));
-  await waitFor(() => expect(api.preview).toHaveBeenCalledWith('other', expect.objectContaining({ reference_files: [] })));
+  expect((screen.getByLabelText('Transcript') as HTMLTextAreaElement).value).toBe('');
+  expect((screen.getByRole('button', { name: 'Review import' }) as HTMLButtonElement).disabled).toBe(true);
+  expect(api.preview).not.toHaveBeenCalled();
 });
 
 it('loads a selected transcript without guessing its source or format', async () => {
@@ -92,6 +95,7 @@ it('retains transcript text if a selected file is invalid or finishes in another
   view.rerender(<MemoryRouter><WorkImport projectId="other" /></MemoryRouter>);
   resolve(new TextEncoder().encode('Later').buffer as ArrayBuffer);
   await waitFor(() => expect(screen.getByRole('button', { name: 'Review import' })).toBeTruthy());
-  expect((screen.getByLabelText('Transcript') as HTMLTextAreaElement).value).toBe('Original text');
+  expect((screen.getByLabelText('Transcript') as HTMLTextAreaElement).value).toBe('');
+  expect((screen.getByRole('button', { name: 'Review import' }) as HTMLButtonElement).disabled).toBe(true);
   expect(screen.queryByText(/later.txt/)).toBeNull();
 });

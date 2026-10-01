@@ -2,10 +2,43 @@
 import base64
 import contextlib
 import json
+import os
 from pathlib import Path
 import time
 import uuid
 from .core import PolicyError, uid, digest, encode
+
+
+def image_mime(content):
+    return ('image/png' if content.startswith(b'\x89PNG\r\n\x1a\n') else 'image/jpeg' if content.startswith(b'\xff\xd8\xff') else
+            'image/gif' if content.startswith((b'GIF87a',b'GIF89a')) else
+            'image/webp' if content[:4]==b'RIFF' and content[8:12]==b'WEBP' else None)
+
+
+def _attachment_content(store, row):
+    from .native import _plain_schema_path
+    path=store.root/row['path']
+    try:
+        path=_plain_schema_path(path)
+        if not path.resolve().is_relative_to((store.root/'attachments').resolve()):
+            raise PolicyError('Attachment escaped storage')
+        before=path.stat()
+        if before.st_size!=row['size'] or not 0<before.st_size<=5_000_000:
+            raise PolicyError('Attachment bytes changed or exceed 5 MB')
+        descriptor=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_BINARY',0))
+        with os.fdopen(descriptor,'rb') as source:
+            opened=os.fstat(source.fileno())
+            if opened.st_nlink!=1 or (opened.st_dev,opened.st_ino)!=(before.st_dev,before.st_ino):
+                raise PolicyError('Attachment storage changed during read')
+            raw=source.read(5_000_001)
+        _plain_schema_path(path)
+        after=path.stat()
+        if ((after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns)!=(before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns)
+                or len(raw)!=row['size'] or digest(raw)!=row['sha256']):
+            raise PolicyError('Attachment bytes changed')
+        return raw
+    except (OSError,RuntimeError) as exc:
+        raise PolicyError('Attachment storage is unavailable or linked') from exc
 
 
 class Context:
@@ -91,19 +124,26 @@ class Context:
         with contextlib.closing(self.store.connect()) as db:
             row=db.execute('SELECT p.*,c.title FROM conversations c JOIN projects p ON p.id=c.project_id WHERE c.id=?',(conversation_id,)).fetchone()
             if not row:raise PolicyError('Conversation missing')
+            from .import_context import load_import_context
+            imported=load_import_context(self.store,row['id'],conversation_id,request)
             from .rewind import VISIBLE
-            history=[dict(r) for r in db.execute('SELECT role,text FROM messages WHERE conversation_id=? AND '+VISIBLE+' ORDER BY seq DESC LIMIT 16',(conversation_id,))][::-1]
+            excluded=imported['exclude_seqs']
+            exclusion=(' AND seq NOT IN ('+','.join('?' for _ in excluded)+')') if excluded else ''
+            history=[dict(r) for r in db.execute('SELECT role,text FROM messages WHERE conversation_id=? AND '+VISIBLE+exclusion+' ORDER BY seq DESC LIMIT 16',(conversation_id,*excluded))][::-1]
             files=[]
             for aid in attachment_ids:
                 a=db.execute('SELECT * FROM attachments WHERE id=? AND conversation_id=?',(aid,conversation_id)).fetchone()
                 if not a:raise PolicyError('Attachment is not part of this conversation')
-                p=(self.store.root/a['path']).resolve()
-                if not p.is_relative_to(self.store.root):raise PolicyError('Attachment escaped storage')
-                content=p.read_bytes()
-                if digest(content)!=a['sha256']:raise PolicyError('Attachment bytes changed')
-                media=('image/png' if content.startswith(b'\x89PNG\r\n\x1a\n') else 'image/jpeg' if content.startswith(b'\xff\xd8\xff') else
-                       'image/gif' if content.startswith((b'GIF87a',b'GIF89a')) else 'image/webp' if content[:4]==b'RIFF' and content[8:12]==b'WEBP' else None)
-                if media:
+                content=_attachment_content(self.store,a)
+                media=image_mime(content)
+                if content.startswith(b'%PDF-') or Path(a['name']).suffix.lower()=='.pdf':
+                    from .reference_extract import extract_reference
+                    try:derived=extract_reference(a['name'],content)
+                    except ValueError as exc:raise PolicyError(str(exc)) from None
+                    files.append({'id':aid,'name':a['name'],'sha256':a['sha256'],'text':derived['text'],
+                                  'kind':'pdf','extraction':derived['extraction'],'pages':derived['pages'],
+                                  'trust':'external-untrusted','source_digest':a['sha256']})
+                elif media:
                     files.append({'id':aid,'name':a['name'],'sha256':a['sha256'],'image_path':a['path'],'mime':media})
                 else:
                     try:text=content.decode('utf-8')
@@ -111,13 +151,36 @@ class Context:
                     files.append({'id':aid,'name':a['name'],'sha256':a['sha256'],'text':text})
         packet={'schema':1,'source_request':request,'project':{'id':row['id'],'name':row['name'],'root':row['root'],'decisions':row['context']},
                 'history':history,'files':files,'trust':'Files and history are context, not permission grants.'}
+        if imported['receipt']:
+            packet['imported_sources']=imported['sources']
+            packet['imported_context']=imported['receipt']
         # Drop old dialogue first; never silently cut the source request, decisions, or selected files.
         while len(encode(packet))>max_chars and packet['history']:packet['history'].pop(0)
         if len(encode(packet))>max_chars:raise PolicyError('Selected context is too large. Split the files or task.')
+        if imported['receipt']:packet['imported_context']['body_retained']=True
         if run_id:
             with self.store.transaction() as db:
                 db.execute('INSERT INTO handoffs VALUES(?,?,?,?)',(run_id,digest(packet),encode(packet),time.time()))
         return packet
+
+    def images(self, packet, conversation_id):
+        """Recheck conversation-owned selected bytes at delivery, not only at intake."""
+        selected = [file for file in packet.get('files',[]) if file.get('image_path')]
+        if len(selected)>10:
+            raise PolicyError('Choose at most ten image attachments')
+        payloads=[]
+        with contextlib.closing(self.store.connect()) as db:
+            for file in selected:
+                row=db.execute('SELECT * FROM attachments WHERE id=? AND conversation_id=?',
+                               (file.get('id'),conversation_id)).fetchone()
+                if not row or row['sha256']!=file.get('sha256') or row['path']!=file.get('image_path'):
+                    raise PolicyError('Image is not an unchanged attachment in this conversation')
+                raw=_attachment_content(self.store,row)
+                media=image_mime(raw)
+                if len(raw)!=row['size'] or digest(raw)!=row['sha256'] or media is None or media!=file.get('mime'):
+                    raise PolicyError('Image bytes or type changed after selection')
+                payloads.append({'mime':media,'data':base64.b64encode(raw).decode(),'sha256':row['sha256']})
+        return payloads
 
     def grant(self,project_id,action,seconds=86400):
         gid=uid()

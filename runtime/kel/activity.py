@@ -36,6 +36,7 @@ KIND_BY_TYPE = {
     # FN-05: a request Kel said no to before any work (it asked to touch a protected place).
     'request.refused': 'attention',
     'reply.word_limit_correction': 'work',
+    'reply.prose_quality_review': 'work',
     # D-64 Full access: what Kel went ahead with (or refused) instead of asking.
     'approval.auto_granted': 'work', 'approval.refused': 'work',
     'authorization.auto_granted': 'work', 'authority.changed': 'other',
@@ -59,13 +60,21 @@ def _snippet(value, limit=90):
 
 def sentence_for(event_type, payload):
     """One plain sentence per event, built from a whitelist of safe fields — never the payload."""
-    if event_type == 'reply.word_limit_correction':
-        return 'Kel is correcting the word count with one more model call.'
     detail = {}
     if isinstance(payload, dict):
         detail = payload.get('detail') or {}
         if not isinstance(detail, dict):
             detail = {}
+    if event_type == 'reply.word_limit_correction':
+        if detail.get('correction_reason')=='sentence-endings':
+            return 'Kel is correcting sentence endings with one more model call.'
+        if detail.get('constraint_kind')=='paragraphs':
+            return 'Kel is correcting the paragraph count with one more model call.'
+        return 'Kel is correcting the word count with one more model call.'
+    if event_type == 'reply.prose_quality_review':
+        if detail.get('state')=='RUNNING':return 'Kel is reviewing this prose with another model.'
+        if detail.get('verdict')=='VERIFIED':return 'The independent model accepted this prose reply.'
+        return 'The independent prose review did not accept this reply.'
     job = (payload or {}).get('job') if isinstance(payload, dict) else None
     request = ''
     if isinstance(job, dict):
@@ -261,7 +270,7 @@ def timeline(store, *, project_id=None, since=None, until=None, kind=None, failu
             if schedule_detail.get('project_id'):
                 row_projects = {schedule_detail['project_id']}
                 row_project = schedule_detail['project_id']
-        if event_type.startswith('scoping.') or event_type in ('request.refused','reply.word_limit_correction'):
+        if event_type.startswith('scoping.') or event_type in ('request.refused','reply.word_limit_correction','reply.prose_quality_review'):
             # D-70: Kel's "before I start" questions belong to the project the request was made in.
             try:
                 raw = event.get('payload')

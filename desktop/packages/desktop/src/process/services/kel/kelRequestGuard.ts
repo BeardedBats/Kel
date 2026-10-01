@@ -20,7 +20,7 @@ const ROUTE =
  */
 const SHELL_ONLY_SCHEDULE_ACTIONS = new Set(['import']);
 
-const WORK_HUB_ROUTE = /^\/api\/work-hub\/(?:imports|search|procedures|outcomes|origin)(?:\?(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*(?:&(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*)*)?$/;
+const WORK_HUB_ROUTE = /^\/api\/work-hub\/(?:imports|references|search|procedures|outcomes|origin)(?:\?(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*(?:&(?:project_id|query|recipe_id|version|job_id)=[a-zA-Z0-9_.%+-]*)*)?$/;
 
 /**
  * D-75.3: the Muse (Ramble) key is managed in Settings → Providers through the main process's custody;

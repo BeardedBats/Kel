@@ -81,39 +81,47 @@ export async function startMicCapture(onPcm?: (base64: string) => void): Promise
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
   });
-  const context = new AudioContext({ sampleRate: TARGET_RATE });
-  const source = context.createMediaStreamSource(stream);
-  const processor = context.createScriptProcessor(4096, 1, 1);
-  const sink = context.createGain();
-  sink.gain.value = 0;
+  let context: AudioContext | undefined;
+  let source: MediaStreamAudioSourceNode | undefined;
+  let processor: ScriptProcessorNode | undefined;
+  let sink: GainNode | undefined;
   const parts: Int16Array[] = [];
   let stopped = false;
-  processor.onaudioprocess = (event) => {
-    if (stopped) return;
-    const pcm = floatToPcm16(event.inputBuffer.getChannelData(0), context.sampleRate);
-    parts.push(pcm);
-    if (onPcm) {
-      try {
-        onPcm(toBase64(new Uint8Array(pcm.buffer.slice(0))));
-      } catch {
-        /* live feeding is best-effort; the final WAV is always captured */
-      }
-    }
-  };
-  source.connect(processor);
-  processor.connect(sink);
-  sink.connect(context.destination);
   const teardown = () => {
-    try {
-      processor.disconnect();
-      source.disconnect();
-      sink.disconnect();
-    } catch {
-      /* already torn down */
+    for (const node of [processor, source, sink]) {
+      try { node?.disconnect(); } catch { /* already disconnected */ }
     }
     stream.getTracks().forEach((track) => track.stop());
-    void context.close();
+    if (context) {
+      try { void context.close().catch(() => {}); } catch { /* already closed */ }
+    }
   };
+  try {
+    context = new AudioContext({ sampleRate: TARGET_RATE });
+    source = context.createMediaStreamSource(stream);
+    processor = context.createScriptProcessor(4096, 1, 1);
+    sink = context.createGain();
+    sink.gain.value = 0;
+    processor.onaudioprocess = (event) => {
+      if (stopped) return;
+      const pcm = floatToPcm16(event.inputBuffer.getChannelData(0), context!.sampleRate);
+      parts.push(pcm);
+      if (onPcm) {
+        try {
+          onPcm(toBase64(new Uint8Array(pcm.buffer.slice(0))));
+        } catch {
+          /* live feeding is best-effort; the final WAV is always captured */
+        }
+      }
+    };
+    source.connect(processor);
+    processor.connect(sink);
+    sink.connect(context.destination);
+  } catch (error) {
+    stopped = true;
+    teardown();
+    throw error;
+  }
   return {
     async stop() {
       if (stopped) throw new Error('The recording already stopped.');

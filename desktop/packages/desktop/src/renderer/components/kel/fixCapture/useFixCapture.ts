@@ -10,6 +10,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { failureSentence } from '../engineFailure';
 import { kelDogfood, kelRequest } from '../kelApi';
 import { friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
+import { microphoneUnavailableReason } from '@renderer/utils/transcription/availability';
 import { describeElement, savedGeometry } from './captureTarget';
 import {
   fixCaptureReducer,
@@ -250,7 +251,7 @@ export function useFixCapture(context: () => FixCaptureContext): FixCaptureApi {
         type: 'mic-failed',
         note: micReady
           ? failureSentence(error, 'Kel could not start the transcript — type what happened instead.')
-          : `${friendlyMicError(error)} You can type what happened instead.`,
+          : `${microphoneUnavailableReason() || friendlyMicError(error)} You can type what happened instead.`,
       });
     }
   }, [endSession]);

@@ -150,12 +150,13 @@ class Composer:
                 'project map section %s, freshness v%d' % (name, latest['version'])))
             count += 1
 
-    def _add_recent(self, conversation_id, recent_limit, recent_chars, sources, omitted):
+    def _add_recent(self, conversation_id, recent_limit, recent_chars, sources, omitted, exclude_seqs=()):
+        exclusion=(' AND seq NOT IN ('+','.join('?' for _ in exclude_seqs)+')') if exclude_seqs else ''
         with contextlib.closing(self.store.connect()) as db:
             rows = [dict(r) for r in db.execute(
                 'SELECT role, text FROM messages WHERE conversation_id=?'
                 ' AND seq NOT IN (SELECT seq FROM rewound_messages)'  # D-75.2: rewound turns are gone
-                ' ORDER BY seq DESC LIMIT ?', (conversation_id, recent_limit))]
+                + exclusion + ' ORDER BY seq DESC LIMIT ?', (conversation_id, *exclude_seqs, recent_limit))]
         rows.reverse()
         lines = ['[%s] %s' % (row['role'], str(row['text'])[:400]) for row in rows]
         while lines and sum(len(line) for line in lines) > recent_chars:
@@ -181,7 +182,7 @@ class Composer:
 
     def build(self, project_id, request, *, conversation_id='main', job=None,
               continuation=None, attachments=(), purpose='plan', budget_chars=32000,
-              recent_limit=16, recent_chars=8000):
+              recent_limit=16, recent_chars=8000, imported_context=None):
         if not isinstance(request, str) or not request.strip():
             raise PolicyError('A nonempty request is required')
         if type(budget_chars) is not int or not 1000 <= budget_chars <= 200000:
@@ -190,6 +191,18 @@ class Composer:
         sources = [self._source('request', 'request', request, 1, 'the current request',
                                 must=True)]
         omitted = []
+        from .import_context import load_import_context
+        imported=load_import_context(self.store,project_id,conversation_id,request)
+        receipt=imported['receipt']
+        if imported_context is not None:
+            if not receipt or imported_context.get('body_retained') is not True or imported_context.get('sources') != receipt['sources']:
+                raise PolicyError('Imported context coverage changed. Try the request again.')
+        if receipt:
+            omitted.extend(receipt['omissions'])
+            for source in imported['sources']:
+                body=json.dumps(receipt['sources'],sort_keys=True) if imported_context is not None else source['text']
+                sources.append(self._source('imported_sources','import:'+source['import_id'],body,7,
+                                            'retained imported-source receipt' if imported_context is not None else 'bounded immutable imported source',must=True))
         self._add_memories(project_id, request, purpose, sources, omitted)
         unknown_refs = {item['ref'] for item in freshness['unknown']}
         for entry in sources:
@@ -203,15 +216,18 @@ class Composer:
         if job:
             self._add_job(job, sources)
         self._add_map(project_id, sources, omitted)
-        self._add_recent(conversation_id, recent_limit, recent_chars, sources, omitted)
+        self._add_recent(conversation_id, recent_limit, recent_chars, sources, omitted, imported['exclude_seqs'])
         self._add_attachments(attachments, sources)
         conflicts = [{'id': c['id'], 'memory_a': c['memory_a'], 'memory_b': c['memory_b'],
                       'state': c['state']} for c in self.memory.conflicts(project_id)]
         packet = self._pack(project_id, purpose, conversation_id, job, sources, omitted,
                             conflicts, budget_chars)
-        packet['context_status'] = {'state': 'ready', 'packet_id': packet['packet_id'],
+        packet['context_status'] = {'state': receipt['state'] if receipt else 'ready', 'packet_id': packet['packet_id'],
                                     'omissions': list(packet['omitted']), 'freshness': freshness,
                                     'error_code': None}
+        if receipt:
+            packet['context_status']['import_coverage']=receipt['sources']
+            packet['context_status']['requires_attention']=False
         self._persist(packet, job)
         return packet
 

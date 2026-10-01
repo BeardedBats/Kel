@@ -32,6 +32,7 @@ import { KelCard, KelEmpty, KelStatusChip } from '@renderer/components/kel/KelPr
 import { KelFailureCard } from '@renderer/components/kel/KelFailureCard';
 import { failureSentence } from '@renderer/components/kel/engineFailure';
 import { decodeFileToWav, friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
+import { microphoneUnavailableReason } from '@renderer/utils/transcription/availability';
 import styles from './index.module.css';
 import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import KelBottomNav from '@renderer/components/kel/KelBottomNav';
@@ -101,6 +102,7 @@ function downloadBlob(name: string, data: BlobPart, mime: string): void {
 const TranscriptionPage: React.FC = () => {
   const navigate = useNavigate();
   const layout = useLayoutContext();
+  const micUnavailable = microphoneUnavailableReason();
   const [creatingFolder, setCreatingFolder] = useState(false);
   const folderCreatePending = useRef(false);
   const folderRenamePending = useRef(false);
@@ -200,6 +202,8 @@ const TranscriptionPage: React.FC = () => {
   const beginRecording = useCallback(
     async (appendTo?: string) => {
       if (recState !== 'idle') return;
+      const unavailable = microphoneUnavailableReason();
+      if (unavailable) { Message.info(unavailable); return; }
       const epoch = (recEpochRef.current += 1);
       setRecState('working');
       setProgress('');
@@ -857,7 +861,7 @@ const statusCopy =
                   >
                     Record More
                   </Button>
-                  <Button type='primary' className='kel-transcription-record' icon={<img src={transcriptMicIcon} alt='' width='16' height='16' />} onClick={() => void beginRecording()} data-testid='record-button'>
+                  <Button type='primary' className='kel-transcription-record' disabled={Boolean(micUnavailable)} title={micUnavailable || undefined} icon={<img src={transcriptMicIcon} alt='' width='16' height='16' />} onClick={() => void beginRecording()} data-testid='record-button'>
                     Record
                   </Button>
                 </>
@@ -881,6 +885,8 @@ const statusCopy =
               )}
             </div>
           </header>
+
+          {micUnavailable && <p className='kel-muted' role='status' data-testid='microphone-unavailable'>{micUnavailable}</p>}
 
           {recState !== 'idle' && (
             <div className={styles.recordBar} data-testid='recording-bar' role='status' aria-live='polite'>

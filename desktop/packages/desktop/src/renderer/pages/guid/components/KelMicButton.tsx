@@ -7,6 +7,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Message } from '@arco-design/web-react';
 import { friendlyMicError, startMicCapture, type MicCapture } from '@renderer/utils/transcription/audio';
+import { microphoneUnavailableReason } from '@renderer/utils/transcription/availability';
 import { kelRequest } from '@renderer/components/kel/kelApi';
 
 type MicState = 'idle' | 'requesting' | 'recording' | 'working';
@@ -105,7 +106,7 @@ const KelMicButton: React.FC<Props> = ({ onTranscript, onLiveTranscript, disable
       timerRef.current = window.setInterval(() => setSeconds((value) => value + 1), 1000);
     } catch (error) {
       setState('idle');
-      Message.error(friendlyMicError(error));
+      Message.error(microphoneUnavailableReason() || friendlyMicError(error));
     }
   }, [disabled, onLiveTranscript, state]);
 

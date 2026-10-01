@@ -65,6 +65,7 @@ export const KelMemoryFolderCard: React.FC = () => {
         <span className="kel-strong">{protection}</span>
       </div>
       {state.codex && <p className="kel-meta m-0">{state.codex}</p>}
+      <p className="kel-meta m-0">Trusted test commands use the Codex sandbox. Local network access remains available; external network blocking is unverified.</p>
       {state.codex_setup === 'failed' && state.codex_error && <p className="kel-meta m-0">{state.codex_error}</p>}
       {state.codex_setup_available && (
         <div className="kel-row">

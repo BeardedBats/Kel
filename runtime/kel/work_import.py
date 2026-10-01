@@ -145,18 +145,95 @@ def _codex_output(content):
     return messages, omissions, next(iter(thread_ids)), terminal
 
 
+def _claude_output(content):
+    """Adopt only documented Claude Code final text, never its native session.
+
+    Evidence: https://code.claude.com/docs/en/headless#stream-responses
+    Kel's recorded native result fixture remains in test_live_audit_fixes.py.
+    """
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value:
+                raise PolicyError('Claude output contains duplicate JSON fields')
+            value[key] = item
+        return value
+    def load(raw):
+        try:
+            return json.loads(raw, object_pairs_hook=unique)
+        except (ValueError, RecursionError) as exc:
+            raise PolicyError('Invalid Claude Code output JSON') from exc
+    stripped = content.lstrip('\ufeff')
+    try:
+        parsed = json.loads(stripped, object_pairs_hook=unique)
+        records = [parsed]
+    except (ValueError, RecursionError):
+        lines = [line for line in stripped.splitlines() if line.strip()]
+        if len(lines) > 1000:
+            raise PolicyError('Claude output supports at most 1000 event records')
+        records = [load(line) for line in lines]
+    sessions, results, skipped = set(), [], {}
+    for number, record in enumerate(records, 1):
+        if not isinstance(record, dict) or not isinstance(record.get('type'), str):
+            raise PolicyError('Claude output record needs an event type')
+        decoded = encode(record)
+        try:
+            decoded.encode('utf-8')
+        except UnicodeError as exc:
+            raise PolicyError('Claude output must contain valid UTF-8 characters') from exc
+        if scan_secret(decoded):
+            raise PolicyError('Remove secret-like content before importing')
+        if 'session_id' in record:
+            sid = _text(record['session_id'], 200, 'Claude session ID')
+            try:
+                sessions.add(str(uuid.UUID(sid)))
+            except ValueError as exc:
+                raise PolicyError('Claude session ID must be a UUID') from exc
+            if len(sessions) > 1:
+                raise PolicyError('Import one Claude session at a time')
+        if record['type'] == 'result':
+            results.append((number, record))
+        else:
+            kind = record['type'][:80]
+            skipped[kind] = skipped.get(kind, 0) + 1
+    if len(results) != 1 or results[0][0] != len(records):
+        raise PolicyError('Claude output needs exactly one final result record')
+    final = results[0][1]
+    if final.get('subtype') != 'success' or final.get('is_error') is not False:
+        raise PolicyError('Claude output needs a successful final result')
+    if 'session_id' not in final:
+        raise PolicyError('Claude final result needs its session ID')
+    text = _text(final.get('result'), MAX_CHARS, 'Claude final text')
+    omissions = [{'name': 'Original prompt and attachments',
+                  'reason': 'Claude Code output does not contain the full conversation or attachment contents'},
+                 {'name': 'Runtime metadata',
+                  'reason': 'Source usage, permissions and runtime configuration were not adopted'}]
+    omissions.extend({'name': kind, 'reason': '%d source event(s) omitted; intermediate text, tools and reasoning were not adopted' % count}
+                     for kind, count in sorted(skipped.items()))
+    return [{'id': 'terminal-result', 'role': 'assistant', 'text': text}], omissions, final['session_id']
+
+
 class WorkImports:
     def __init__(self, store):
         self.store = store
         with contextlib.closing(store.connect()) as db:
             db.executescript(DDL)
 
-    def preview(self, project_id, content, format='text', source='other', source_id='', title='', reference_files=None):
+    def preview(self, project_id, content, format='text', source='other', source_id='', title='', reference_files=None, extraction_ids=None):
         _text(project_id, 200, 'Project')
         _text(content, MAX_CHARS, 'Transcript')
         _text(source_id, 200, 'Source ID', empty=True)
         _text(title, 200, 'Title', empty=True)
         files = _reference_files(reference_files, content)
+        if extraction_ids is not None:
+            from .reference_sources import ReferenceSources
+            ReferenceSources(self.store)
+            with contextlib.closing(self.store.connect()) as db:
+                _project(db,project_id)
+                extracted = ReferenceSources.resolve(db,project_id,extraction_ids)
+            combined = files + extracted
+            _reference_files([{'name':file['name'],'text':file['text']} for file in combined],content)
+            files = combined
         if source not in ('codex', 'claude', 'deepseek', 'other'):
             raise PolicyError('Unsupported source')
         if scan_secret(content + source_id + title):
@@ -170,6 +247,12 @@ class WorkImports:
             messages, omissions, thread_id, terminal = _codex_output(content)
             source = 'codex'
             source_id = source_id or thread_id
+        elif format == 'claude-code-output':
+            if source not in ('claude', 'other'):
+                raise PolicyError('Claude Code output must use the Claude source')
+            messages, omissions, session_id = _claude_output(content)
+            source = 'claude'
+            source_id = source_id or session_id
         elif format == 'kel-transcript':
             try:
                 parsed = json.loads(content)
@@ -200,7 +283,7 @@ class WorkImports:
                 omissions.append({'name': _text(attachment['name'], 200, 'Attachment'),
                                   'reason': 'Attachment contents were not imported'})
         else:
-            raise PolicyError('Supported formats: text, kel-transcript, codex-exec-jsonl')
+            raise PolicyError('Supported formats: text, kel-transcript, codex-exec-jsonl, claude-code-output')
         data = {'project_id': project_id, 'source': source, 'source_id': source_id,
                 'format': format, 'title': title.strip() or 'Imported work',
                 'messages': messages, 'omissions': omissions, 'trust': 'external-untrusted',
@@ -210,6 +293,9 @@ class WorkImports:
         if format == 'codex-exec-jsonl':
             data['source_thread_id'] = thread_id
             data['source_completion'] = terminal or 'unknown'
+        elif format == 'claude-code-output':
+            data['source_session_id'] = session_id
+            data['source_completion'] = 'success'
         # JSON escape sequences can hide credentials from the raw input scan.
         # Scan decoded fields before either the preview or the transcript can persist.
         decoded = encode(data)
@@ -245,6 +331,12 @@ class WorkImports:
             if not preview or preview['created'] < time.time() - 86400 or preview['digest'] != expected_digest:
                 raise PolicyError('Import preview expired or changed; review it again')
             data = json.loads(preview['data'])
+            extracted = [file for file in data.get('reference_files',[]) if 'source' in file]
+            if extracted:
+                from .reference_sources import ReferenceSources
+                current = ReferenceSources.resolve(db,project_id,[file['source']['id'] for file in extracted])
+                if current != extracted:
+                    raise PolicyError('Extracted reference changed; review the import again')
             existing = db.execute('SELECT * FROM work_imports WHERE project_id=? AND source=? AND source_id=? AND digest=?',
                                   (project_id, data['source'], data['source_id'], expected_digest)).fetchone()
             if existing:
@@ -266,6 +358,8 @@ class WorkImports:
                                                             'source': data['source'], 'source_id': data['source_id']})))
             db.execute('INSERT INTO work_imports VALUES(?,?,?,?,?,?,?,?)',
                        (iid, project_id, data['source'], data['source_id'], expected_digest, cid, encode(data), time.time()))
+            if extracted:
+                ReferenceSources.adopt(db,project_id,data['reference_files'],iid,cid)
             return self._receipt(db.execute('SELECT * FROM work_imports WHERE id=?', (iid,)).fetchone(), False)
 
     @staticmethod
@@ -278,7 +372,8 @@ class WorkImports:
     @staticmethod
     def _file_summaries(data, preview=False):
         return [dict({'name': file['name'], 'chars': len(file['text']), 'sha256': digest(file['text'].encode('utf-8')),
-                      'status': 'included-reference'}, **({'snippet': file['text'][:600]} if preview else {}))
+                      'status': 'included-reference'}, **({'snippet': file['text'][:600]} if preview else {}),
+                     **({'source':file['source']} if 'source' in file else {}))
                 for file in data.get('reference_files', [])]
 
     def entries(self, project_id):

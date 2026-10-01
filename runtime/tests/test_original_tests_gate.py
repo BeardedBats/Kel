@@ -6,8 +6,9 @@ then retried the same deterministic failure four times across models, and the re
 "failed check repository_evidence: expected None".
 
 Here the coding adapter runs for real against a scratch git project: the trusted test runs go through the
-native host's own `command/exec` (a real subprocess running pytest); only the model turn is a fake that
-makes exactly the change each case describes. No model is called.
+native host's own `command/exec` (a real subprocess running pytest). The model turn and sandbox
+launcher are controlled fakes. Actual pytest assertions and receipts remain real. This fixture does
+not prove production sandbox isolation. No model is called.
 """
 import contextlib
 import json
@@ -66,6 +67,11 @@ class FakeConnection:
         logs.mkdir(parents=True, exist_ok=True)
         host = object.__new__(HostConnection)
         host.workspace, host.logs, host.provider = str(self.workspace), logs, 'claude'
+        host.engine_root, host.temp, host.network = store.root, logs/'test-temp', False
+        host.temp.mkdir(exist_ok=True)
+        host._trusted_workspace = self.workspace.absolute()
+        info = host._trusted_workspace.stat()
+        host._trusted_workspace_identity = (info.st_dev, info.st_ino)
         self.host = host
         self.prompts = []
 
@@ -83,7 +89,9 @@ class FakeConnection:
         with self.store.transaction() as db:
             db.execute("INSERT OR IGNORE INTO coding_calls VALUES(?,?,?,'DISPATCHED',NULL)",
                        (self.run_id, key, encode(params)))
-        result = self.host.call(method, params, timeout)
+        # Only the launcher is simulated; scope/command validation and pytest remain real.
+        with mock.patch.object(self.host, '_trusted_test_argv', side_effect=lambda cwd, command: (command, False)):
+            result = self.host.call(method, params, timeout)
         FakeConnection.executed.append((key, params['cwd']))
         FakeConnection.receipts[slot] = result
         if FakeConnection.crash_after == key:

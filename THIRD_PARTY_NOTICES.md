@@ -32,6 +32,7 @@ Copyright (c) 2025 Nous Research. Material from other donors below remains patte
 | PyInstaller | GPL-2.0 with bootloader exception | Runtime packaging tool (build-time only) |
 | Python standard library | PSF | Runtime engine |
 | tzdata (Python package, IANA time zone database) | Apache-2.0 (tz data: public domain) | Time zone data bundled into the engine for scheduled tasks (`runtime/requirements.txt`) |
+| pypdf 6.9.2 | BSD-3-Clause (full text: `third_party/PYPDF-LICENSE.txt`, bundled under engine `licenses/`) | Selected PDF text extraction in a bounded local child process; dependency pinned in `runtime/requirements.txt` |
 
 ## Evaluated donors (pattern-level; see "Copied code (adapted)" above)
 
