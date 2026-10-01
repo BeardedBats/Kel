@@ -15,6 +15,7 @@ export * from './popover';
 export * from './layoutProbe';
 export { EdgePill, RollText, SwapIn, ProgressFill, fillTone, useEntrance, type FillTone } from './components';
 export { useStreamFade } from './streamFade';
+export { animateString, graphemes, stringProgress, STRING_MOTION } from './stringMotion';
 export { useMessageArrival } from './messageArrival';
 
 import { installMotionTokens } from './easing';

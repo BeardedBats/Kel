@@ -2,6 +2,16 @@
 
 **Status:** approved by Nick (D-78, 2026-09-29) and built into the renderer (stage 2, §11). Later rules
 from Nick are §2.1 (the settling fade) and §8.1 (no layout shift); D-79 simplified the detail panel.
+**Text reference update (D-92, 2026-10-01):** Nick's String motion replaces conflicting label-roll
+and stream-fade ingredients: 15 ms per-letter stagger; damping 16, stiffness 240, mass 1.2;
+enter opacity 0 → 1, rotateX 80° → 0°, y 8 px → 0, blur 3 px → 0;
+exit opacity 0, rotateX -80°, y -8 px, blur 3 px. Other motion keeps its approved presets.
+Preserve final wrapping, selection/copy, Markdown and reduced motion. Reopened chat history and
+already revealed stream text stay still. `motion/stringMotion.ts` uses the existing motion clock
+and decorative per-grapheme ink copies over unchanged native text. Bursts animate at most 24 glyphs;
+other text appears immediately. Code, math, joining scripts and clipped glyphs retain native ink.
+String motion stops on rewrites, scrolling, selection, interruption, reduced motion and unmount.
+The October 1 batch retains separate browser-harness, journey, package and installed evidence in Tools.
 **Prototype:** `C:\Users\Nick\Desktop\Kel\Tools\motion\kel-motion-prototype.html` (outside Git; rebuilt by
 `Tools\motion\src\build.py`). Every moment below is a live, clickable demo there. The page has a
 reduced-motion switch and a ×4 slow-motion switch. Key-frame contact sheets are in `Tools\motion\keyframes\`.
@@ -10,11 +20,11 @@ Kel's interface should move the way good physical objects do. One element change
 than being swapped. It settles on a spring with only a trace of overshoot. It never makes Nick wait for
 information. Motion explains where something came from and where it went. It is never decoration.
 
-Today almost nothing in the Kel shell or the work cards animates. Cards, the detail panel, the done
-card, the scoping collapse, menus and new sidebar rows all mount and unmount instantly, and progress
-fills and state colours jump. The only motion is two loops on the Thinking indicator, a few 120–200 ms
-hover and rotate transitions, and Arco's own dropdown and toast animations. This document replaces all
-of that with one system.
+At the original design baseline, almost nothing in the Kel shell or the work cards animated. Cards,
+the detail panel, the done card, the scoping collapse, menus and new sidebar rows mounted and unmounted
+instantly, and progress fills and state colours jumped. The only motion was two loops on the Thinking
+indicator, a few 120–200 ms hover and rotate transitions, and Arco's dropdown and toast animations.
+Stage 2 replaced that baseline with the shared system described below.
 
 ---
 

@@ -1087,3 +1087,17 @@ finding Fixed. Saved appearance, user data, and credential custody remain protec
 
 Implemented source and isolated checks are recorded in the September 30 audit. Live provider repair,
 physical-phone, microphone, and future installer journeys require their own evidence.
+
+## D-92 — String motion for text
+
+**Requested by Nick and authorized for implementation on 2026-10-01.** Nick supplied a per-letter
+animation as the exact reference for changing labels and revealing new chat text. Each letter enters
+from opacity 0, rotateX 80 degrees, y 8 px and blur 3 px, then reaches opacity 1, rotation 0, y 0 and
+blur 0. Exit uses opacity 0, rotateX -80 degrees, y -8 px and blur 3 px. Stagger is 15 ms. The spring
+uses damping 16, stiffness 240 and mass 1.2.
+
+This text-specific reference supersedes conflicting D-78 text-roll and stream-fade ingredients.
+It does not change the springs for cards, panels or navigation. Preserve final text layout, Markdown,
+selection/copy and system reduced motion. Do not replay old chat history or already revealed text.
+Bound animation work for long replies so motion does not delay reading or sending another message.
+Keep D-90's saved appearance and the existing approved interface structure.

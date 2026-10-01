@@ -13,6 +13,8 @@ import { useEdgeIndicator } from './indicator';
 import { isReducedMotion } from './reduced';
 import { frameWrite, spring, type SpringHandle } from './spring';
 import { BLUR, MOTION } from './tokens';
+import { animateString, type StringMotionHandle } from './stringMotion';
+import { useReducedMotion } from './reduced';
 
 /* ─────────────────────────────── label roll ─────────────────────────────── */
 
@@ -46,6 +48,9 @@ const followingSiblings = (el: HTMLElement): HTMLElement[] => {
  * 3 px) in the same slot, which already has the new width; neighbours FLIP to their new places.
  */
 export const RollText: React.FC<RollProps> = ({ value, valueKey, className, settle = false, dir = 1, flipSiblings = true, testId, as = 'span' }) => {
+  const reducedPreference = useReducedMotion();
+  const strings = useRef<StringMotionHandle[]>([]);
+  const oldCopies = useRef<HTMLElement[]>([]);
   const key = valueKey ?? (typeof value === 'string' || typeof value === 'number' ? value : null);
   const slotRef = useRef<HTMLElement>(null);
   const nowRef = useRef<HTMLElement>(null);
@@ -71,22 +76,45 @@ export const RollText: React.FC<RollProps> = ({ value, valueKey, className, sett
     const now = nowRef.current;
     if (!host || !now) return;
     const reduced = isReducedMotion();
+    strings.current.forEach((handle) => handle.stop());
+    strings.current = [];
+    oldCopies.current.forEach((copy) => copy.remove());
+    oldCopies.current = [];
+    const stringValue = typeof value === 'string' || typeof value === 'number';
     if (snap.ghost) {
       const ghost = snap.ghost;
       ghost.classList.remove('kel-roll__now');
       ghost.classList.add('kel-roll__old');
       host.appendChild(ghost);
-      void exit(ghost, reduced ? {} : { y: -7 * dir, blur: BLUR.roll, ms: 130 }).then(() => ghost.remove());
+      oldCopies.current.push(ghost);
+      if (stringValue && !settle && !reduced) {
+        const leaving = animateString(ghost, 0, ghost.textContent?.length ?? 0, 'exit');
+        strings.current.push(leaving);
+        void leaving.finished.then(() => ghost.remove());
+      } else void exit(ghost, reduced ? {} : { y: -7 * dir, blur: BLUR.roll, ms: 130 }).then(() => ghost.remove());
     }
     if (settle) {
       prepareEnter(now, { y: 0, blur: MOTION.settleBlurPx });
       void settleIn(now, { delay: reduced ? 0 : 60 });
+    } else if (stringValue && !reduced) {
+      strings.current.push(animateString(now));
     } else {
       prepareEnter(now, { y: 7 * dir, blur: BLUR.roll });
       void enter(now, { y: 7 * dir, blur: BLUR.roll, ms: MOTION.rollMs, delay: 60 });
     }
     if (snap.siblings.size) void playFlip(snap.siblings, 'snappy', { axis: 'x' });
   }, [key]);
+
+  useLayoutEffect(() => {
+    if (reducedPreference) {
+      strings.current.forEach((handle) => handle.stop());
+      oldCopies.current.forEach((copy) => copy.remove());
+    }
+  }, [reducedPreference]);
+  useLayoutEffect(() => () => {
+    strings.current.forEach((handle) => handle.stop());
+    oldCopies.current.forEach((copy) => copy.remove());
+  }, []);
 
   const Tag = as;
   return (
