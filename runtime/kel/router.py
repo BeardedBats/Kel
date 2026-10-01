@@ -122,6 +122,10 @@ def image_generation_intent(text):
     prefix = r'^(?:(?:please|can you|could you|would you|will you)\s+)*'
     match = re.match(prefix + r'(?:create|generate|draw|render|make)\s+(?:(?:me|us)\s+)?(?:(?:a|an|the|this|that|my)\s+)?(?:(?:new|generated)\s+)?(?:image|picture|illustration|infographic|logo)\b', text, re.I)
     if not match:
+        match = re.match(r'^(?:no\b\s*[,;:]?\s*)?(?:this|it)\s+should\s+be\s+'
+            r'(?:(?:a|an|the)\s+)?(?:generated\s+)?'
+            r'(?:image|picture|illustration|infographic|logo)\b(?:\s+generated\b)?', text, re.I)
+    if not match:
         return False
     return not re.match(r'\s+(?:generation\s+)?(?:prompt|brief|concept|description|plan|generator|app|application|script|tool|component|widget|website|page)\b', text[match.end():], re.I)
 

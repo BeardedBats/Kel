@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from kel.core import Store, PolicyError, encode
 from kel.image_jobs import ImageAdapter, action, compile_image, image_artifact, repair_legacy_claims
+from kel.router import image_generation_intent, classify
 from tests.test_requested_image_output import png
 
 
@@ -91,3 +92,42 @@ class ImageJobTests(unittest.TestCase):
         before = self.store.get(job_id)
         self.assertEqual(repair_legacy_claims(self.store), [])
         self.assertEqual(self.store.get(job_id), before)
+
+    def test_exact_legacy_image_correction_is_repaired_without_execution(self):
+        request='No, this should be a image generated, like an infographic'
+        self.assertTrue(image_generation_intent(request))
+        self.assertEqual(classify(request)['kind'],'image')
+        job_id=self.store.create({'request':request,'milestones':[{'id':'document',
+            'objective':request,'filename':'result.md','checks':[{'kind':'min_chars','value':1}]}]})
+        with self.store.transaction() as db:
+            job=self.store._get(db,job_id)
+            artifact=self.store._artifact(job_id,'document','legacy-correction','Create an infographic image titled How Kel Works.')
+            job['milestones']['document'].update(state='ACCEPTED',artifact=artifact,checks=[],provider='codex')
+            job.update(state='CLOSED',verdict='VERIFIED')
+            self.store._save(db,job,'fixture.false_correction_done')
+        original=(self.store.root/artifact['path']).read_bytes()
+        with patch.object(ImageAdapter,'execute',side_effect=AssertionError('migration cannot generate')):
+            self.assertEqual(repair_legacy_claims(self.store),[job_id])
+            self.assertEqual(repair_legacy_claims(self.store),[])
+        repaired=self.store.get(job_id)
+        self.assertEqual(repaired['state'],'WAITING_RESOURCE')
+        self.assertEqual(repaired['verdict'],'UNCERTAIN')
+        self.assertEqual(repaired['contract']['request'],request)
+        self.assertEqual(repaired['contract']['output_contract'],{'kind':'image'})
+        self.assertEqual(repaired['milestones']['image']['attempts'],0)
+        self.assertEqual((self.store.root/artifact['path']).read_bytes(),original)
+        with contextlib.closing(self.store.connect()) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM runs').fetchone()[0],0)
+
+    def test_correction_prompt_software_and_quoted_source_are_excluded(self):
+        for request in ('No, this should be an image prompt',
+                        'No, this should be an image generated prompt',
+                        'No, this should be an image generated component in React',
+                        'This should be a generated infographic widget',
+                        '"No, this should be a image generated, like an infographic"',
+                        '> No, this should be a image generated, like an infographic',
+                        '```\nNo, this should be a image generated, like an infographic\n```',
+                        'Explain why this should be an image generated',
+                        'This should not be an image generated'):
+            with self.subTest(request=request):
+                self.assertFalse(image_generation_intent(request))
