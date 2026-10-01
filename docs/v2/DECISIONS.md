@@ -1101,3 +1101,23 @@ It does not change the springs for cards, panels or navigation. Preserve final t
 selection/copy and system reduced motion. Do not replay old chat history or already revealed text.
 Bound animation work for long replies so motion does not delay reading or sending another message.
 Keep D-90's saved appearance and the existing approved interface structure.
+
+## D-93 — Image work needs a real image
+
+**Requested by Nick on 2026-10-01 after a real failed infographic request.** Image requests,
+image corrections and same-chat retries use an image task. They never need a coding test command.
+Requests for image prompts or image components keep their text or coding task.
+
+Kel uses an enabled, configured desktop image model, or the installed Codex native image tool.
+Codex uses a new ephemeral session and keeps general tools disabled. Kel accepts only a completed
+image-tool result, decoded bounded PNG bytes and a server-recorded receipt bound to that run.
+Text, a prompt, a Markdown image claim or an arbitrary local path cannot pass image completion.
+The final image appears in chat with Open image and Save image. Reopening rechecks its receipt and bytes.
+
+File checks establish image delivery and integrity. They do not establish independent visual review.
+One explicit start gets one image attempt. A failure waits for an explicit retry.
+Missing setup, cancellation and damaged files never become Done. Old text-only image completion
+cards are corrected once, preserving old messages, contract versions and files. They wait for retry.
+
+The first live source check generated a real PNG through Nick's existing Codex sign-in. Selected
+reference-image editing and complete attached-file synthesis are outside this delivered image path.

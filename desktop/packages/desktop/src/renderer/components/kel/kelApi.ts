@@ -272,6 +272,10 @@ declare global {
       };
       /** Reveal a store-relative path in the OS file manager (best effort on the remote surface). */
       revealArtifact?: (relpath: string) => Promise<unknown>;
+      /** A checked image artifact, addressed by job and milestone rather than a filesystem path. */
+      imageArtifact?: (job: string, milestone: string) => Promise<{
+        base64: string; media_type: 'image/png'; width: number; height: number; sha256: string;
+      }>;
       kibbleInstaller?: (fixId: string, reveal?: boolean) => Promise<unknown>;
       /**
        * D-57: the app chat for an engine conversation (a scheduled run's), made on first use.

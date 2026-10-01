@@ -136,6 +136,10 @@ class Engine:
                 if brief:
                     prompt += '\n' + brief
             prompt += '\nPrevious acceptance findings. Repair only failures; preserve accepted work:\n'+json.dumps(previous_try['checks'])
+        from .output_contracts import requires_image
+        if requires_image(job['contract'], spec['id']):
+            from .image_jobs import image_prompt
+            prompt = image_prompt(job, spec)  # Preserve the request and its bounded facts, not a Markdown-output prompt.
         try:
             with contextlib.closing(self.store.connect()) as db:
                 previous=db.execute("SELECT native_session FROM runs WHERE job_id=? AND milestone_id=? AND provider=? AND state!='ORPHANED' AND native_session IS NOT NULL ORDER BY rowid DESC LIMIT 1",
@@ -336,6 +340,10 @@ class Engine:
                     if not may_start(job, mid):
                         continue
                     role = step_role(job, mid)
+                    from .output_contracts import requires_image
+                    if requires_image(job['contract'], mid):
+                        self._start_image_run(job, mid, spec, m)
+                        continue  # Never fall back to a text model for a requested image.
                     if code_step(job, spec):
                         # V1.5: authorization is part of the execution path. A coding job cannot
                         # claim a worker without a valid execution lease for its project root.
@@ -460,6 +468,36 @@ class Engine:
                     future = self.pool.submit(self._execute, run, self.adapters[route['selected']], cancel)
                     self.active[run['id']] = (future, cancel, run)
             return bool(advancing or self.active or self.reviews)
+
+    def _start_image_run(self, job, mid, spec, milestone):
+        """One image-tool attempt per explicit start; no automatic paid retries or text substitute."""
+        adapter = self.adapters.get('image-generation')
+        from .router import is_local_only
+        if is_local_only(job['contract']):
+            self.store.wait_for_route(job['id'], NO_ROUTE_WAIT+'This image generator uses a cloud service. Your request requires local-only work.')
+            return
+        if milestone.get('attempts', 0) >= milestone.get('image_retry_at_attempt', 0) + 1:
+            note = milestone.get('error') or 'The generated image did not pass its file check.'
+            self.store.wait_for_route(job['id'], STUCK_WAIT+note+' No image was delivered. Choose Try again to start one new image attempt.')
+            return
+        try:
+            ready = bool(adapter and callable(getattr(adapter, 'ready', None)) and adapter.ready())
+        except Exception:
+            ready = False
+        if not ready:
+            note = adapter.unavailable_note() if adapter and callable(getattr(adapter, 'unavailable_note', None)) else 'No image generator is available. Set up an image generator, then choose Try again. No image was created.'
+            self.store.wait_for_route(job['id'], NO_ROUTE_WAIT+note)
+            return
+        try:
+            self.store.controller_lease(self.owner)
+            run = self.store.claim(job['id'], mid, 'image-generation', timeout=600,
+                                   route={'selected': 'image-generation', 'why': 'A real image tool is required; text cannot satisfy this request.'})
+        except PolicyError:
+            return
+        milestone['state'] = 'RUNNING'
+        cancel = threading.Event()
+        future = self.pool.submit(self._execute, run, adapter, cancel)
+        self.active[run['id']] = (future, cancel, run)
 
     def _job_active(self, job_id):
         with contextlib.closing(self.store.connect()) as db:

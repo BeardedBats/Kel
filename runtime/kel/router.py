@@ -90,6 +90,8 @@ def coding_intent(text):
     text = str(text or '').strip()
     if not text:
         return False
+    if image_component_intent(text):
+        return True
     if CODE_LEAD_RE.match(text) and CODE_THING_RE.search(text):
         return True
     return bool(CODE_VERB_RE.search(text) and CODE_THING_RE.search(text) and
@@ -100,6 +102,28 @@ def coding_intent(text):
 def needs_work(text):
     """True when the message asks for something only real work can do (a command, a service)."""
     return bool(TOOL_REQUEST_RE.search(str(text or '')))
+
+
+def image_component_intent(text):
+    """A visual software component is code, rather than a generated image."""
+    return bool(re.match(r'^(?:(?:please|can you|could you|would you|will you)\s+)*'
+        r'(?:create|generate|draw|render|make|build)\s+(?:(?:me|us)\s+)?'
+        r'(?:(?:a|an|the|this|that|my)\s+)?(?:(?:new|generated)\s+)?'
+        r'(?:image|picture|illustration|infographic|logo)\s+(?:component|widget)\b',
+        str(text or '').strip(),re.I))
+
+
+def image_generation_intent(text):
+    """Explicit visual output, not an image prompt, quoted example or analysis."""
+    text = str(text or '').strip()
+    text = re.sub(r'<memory-context>[\s\S]*?</memory-context>|```[\s\S]*?(?:```|$)|`[^`]*(?:`|$)', ' ', text)
+    text = re.sub(r'(?m)^\s*>[^\n]*', ' ', text)
+    text = re.sub(r'"[^"\n]*"|“[^”\n]*”', ' ', text)
+    prefix = r'^(?:(?:please|can you|could you|would you|will you)\s+)*'
+    match = re.match(prefix + r'(?:create|generate|draw|render|make)\s+(?:(?:me|us)\s+)?(?:(?:a|an|the|this|that|my)\s+)?(?:(?:new|generated)\s+)?(?:image|picture|illustration|infographic|logo)\b', text, re.I)
+    if not match:
+        return False
+    return not re.match(r'\s+(?:generation\s+)?(?:prompt|brief|concept|description|plan|generator|app|application|script|tool|component|widget|website|page)\b', text[match.end():], re.I)
 
 
 # A file action names a file and the folder it should land in ("create a file named hello.txt
@@ -285,6 +309,10 @@ def classify(text):
     word = text.strip().lower()
     if word in ('status', '/status', 'jobs', '/jobs'):
         return {'kind': 'status', 'confidence': 1.0}
+    if image_generation_intent(text):
+        return {'kind': 'image', 'confidence': 1.0}
+    if image_component_intent(text):
+        return {'kind': 'coding', 'confidence': 1.0}
     if greenfield_intent(word):
         return {'kind': 'coding', 'confidence': .7, 'greenfield': True}
     if word.startswith(('write ', 'create ', 'draft ', 'summarize ')):

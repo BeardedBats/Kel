@@ -131,6 +131,7 @@ contextBridge.exposeInMainWorld('kelAPI', {
   },
   // Artifact lineage: reveal a produced artifact (store-relative path) in the OS file manager.
   revealArtifact: (relpath: string) => ipcRenderer.invoke('kel:artifact-reveal', relpath),
+  imageArtifact: (job: string, milestone: string) => ipcRenderer.invoke('kel:image-artifact', job, milestone),
   kibbleInstaller: (fixId: string, reveal = false) => ipcRenderer.invoke('kel:kibble-installer', fixId, reveal),
   // D-57: a scheduled run's engine conversation as an app chat (made on first use), and a nudge
   // that brings the chat list in step right after a schedule changes.

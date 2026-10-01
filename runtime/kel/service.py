@@ -21,7 +21,7 @@ from .native import NativeAdapter
 from .coding import CodingAdapter,compile_coding
 from .runner import DurableAdapter
 from .research import needs_research
-from .router import coding_intent, needs_work, file_action
+from .router import coding_intent, needs_work, file_action, image_generation_intent
 from . import handoff
 from .turn import decide as decide_turn, amend_ack, guard_ack, guard_reply, template_ack, title_for
 
@@ -121,6 +121,8 @@ class Service:
                     else:review_alternates.append(adapter)
         self.commander=Commander(review_model,review_alternates) if review_model else None
         adapters={}
+        from .image_jobs import ImageAdapter
+        adapters['image-generation']=ImageAdapter(self.store)
         for provider in ('codex','claude'):
             if NativeAdapter(provider,self.store.root/'workspaces'/provider,self.store.root/'logs').probe().get('installed'):
                 adapters[provider]=DurableAdapter(self.store,provider)
@@ -217,6 +219,8 @@ class Service:
         # D-64: Full access by default (migration 34 runs here, once).
         from .authority import ensure_schema as ensure_authority_schema
         ensure_authority_schema(self.store)
+        from .image_jobs import repair_legacy_claims
+        repair_legacy_claims(self.store)
         self.supervisor=threading.Thread(target=self._tick,daemon=True);self.supervisor.start()
         def telemetry():
             while not self.stop.is_set():
@@ -271,6 +275,48 @@ class Service:
                 try:handoff.follow_up(self.store)
                 except Exception:pass  # a missed notice is retried on the next pass; never stop supervision
 
+    def _image_followup(self,cid,text):
+        """Only local request receipts can carry image intent into a short correction."""
+        import re
+        normalized=re.sub(r'[^a-z0-9 ]',' ',str(text).lower())
+        normalized=' '.join(normalized.split())
+        status=normalized in ('where is the image','where s the image','where is my image',
+                              'show me the image','where is it')
+        correction=normalized in ('fix this','fix it','try again','generate it','make it an image',
+            'no this should be an image generated','this should be an image generated',
+            'no this should be a generated image','this should be a generated image',
+            'no i asked for an image','i asked for an image')
+        if not status and not correction:return None
+        with contextlib.closing(self.store.connect()) as db:
+            rows=db.execute('SELECT s.id,s.text,s.job_id,p.kind,p.packet FROM submissions s '
+                'LEFT JOIN submission_packets p ON p.id=s.id WHERE s.conversation_id=? '
+                'ORDER BY s.created DESC,s.rowid DESC LIMIT 16',(cid,)).fetchall()
+        for row in rows:
+            packet=json.loads(row['packet']) if row['packet'] else {}
+            previous=packet.get('image_request') or {}
+            if previous.get('mode')=='status':continue
+            if row['kind']=='image' or image_generation_intent(row['text']):
+                request=previous.get('request') or row['text']
+                return {'mode':'status' if status else 'generate','request':request,
+                        'source_submission':row['id'],'job_id':row['job_id']}
+            # An intervening substantive request ends this reference. Imported messages
+            # never create these local submission receipts.
+            return None
+        return None
+
+    def _image_status(self,reference):
+        jid=reference.get('job_id')
+        if not jid:return 'Image generation has not started. No generated image is available.'
+        job=self.store.get(jid)
+        from .image_jobs import image_artifact
+        mid=job['contract'].get('final_milestone')
+        try:
+            image_artifact(self.store,jid,mid)
+        except PolicyError:
+            state=str(job.get('state') or 'unknown').lower().replace('_',' ')
+            return 'No verified generated image is available. Image work is '+state+'.'
+        return 'The generated image is available in the image work result.'
+
     def submit(self,data,origin=None):
         """`origin` (D-57): the schedule that started this run. Python callers only."""
         sid=data.get('id') or secrets.token_hex(16);cid=data.get('conversation','main');text=data.get('text','')
@@ -308,7 +354,13 @@ class Service:
             from .router import classify
             result=classify(text)
             kind=result['kind'];greenfield_flag=bool(result.get('greenfield'))
+        if kind!='coding' and image_generation_intent(text):
+            kind='image';greenfield_flag=False
+        image_followup=self._image_followup(cid,text) if kind!='coding' else None
+        if image_followup:
+            kind='image';greenfield_flag=False
         packet=self.context.handoff(cid,text,attachments)
+        if image_followup:packet['image_request']=image_followup
         if transcript_origin:
             packet['transcript_origin'] = transcript_origin
         try:
@@ -775,6 +827,20 @@ class Service:
             if (packet.get('context_status') or {}).get('requires_attention'):
                 self._say(sid,cid,'Project context needs attention before I continue. Narrow this request or review the project decisions.')
                 return None
+            if kind=='image':
+                image_request=packet.get('image_request') or {}
+                if image_request.get('mode')=='status':
+                    self._say(sid,cid,self._image_status(image_request))
+                    with self.store.transaction() as db:
+                        db.execute("UPDATE submissions SET state='SETTLED' WHERE id=? AND state='PLANNING'",(sid,))
+                    return None
+                request=image_request.get('request') or text
+                if request!=text:
+                    text=self._rewrite_request(sid,request)
+                packet['output_contract']={'kind':'image'}
+                return self._handoff(sid,cid,text,packet,'image',False,
+                    {'task_class':'image','title':'Generate image',
+                     'acknowledgement':'I am checking whether image generation can start.'})
             lower=text.lower().strip()
             coding_verb=lower.startswith(CODING_VERBS)
             code_floor=coding_verb or self._code_in_project(text,packet)
@@ -959,9 +1025,9 @@ class Service:
         from .staff import MECHANICAL,USER_FACING
         lower=str(text or '').lower().strip()
         root=(packet.get('project') or {}).get('root')
-        code_floor=kind=='coding' or bool(greenfield_flag) or (root and (lower.startswith(CODING_VERBS) or self._code_in_project(text,packet)))
+        code_floor=kind!='image' and (kind=='coding' or bool(greenfield_flag) or (root and (lower.startswith(CODING_VERBS) or self._code_in_project(text,packet))))
         research_floor=kind=='research' or lower.startswith(RESEARCH_PREFIXES)
-        model_class=(decision or {}).get('task_class')
+        model_class='image' if kind=='image' else (decision or {}).get('task_class')
         out={'task_class':model_class,'tier':(decision or {}).get('tier'),'source':'model' if model_class else 'floors'}
         forced=('coding' if code_floor else 'research' if research_floor else None)
         if forced and model_class not in ('coding','research','page','motion') and model_class!=forced:
@@ -974,7 +1040,7 @@ class Service:
         # D-88 (WRITER_ANIMATOR_ROLES.md §2.1): the page and motion floors only add a role's work, never
         # take any away (research stays research, a utility job stays small).
         from .pages import floor_class
-        floored=floor_class(text,out['task_class'])
+        floored=out['task_class'] if kind=='image' else floor_class(text,out['task_class'])
         if floored!=out['task_class']:
             out.update(task_class=floored,forced_by='floor')
         packet['classification']={k:v for k,v in out.items() if v}
@@ -1113,7 +1179,11 @@ class Service:
         target=file_action(text)
         if target and kind=='coding' and packet.get('kind_source')=='client':
             target=None  # an explicit coding request keeps its own project routing
-        if target:
+        if kind=='image':
+            from .image_jobs import compile_image
+            contract=compile_image(text)
+            contract['output_contract']={'kind':'image'}
+        elif target:
             # A named file in a named folder: only the coding path can write into a saved project.
             # Anywhere else the result is text, and publication says plainly that no file was made.
             found=self._project_for_folder(target['folder'])
@@ -1202,7 +1272,7 @@ class Service:
                 if finding:contract['context']['kibble']={'fix_id':finding['fix_id']}
         if packet.get('classification'):
             contract['classification']=dict(packet['classification'])  # staffing reads the class and tier
-        if any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
+        if kind!='image' and any(f.get('image_path') for f in packet['files']):contract['required_capabilities']=['image','text']
         contract['submission_id']=sid
         return contract
 
@@ -1501,6 +1571,9 @@ class Service:
 
         With the workforce off (KEL_WORKFORCE=0) nothing is added and the job runs as before. A
         decision that cannot be made never blocks the work: the job runs unstaffed and says why."""
+        if (contract.get('output_contract') or {}).get('kind')=='image':
+            # This route has its own image executor; text staffing cannot supply it.
+            return None
         from . import staff
         from .code_streams import collapse
         if not staff.enabled():
@@ -2247,6 +2320,9 @@ class Service:
     def action(self,path,data):
         with self.lifecycle_lock:
             if self.draining:raise PolicyError('Kel is restarting for an update. Try again after it opens.')
+            if path=='/api/image-worker':
+                from .image_jobs import action
+                return action(self.store,data)
             if path.startswith('/api/work-hub/'):
                 from .work_hub import WorkHub
                 return WorkHub(self).act(path, data)
@@ -3120,6 +3196,10 @@ def serve(root,port=0):
                                                 failures_only=_first('failures') in ('1','true','yes'),
                                                 query=_first('query'),limit=_first('limit')));return
                     if parsed.path=='/api/connections':self.reply(200,service._connections_list());return
+                    if parsed.path=='/api/image-artifact':
+                        from .image_jobs import image_artifact
+                        self.reply(200,image_artifact(service.store,(query.get('job') or [''])[0],
+                            (query.get('milestone') or [None])[0]));return
                     if parsed.path=='/api/artifact':
                         if 'lineage' in query:
                             out=service.store.lineage_artifact(query['lineage'][0])

@@ -353,7 +353,7 @@ export async function executeImageGeneration(
 
     if (!images || images.length === 0) {
       const warningMessage = `Image generation did not produce any images.\n\nModel response: ${responseText}\n\nTip: Make sure your image generation model supports this type of request. Current model: ${provider.use_model}`;
-      return { success: true, text: warningMessage };
+      return { success: false, text: warningMessage, error: 'Image generation returned no image.' };
     }
 
     const firstImage = images[0];
@@ -379,7 +379,11 @@ export async function executeImageGeneration(
       };
     }
 
-    return { success: true, text: responseText };
+    return {
+      success: false,
+      text: 'Image generation returned no usable image. No image was saved.',
+      error: 'Image generation returned no usable image.',
+    };
   } catch (error) {
     if (signal?.aborted) {
       return { success: false, text: 'Image generation was cancelled.', error: 'cancelled' };

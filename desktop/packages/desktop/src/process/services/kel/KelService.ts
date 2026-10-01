@@ -1,5 +1,6 @@
 /** Kel integration: connect the donor UI host to the durable Kel engine. */
 import { rendererKelRequestRefusal } from './kelRequestGuard';
+import { startImageWorker } from './imageWorker';
 import { migrateDonorSchedules } from './scheduleMigration';
 import { applyWorkspaceRepairs, listConversationsForRepair, planWorkspaceRepairs } from './repairWorkspacePaths';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
@@ -356,6 +357,16 @@ export async function initializeKel(port: number): Promise<void> {
     const payload = await r.json();
     return payload.data ?? payload;
   }
+  const stopImageWorker = startImageWorker(kelRequest, core, root);
+  app.on('before-quit', stopImageWorker);
+  ipcMain.removeHandler('kel:image-artifact');
+  ipcMain.handle('kel:image-artifact', async (event, job: string, milestone: string) => {
+    assertTrustedSender(event, { allowDevServer: true });
+    if (typeof job !== 'string' || typeof milestone !== 'string' ||
+        !/^[a-zA-Z0-9_-]{1,128}$/.test(job) || !/^[a-zA-Z0-9_-]{1,128}$/.test(milestone))
+      throw new Error('That image is not a Kel result.');
+    return kelRequest('/api/image-artifact?job=' + job + '&milestone=' + milestone);
+  });
   const agents = await core('/api/agents/management');
   console.log('[KEL-BOOT] initializeKel agents/management ok');
   const found = agents.find((a: { name: string }) => a.name === 'Kel');

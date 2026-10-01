@@ -241,6 +241,21 @@ export const createInitStyle = (
     max-width: 100%;
     height: auto;
   }
+  /* Checked image controls live inside this Shadow DOM, so shell rules cannot reach them. */
+  .kel-generated-image { display: inline-flex; flex-direction: column; gap: 8px; max-width: 100%; margin-block: 8px; }
+  .kel-generated-image__preview {
+    display: block; max-width: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 8px;
+  }
+  .kel-generated-image__preview img { display: block; max-width: 100%; max-height: 520px; height: auto; object-fit: contain; border-radius: 8px; }
+  .kel-generated-image__actions { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .kel-generated-image .kel-btn {
+    box-sizing: border-box; min-height: 32px; padding: 6px 10px;
+    border: 1px solid var(--kel-figma-color-glass-button-edge, var(--bg-3)); border-radius: 8px;
+    background: transparent; color: var(--kel-figma-color-text-accent, var(--text-primary));
+    font: 500 14px/20px var(--kel-shell-heading, sans-serif); cursor: pointer;
+  }
+  .kel-generated-image .kel-btn:hover { background: var(--kel-shell-hover, var(--bg-2)); }
+  .kel-generated-image button:focus-visible { outline: 2px solid var(--kel-figma-color-control-focus, var(--text-primary)); outline-offset: 3px; }
    /* Table border styles */
   table {
     border-collapse: collapse;

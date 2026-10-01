@@ -114,8 +114,14 @@ class TaskOutcomes:
         feedback_current = bool(feedback and feedback['subject'] == self._subject(job) and terminal)
         if feedback_current and feedback['response'] == 'useful':
             try:
-                for step in milestones.values():
-                    self.store.artifact_text(step['artifact'])
+                from .output_contracts import image_check
+                for mid, step in milestones.items():
+                    checked = image_check(self.store, job, mid)
+                    if checked:
+                        if checked['verdict'] != 'VERIFIED':
+                            raise PolicyError('The generated image is no longer valid.')
+                    else:
+                        self.store.artifact_text(step['artifact'])
             except (OSError, PolicyError, UnicodeError, KeyError, TypeError):
                 feedback_current = False
         return {'job_id': job['id'], 'project_id': project_id, 'state': job['state'],

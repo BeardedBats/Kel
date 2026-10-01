@@ -63,8 +63,15 @@ def validate_contract(contract):
         if not isinstance(m.get("objective"), str) or not m["objective"].strip():
             raise PolicyError("Each milestone needs an objective")
         filename = m.get("filename", "")
-        if not isinstance(filename, str) or not filename.endswith(".md") or any(c in filename for c in '/\\:') or filename.startswith('.'):
-            raise PolicyError("Outputs must be simple Markdown filenames")
+        from .output_contracts import requires_image
+        declared_output = contract.get('output_contract') or {}
+        explicit_image = contract.get('kind') == 'image' or (isinstance(declared_output, dict) and declared_output.get('kind') == 'image')
+        image_filename = explicit_image and requires_image(contract, m['id']) and any(
+            isinstance(check, dict) and check.get('kind') == 'generated_image' for check in m.get('checks', []))
+        suffix_ok = isinstance(filename, str) and (filename.endswith('.md') or
+                    (image_filename and filename.endswith('.png')))
+        if not suffix_ok or any(c in filename for c in '/\\:') or filename.startswith('.'):
+            raise PolicyError("Outputs must be simple Markdown filenames, or PNG filenames for requested images")
         if filename in filenames:
             raise PolicyError("Milestones cannot share an output filename")
         filenames.add(filename)
@@ -75,7 +82,7 @@ def validate_contract(contract):
             if not isinstance(check,dict):
                 raise PolicyError('Checks must be objects')
             kind = check.get("kind")
-            if kind not in ("contains", "min_chars", "manual_review"):
+            if kind not in ("contains", "min_chars", "manual_review", "generated_image"):
                 raise PolicyError("Only trusted built-in checks are allowed; executable oracles are forbidden")
             if kind == "contains" and (not isinstance(check.get("value"), str) or not check["value"].strip()):
                 raise PolicyError("Contains checks need a nonempty literal")
@@ -83,6 +90,10 @@ def validate_contract(contract):
                 raise PolicyError("Minimum length must be between 1 and 100000")
             if kind == "manual_review" and not check.get("rubric"):
                 raise PolicyError("Review requires an explicit rubric")
+            if kind == 'generated_image':
+                from .output_contracts import requires_image
+                if not requires_image(contract, m['id']):
+                    raise PolicyError('Image generation needs an explicit requested image output')
         if not isinstance(m.get('depends_on',[]),list):
             raise PolicyError('Dependencies must be a list')
         if not set(m.get("depends_on", [])).issubset(ids - {m['id']}):
@@ -114,6 +125,9 @@ def completion_claims(contract):
             elif kind == 'min_chars':
                 criterion = 'the output has at least %d characters of text' % check.get('value')
                 method = 'artifact length check (trusted builtin)'
+            elif kind == 'generated_image':
+                criterion = 'a generated image file decodes, matches its captured digest, and has a trusted image-tool receipt'
+                method = 'generated-image asset and tool-receipt check'
             else:
                 criterion = check.get('rubric') or 'the output satisfies the recorded rubric'
                 method = 'independent rubric review'
@@ -133,6 +147,16 @@ def completion_claims(contract):
                        'objective_or_subjective': 'objective',
                        'evidence_required': 'code_evidence row + diff digest',
                        'failure_condition': 'repository evidence FAILED or UNCERTAIN',
+                       'dependencies': []})
+    from .output_contracts import requires_image
+    if requires_image(contract) and not any(check.get('kind') == 'generated_image'
+            for step in contract.get('milestones', []) for check in step.get('checks', [])):
+        claims.append({'id': 'requested.image', 'requirement': contract.get('request', ''),
+                       'acceptance_criterion': 'a generated image file exists, decodes, matches its captured digest, and has a trusted image-tool receipt',
+                       'verification_method': 'generated-image asset and tool-receipt check',
+                       'objective_or_subjective': 'objective',
+                       'evidence_required': 'image bytes + digest + image-tool receipt',
+                       'failure_condition': 'missing, invalid, changed or untrusted image output',
                        'dependencies': []})
     return claims
 
@@ -403,7 +427,7 @@ class Store:
                    ' VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)',
                    (lineage_id, project, conversation, job['id'], milestone_id, info['run_id'],
                     Path(info['path']).name, info['path'], info.get('sha256'), info.get('bytes'),
-                    'text/markdown', time.time(),
+                    info.get('media_type', 'text/markdown'), time.time(),
                     ('message:%s' % turn['seq']) if turn else '',
                     previous['id'] if previous else None))
         if previous:
@@ -479,14 +503,22 @@ class Store:
                     # D-66: the model the runtime reported running, never the one merely asked for.
                     m['model'] = str(result['model_used'])[:120]
                     db.execute('UPDATE runs SET model=? WHERE id=?', (m['model'], run['id']))
-                if outcome in ('SUCCESS', 'PARTIAL') and isinstance(result.get('text'), str):
+                from .output_contracts import accept_image_result, requires_image
+                image_output = requires_image(job['contract'], run['milestone_id'])
+                image_artifact = None
+                if image_output:
+                    try:
+                        image_artifact = accept_image_result(self, job, dict(run), result, db)
+                    except (OSError, ValueError, KeyError, TypeError, PolicyError) as exc:
+                        result['error'] = str(exc)
+                if image_artifact or (not image_output and outcome in ('SUCCESS', 'PARTIAL') and isinstance(result.get('text'), str)):
                     spec=next(s for s in job['contract']['milestones'] if s['id']==run['milestone_id'])
-                    m['artifact'] = self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
+                    m['artifact'] = image_artifact or self._artifact(job['id'], run['milestone_id'], run['id'], result['text'], spec['filename'])
                     m['artifact']['lineage'] = self._record_lineage(db, job, run['milestone_id'], m['artifact'])
                     self._record_assignment_artifact(db, job['id'], run['milestone_id'], m['artifact'])
                     m.update(state='CHECKING', error=None, recommendation=None)
                 else:
-                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'Missing output text'),
+                    m.update(state='NEEDS_REPAIR', error=result.get('error', 'No image file was generated. Text or a prompt cannot satisfy this image request.' if image_output else 'Missing output text'),
                              recommendation=result.get('recommendation'))
                     # V2-09: a failed attempt is routing evidence too, not only a reviewed verdict.
                     # One row per run (idempotent); a later review refines it, never the other way.
@@ -558,6 +590,8 @@ class Store:
             pass  # the record is additive; it never blocks settlement
 
     def artifact_text(self, artifact):
+        if artifact.get('media_type', '').startswith('image/'):
+            raise PolicyError('An image artifact is not Markdown text')
         path = (self.root / artifact['path']).resolve()
         if not path.is_relative_to((self.root / 'artifacts').resolve()):
             raise PolicyError("Artifact escaped its root")
@@ -597,8 +631,13 @@ class Store:
             try:
                 if m['artifact']['job_id'] != job_id or m['artifact']['milestone_id'] != milestone_id:
                     raise PolicyError("Evidence belongs to another subject")
-                text = self.artifact_text(m['artifact'])
-                checks.append(dict(kind='artifact_digest', verdict='VERIFIED', subject=m['artifact']['sha256']))
+                from .output_contracts import image_check
+                requested_output = image_check(self, job, milestone_id, db=db)
+                text = '' if requested_output else self.artifact_text(m['artifact'])
+                if not requested_output or requested_output['verdict'] == 'VERIFIED':
+                    checks.append(dict(kind='artifact_digest', verdict='VERIFIED', subject=m['artifact']['sha256']))
+                if requested_output:
+                    checks.append(requested_output)
                 if job['contract'].get('kind')=='coding' and spec.get('kind')!='text':  # D-88: a page's copy is text
                     from .coding import repository_check
                     checks.append(repository_check(self,m['artifact']['run_id']))
@@ -607,7 +646,7 @@ class Store:
                 from .motion_capture import check as motion_check
                 from .pages import copy_check
                 from .slop import check as slop_check
-                extras = [slop_check(self, job, milestone_id, text)]
+                extras = [] if requested_output else [slop_check(self, job, milestone_id, text)]
                 if job['contract'].get('kind')=='coding' and spec.get('kind')!='text':
                     extras += [copy_check(self, job, milestone_id), motion_check(self, job, milestone_id)]
                 checks.extend(extra for extra in extras if extra)
@@ -616,6 +655,8 @@ class Store:
                     checks.append(dict(kind='research_evidence',verdict='VERIFIED' if check_research_evidence(self,m['artifact']['run_id'],text) else 'UNCERTAIN'))
                 for criterion in spec['checks']:
                     kind = criterion['kind']
+                    if kind == 'generated_image':
+                        continue  # The receipt and full image bytes were checked above.
                     if kind == 'contains':
                         passed = criterion['value'] in text
                     elif kind == 'min_chars':
@@ -719,7 +760,14 @@ class Store:
             for m in job['milestones'].values():
                 if m['state'] == 'ACCEPTED':
                     try:
-                        self.artifact_text(m['artifact'])
+                        from .output_contracts import image_check
+                        requested_output = image_check(self, job, m['artifact']['milestone_id'], db=db)
+                        if requested_output and requested_output['verdict'] != 'VERIFIED':
+                            m['state'] = 'INVALIDATED'
+                            states.append(requested_output['verdict'])
+                            continue
+                        if not requested_output:
+                            self.artifact_text(m['artifact'])
                         if job['contract'].get('kind')=='coding' and not any(  # D-88: a page's text steps
                                 s.get('kind')=='text' and s.get('id')==m['artifact'].get('milestone_id')
                                 for s in job['contract'].get('milestones') or []):
@@ -776,7 +824,13 @@ class Store:
                        'can only write text here, not save files into your folders. Save it there yourself, '
                        'or select that folder as a project (with a test command) and ask again.')
             if job['verdict']=='VERIFIED':
-                text='\n\n'.join(self.artifact_text(m['artifact']) for m in accepted.values())
+                from .output_contracts import display_image, requires_image
+                image_output = requires_image(job['contract'])
+                if image_output:
+                    text='Here is the generated image. Kel checked the image file; visual details have not had a separate review.\n\n' + '\n\n'.join(
+                        display_image(self, job, mid, db=db) for mid in accepted if requires_image(job['contract'], mid))
+                else:
+                    text='\n\n'.join(self.artifact_text(m['artifact']) for m in accepted.values())
                 if job['contract'].get('kind')=='coding':
                     # D-85: only say "a separate review" when one ran.
                     from .proportional import independently_reviewed
@@ -805,7 +859,9 @@ class Store:
                 # D-53: a conversational hand-off gets a lead-in that names the work — and only a
                 # VERIFIED result may say it passed its checks.
                 handoff=job['contract'].get('handoff') or {}
-                if file_request:
+                if image_output:
+                    pass  # The image result names the exact check boundary above.
+                elif file_request:
                     text=("Here's the content for "+str(file_request.get('filename'))+' — it passed its checks. '
                           +file_note+('\n\n'+text if text else ''))
                 elif handoff.get('title'):
@@ -857,6 +913,10 @@ class Store:
         if action == 'resume':
             if job['state'] != 'PAUSED':
                 raise PolicyError("Only a paused job can resume")
+            from .output_contracts import requires_image
+            for mid, milestone in job['milestones'].items():
+                if milestone['state'] != 'ACCEPTED' and requires_image(job['contract'], mid):
+                    milestone['image_retry_at_attempt'] = milestone.get('attempts') or 0
             job['state'] = 'READY'
         elif action in ('cancel', 'pause'):
             job['state'] = ('CANCELLING' if action == 'cancel' else 'PAUSING') if active else ('CANCELLED' if action == 'cancel' else 'PAUSED')
@@ -1089,7 +1149,10 @@ class Store:
                     if m['state'] != 'ACCEPTED' and m['attempts'] < 4]
             if not work:
                 raise PolicyError('No retryable milestones to resume')
-            for m in job['milestones'].values():
+            for mid, m in job['milestones'].items():
+                from .output_contracts import requires_image
+                if m['state'] != 'ACCEPTED' and m['attempts'] < 4 and requires_image(job['contract'], mid):
+                    m['image_retry_at_attempt'] = m.get('attempts') or 0
                 if m['state'] == 'EXHAUSTED' and m['attempts'] < 4:
                     m['state'] = 'READY'
                 elif m['state'] == 'UNCERTAIN' and m['attempts'] < 4:
@@ -1205,6 +1268,11 @@ class Store:
                     continue
                 if (m.get('attempts') or 0)>=2:
                     m['attempts']=2  # two more tries per open step
+                from .output_contracts import requires_image
+                if requires_image(job['contract'], mid):
+                    # The generic explicit-retry path resets its local counter; bind the image's
+                    # one-attempt fence to that new counter, never the stale pre-reset value.
+                    m['image_retry_at_attempt'] = m.get('attempts') or 0
                 if m['state']=='EXHAUSTED' or (m['state']=='UNCERTAIN' and not _may_finish(job,mid)):
                     m.update(state='NEEDS_REPAIR',error='Trying this again at your request.')
             job['budget']=max(job['budget'],job['spent']+job['reserved'])+int(extra)

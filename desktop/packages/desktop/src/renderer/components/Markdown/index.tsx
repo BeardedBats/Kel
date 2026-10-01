@@ -20,6 +20,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { convertLatexDelimiters } from '@renderer/utils/chat/latexDelimiters';
 import LocalImageView from '@renderer/components/media/LocalImageView';
+import KelGeneratedImage, { parseKelImageReference } from '@renderer/components/media/KelGeneratedImage';
 import CodeBlock from './CodeBlock';
 import LocalFileLink from './LocalFileLink';
 import ShadowView from './ShadowView';
@@ -115,6 +116,10 @@ const MarkdownView: React.FC<MarkdownViewProps> = React.memo(
         td: MarkdownTd,
         img: ({ node: _node, ...rest }: Record<string, unknown>) => {
           const imgProps = rest as React.ImgHTMLAttributes<HTMLImageElement>;
+          if (parseKelImageReference(imgProps.src || '')) {
+            return <KelGeneratedImage src={imgProps.src!} alt={imgProps.alt} />;
+          }
+          if (!imgProps.src) return <span>Image unavailable.</span>;
           if (isLocalFilePath(imgProps.src || '')) {
             const src = decodeURIComponent(imgProps.src || '');
             return <LocalImageView src={src} alt={imgProps.alt || ''} className={imgProps.className} />;
@@ -135,7 +140,7 @@ const MarkdownView: React.FC<MarkdownViewProps> = React.memo(
               remarkPlugins={MARKDOWN_REMARK_PLUGINS}
               rehypePlugins={rehypePlugins}
               components={components}
-              urlTransform={(url) => (resolveLocalFileLinkPath(url) ? url : defaultUrlTransform(url))}
+              urlTransform={(url, key) => (key === 'src' && parseKelImageReference(url) ? url : resolveLocalFileLinkPath(url) ? url : defaultUrlTransform(url))}
             >
               {normalizedChildren}
             </ReactMarkdown>

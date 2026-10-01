@@ -34,6 +34,11 @@ const LocalImageView: React.FC<{
   }, [src, root]);
 
   useEffect(() => {
+    if (absolutePath.startsWith('data:image/')) {
+      setUrl(absolutePath);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     ipcBridge.fs.getImageBase64
       .invoke({ path: absolutePath, workspace: root || undefined })
