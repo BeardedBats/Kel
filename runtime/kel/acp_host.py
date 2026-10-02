@@ -596,6 +596,15 @@ class ACPHost:
                     if message['seq'] not in seen:
                         seen.add(message['seq'])
                         if message['role'] == 'assistant':
+                            ack = submission.get('ack_seq') if submission else None
+                            reason = str(submission.get('error') or '').strip().rstrip('.') if submission else ''
+                            owned_failure = "I wasn't able to get that started — " + reason + '. You can retry it from the card above.'
+                            if (ack and submission.get('state') == 'FAILED' and reason
+                                    and message['seq'] > ack and not message.get('job_id')
+                                    and message.get('text') == owned_failure):
+                                # The live work card owns this failure. Keep its durable message,
+                                # but do not append a second error to the acknowledgment stream.
+                                continue
                             self._say_message(session, message, stream)
                 if not submission:
                     raise RuntimeError('Kel lost the submitted request record')

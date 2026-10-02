@@ -8,6 +8,7 @@ import type { KelHandoff } from '../kelApi';
 
 /** The last state each hand-off (by submission id) showed. */
 export const lastHandoffViews = new Map<string, KelHandoff>();
+export const HANDOFF_STATE_EVENT = 'kel:handoff-state';
 
 /** Hand-offs whose in-thread line has already revealed. */
 export const revealedHandoffLines = new Set<string>();

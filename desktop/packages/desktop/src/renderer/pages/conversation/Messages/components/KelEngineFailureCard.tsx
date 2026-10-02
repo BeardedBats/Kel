@@ -5,13 +5,14 @@
  */
 
 import { Attention } from '@icon-park/react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useConversationContextSafe } from '@/renderer/hooks/context/ConversationContext';
 import { iconColors } from '@/renderer/styles/colors';
 import { emitter } from '@/renderer/utils/emitter';
 import { useMessageList } from '../hooks';
 import type { TMessage } from '@/common/chat/chatLib';
-import { isKelWorkToolCall } from '@/common/chat/kelWork';
+import { kelWorkSubmissionId } from '@/common/chat/kelWork';
+import { HANDOFF_STATE_EVENT, lastHandoffViews } from '@renderer/components/kel/workCards/handoffMemory';
 
 /**
  * The engine reports a failed start as plain assistant text. Kel shows it as the Figma
@@ -54,9 +55,27 @@ export const hasWorkFailureOwner = (messages: TMessage[], messageId: string): bo
     const item = messages[i];
     if (item.conversation_id !== conversation || item.hidden) continue;
     if (item.type === 'text' && item.position === 'right') return false;
-    if (item.type === 'acp_tool_call' && isKelWorkToolCall(item.content?.update?.tool_call_id)) return true;
+    if (item.type === 'acp_tool_call') {
+      const sid = kelWorkSubmissionId(item.content?.update?.tool_call_id);
+      if (!sid) continue;
+      const view = lastHandoffViews.get(sid);
+      const reason = parseEngineFailure(failed.content.content);
+      const recorded = String(view?.error || view?.why || '').trim().replace(/\.$/, '');
+      return view?.phase === 'failed_to_start' && Boolean(reason && recorded && reason === recorded);
+    }
   }
   return false;
+};
+
+export const useHandoffFailureOwner = (messages: TMessage[], messageId: string, failure: string | null): boolean => {
+  const [, update] = useState(0);
+  useEffect(() => {
+    if (!failure) return;
+    const refresh = () => update(value => value + 1);
+    window.addEventListener(HANDOFF_STATE_EVENT, refresh);
+    return () => window.removeEventListener(HANDOFF_STATE_EVENT, refresh);
+  }, [failure]);
+  return Boolean(failure && hasWorkFailureOwner(messages, messageId));
 };
 
 const KelEngineFailureCard: React.FC<{ reason: string; messageId: string; conversationId: string }> = ({

@@ -1,5 +1,5 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
-import KelEngineFailureCard, { hasWorkFailureOwner, parseEngineFailure } from './KelEngineFailureCard';
+import KelEngineFailureCard, { useHandoffFailureOwner, parseEngineFailure } from './KelEngineFailureCard';
 import { KelMessageNote } from './KelMessageDetails';
 import { KelMessageCard } from '@renderer/components/kel/workCards/KelMessageCard';
 import { replyUsageWords } from '@renderer/components/kel/usage/usageWords';
@@ -188,7 +188,7 @@ const MessageText: React.FC<{
   const isUserMessage = message.position === 'right';
   const engineFailure = !isUserMessage && typeof message.content.content === 'string' ? parseEngineFailure(message.content.content) : null;
   const messages = useMessageList();
-  const pairedEngineFailure = engineFailure && hasWorkFailureOwner(messages, message.id);
+  const pairedEngineFailure = useHandoffFailureOwner(messages, message.id, engineFailure);
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
   // supporting backend (claude/codex). The message already reached the
   // server (it's rendered); this only answers "has the agent picked it up

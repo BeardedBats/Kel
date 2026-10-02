@@ -16,7 +16,7 @@ import { applicationLine, isApplied } from './changeApplication';
 import { WORK_WORDS, workWords } from './workLanguage';
 import { announceHandoffLive } from './useKelLiveWork';
 import { KelWorkLine } from './workCards/KelWorkLine';
-import { lastHandoffViews } from './workCards/handoffMemory';
+import { HANDOFF_STATE_EVENT, lastHandoffViews } from './workCards/handoffMemory';
 import { answerApply } from './workCards/officeApi';
 import { refreshWorkCards } from './workCards/workCardEvents';
 import './KelWorkCard.css';
@@ -90,6 +90,9 @@ export const KelWorkCard: React.FC<Props> = ({ submissionId, conversationId, pol
   const [notice, setNotice] = useState('');
   const [generation, setGeneration] = useState(0);
   const inFlight = useRef(false);
+  useEffect(() => {
+    window.dispatchEvent(new Event(HANDOFF_STATE_EVENT));
+  }, [view?.phase, view?.error, view?.why, submissionId]);
 
   useEffect(() => {
     let alive = true;

@@ -339,11 +339,26 @@ class ACPHostTests(unittest.TestCase):
         def failed(state):
             submission = state['submissions'][0]
             submission.update(state='FAILED', error='No planner', ack_seq=state['messages'][-1]['seq'])
+            state['messages'].append({'seq': state['messages'][-1]['seq'] + 1, 'role': 'assistant',
+                'text': "I wasn't able to get that started — No planner. You can retry it from the card above."})
         self.send_hook = failed
         self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'write a plan'}]})
         texts = [e['params']['update'].get('content', {}).get('text', '') for e in self.events]
         self.assertFalse(any('could not plan' in t for t in texts))
+        self.assertFalse(any("wasn't able" in t for t in texts))
+        self.assertIn("wasn't able", self.state['messages'][-1]['text'])
         self.assertTrue(self.events[-1]['params']['update']['toolCallId'].startswith('kel-work:'))
+
+    def test_handoff_keeps_an_unrelated_failure_in_the_stream(self):
+        def failed(state):
+            submission = state['submissions'][0]
+            submission.update(state='FAILED', error='No planner', ack_seq=state['messages'][-1]['seq'])
+            state['messages'].append({'seq': state['messages'][-1]['seq'] + 1, 'role': 'assistant',
+                'text': "I wasn't able to get that started — Another reason. You can retry it from the card above."})
+        self.send_hook = failed
+        self.host.prompt({'sessionId': 'kel:c1', 'prompt': [{'type': 'text', 'text': 'write a plan'}]})
+        texts = [e['params']['update'].get('content', {}).get('text', '') for e in self.events]
+        self.assertTrue(any('Another reason' in text for text in texts))
 
     def test_uncertain_work_is_pending_not_verified(self):
         def uncertain(state):
