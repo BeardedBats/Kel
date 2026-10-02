@@ -10,6 +10,11 @@
   font: 400 13px/18px var(--kel-shell-body);
 }
 .kel-staff-models__rows { display: flex; flex-direction: column; }
+.kel-staff-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 12px 0; min-width: 0; }
+.kel-staff-summary + .kel-staff-summary { box-shadow: 0 -1px 0 rgba(191,216,255,.08); }
+.kel-staff-summary > strong { flex: 1 1 180px; color: var(--kel-text-1); font: 500 14px/20px var(--kel-shell-heading); }
+.kel-staff-summary > span { color: var(--kel-text-2); font: 400 14px/20px var(--kel-shell-body); overflow-wrap: anywhere; }
+.kel-staff-summary > .kel-staff-summary__unavailable { color: var(--kel-status-attention-text, #ffc481); }
 .kel-staff-row {
   display: flex;
   flex-direction: column;

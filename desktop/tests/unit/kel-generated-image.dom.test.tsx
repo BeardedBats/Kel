@@ -35,7 +35,7 @@ describe('checked image delivery', () => {
     expect(imageArtifact).toHaveBeenCalledWith('job-ab12', 'image');
     expect(image.getAttribute('src')).toBe('data:image/png;base64,' + png);
     fireEvent.click(screen.getByRole('button', { name: 'Open image', exact: true }));
-    expect(screen.getByRole('dialog', { name: 'Preview kel-image-job-ab12-image.png' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Image preview' })).toBeTruthy();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open generated image' }));
@@ -44,7 +44,7 @@ describe('checked image delivery', () => {
       saved = { href: this.href, name: this.download };
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save image' }));
-    expect(saved).toEqual({ href: 'data:image/png;base64,' + png, name: 'kel-image-job-ab12-image.png' });
+    expect(saved).toEqual({ href: 'data:image/png;base64,' + png, name: 'kel-image.png' });
   });
 
   it('renders the published Markdown reference through the checked image bridge', async () => {
@@ -60,7 +60,7 @@ describe('checked image delivery', () => {
     const imageArtifact = vi.fn().mockRejectedValueOnce(new Error('Image generation is not set up.')).mockResolvedValueOnce(receipt);
     window.kelAPI = { imageArtifact } as unknown as Window['kelAPI'];
     render(<KelGeneratedImage src='kel-image://job-ab12/image' />);
-    expect((await screen.findByRole('alert')).textContent).toContain('Image generation is not set up.');
+    expect((await screen.findByRole('alert')).textContent).toContain('Kel could not load this image. Try again here.');
     expect(screen.queryByRole('img')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('img', { name: 'Generated image' })).toBeTruthy();

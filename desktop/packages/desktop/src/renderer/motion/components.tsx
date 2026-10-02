@@ -6,14 +6,13 @@
  * re-renders, and never plays on first paint.
  */
 import React, { useLayoutEffect, useRef } from 'react';
-import { drawOn, enter, exit, prepareEnter, settleIn, turnOnce } from './fx';
-import { measure, playFlip, type Point } from './flip';
+import { clearFx, drawOn, enter, exit, prepareEnter, settleIn, takeOver, turnOnce } from './fx';
 import { ghostOf } from './morph';
 import { useEdgeIndicator } from './indicator';
 import { isReducedMotion } from './reduced';
 import { frameWrite, spring, type SpringHandle } from './spring';
 import { BLUR, MOTION } from './tokens';
-import { animateString, type StringMotionHandle } from './stringMotion';
+import { animateString, graphemes, STRING_MOTION, type StringMotionHandle } from './stringMotion';
 import { useReducedMotion } from './reduced';
 
 /* ─────────────────────────────── label roll ─────────────────────────────── */
@@ -27,27 +26,14 @@ type RollProps = {
   settle?: boolean;
   /** Roll direction: 1 = old up and out, new up from below. */
   dir?: 1 | -1;
-  /** FLIP the following siblings when the width changes (default on). */
+  /** Compatibility only. Label changes no longer animate neighbouring layout. */
   flipSiblings?: boolean;
   testId?: string;
   as?: 'span' | 'div';
 };
 
-const followingSiblings = (el: HTMLElement): HTMLElement[] => {
-  const out: HTMLElement[] = [];
-  let next = el.nextElementSibling;
-  while (next) {
-    out.push(next as HTMLElement);
-    next = next.nextElementSibling;
-  }
-  return out;
-};
-
-/**
- * Label swaps roll (§4): the old words leave upward and the new ones arrive from below (7 px, blur
- * 3 px) in the same slot, which already has the new width; neighbours FLIP to their new places.
- */
-export const RollText: React.FC<RollProps> = ({ value, valueKey, className, settle = false, dir = 1, flipSiblings = true, testId, as = 'span' }) => {
+/** Small label changes keep String motion. Long text and neighbouring layout stay still. */
+export const RollText: React.FC<RollProps> = ({ value, valueKey, className, settle = false, dir = 1, testId, as = 'span' }) => {
   const reducedPreference = useReducedMotion();
   const strings = useRef<StringMotionHandle[]>([]);
   const oldCopies = useRef<HTMLElement[]>([]);
@@ -55,14 +41,13 @@ export const RollText: React.FC<RollProps> = ({ value, valueKey, className, sett
   const slotRef = useRef<HTMLElement>(null);
   const nowRef = useRef<HTMLElement>(null);
   const committed = useRef<{ key: unknown; ghost: HTMLElement | null } | null>(null);
-  const pending = useRef<{ key: unknown; ghost: HTMLElement | null; siblings: Map<HTMLElement, Point> } | null>(null);
+  const pending = useRef<{ key: unknown; ghost: HTMLElement | null } | null>(null);
 
   const slot = slotRef.current;
   if (slot && committed.current && key !== committed.current.key && pending.current?.key !== key) {
     pending.current = {
       key,
       ghost: nowRef.current ? ghostOf(nowRef.current) : null,
-      siblings: flipSiblings ? measure(followingSiblings(slot)) : new Map(),
     };
   }
 
@@ -78,16 +63,22 @@ export const RollText: React.FC<RollProps> = ({ value, valueKey, className, sett
     const reduced = isReducedMotion();
     strings.current.forEach((handle) => handle.stop());
     strings.current = [];
-    oldCopies.current.forEach((copy) => copy.remove());
+    oldCopies.current.forEach((copy) => { takeOver(copy); copy.remove(); });
     oldCopies.current = [];
-    const stringValue = typeof value === 'string' || typeof value === 'number';
+    takeOver(now);
+    clearFx(now);
+    const shortLabel = (typeof value === 'string' || typeof value === 'number') &&
+      graphemes(String(value)).length <= STRING_MOTION.maxGlyphs &&
+      graphemes(snap.ghost?.textContent ?? '').length <= STRING_MOTION.maxGlyphs;
+    // Static content keeps native wrapping and never leaves a large outgoing copy.
+    if (!shortLabel) return;
     if (snap.ghost) {
       const ghost = snap.ghost;
       ghost.classList.remove('kel-roll__now');
       ghost.classList.add('kel-roll__old');
       host.appendChild(ghost);
       oldCopies.current.push(ghost);
-      if (stringValue && !settle && !reduced) {
+      if (!settle && !reduced) {
         const leaving = animateString(ghost, 0, ghost.textContent?.length ?? 0, 'exit');
         strings.current.push(leaving);
         void leaving.finished.then(() => ghost.remove());
@@ -96,24 +87,28 @@ export const RollText: React.FC<RollProps> = ({ value, valueKey, className, sett
     if (settle) {
       prepareEnter(now, { y: 0, blur: MOTION.settleBlurPx });
       void settleIn(now, { delay: reduced ? 0 : 60 });
-    } else if (stringValue && !reduced) {
+    } else if (!reduced) {
       strings.current.push(animateString(now));
     } else {
       prepareEnter(now, { y: 7 * dir, blur: BLUR.roll });
       void enter(now, { y: 7 * dir, blur: BLUR.roll, ms: MOTION.rollMs, delay: 60 });
     }
-    if (snap.siblings.size) void playFlip(snap.siblings, 'snappy', { axis: 'x' });
   }, [key]);
 
   useLayoutEffect(() => {
     if (reducedPreference) {
       strings.current.forEach((handle) => handle.stop());
-      oldCopies.current.forEach((copy) => copy.remove());
+      oldCopies.current.forEach((copy) => { takeOver(copy); copy.remove(); });
+      if (nowRef.current) { takeOver(nowRef.current); clearFx(nowRef.current); }
     }
   }, [reducedPreference]);
-  useLayoutEffect(() => () => {
-    strings.current.forEach((handle) => handle.stop());
-    oldCopies.current.forEach((copy) => copy.remove());
+  useLayoutEffect(() => {
+    const now = nowRef.current;
+    return () => {
+      strings.current.forEach((handle) => handle.stop());
+      oldCopies.current.forEach((copy) => { takeOver(copy); copy.remove(); });
+      if (now) { takeOver(now); clearFx(now); }
+    };
   }, []);
 
   const Tag = as;

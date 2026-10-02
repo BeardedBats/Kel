@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { animateString, graphemes, motionClock, RollText, setReducedMotionOverride, setSceneSettledForTests, STRING_MOTION, stringProgress, useStreamFade } from '@renderer/motion';
+import { animateString, graphemes, motionClock, RollText, setReducedMotionOverride, setSceneSettledForTests, STRING_MOTION, stringProgress } from '@renderer/motion';
 
 let highlights: Map<string, Set<Range>>;
 beforeEach(() => {
@@ -33,7 +33,6 @@ const source = (html: string) => {
   return el;
 };
 const glyphs = () => Array.from(document.querySelectorAll<HTMLElement>('.kel-string-glyph'));
-const Reply = ({ body }: { body: HTMLElement }) => { useStreamFade(body, true); return null; };
 
 describe('String motion', () => {
   it('keeps graphemes whole, uses the requested physical spring, and caps a large burst', () => {
@@ -79,35 +78,52 @@ describe('String motion', () => {
     second.stop();
   });
 
-  it('shows history immediately, animates only stream additions, and restores text on a Markdown rewrite', async () => {
-    const body = source('<p>Existing</p>');
-    const view = render(<Reply body={body} />);
-    expect(glyphs()).toHaveLength(0);
-    await act(async () => { body.firstChild!.textContent = 'Existing new'; });
-    expect(glyphs().map((el) => el.textContent).join('')).toBe('new');
-    act(() => motionClock.advance(100));
-    await act(async () => { body.firstChild!.textContent = 'Existing new next'; });
-    expect(glyphs().map((el) => el.textContent).join('')).toBe('next');
-    await act(async () => { body.innerHTML = '<p><strong>Existing new next</strong></p>'; });
-    expect(glyphs()).toHaveLength(0);
-    expect(highlights.size).toBe(0);
-    await act(async () => { body.innerHTML = '<p><strong>Edited</strong></p>'; });
-    expect(glyphs()).toHaveLength(0);
-    expect(highlights.size).toBe(0);
-    view.unmount();
-  });
-
-  it('reveals a newly arriving nonempty reply, stops on reduced motion, and never replays it on toggle', () => {
-    setSceneSettledForTests(true);
-    const body = source('<p>New reply</p>');
-    const view = render(<Reply body={body} />);
+  it('keeps short label transitions and never moves a following label or replays unchanged words', () => {
+    const row = (value: string) => <><RollText value={value} flipSiblings /><span data-testid='neighbour'>Next</span></>;
+    const view = render(row('Working'));
+    const next = view.getByTestId('neighbour');
+    vi.spyOn(next, 'getBoundingClientRect').mockReturnValue({ left: 100, top: 0 } as DOMRect);
+    view.rerender(row('Checking'));
     expect(glyphs().length).toBeGreaterThan(0);
+    act(() => motionClock.advance(1500));
+    expect(next.style.transform).toBe('');
+    view.rerender(row('Checking'));
+    expect(glyphs()).toHaveLength(0);
+    view.rerender(row('Done'));
     act(() => setReducedMotionOverride(true));
     expect(glyphs()).toHaveLength(0);
     expect(highlights.size).toBe(0);
     act(() => setReducedMotionOverride(false));
     expect(glyphs()).toHaveLength(0);
     view.unmount();
+  });
+
+  it('keeps long content static during swaps, including an interrupted short label', () => {
+    const view = render(<RollText value='Working' />);
+    view.rerender(<RollText value='Checking' />);
+    act(() => motionClock.advance(90));
+    view.rerender(<RollText value='Long explanation that wraps naturally without decorative text copies.' />);
+    expect(glyphs()).toHaveLength(0);
+    expect(highlights.size).toBe(0);
+    expect(document.querySelectorAll('.kel-roll__old')).toHaveLength(0);
+    expect(motionClock.active()).toBe(0);
+    view.rerender(<RollText value='Done' />);
+    expect(glyphs()).toHaveLength(0);
+  });
+
+  it('cancels a settling fade before long static text arrives and removes effects on unmount', () => {
+    const view = render(<RollText value='Working' testId='label' />);
+    view.rerender(<RollText value='Done' settle testId='label' />);
+    act(() => motionClock.advance(90));
+    view.rerender(<RollText value='Long explanation that must be readable immediately.' testId='label' />);
+    const label = view.getByTestId('label');
+    expect(label.style.opacity).toBe('');
+    expect(label.style.filter).toBe('');
+    expect(motionClock.active()).toBe(0);
+    view.rerender(<RollText value='Working' testId='label' />);
+    view.rerender(<RollText value='Done' settle testId='label' />);
+    view.unmount();
+    expect(motionClock.active()).toBe(0);
   });
 
   it('finishes an interrupted label before the next swap and removes every overlay on unmount', () => {

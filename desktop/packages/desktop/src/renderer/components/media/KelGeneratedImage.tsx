@@ -18,7 +18,7 @@ const KelGeneratedImage: React.FC<{ src: string; alt?: string }> = ({ src, alt }
   const [previewOpen, setPreviewOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const openButton = useRef<HTMLButtonElement>(null);
-  const name = reference ? `kel-image-${reference.job}-${reference.milestone}.png` : 'generated-image.png';
+  const name = 'kel-image.png';
 
   useEffect(() => {
     let active = true;
@@ -47,8 +47,9 @@ const KelGeneratedImage: React.FC<{ src: string; alt?: string }> = ({ src, alt }
   }, [reference, attempt]);
 
   if (error) return <span className='kel-generated-image' role='alert'>
-    <span>{error}</span>
+    <span>Kel could not load this image. Try again here.</span>
     {reference && <button type='button' className='kel-btn kel-btn--quiet' onClick={() => setAttempt(value => value + 1)}>Try again</button>}
+    <details><summary>Details</summary><span>{error}</span></details>
   </span>;
   if (!picture) return <span role='status'>Loading image…</span>;
 
@@ -69,7 +70,7 @@ const KelGeneratedImage: React.FC<{ src: string; alt?: string }> = ({ src, alt }
       <button type='button' className='kel-btn kel-btn--quiet' onClick={() => setPreviewOpen(true)}>Open image</button>
       <button type='button' className='kel-btn kel-btn--quiet' onClick={save}>Save image</button>
     </span>
-    {previewOpen && <KelImageLightbox src={picture.url} name={name} detail={`${picture.width} × ${picture.height}`}
+    {previewOpen && <KelImageLightbox src={picture.url} name={name}
       onClose={() => { setPreviewOpen(false); openButton.current?.focus(); }} />}
   </span>;
 };

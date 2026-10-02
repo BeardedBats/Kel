@@ -10,6 +10,8 @@ import { useConversationContextSafe } from '@/renderer/hooks/context/Conversatio
 import { iconColors } from '@/renderer/styles/colors';
 import { emitter } from '@/renderer/utils/emitter';
 import { useMessageList } from '../hooks';
+import type { TMessage } from '@/common/chat/chatLib';
+import { isKelWorkToolCall } from '@/common/chat/kelWork';
 
 /**
  * The engine reports a failed start as plain assistant text. Kel shows it as the Figma
@@ -31,12 +33,30 @@ export const parseEngineFailure = (text: string): string | null => {
 };
 
 /** Plain-language body for the raw engine reason; the raw text stays available under Details. */
-const friendlyReason = (reason: string): string => {
-  if (/timed? ?out|took too long/i.test(reason)) return 'The model took too long. Try again or pick another model.';
-  if (/structured result|invalid json|parse/i.test(reason)) return 'The model sent back an answer Kel could not use. Try again or pick another model.';
-  if (/auth|api key|sign.?in|credential/i.test(reason)) return 'The model needs to be set up before Kel can use it. Pick another model or finish its setup.';
-  if (/quota|rate.?limit|limit (was )?reached/i.test(reason)) return 'The model has hit its usage limit. Pick another model or try again later.';
-  return 'Something went wrong before Kel could start. Try again or pick another model.';
+export const friendlyReason = (reason: string): string => {
+  if (/project needs a test command/i.test(reason)) return 'Add a test command to this project before Kel changes its code.';
+  if (/no image tool|cannot generate an image/i.test(reason)) return 'No image tool is available. Connect Codex, then try again here.';
+  if (/timed? ?out|took too long/i.test(reason)) return 'This took too long. Try again.';
+  if (/structured result|invalid json|parse/i.test(reason)) return 'Kel could not use the model’s answer. Try again.';
+  if (/auth|api key|sign.?in|credential/i.test(reason)) return 'This model needs a sign-in. Sign in, then try again.';
+  if (/quota|rate.?limit|limit (was )?reached/i.test(reason)) return 'This model has reached its limit. Try again later.';
+  return 'Kel could not start this request. Try again.';
+};
+
+/** A handoff card owns a failed start in this user turn. Keep standalone failures visible. */
+export const hasWorkFailureOwner = (messages: TMessage[], messageId: string): boolean => {
+  const index = messages.findIndex(item => item.id === messageId);
+  if (index < 0) return false;
+  const failed = messages[index];
+  if (failed.type !== 'text' || !/^I wasn't able to get that started\s*[—-]/.test(failed.content.content.trim())) return false;
+  const conversation = messages[index].conversation_id;
+  for (let i = index - 1; i >= 0; i--) {
+    const item = messages[i];
+    if (item.conversation_id !== conversation || item.hidden) continue;
+    if (item.type === 'text' && item.position === 'right') return false;
+    if (item.type === 'acp_tool_call' && isKelWorkToolCall(item.content?.update?.tool_call_id)) return true;
+  }
+  return false;
 };
 
 const KelEngineFailureCard: React.FC<{ reason: string; messageId: string; conversationId: string }> = ({
@@ -61,13 +81,6 @@ const KelEngineFailureCard: React.FC<{ reason: string; messageId: string; conver
       </div>
       <p className='kel-chat-agent-error__body'>{friendlyReason(reason)}</p>
       <div className='kel-chat-agent-error__actions'>
-        <button
-          type='button'
-          className='kel-chat-agent-error__model'
-          onClick={() => emitter.emit('agent.error.pick-model', conversationId)}
-        >
-          Pick another model
-        </button>
         {canRetry && (
           <button
             type='button'
@@ -81,6 +94,8 @@ const KelEngineFailureCard: React.FC<{ reason: string; messageId: string; conver
       <details className='kel-chat-agent-error__details'>
         <summary>Details</summary>
         <div className='kel-chat-agent-error__diagnostics'>{reason}</div>
+        <button type='button' className='kel-chat-agent-error__model'
+          onClick={() => emitter.emit('agent.error.pick-model', conversationId)}>Change model</button>
       </details>
     </section>
   );

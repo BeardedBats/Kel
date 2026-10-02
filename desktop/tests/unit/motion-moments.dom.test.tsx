@@ -28,7 +28,6 @@ import {
   motionClock,
   setReducedMotionOverride,
   setSceneSettledForTests,
-  useMessageArrival,
 } from '@renderer/motion';
 import { MIC, MIC_DETAIL, RECEIPTS, RECEIPTS_DETAIL } from './fixtures/kelOfficeFixtures';
 
@@ -121,36 +120,6 @@ describe('10.1 send → Thinking → reply', () => {
     expect(container.querySelector<HTMLElement>('.kel-thinking__mark')!.style.opacity).toBe('');
   });
 
-  it('the reply’s mark and time fade in in place — nothing flies to the avatar (FIX-0025)', () => {
-    motionClock.setManual(true);
-    const thinking = render(<KelThinkingIndicator label='Thinking…' />);
-    thinking.unmount();
-    const Turn: React.FC = () => {
-      const ref = React.useRef<HTMLDivElement>(null);
-      useMessageArrival(ref, 'kel');
-      return (
-        <div ref={ref}>
-          <div className='kel-shell-message-meta'>
-            <span className='kel-shell-message-avatar'>
-              <img alt='Kel' />
-            </span>
-            <time>9:12 AM</time>
-          </div>
-        </div>
-      );
-    };
-    const { container } = render(<Turn />);
-    const avatar = container.querySelector<HTMLElement>('.kel-shell-message-avatar')!;
-    const time = container.querySelector<HTMLElement>('time')!;
-    expect(avatar.querySelector('img')!.style.visibility).toBe('');
-    expect(document.querySelector('.kel-motion-fly')).toBeNull();
-    expect(Number(avatar.style.opacity)).toBe(0);
-    expect(Number(time.style.opacity)).toBe(0);
-    expect(avatar.style.transform ?? '').not.toMatch(/translate/);
-    act(() => motionClock.advance(400));
-    expect(avatar.style.opacity).toBe('');
-    expect(time.style.opacity).toBe('');
-  });
 });
 
 describe('10.2 the hand-off', () => {

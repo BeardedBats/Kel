@@ -237,7 +237,33 @@ describe('FIX-0025 a reply arrives without jumps', () => {
     expect(row.querySelector('button[aria-label="Copy"]')).not.toBeNull();
   });
 
-  describe('the thread glides instead of jumping', () => {
+  it('keeps reply text visible through streaming, re-render and reopening history', () => {
+    motionClock.setManual(true);
+    setSceneSettledForTests(true);
+    const message = (text: string) => <MemoryRouter><ConversationProvider value={{ conversation_id: 'donor', type: 'acp' } as never}>
+      <MessageText message={reply(text)} showCopyRow={false} />
+    </ConversationProvider></MemoryRouter>;
+    const view = render(message('First words'));
+    view.rerender(message('First words and more'));
+    view.rerender(message('First words and more'));
+    expect(screen.getByTestId('message-text-content').textContent).toBe('First words and more');
+    expect(document.querySelector('.kel-string-layer, .kel-motion-fly')).toBeNull();
+    const text = screen.getByTestId('message-text-content');
+    const range = document.createRange();
+    range.selectNodeContents(text);
+    window.getSelection()!.removeAllRanges();
+    window.getSelection()!.addRange(range);
+    expect(window.getSelection()!.toString()).toBe('First words and more');
+    window.getSelection()!.removeAllRanges();
+    view.unmount();
+    setSceneSettledForTests(false);
+    render(message('First words and more'));
+    expect(screen.getByTestId('message-text-content').style.visibility).toBe('');
+    expect(document.querySelector('.kel-string-layer, .kel-motion-fly')).toBeNull();
+    expect(motionClock.active()).toBe(0);
+  });
+
+  describe('the thread follows without layout animation', () => {
     let observe: (() => void) | null = null;
     let itemTop = 500;
     beforeEach(() => {
@@ -283,7 +309,7 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       );
     };
 
-    it('a short chat growing upward (the list is bottom-aligned) glides by the growth, with no painted jump', () => {
+    it('leaves bottom-aligned content untransformed as replies grow', () => {
       const messages = [{ id: 'u', position: 'right', type: 'text' } as TMessage];
       render(<Harness messages={messages} />);
       const content = screen.getByTestId('content');
@@ -296,15 +322,14 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       // The reply's first lines arrive: the bottom-aligned list pushes the first message up 60 px.
       itemTop = 440;
       act(() => observe?.());
-      expect(content.style.transform).toBe('translateY(60.00px)');
-      // While it moves, the box around it clips, so the moving content never changes the scroll range.
-      expect(screen.getByTestId('clip').style.overflow).toBe('clip');
+      expect(content.style.transform).toBe('');
+      expect(screen.getByTestId('clip').style.overflow).toBe('');
       act(() => motionClock.advance(1000));
       expect(content.style.transform).toBe('');
       expect(screen.getByTestId('clip').style.overflow).toBe('');
     });
 
-    it('the list getting taller (Thinking leaving) glides the thread down, not a snap', () => {
+    it('keeps content static when the Thinking row leaves', () => {
       render(<Harness messages={[{ id: 'u', position: 'right', type: 'text' } as TMessage]} />);
       const content = screen.getByTestId('content');
       const first = screen.getByTestId('first');
@@ -313,10 +338,10 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       act(() => observe?.());
       itemTop = 536;
       act(() => observe?.());
-      expect(content.style.transform).toBe('translateY(-36.00px)');
+      expect(content.style.transform).toBe('');
     });
 
-    it('a browser scroll clamp (the thread got shorter at the bottom) still glides', () => {
+    it('does not replay a browser scroll clamp as a thread spring', () => {
       render(<Harness messages={[{ id: 'u', position: 'right', type: 'text' } as TMessage]} />);
       const scroller = screen.getByTestId('scroller');
       const content = screen.getByTestId('content');
@@ -329,7 +354,7 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       itemTop = 561;
       fireEvent.scroll(scroller);
       act(() => observe?.());
-      expect(content.style.transform).toBe('translateY(-61.00px)');
+      expect(content.style.transform).toBe('');
     });
 
     it('never replays Nick’s own scrolling as a glide', () => {
@@ -345,6 +370,28 @@ describe('FIX-0025 a reply arrives without jumps', () => {
       fireEvent.scroll(scroller);
       act(() => observe?.());
       expect(content.style.transform).toBe('');
+    });
+
+    it('follows streamed growth immediately but keeps the reading position after user scrolling', () => {
+      render(<Harness messages={[{ id: 'r', position: 'left', type: 'text' } as TMessage]} />);
+      const scroller = screen.getByTestId('scroller');
+      const scroll = vi.fn(({ top }: ScrollToOptions) => { scroller.scrollTop = top ?? 0; });
+      scroller.scrollTo = scroll;
+      Object.defineProperties(scroller, {
+        scrollHeight: { configurable: true, value: 1000 },
+        clientHeight: { configurable: true, value: 300 },
+      });
+      act(() => observe?.());
+      expect(scroll).toHaveBeenLastCalledWith({ top: 700, behavior: 'auto' });
+      scroller.scrollTop = 200;
+      fireEvent.wheel(scroller, { deltaY: -500 });
+      fireEvent.scroll(scroller);
+      scroll.mockClear();
+      Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 1200 });
+      act(() => observe?.());
+      expect(scroll).not.toHaveBeenCalled();
+      expect(scroller.scrollTop).toBe(200);
+      expect(screen.getByTestId('content').style.transform).toBe('');
     });
   });
 });

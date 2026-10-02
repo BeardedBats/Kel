@@ -42,6 +42,7 @@ import {
   type StaffRoleRow,
 } from '@renderer/components/kel/staffModels/staffModelsApi';
 import SettingsPageWrapper from '../components/SettingsPageWrapper';
+import SettingsAdvanced from '../components/SettingsAdvanced';
 import './staffModels.css';
 
 const MODES: StaffMode[] = ['AUTOMATIC', 'PREFERRED', 'FIXED'];
@@ -517,7 +518,7 @@ const StaffModelsSettings: React.FC = () => {
           </KelCard>
         ) : (
           <KelCard title='Staff'>
-            {inEffect.line ? (
+            {inEffect.line && inEffect.forChat ? (
               <p className='kel-staff-models__in-effect' data-testid='staff-kel-in-effect' data-for-chat={inEffect.forChat || undefined}>
                 {inEffect.line}
               </p>
@@ -525,6 +526,21 @@ const StaffModelsSettings: React.FC = () => {
             {rows.length === 0 ? (
               <p className='kel-staff-models__note'>Kel did not list any staff roles. Try again in a moment.</p>
             ) : (
+              <div className='kel-staff-models__rows'>
+                {rows.map((row) => (
+                  <div className='kel-staff-summary' key={row.role} data-testid={`staff-summary-${row.role}`}>
+                    <strong>{row.label}</strong>
+                    <span>{row.mode === 'AUTOMATIC' ? 'Kel chooses' : modelLabel(listing, row.model)}</span>
+                    {row.mode !== 'AUTOMATIC' && row.available === false && <span className='kel-staff-summary__unavailable'>Not available</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </KelCard>
+        )}
+        {listing && !loadError ? (
+          <SettingsAdvanced testId='staff-advanced'>
+            <KelCard title='Staff choices'>
               <StaffRowsFlip flipKey={rows.map((row) => `${row.role}${fellBackLine(row.last_run) ? '!' : ''}`).join('|')}>
                 {rows.map((row) => (
                   <StaffRow
@@ -538,11 +554,11 @@ const StaffModelsSettings: React.FC = () => {
                   />
                 ))}
               </StaffRowsFlip>
-            )}
-          </KelCard>
-        )}
-        {listing && !loadError ? <ScopingThresholdCard /> : null}
-        {listing && !loadError ? <RankingCard /> : null}
+            </KelCard>
+            <ScopingThresholdCard />
+            <RankingCard />
+          </SettingsAdvanced>
+        ) : null}
       </div>
     </SettingsPageWrapper>
   );

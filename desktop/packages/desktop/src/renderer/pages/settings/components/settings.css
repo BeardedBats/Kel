@@ -1,3 +1,23 @@
+/* Settings disclosures use the existing neutral card and control tokens. */
+.kel-settings-advanced {
+  min-width: 0;
+  border: 1px solid var(--kel-figma-color-glass-button-edge, var(--border-base));
+  border-radius: 8px;
+}
+.kel-settings-advanced > summary {
+  padding: 12px 16px;
+  color: var(--kel-text-1, var(--text-primary));
+  font: 500 14px/20px var(--kel-shell-heading, sans-serif);
+  cursor: pointer;
+}
+.kel-settings-advanced > summary:hover { background: var(--kel-shell-hover, var(--bg-2)); }
+.kel-settings-advanced > summary:focus-visible {
+  outline: 2px solid var(--kel-figma-color-control-focus, var(--text-primary));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.kel-settings-advanced__content { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 16px; min-width: 0; }
+
 /* Settings mobile top nav */
 @media (max-width: 767px) {
   .settings-mobile-top-nav {

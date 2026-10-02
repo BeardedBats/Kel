@@ -151,30 +151,38 @@
 .kel-attachment-chip__remove { flex: none; width: 16px; height: 20px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .kel-image-lightbox {
   position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center;
-  box-sizing: border-box; padding: 20px; background: rgba(6,18,46,.7);
+  box-sizing: border-box; padding: 24px; background: rgba(0,0,0,.72);
+  animation: kel-image-viewer-fade 140ms ease-out both;
 }
 .kel-image-lightbox__panel {
   display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;
-  width: min(960px,100%); max-height: 100%; padding: 12px 16px 14px;
-  border: 1px solid rgba(191,216,255,.16); border-radius: 16px;
-  background: linear-gradient(rgba(191,216,255,.08),rgba(191,216,255,0)),rgba(15,45,100,.84);
-  box-shadow: inset 0 1px rgba(191,216,255,.18),0 20px 48px -16px rgba(0,0,0,.35);
-  backdrop-filter: blur(24px);
+  width: min(1280px,100%); height: min(900px,100%); min-height: 0; padding: 12px;
+  border: 1px solid var(--kel-shell-custom-border,var(--kel-border)); border-radius: 16px;
+  background: var(--kel-shell-custom-elevated,var(--bg-2,var(--kel-surface-2)));
+  box-shadow: 0 20px 48px -16px rgba(0,0,0,.45);
 }
-.kel-image-lightbox__bar { display: flex; align-items: center; gap: 10px; min-width: 0; color: #edf2fa; }
+.kel-image-lightbox__bar { display: flex; flex: none; align-items: center; gap: 10px; min-width: 0; color: var(--kel-text-1,#edf2fa); }
 .kel-image-lightbox__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 14px/20px var(--kel-shell-heading,sans-serif); }
-.kel-image-lightbox__detail { flex: none; color: #8fa9d6; font: 400 12px/16px var(--kel-shell-body,sans-serif); }
 .kel-image-lightbox__actions { display: flex; gap: 4px; margin-left: auto; }
-.kel-image-lightbox__actions button { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: #edf2fa; font-size: 19px; cursor: pointer; }
+.kel-image-lightbox__actions button { display: grid; place-items: center; min-width: 56px; height: 36px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: inherit; font: 500 14px/20px var(--kel-shell-heading,sans-serif); cursor: pointer; transition: background-color 120ms ease; }
 .kel-image-lightbox__actions button:hover,
-.kel-image-lightbox__actions button:focus-visible { background: var(--kel-figma-color-glass-edge); outline: none; }
-.kel-image-lightbox__image { display: grid; place-items: center; min-height: 0; overflow: hidden; border-radius: 10px; background: linear-gradient(150deg,#1e3f86,#0b1734); }
-.kel-image-lightbox__image img { display: block; max-width: 100%; max-height: min(60vh,540px); object-fit: contain; }
+.kel-image-lightbox__actions button[aria-pressed='true'] { background: var(--kel-shell-hover,rgba(191,216,255,.06)); }
+.kel-image-lightbox__actions button:focus-visible,
+.kel-image-lightbox__image:focus-visible { outline: 2px solid var(--kel-accent,#9fc3ff); outline-offset: 2px; }
+.kel-image-lightbox__actions button:disabled { opacity: .6; cursor: default; }
+.kel-image-lightbox__image { display: grid; flex: 1; place-items: center; min-height: 0; min-width: 0; overflow: hidden; border-radius: 8px; background: rgba(0,0,0,.16); }
+.kel-image-lightbox__image img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+.kel-image-lightbox__image.is-zoomed { display: block; overflow: auto; overscroll-behavior: contain; }
+.kel-image-lightbox__image.is-zoomed img { width: 200%; height: 200%; max-width: none; max-height: none; }
+@keyframes kel-image-viewer-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .kel-image-lightbox { animation-duration: 80ms; }
+  .kel-image-lightbox__actions button { transition: none; }
+}
 @media (max-width: 767px) {
   .kel-v2-shell .kel-in-chat-frame__pane { scrollbar-width: none; }
   .kel-v2-shell .kel-in-chat-frame__pane::-webkit-scrollbar { display: none; }
-  .kel-image-lightbox { padding: 16px; }
-  .kel-image-lightbox__detail { display: none; }
+  .kel-image-lightbox { padding: 12px; }
 }
 :root[data-theme='dark'], .dark {
   --kel-status-positive-text: #8fe3b4;

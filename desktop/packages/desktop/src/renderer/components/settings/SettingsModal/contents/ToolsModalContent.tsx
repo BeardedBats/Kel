@@ -39,6 +39,7 @@ import {
 } from '@/renderer/services/clientBusinessSettings';
 import classNames from 'classnames';
 import { useSettingsTabNavigate, useSettingsViewMode } from '../settingsViewContext';
+import SettingsAdvanced from '@renderer/pages/settings/components/SettingsAdvanced';
 
 type MessageInstance = ReturnType<typeof Message.useMessage>[0];
 
@@ -625,16 +626,18 @@ const ToolsModalContent: React.FC = () => {
           </div>
           {/* 图像生成 */}
           {!selectedMobileServerId && (
+            <SettingsAdvanced testId='tools-advanced'>
             <div className='kel-shell-settings-card kel-tools-image-card px-[12px] md:px-[32px] py-[24px] bg-2 rd-12px md:rd-16px border border-border-2'>
-              <ShellSourceCardHeader title='Image generation' />
+              <ShellSourceCardHeader title='Optional image provider' />
               <div className='kel-tools-image-toggle-row flex items-center justify-between'>
                 <div className='flex flex-col gap-2px'>
-                  <span className='text-14px text-t-primary'>Generate images</span>
+                  <span className='text-14px text-t-primary'>Use image provider</span>
                   {isImageGenerationModelUnavailable && (
-                    <span className='kel-tools-image-hint'>Needs an image model first</span>
+                    <span className='kel-tools-image-hint'>Choose a provider model to use this option.</span>
                   )}
                 </div>
                 <Switch
+                  aria-label='Use image provider'
                   disabled={
                     isUpdatingImageGeneration ||
                     isImageGenerationServerLoading ||
@@ -724,6 +727,7 @@ const ToolsModalContent: React.FC = () => {
                 </Form>
               )}
             </div>
+            </SettingsAdvanced>
           )}
         </div>
       </AionScrollArea>

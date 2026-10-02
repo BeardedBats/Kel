@@ -26,13 +26,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import useSWR from 'swr';
 import { useSettingsViewMode } from '../../settingsViewContext';
-import { useLayoutContext } from '@renderer/hooks/context/LayoutContext';
 import BrowserNotificationGrant from './BrowserNotificationGrant';
 import DevSettings from './DevSettings';
 import BrowserDataSection from './BrowserDataSection';
 import DirInputItem from './DirInputItem';
 import PreferenceRow from './PreferenceRow';
 import VoiceInputSection from './VoiceInputSection';
+import SettingsAdvanced from '@renderer/pages/settings/components/SettingsAdvanced';
 
 /**
  * System settings content component
@@ -48,8 +48,6 @@ const SystemModalContent: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const viewMode = useSettingsViewMode();
   const isPageMode = viewMode === 'page';
-  const layout = useLayoutContext();
-  const isDesktopPage = isPageMode && !layout?.isMobile;
   const initializingRef = useRef(true);
 
   const [startOnBoot, setStartOnBoot] = useState<IStartOnBootStatus>({
@@ -79,7 +77,6 @@ const SystemModalContent: React.FC = () => {
   const [previewLimitMb, setPreviewLimitMb] = useState<number>(DEFAULT_TEXT_PREVIEW_LIMIT_MB);
   const previewLimitDraftRef = useRef<string>(String(DEFAULT_TEXT_PREVIEW_LIMIT_MB));
   const [saveUploadToWorkspace, setSaveUploadToWorkspace] = useState(false);
-  const [foldersOpen, setFoldersOpen] = useState(false);
 
   useEffect(() => {
     if (!isDesktop) {
@@ -551,7 +548,16 @@ const SystemModalContent: React.FC = () => {
     previewTextSizeLimit: undefined,
   };
   const visiblePreferences = preferenceItems.filter((item) => item.key !== 'saveUploadToWorkspace');
-  if (isDesktopPage) visiblePreferences.sort((a, b) => desktopOrder.indexOf(a.key) - desktopOrder.indexOf(b.key));
+  visiblePreferences.sort((a, b) => desktopOrder.indexOf(a.key) - desktopOrder.indexOf(b.key));
+  const advancedKeys = new Set(['hardwareAcceleration', 'crossSessionMessage', 'promptTimeout', 'agentIdleTimeout', 'previewTextSizeLimit']);
+  const generalPreferences = visiblePreferences.filter((item) => !advancedKeys.has(item.key));
+  const advancedPreferences = visiblePreferences.filter((item) => advancedKeys.has(item.key));
+  const renderPreference = (item: (typeof preferenceItems)[number]) => (
+    <PreferenceRow key={item.key} label={desktopLabels[item.key] ?? item.label}
+      description={item.key in desktopDescriptions ? desktopDescriptions[item.key] : item.description}>
+      {item.component}
+    </PreferenceRow>
+  );
 
   return (
     <div className='flex flex-col h-full w-full'>
@@ -565,20 +571,15 @@ const SystemModalContent: React.FC = () => {
               {/* VIS-20: first in General, as in the Figma System frame (it used to follow the
                   language row, which D-61 removed, and vanished with it). */}
               {isDesktop && <KelKeepAwakeCard compact />}
-              {visiblePreferences.map((item) => (
-                <PreferenceRow
-                  key={item.key}
-                  label={isDesktopPage ? desktopLabels[item.key] ?? item.label : item.label}
-                  description={isDesktopPage && item.key in desktopDescriptions ? desktopDescriptions[item.key] : item.description}
-                >
-                  {item.component}
-                </PreferenceRow>
-              ))}
+              {generalPreferences.map(renderPreference)}
             </div>
 
           </div>
-
-
+          <SettingsAdvanced testId='system-advanced'>
+            <div className='w-full flex flex-col divide-y divide-border-2'>
+              {advancedPreferences.map(renderPreference)}
+            </div>
+          </SettingsAdvanced>
         </div>
       </AionScrollArea>
     </div>

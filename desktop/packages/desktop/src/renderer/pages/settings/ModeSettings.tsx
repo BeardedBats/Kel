@@ -8,13 +8,16 @@ import React from 'react';
 import ModelModalContent from '@/renderer/components/settings/SettingsModal/contents/ModelModalContent';
 import { KelDefaultModelCard } from '@/renderer/components/kel/KelModelControl';
 import SettingsPageWrapper from './components/SettingsPageWrapper';
+import SettingsAdvanced from './components/SettingsAdvanced';
 
 const ModeSettings: React.FC = () => {
   return (
     <SettingsPageWrapper contentClassName='max-w-920px'>
       <div className='kel-shell-model-settings flex flex-col gap-12px'>
         <KelDefaultModelCard compact />
-        <ModelModalContent />
+        <SettingsAdvanced testId='model-advanced'>
+          <ModelModalContent />
+        </SettingsAdvanced>
       </div>
     </SettingsPageWrapper>
   );

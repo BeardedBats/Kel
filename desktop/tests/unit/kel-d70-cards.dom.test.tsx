@@ -350,7 +350,7 @@ const RESULT_META = {
 };
 
 describe('5d — the result carries the compact done card', () => {
-  it('D-79: title, "Complete" (its when in the tooltip), checks, one sentence, where it was applied, Open / Details, no Undo', async () => {
+  it('keeps the result card compact with state, location and actions; Details opens the full work', async () => {
     details = { 'job-mic': DONE_DETAIL };
     const request = install();
     const opened: string[] = [];
@@ -362,10 +362,10 @@ describe('5d — the result carries the compact done card', () => {
     expect(within(card).getByText('Mic mute toggle app')).toBeTruthy();
     expect(within(card).getByTestId('kel-done-card-state').textContent).toBe('Complete');
     expect(card.querySelector('.kel-dc__state-word')?.getAttribute('title')).toMatch(/^\d{2}\/\d{2}\/\d{2} \d{2}:\d{2} (AM|PM)$/);
-    expect(within(card).getByText('4 of 4 checks passed')).toBeTruthy();
+    expect(within(card).queryByText('4 of 4 checks passed')).toBeNull();
     expect(
-      within(card).getByText('A tray app that mutes your mic with one hotkey and shows the state, even when you mute from Windows settings.')
-    ).toBeTruthy();
+      within(card).queryByText('A tray app that mutes your mic with one hotkey and shows the state, even when you mute from Windows settings.')
+    ).toBeNull();
     expect(within(card).getByTestId('kel-done-card-applied').textContent).toMatch(/^Applied to Projects › mic-mute at 10:31 AM · you can undo it$/);
     expect(within(card).queryByTestId('kel-done-card-undo')).toBeNull();
     const open = within(card).getByTestId('kel-done-card-folder');
@@ -389,7 +389,7 @@ describe('5d — the result carries the compact done card', () => {
     render(<KelDoneCard job='job-mic' meta={{ ...RESULT_META, verdict: 'FAILED', checks: [{ kind: 'tests', verdict: 'FAILED' }] }} />);
     const card = await screen.findByTestId('kel-done-card');
     expect(within(card).getByTestId('kel-done-card-state').textContent).toBe('Didn’t pass its checks');
-    expect(within(card).getByText('0 of 1 check passed')).toBeTruthy();
+    expect(within(card).queryByText('0 of 1 check passed')).toBeNull();
     expect(within(card).queryByTestId('kel-done-card-undo')).toBeNull();
   });
 

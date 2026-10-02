@@ -1,10 +1,10 @@
 /**
  * D-70 item 2 — the compact done card on Kel's result message (Figma 5d). Title, the verified
- * state ("Done and checked" only for work whose checks passed, D-53), "N of N checks passed", one
- * sentence of the result, where a coding change was applied (D-65 truth from changeApplication.ts)
+ * state ("Done and checked" only for work whose checks passed, D-53), and
+ * where a coding change was applied (D-65 truth from changeApplication.ts)
  * with "Open" for its folder (D-79: no Undo — Nick asks Kel; Apply / Leave it while a checked change
  * waits for Nick), and
- * Details, which opens the work's top card. Failed, stopped and needs-you results use the same card
+ * Details opens the full work panel with its result and checks. Failed, stopped and needs-you results use the same card
  * with their own words. Work without a top card (from before the cards) renders `fallback` instead
  * — today's message details.
  */
@@ -110,7 +110,7 @@ const DoneNotice: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openFolder = defaultOpenFolder }) => {
+export const KelDoneCard: React.FC<Props> = ({ job, fallback = null, openFolder = defaultOpenFolder }) => {
   const [detail, setDetail] = useState<OfficeItemDetail | null>(null);
   const [noCard, setNoCard] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -185,9 +185,6 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
         : appliedWords(application, detail.finished_at)
       : null;
   const uncertain = state === 'failed' && isUncertain(detail);
-  const firstSentence = resultSentence(detail.result) ?? (detail.status_line?.trim() || null);
-  const sentence = applyWords ? withoutPlace(firstSentence) : firstSentence;
-  const checks = checksLine(meta);
   const settles = cardStateTransition(state) === 'settling';
   // D-70: a checked change that waits for Nick (Ask first, or held in Full access) is answered here
   // too, through the same route as its top card: Apply / Apply anyway, or Leave it.
@@ -224,9 +221,7 @@ export const KelDoneCard: React.FC<Props> = ({ job, meta, fallback = null, openF
           <RollText className='kel-dc__state' value={label} settle={settles} testId='kel-done-card-state' />
         </span>
         <span className='kel-wc-push' />
-        {checks ? <span className='kel-dc__checks'>{checks}</span> : null}
       </div>
-      {sentence ? <p className='kel-dc__result'>{sentence}</p> : null}
       {applyWords ? (
         <div className='kel-dc__applied' data-testid='kel-done-card-applied' title={applied && folder ? folder : undefined}>
           <img src={iconFolder13} alt='' />

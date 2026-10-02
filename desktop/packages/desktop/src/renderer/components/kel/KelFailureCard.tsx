@@ -66,9 +66,6 @@ export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, 
             {retryLabel}
           </KelButton>
         )}
-        <KelButton variant='quiet' onClick={() => void copyDiagnostics()}>
-          {copied ? 'Diagnostics copied' : 'Copy diagnostics'}
-        </KelButton>
       </div>
       <details
         className='kel-failure__details'
@@ -76,8 +73,11 @@ export const KelFailureCard: React.FC<KelFailureCardProps> = ({ error, onRetry, 
           if ((event.target as HTMLDetailsElement).open && !details) void buildDetails().then(setDetails);
         }}
       >
-        <summary>Technical details</summary>
+        <summary>Details</summary>
         <pre className='kel-failure__raw'>{details || 'Loading details…'}</pre>
+        <KelButton variant='quiet' onClick={() => void copyDiagnostics()}>
+          {copied ? 'Copied' : 'Copy details'}
+        </KelButton>
       </details>
     </section>
   );

@@ -20,9 +20,8 @@ from .core import PolicyError, uid, validate_contract, completion_claims, digest
 
 MAX_IMAGE_BYTES = 5_000_000
 WAIT_SECONDS = 180
-MISSING_GENERATOR = ('Kel cannot generate an image with the tools available here. '
-                     'Sign in to Codex, or choose an image model in Settings > Tools. '
-                     'No image has been generated. You do not need a project test command.')
+MISSING_GENERATOR = ('No image tool is available. Connect Codex to enable image generation, '
+                     'then try again here. No image was created.')
 
 
 def compile_image(request):

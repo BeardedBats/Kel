@@ -1,5 +1,5 @@
 import kelMark from '@renderer/assets/figma/kel-mark.png';
-import KelEngineFailureCard, { parseEngineFailure } from './KelEngineFailureCard';
+import KelEngineFailureCard, { hasWorkFailureOwner, parseEngineFailure } from './KelEngineFailureCard';
 import { KelMessageNote } from './KelMessageDetails';
 import { KelMessageCard } from '@renderer/components/kel/workCards/KelMessageCard';
 import { replyUsageWords } from '@renderer/components/kel/usage/usageWords';
@@ -11,6 +11,7 @@ import { isKelNoteMeta } from '@/common/chat/kelMessageMeta';
  */
 
 import type { IMessageText } from '@/common/chat/chatLib';
+import { useMessageList } from '../hooks';
 import { parseFileMarker, resolveMessageFilePath } from './fileMarker';
 import SessionMentionAction from './SessionMentionAction';
 import { parseSessionMessageBlock, parseSessionsBlock } from './sessionMarkers';
@@ -21,8 +22,8 @@ import { iconColors } from '@/renderer/styles/colors';
 import { Message, Tooltip } from '@arco-design/web-react';
 import { Copy, Edit, Refresh } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { useArrival, useEntrance, useMessageArrival, useStreamFade } from '@renderer/motion';
+import React, { useMemo, useRef } from 'react';
+import { useArrival, useEntrance } from '@renderer/motion';
 import { useTranslation } from 'react-i18next';
 import { copyText } from '@/renderer/utils/ui/clipboard';
 import { emitter } from '@/renderer/utils/emitter';
@@ -186,6 +187,8 @@ const MessageText: React.FC<{
   const layout = useLayoutContext();
   const isUserMessage = message.position === 'right';
   const engineFailure = !isUserMessage && typeof message.content.content === 'string' ? parseEngineFailure(message.content.content) : null;
+  const messages = useMessageList();
+  const pairedEngineFailure = engineFailure && hasWorkFailureOwner(messages, message.id);
   // Delivered-but-not-yet-consumed marker for messages sent mid-turn to a
   // supporting backend (claude/codex). The message already reached the
   // server (it's rendered); this only answers "has the agent picked it up
@@ -234,13 +237,7 @@ const MessageText: React.FC<{
     [conversationContext?.workspace, files]
   );
 
-  // D-78 §10.1: a message that arrives while Nick watches — his words fly from the composer, Kel's mark
-  // flies from Thinking to the reply's avatar, and a streamed reply's new words fade out of a blur.
-  const turnRef = useRef<HTMLDivElement>(null);
-  const [markdownBody, setMarkdownBody] = useState<HTMLDivElement | null>(null);
-  const onMarkdownBody = useCallback((el?: HTMLDivElement | null) => setMarkdownBody(el ?? null), []);
-  useMessageArrival(turnRef, isUserMessage ? 'user' : isTeammateMessage || message.content.cronMeta ? 'other' : 'kel');
-  useStreamFade(markdownBody, !isUserMessage);
+  // Chat text stays native and visible through streaming, rewrites and history mounts.
 
   // D-75.2: Nick can edit a message he sent; Kel answers again from there.
   const [editing, setEditing] = React.useState(false);
@@ -250,6 +247,7 @@ const MessageText: React.FC<{
   if (!message.content.content || (typeof message.content.content === 'string' && !message.content.content.trim())) {
     return null;
   }
+  if (pairedEngineFailure && !actionsOnly) return null;
 
   // CH-3/D-55: "You stopped this reply." and "Restarting … with that change" are notes about the
   // conversation, shown as one quiet line rather than as a Kel reply with its actions.
@@ -365,7 +363,7 @@ const MessageText: React.FC<{
 
   return (
     <>
-      {actionsOnly ? actionsRow : <div ref={turnRef} className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
+      {actionsOnly ? actionsRow : <div className={classNames('kel-shell-message-turn min-w-0 flex flex-col group', isUserMessage ? 'items-end' : 'items-start')}>
         {message.created_at && <div className='kel-shell-message-meta'>
           {!isUserMessage && !isTeammateMessage && (layout?.isMobile
             ? <img src={kelMark} alt='Kel' width={22} height={22} />
@@ -501,7 +499,7 @@ const MessageText: React.FC<{
             </CollapsibleContent>
           ) : (
             <div data-testid='message-text-content'>
-              <MarkdownView codeStyle={CODE_STYLE} onLocalFileLink={handleLocalFileLink} onRef={onMarkdownBody}>
+              <MarkdownView codeStyle={CODE_STYLE} onLocalFileLink={handleLocalFileLink}>
                 {data}
               </MarkdownView>
             </div>
